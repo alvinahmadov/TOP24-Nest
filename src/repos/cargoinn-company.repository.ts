@@ -199,9 +199,8 @@ export default class CargoInnCompanyRepository
 		return this.log(
 			() => this.model.findOne(
 				{
-					where:   this.whereClause('or')
-					             .eq('phone', phone)
-					             .eq('phone', formatPhone(phone), 'or')
+					where:   this.whereClause()
+					             .in('phone', [phone, formatPhone(phone)])
 						         .query,
 					include: full ? this.include : []
 				}
