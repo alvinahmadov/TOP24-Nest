@@ -1,0 +1,22 @@
+{
+	"extends": "./tsconfig.json",
+	"include": [
+		"./lib",
+		"./src/*.ts",
+		"./src/**/*.ts",
+		"./lib/parse-tools/*.ts",
+		"./lib/parse-tools/**/*.ts"
+	],
+	"exclude": [
+		"./node_modules",
+		"./dist/*",
+		"./dist/**/*",
+		"./tmp/*",
+		"./tmp/**/*",
+		"./requests/*",
+		"./requests/**/*",
+		"./test/*.ts",
+		"./test/**/*.ts",
+		"**/*spec.ts"
+	]
+}

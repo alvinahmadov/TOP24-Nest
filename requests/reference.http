@@ -1,0 +1,39 @@
+### Get addresses
+GET {{api}}/reference/address?from=0&count=10
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Search by some word
+GET {{api}}/reference/address?search={{addressTerm}}&full=true
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get payloads
+GET {{api}}/reference/fixtures
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get loading types
+GET {{api}}/reference/loading_types
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get payloads
+GET {{api}}/reference/payloads
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get payloads
+GET {{api}}/reference/payment_types
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get risk classes
+GET {{api}}/reference/risk_classes
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Search by some word
+GET {{api}}/reference/transport_types
+Authorization: {{accessToken}}
+Content-Type: application/json

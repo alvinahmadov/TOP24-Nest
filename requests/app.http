@@ -1,0 +1,35 @@
+### Make migration for database
+POST {{host}}/migrate
+Content-Type: application/json
+
+{
+	"preview": true,
+	"filename": "migration"
+}
+
+### Get agreement pdf file
+GET {{host}}/agreement
+Content-Type: application/json
+
+###
+POST {{host}}/reset
+Content-Type: application/json
+
+### Generate random companies
+POST {{api}}/generator/companies
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"count": 1,
+	"type": 0
+}
+
+### Generate random orders
+POST {{api}}/generator/orders
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"count": 10
+}

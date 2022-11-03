@@ -1,0 +1,88 @@
+### Get list of order offers
+GET {{api}}/offer?full=true
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get list of filtered order offers
+POST {{api}}/offer/filter?full=true
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"orderStatus": 1
+}
+
+### Get offer
+GET {{api}}/offer/{{offerId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Delete offer
+DELETE {{api}}/offer/{{offerId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Accept an offer by driver
+PATCH {{api}}/offer/accept/{{orderId}}/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Decline an offer by driver
+PATCH {{api}}/offer/decline/{{orderId}}/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Update offer data
+PUT {{api}}/offer/{{orderId}}/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+    "orderStatus": 1
+}
+
+### Get offer assigned drivers
+POST {{api}}/offer/driver/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get offer assigned orders
+POST {{api}}/offer/order/{{orderId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get offer assigned transports
+POST {{api}}/offer/transport/{{orderId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"orderStatus": 1,
+	"transportStatus": 1
+}
+
+### Associate driver with order
+POST {{api}}/offer/{{orderId}}/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Associate drivers with order
+POST {{api}}/offer/drivers/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Associate drivers with order
+POST {{api}}/offer/drivers/{{orderId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"drivers": [
+		{
+			"driverId": ""
+		},
+		{
+			"driverId": ""
+		}
+	]
+}

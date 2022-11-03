@@ -1,0 +1,67 @@
+version: "3.5"
+
+networks:
+  overlay:
+    driver: bridge
+    name: top24net
+
+services:
+  redis:
+    container_name: top24-redis
+    image: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/data
+    networks:
+      - overlay
+  db:
+    container_name: top24-postgres
+    image: postgres:12.1-alpine
+    restart: on-failure
+    stdin_open: true
+    tty: true
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: "${DATABASE_NAME}"
+      POSTGRES_USER: "${DATABASE_USER}"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
+    ports:
+      - "5432:5432"
+    networks:
+      - overlay
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  core:
+    container_name: top24-core
+    image: top24:latest
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: ./deploy/docker/dev/Dockerfile
+    volumes:
+      - ./deploy/nginx/top24.conf:/etc/nginx/conf.d/default.conf
+      - root_node_modules:/srv/app/node_modules
+      - docs:/srv/app/docs
+    ports:
+      - "8080:8080"
+    networks:
+      - overlay
+    depends_on:
+      - db
+      - redis
+    links:
+      - db
+      - redis
+
+volumes:
+  redis:
+  postgres_data:
+  root_node_modules:
+  docs:

@@ -1,0 +1,11 @@
+{
+	"name": "24TOP Backend documentation",
+	"tsconfig": "tsconfig.build.json",
+	"output": "docs",
+	"theme": "vagrant",
+	"hideGenerator": true,
+	"disableSourceCode": true,
+	"silent": true,
+	"serve": false,
+	"port": 8081
+}

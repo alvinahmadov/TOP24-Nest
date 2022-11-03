@@ -1,0 +1,114 @@
+### Get all transports
+GET {{api}}/transport
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get all transports by filter
+POST {{api}}/transport/filter?full=true
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"cargoId": "{{companyId}}"
+}
+
+### Get single transport by id
+GET {{api}}/transport/{{transportId}}?full=true
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Create new transport record
+POST {{api}}/transport
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"cargoId": "{{companyId}}",
+	"cargoinnId": null,
+	"driverId": "{{driverId}}",
+	"isTrailer": false,
+	"status": 1,
+	"certificateNumber": "73 37 748675 ",
+	"weight": 36,
+	"volume": 0,
+	"length": 22,
+	"width": 22,
+	"height": 46,
+	"type": "Трубовоз",
+	"brand": "Honda",
+	"model": "Malibu",
+	"extraFixtures": ["788", "790", "792"],
+	"registrationNumber": "q uiy r%",
+	"prodYear": 2019,
+	"riskClass": "406",
+	"payload": "Пластик",
+	"payloadExtra": true,
+	"loadingTypes": [
+		1,
+		3,
+		4
+	],
+	"pallets": 20,
+	"info": "Quo doloribus enim.",
+	"osagoNumber": "744 448 4814 ",
+	"osagoExpiryDate": "2021-11-24",
+	"osagoPhotoLink": "https://cloudflare-ipfs.com/ipfs/Qmd3W5DuhgHirLHGVixi6V76LhCkZUz6pnFt5AJBiyvHye/avatar/1186.jpg",
+	"diagnosticsNumber": "7SUPS2LQRL",
+	"diagnosticsDate": "2020-11-07",
+	"diagnosticsPhotoLink": "https://cloudflare-ipfs.com/ipfs/Qmd3W5DuhgHirLHGVixi6V76LhCkZUz6pnFt5AJBiyvHye/avatar/704.jpg",
+	"comments": "Maxime aut necessitatibus."
+}
+
+> {%	client.global.set("transportId", response.body['data']['id']); %}
+
+### Update single transport by id
+PUT {{api}}/transport/{{transportId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+    "isTrailer": true
+}
+
+### Get list of transports by id and applied filters
+POST {{api}}/transport/driver/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Delete transport record
+DELETE {{api}}/transport/{{transportId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get single transport with given `transportId`
+POST {{api}}/transport/image/{{transportId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="image1.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--
+
+### Send passport scan
+POST {{api}}/transport/diag/{{transportId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="diag.png"
+
+< /path/to/image/diag.png
+--WebAppBoundary--
+
+### Send passport scan
+POST {{api}}/transport/osago/{{transportId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="osago.png"
+
+< /path/to/image/osago.png
+--WebAppBoundary--

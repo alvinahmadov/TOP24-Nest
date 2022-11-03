@@ -1,0 +1,23 @@
+### Node template
+.editorconfig
+.prettierrc
+
+## Project directories
+
+# Nest.js build / generate output
+dist
+
+# Dependency directories
+node_modules/
+
+# Migration files
+db/migrations/*
+
+# Etc
+.env.template
+.idea/
+.git/
+deploy/
+misc/
+requests/
+test/

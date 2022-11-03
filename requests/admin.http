@@ -1,0 +1,116 @@
+### Authorize host admin
+POST {{api}}/admin/hostlogin
+Content-Type: application/json
+
+{
+    "email": "{{adminEmail}}",
+    "password": "{{adminPassword}}"
+}
+
+> {%
+	client.global.set('accessToken', response.body['data']['accessToken']);
+	client.global.set('refreshToken', response.body['data']['refreshToken']);
+%}
+
+### Refresh authorization token
+POST {{api}}/admin/refresh
+Authorization: {{refreshToken}}
+Content-Type: application/json
+
+> {% client.global.set('accessToken', response.body['data']['accessToken'])%}
+
+### Get list of users
+GET {{api}}/admin?from=0&count=5
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get single admin/user
+GET {{api}}/admin/{{userId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Register to the service
+POST {{api}}/admin
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"name": "Логист",
+	"phone": "{{userPhone}}",
+	"email": "{{userEmail}}",
+	"type": 0
+}
+
+> {%
+		client.global.set("userId", response.body['id'])
+		client.global.set("userPhone", response.body['phone'])
+ %}
+
+### Login to service
+POST {{api}}/admin/login
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Request verification code to signin by phone number
+POST {{api}}/admin/signin?by=phone
+Content-Type: application/json
+
+{
+	"phone": "{{userPhone}}"
+}
+
+> {% client.global.set('verificationCode', response.body['data']['code']) %}
+
+### Submit signin by supplying verification code
+POST {{api}}/admin/signin?by=phone
+Content-Type: application/json
+
+{
+	"phone": "{{userPhone}}",
+	"code": "{{verificationCode}}"
+}
+
+> {%
+	client.global.set('accessToken', response.body['data']['accessToken'])
+	client.global.set('refreshToken', response.body['data']['refreshToken'])
+	client.global.set('userId', response.body['data']['user']['id'])
+%}
+
+### Request verification code to signin by email
+POST {{api}}/admin/signin?by=email
+Content-Type: application/json
+
+{
+	"email": "{{userEmail}}"
+}
+
+> {% client.global.set("verificationCode", response.body['data']['code']) %}
+
+### Submit signin by supplying verification code
+POST {{api}}/admin/signin?by=email
+Content-Type: application/json
+
+{
+	"email": "{{userEmail}}",
+	"code": "{{verificationCode}}"
+}
+
+> {%
+	client.global.set('accessToken', response.body['data']['accessToken'])
+	client.global.set('refreshToken', response.body['data']['refreshToken'])
+	client.global.set('userId', response.body['data']['user']['id'])
+%}
+
+### Update admin information
+PUT {{api}}/admin/{{userId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"name": "User"
+}
+
+### Delete admin
+DELETE {{api}}/admin/{{userId}}
+Authorization: {{accessToken}}
+Content-Type: application/json

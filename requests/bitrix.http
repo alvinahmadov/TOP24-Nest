@@ -1,0 +1,25 @@
+### Update cargo data from bitrix
+PUT {{api}}/bitrix/cargo/{{crmId}}
+Content-Type: application/json
+
+{
+	"info": "Some information about cargo company",
+	"status": "free",
+	"confirmed": true
+}
+
+### Get bitrix order data
+GET {{api}}/bitrix/orders
+Content-Type: application/json
+
+### Update order data
+PUT {{api}}/bitrix/order/{{crmId}}
+Content-Type: application/json
+
+### Update bitrix order data
+PATCH {{api}}/bitrix/orders
+Content-Type: application/json
+
+### Delete order
+DELETE {{api}}/bitrix/order/{{crmId}}
+Content-Type: application/json

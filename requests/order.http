@@ -1,0 +1,91 @@
+### Get list of orders
+GET {{api}}/order
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get orders with specified filters
+POST {{api}}/order/filter?full=true
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"status": 2
+}
+
+### Get single order by id
+GET {{api}}/order/{{orderId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Update order by id
+PUT {{api}}/order/{{orderId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+  "stage": 2
+}
+
+### Delete order by id
+DELETE {{api}}/order/{{orderId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get orders with specified filters
+GET {{api}}/order/driver/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Send order to bitrix
+GET {{api}}/order/send/{{orderId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get cargo list
+GET {{api}}/order/cargolist/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Upload shipping document for destination point A
+POST {{api}}/order/shipping/{{orderId}}?pt={{point}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="order_shipping_A.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--
+
+### Upload payment documents
+POST {{api}}/order/payment/{{orderId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="order_payment.png"
+
+< /home/alvin/Pictures/24top.png
+--WebAppBoundary--
+
+### Upload contract documents
+POST {{api}}/order/contract/{{orderId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="contract.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--
+
+### Upload receipt documents
+POST {{api}}/order/receipt/{{orderId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="receipt.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--

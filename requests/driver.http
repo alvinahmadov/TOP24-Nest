@@ -1,0 +1,106 @@
+### Get list of drivers
+GET {{api}}/driver
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get list of drivers filtering
+POST {{api}}/driver/filter?full=true
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"isReady": false
+}
+
+### Get single driver by id
+GET {{api}}/driver/{{driverId}}?full=true
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Update driver status (coordinates and status)
+PUT {{api}}/driver/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"name": "Кирилл",
+	"middleName": "Иванович",
+	"surname": "Кожемяко",
+	"status": 1,
+	"isReady": true,
+	"avatarLink": "https://cloudflare-ipfs.com/ipfs/Qmd3W5DuhgHirLHGVixi6V76LhCkZUz6pnFt5AJBiyvHye/avatar/130.jpg"
+}
+
+### Create driver account
+POST {{api}}/driver
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+    "cargoId": "{{companyId}}",
+    "name": "John",
+    "middleName": "Arestovych",
+    "surname": "Androl",
+    "email": "john.androl@mail.com",
+    "birthDate": "2012-09-07",
+    "phone": "+7 468 273 19 55",
+    "taxpayerNumber": null,
+    "passportSerialNumber": "513 1386 ",
+    "passportDate": "2027-11-12 01:47:35.576 +00:00",
+    "passportSubdivisionCode": "553 537 ",
+    "passportIssuedBy": "French Polynesia, Port Mertie, 679 Shields Knolls Suite 688",
+    "passportRegistrationAddress": "Palestinian Territory, Moniquecester, 7579 Nienow Mountains Suite 212",
+    "passportPhotoLink": "http://loremflickr.com/640/480/business",
+    "passportSignLink": "http://loremflickr.com/640/480/business",
+    "passportSelfieLink": "http://loremflickr.com/640/480/business",
+    "avatarLink": "http://loremflickr.com/640/480/business",
+    "registrationAddress": "Филиппины, Konopelskicester, Klocko проспект, 473 кв. 006",
+    "address": "Филиппины, Konopelskicester, Klocko проспект, 473 кв. 006",
+    "licenseNumber": "32 43 243243",
+    "licenseDate": "2020-12-12T00:00:00.000Z",
+    "licenseFrontLink": "http://loremflickr.com/640/480/business",
+    "licenseBackLink": "http://loremflickr.com/640/480/business",
+    "status": 1,
+    "latitude": 57.0712211,
+    "longitude": 34.2374485
+}
+
+> {%	client.global.set('driverId', response.body['data']['id']);	%}
+
+### Delete driver
+DELETE {{api}}/driver/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Upload driver avatar
+POST {{api}}/driver/avatar/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="avatar.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--
+
+### Upload front side of passport scan
+POST {{api}}/driver/front/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="driverFrontPhotoLink.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--
+
+### Upload back side of passport scan
+POST {{api}}/driver/back/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="driverBackPhotoLink.jpg""
+
+< /path/to/image/file.png
+--WebAppBoundary--

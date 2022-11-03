@@ -1,0 +1,197 @@
+{
+	"ENUM": {
+		"COMPANY": {
+			"TYPE": {
+				"ORG": "Commercial organization",
+				"IE": "Individual entrepreneur",
+				"PI": "Private individual"
+			}
+		},
+		"DRIVER": {
+			"STATUS": {
+				"NONE": "Not ready",
+				"ON_WAY": "On way to load",
+				"ON_POINT": "On destination point",
+				"DOC_LOAD": "Sending documents"
+			}
+		},
+		"TRANSPORT": {
+			"STATUS": {
+				"NONE": "None",
+				"ACTIVE": "Transport is active",
+				"HAS_PROBLEM": "Has problems"
+			},
+			"LOADTYPE": {
+				"NONE": "None",
+				"BACK": "Back",
+				"TOP": "Top",
+				"SIDE": "Side"
+			}
+		},
+		"ORDER": {
+			"STATUS": {
+				"PENDING": "Pending confirmation.",
+				"ACCEPTED": "Accepted.",
+				"PROCESSING": "On processing.",
+				"CANCELLED": "Cancelled.",
+				"PAYMENT": "On payment.",
+				"FINISHED": "Completed."
+			},
+			"STAGE": {
+				"NEW": "Not processed.",
+				"PREPARATION": "Taken for work.",
+				"AGREED_LOGIST": "The price has been agreed with the Logistician.",
+				"AGREED_OWNER": "The price has been agreed with the Cargo Owner.",
+				"SIGNED_DRIVER": "The application with the driver has been signed.",
+				"SIGNED_OWNER": "The application has been signed with the Cargo Owner.",
+				"CARRYING": "Transportation agreed (carried out).",
+				"HAS_PROBLEM": "Problem with transportation.",
+				"CONTINUE": "Transportation continues.",
+				"DELIVERED": "The cargo has been delivered (document verification).",
+				"DOCUMENT_SENT": "The documents have been sent.",
+				"PAYMENT_FORMED": "The payment receipt has been formed.",
+				"PAYMENT_RECEIVED": "Payment received.",
+				"FINISHED": "The deal is successful!"
+			},
+			"PAYLOAD": {
+				"TYPE": {
+					"NONE": "None",
+					"FRONT": "Front",
+					"BACK": "Back",
+					"SIDE": "Side"
+				}
+			}
+		}
+	},
+	"REST": {
+		"ADMIN": {
+			"GET": "Found user '{}'",
+			"LIST": "Found {} users!",
+			"CREATE": "Created new user '{}'",
+			"UPDATE": "Updated user data of '{}'",
+			"DELETE": "User '{}' was deleted.",
+			"NOT_FOUND": "User not found!",
+			"NOT_ACCEPTABLE": "Not acceptable!",
+			"ACCESS_DENIED": "Access denied!",
+			"INCORRECT_TOKEN": "Incorrect token. Try again!",
+			"INCORRECT_PASSW": "Incorrect password. Try again!",
+			"INCORRECT_CODE": "Incorrect verification code. Try again!",
+			"INCORRECT_PHONE": "No phone number provided. Try again!"
+		},
+		"ADDRESS": {
+			"GET": "Found address '{}'",
+			"LIST": "Found {} addresses!",
+			"NOT_FOUND": "Address not found!"
+		},
+		"COMPANY": {
+			"GET": "Found company '{}'",
+			"LIST": "Found {} companies!",
+			"CREATE": "Successfuly created new company '{}'",
+			"UPDATE": "Successfuly updated company '{}'",
+			"DELETE": "Company '{}' was deleted.",
+			"TRANSPORTS": "Found {} company transports!",
+			"NOT_FOUND": "Company not found!",
+			"NOT_ACCEPTABLE": "Not acceptable!",
+			"ACCESS_DENIED": "Access denied!",
+			"INCORRECT_CODE": "Incorrect confirmation code. Try again!",
+			"INCORRECT_TOKEN": "Incorrect token. Try again!",
+			"INCORRECT_PASSW": "Incorrect password. Try again!",
+			"INCORRECT_PHONE": "Phone is incorrect. Try again!",
+			"CRM_ERROR": "CRM service error!"
+		},
+		"DRIVER": {
+			"GET": "Found driver '{}'",
+			"LIST": "Found {} drivers!",
+			"CREATE": "Created new driver '{}'",
+			"UPDATE": "Updated driver '{}'",
+			"DELETE": "Deleted driver '{}'.",
+			"TRANSPORTS": "Found {} drivers by transport!",
+			"NOT_FOUND": "Driver not found!"
+		},
+		"GENERATOR": {
+			"COMPANY": "Generated {} companies, of types [{}].",
+			"ORDER": "Generated {} orders."
+		},
+		"OFFER": {
+			"GET": "Found offer '{}'",
+			"LIST": "Found {} offers!",
+			"CREATE": "Created new offer '{}'",
+			"UPDATE": "Updated offer '{}'",
+			"DELETE": "Deleted offer {}.",
+			"DRIVERS": "Found {} driver(s).",
+			"ORDERS": "Found {} order(s).",
+			"TRANSPORTS": "Found {} transports.",
+			"SEND": "Created {}, updated {} offers by orders.",
+			"ACCEPTED": "Offer is already accepted!",
+			"DECLINED": "Offer is already declined!",
+			"NOT_FOUND": "Offer not found!"
+		},
+		"ORDER": {
+			"GET": "Found order '{}'",
+			"LIST": "Found {} orders!",
+			"CREATE": "Created new order '{}'",
+			"UPDATE": "Updated order '{}'",
+			"DELETE": "Deleted order {}.",
+			"DRIVERS": "Found {} drivers.",
+			"ORDERS": "Found {} transports.",
+			"TRANSPORTS": "Найдены {} транспорты(ов).",
+			"SEND": "Created {}, updated {} offers by orders.",
+			"SHIPPING": "Shipping documents uploaded to link {} for destionation point '{}'",
+			"PAYMENT": "Payment documents uploaded to link {}",
+			"RECEIPT": "Receipt documents uploaded to link {}",
+			"CONTRACT": "Contract document uploaded to link {}",
+			"ACCEPTED": "Order is already accepted!",
+			"DECLINED": "Order is already declined/canceled!",
+			"NOT_FOUND": "Order not found!",
+			"WRITE_FILE": "File write error!"
+		},
+		"PAYMENT": {
+			"GET": "Found payment account '{}'",
+			"LIST": "Found {} payment accounts!",
+			"CREATE": "Created new payment account '{}'",
+			"UPDATE": "Updated payment account '{}'",
+			"DELETE": "Deleted payment account {}.",
+			"NOT_FOUND": "Payment account not found!"
+		},
+		"REFERENCE": {
+			"FIXTURES": "Found {} fixtures!",
+			"LOADING_TYPES": "Found {} loading types for transport!",
+			"PAYLOAD_TYPES": "Found {} payload types!",
+			"PAYMENT_TYPES": "Found {} payment types!",
+			"RISK_CLASSES": "Found {} risk classes for cargo!",
+			"TRANSPORT_TYPES": "Found {} transport types!"
+		},
+		"TRANSPORT": {
+			"GET": "Found transport '{}'",
+			"LIST": "Found {} transports!",
+			"CREATE": "Created new transport '{}'",
+			"UPDATE": "Updated transport '{}'",
+			"DELETE": "Deleted transport {}.",
+			"NOT_FOUND": "Transport not found!"
+		}
+	},
+	"EVENT": {
+		"DRIVER": {
+			"SENT": "An offer has been sent to you to complete the order '{}'.",
+			"ACCEPT": "Your request for the order '{}' is accepted!"
+		},
+		"ORDER": {
+			"ACCEPT": "The offer was accepted by the driver {}.",
+			"CREATE": "Создана заявка {}",
+			"UPDATE": "Обновлены данные сделки {}"
+		}
+	},
+	"FAIL": {
+		"ACCESS_DENIED": "Access denied!",
+		"NOT_ACCEPTABLE": "Not acceptable!",
+		"INCORRECT_CODE": "Incorrect confirmation code. Try again!",
+		"INCORRECT_TOKEN": "Incorrect token. Try again!",
+		"INCORRECT_PASSW": "Incorrect password. Try again!",
+		"INCORRECT_PHONE": "Phone is incorrect. Try again!",
+		"INCORRECT_EMAIL": "Email is incorrect. Try again!",
+		"WRITE_FILE": "File write error!"
+	},
+	"SUCCESS": {
+		"WRITE_FILE": "File write successful!"
+	}
+}

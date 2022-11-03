@@ -1,0 +1,178 @@
+### Legal entity cargo companies
+
+### Request login code for the account
+POST {{api}}/company/login
+Content-Type: application/json
+
+{
+	"phone": "{{companyPhone}}"
+}
+
+> {%	client.global.set('verificationCode', response.body['data']['code'])	%}
+
+### Finish login by supplying received code
+POST {{api}}/company/login
+Content-Type: application/json
+
+{
+	"phone": "{{companyPhone}}",
+	"code": "{{verificationCode}}"
+}
+
+> {%
+	client.global.set("accessToken", response.body['data']['accessToken']);
+	client.global.set("refreshToken", response.body['data']['refreshToken']);
+	client.global.set("companyId", response.body['data']['company']['id']);
+%}
+
+### Get list of cargo companies
+GET {{api}}/company
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get filtered list of cargo companies
+POST {{api}}/company/filter?full=true
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"phone": "{{companyPhone}}"
+}
+
+### Get single cargo company with associated models
+GET {{api}}/company/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Register as a new cargo company
+POST {{api}}/company
+Content-Type: application/json
+
+{
+	"name": "ООО 'РосПеревозки'",
+	"shortName": "РП",
+	"email": "{{companyEmail}}",
+	"phone": "{{companyPhone}}",
+	"taxpayerNumber": "7707083893",
+	"taxReasonCode": "773601001",
+	"paymentType": "НДС 20%",
+	"registrationNumber": "025850",
+	"directions": ["Москва"],
+	"director": "",
+	"passportSerialNumber": "4218 555555",
+	"passportRegistrationAddress": "Москва, 117312, ул. Вавилова, д. 19",
+	"passportGivenDate": "06.06.2018",
+	"passportSubdivisionCode": "354 354",
+	"passportIssuedBy": "УМВД России по Липецкой области",
+	"address": "Россия, Москва, 117312, ул. Вавилова, д. 19",
+	"contact": "Константинопольский К. К.",
+	"type": 0,
+	"phoneSecond": "+7 (435) 435 45 43"
+}
+
+> {%
+	client.global.set("accessToken", response.body['accessToken']);
+	client.global.set("refreshToken", response.body['refreshToken']);
+	client.global.set("companyId", response.body['company']['id'])
+	client.global.set("companyPhone", response.body['company']['phone'])
+%}
+
+### Update some information about company
+PUT {{api}}/company/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"status": ""
+}
+
+### Refresh authorization token
+PATCH {{api}}/company/refresh
+Authorization: {{refreshToken}}
+Content-Type: application/json
+
+> {%
+	client.global.set("accessToken", response.body['data']['accessToken']);
+%}
+
+### Send company data to bitrix backend
+GET {{api}}/company/send/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get list of transports that belong to cargo company
+### that satisfies to physical parameters in body (not required)
+POST {{api}}/company/transports
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Delete cargo company
+DELETE {{api}}/company/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Send passport scan
+POST {{api}}/company/passport/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="passport_scan.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--
+
+### Send passport scan
+POST {{api}}/company/passport_selfie/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="passport-selfie.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--
+
+### Send passport scan
+POST {{api}}/company/passport_sign/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="passport-sign.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--
+
+### Send attorney sign link scan
+POST {{api}}/company/attorney/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="attorney.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--
+
+### Send passport scan
+POST {{api}}/company/order/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="order.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--
+
+### Send passport scan
+POST {{api}}/company/ogrnip/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="ogrnip.png"
+
+< /path/to/image/file.png
+--WebAppBoundary--

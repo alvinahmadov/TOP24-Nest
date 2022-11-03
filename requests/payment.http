@@ -1,0 +1,53 @@
+### Get list of payments
+GET {{api}}/payment
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get filtered payments
+POST {{api}}/payment/filter
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"cargoId": "{{companyId}}"
+}
+
+### Get single payment with id
+GET {{api}}/payment/{{paymentId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Create new payment
+POST {{api}}/payment
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"cargoId": "{{companyId}}",
+	"bankBic": "869049586",
+	"bankName": "ПАО “Липецкстройбанкинвест”",
+	"ogrnip": "ОГПРО0957849385",
+	"currentAccount": "34568987670000000007",
+	"correspondentAccount": "34568987670000000003"
+}
+
+> {% client.global.set('paymentId', response.body['data']['id']) %}
+
+### Update payment details
+PUT {{api}}/payment/{{paymentId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"bankBic": "123456789"
+}
+
+### Delete payment
+DELETE {{api}}/payment/{{paymentId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get payment details of company with id
+GET {{api}}/payment/company/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: application/json

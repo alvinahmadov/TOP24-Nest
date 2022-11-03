@@ -1,0 +1,14 @@
+### Get list of images
+GET {{api}}/image?full=true
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get single image with id
+GET {{api}}/image/{{imageId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Delete image
+DELETE {{api}}/image/{{imageId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
