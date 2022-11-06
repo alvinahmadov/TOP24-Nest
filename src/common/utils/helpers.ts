@@ -57,22 +57,13 @@ export function expandApiResult<T = any>(result: IApiResponse<T>) {
 		};
 	}
 
-	const expandModel = <T extends IModel, M extends EntityModel<T>>(
-		model: M,
-		fromArray: boolean = false
-	) => (fromArray ? {
-			...(model.get({ clone: false, plain: true }) ?? {})
-		}
-	                : {
-			status:  result.statusCode,
-			message: result.message,
-			...(model.get({ clone: false, plain: true }) ?? {})
-		});
+	const expandModel = <T extends IModel, M extends EntityModel<T>>(model: M) =>
+		({ ...(model.get({ clone: false, plain: true }) ?? {}) });
 
 	if(Array.isArray(result.data)) {
 		if(result.data.length > 0) {
 			if(result.data[0] instanceof EntityModel)
-				return result.data.map(d => expandModel(d, true));
+				return result.data.map(d => expandModel(d));
 			else
 				return result.data;
 		}
