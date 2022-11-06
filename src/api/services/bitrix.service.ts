@@ -225,7 +225,7 @@ export default class BitrixService
 	public async updateCargo(
 		crmId: number,
 		cargo: TUpdateAttribute<ICompany>
-	) {
+	): TAsyncApiResponse<ICompany> {
 		const { data: item } = await this.cargoService.getByCrmId(crmId);
 		if(item) {
 			return this.cargoService.update(item.id, cargo);
