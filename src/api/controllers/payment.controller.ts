@@ -14,7 +14,10 @@ import { ApiRoute }            from '@common/decorators';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
-import { CargoGuard }          from '@api/security';
+import {
+	AccessGuard,
+	CargoGuard
+}                              from '@api/security';
 import { PaymentService }      from '@api/services';
 import BaseController          from './controller';
 
@@ -30,7 +33,7 @@ export default class PaymentController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
@@ -45,7 +48,7 @@ export default class PaymentController
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -59,7 +62,7 @@ export default class PaymentController
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async index(
@@ -116,7 +119,7 @@ export default class PaymentController
 	}
 
 	@ApiRoute(routes.company, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getByCompany(

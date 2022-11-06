@@ -19,7 +19,7 @@ import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { DefaultBoolPipe }     from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
-import { CargoGuard }          from '@api/security';
+import { AccessGuard }         from '@api/security';
 import { OfferService }        from '@api/services';
 import BaseController          from './controller';
 
@@ -37,7 +37,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
@@ -52,7 +52,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -66,7 +66,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async index(
@@ -81,7 +81,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.update, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async update(
@@ -97,7 +97,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.order, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getDrivers(
@@ -113,7 +113,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.driver, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getOrders(
@@ -129,7 +129,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.transport, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getTransports(
@@ -145,7 +145,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.delete, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async delete(
@@ -159,7 +159,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.accept, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async accept(
@@ -176,7 +176,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.decline, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async decline(
@@ -194,7 +194,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.sendList, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async makeOffers(
@@ -211,7 +211,7 @@ export default class OfferController
 	}
 
 	@ApiRoute(routes.send, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async create(

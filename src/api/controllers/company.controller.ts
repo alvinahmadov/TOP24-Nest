@@ -40,7 +40,10 @@ import {
 	DefaultBoolPipe
 }                                     from '@api/pipes';
 import { getRouteConfig }             from '@api/routes';
-import { CargoGuard }                 from '@api/security';
+import {
+	AccessGuard,
+	CargoGuard
+}                                     from '@api/security';
 import {
 	AuthService,
 	CargoCompanyInnService,
@@ -69,7 +72,7 @@ export default class CompanyController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
@@ -96,7 +99,7 @@ export default class CompanyController
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -118,7 +121,7 @@ export default class CompanyController
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async index(
@@ -133,7 +136,6 @@ export default class CompanyController
 	}
 
 	@ApiRoute(routes.create, {
-		guards:   [CargoGuard],
 		statuses: [HttpStatus.CREATED, HttpStatus.BAD_REQUEST]
 	})
 	public override async create(
@@ -286,7 +288,7 @@ export default class CompanyController
 	}
 
 	@ApiRoute(routes.transports, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getTransports(

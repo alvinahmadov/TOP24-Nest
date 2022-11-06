@@ -8,7 +8,7 @@ import {
 	Query,
 	Req,
 	Res,
-	UseFilters, UseGuards
+	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { ApiRoute, UserParam } from '@common/decorators';
@@ -26,7 +26,11 @@ import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { UserPipe }            from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
-import { AdminGuard }          from '@api/security';
+import {
+	AccessGuard,
+	AdminGuard,
+	LogistGuard
+}                              from '@api/security';
 import {
 	AdminService,
 	AuthService
@@ -48,7 +52,7 @@ export default class AdminController
 	}
 
 	@ApiRoute(routes.refresh, {
-		guards:   [AdminGuard],
+		guards:   [LogistGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async refresh(
@@ -73,7 +77,7 @@ export default class AdminController
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [AdminGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -87,7 +91,7 @@ export default class AdminController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [AdminGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
@@ -102,7 +106,7 @@ export default class AdminController
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [AdminGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK, HttpStatus.NOT_FOUND]
 	})
 	public override async index(
@@ -116,7 +120,7 @@ export default class AdminController
 	}
 
 	@ApiRoute(routes.update, {
-		guards:   [AdminGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async update(
@@ -157,10 +161,9 @@ export default class AdminController
 	}
 
 	@ApiRoute(routes.delete, {
-		guards:   [AdminGuard],
+		guards:   [LogistGuard],
 		statuses: [HttpStatus.OK]
 	})
-	@UseGuards(AdminGuard)
 	public override async delete(
 		@Res() response: ex.Response,
 		@Param('id', ParseUUIDPipe) id: string

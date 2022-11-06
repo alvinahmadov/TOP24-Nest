@@ -18,7 +18,10 @@ import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { DefaultBoolPipe }     from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
-import { CargoGuard }          from '@api/security';
+import {
+	AccessGuard,
+	CargoGuard
+}                              from '@api/security';
 import {
 	DriverService,
 	OrderService
@@ -40,7 +43,7 @@ export default class DriverController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
@@ -55,7 +58,7 @@ export default class DriverController
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -69,7 +72,7 @@ export default class DriverController
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async index(

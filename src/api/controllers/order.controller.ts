@@ -19,6 +19,7 @@ import { HttpExceptionFilter } from '@api/middlewares';
 import { DefaultBoolPipe }     from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
+	AccessGuard,
 	CargoGuard,
 	LogistGuard
 }                              from '@api/security';
@@ -39,7 +40,7 @@ export default class OrderController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
@@ -59,7 +60,7 @@ export default class OrderController
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -73,7 +74,7 @@ export default class OrderController
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async index(
@@ -88,7 +89,7 @@ export default class OrderController
 	}
 
 	@ApiRoute(routes.create, {
-		guards:   [CargoGuard],
+		guards:   [LogistGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async create(
@@ -102,7 +103,7 @@ export default class OrderController
 	}
 
 	@ApiRoute(routes.update, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async update(
@@ -131,7 +132,7 @@ export default class OrderController
 	}
 
 	@ApiRoute(routes.cargos, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async cargoList(
@@ -146,7 +147,7 @@ export default class OrderController
 	}
 
 	@ApiRoute(routes.driver, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async driver(
@@ -161,7 +162,7 @@ export default class OrderController
 	}
 
 	@ApiRoute(routes.send, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async send(

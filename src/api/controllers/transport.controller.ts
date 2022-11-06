@@ -22,7 +22,10 @@ import {
 	TransportUpdatePipe
 }                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
-import { CargoGuard }          from '@api/security';
+import {
+	AccessGuard,
+	CargoGuard
+}                              from '@api/security';
 import { TransportService }    from '@api/services';
 import BaseController          from './controller';
 
@@ -40,7 +43,7 @@ export default class TransportController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
@@ -55,7 +58,7 @@ export default class TransportController
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -69,7 +72,7 @@ export default class TransportController
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async index(
@@ -127,7 +130,7 @@ export default class TransportController
 	}
 
 	@ApiRoute(routes.driver, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getByDriverId(
