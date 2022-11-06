@@ -1,9 +1,12 @@
+import * as ex                  from 'express';
 import {
 	RANDOM_CODE_MAX,
 	RANDOM_CODE_DIGITS
-}                from '@common/constants';
-import Driver    from '@models/driver.entity';
-import Transport from '@models/transport.entity';
+}                               from '@common/constants';
+import { IApiResponse, IModel } from '@common/interfaces';
+import Driver                   from '@models/driver.entity';
+import Transport                from '@models/transport.entity';
+import EntityModel              from '@models/entity-model';
 
 const phoneRegex = RegExp(/[\s+()]+/gi);
 
@@ -30,7 +33,7 @@ export function transformTransportParameters(transport: Transport): Transport {
 export function transformDriverTransports(driver: Driver): Driver {
 	if(driver.transports !== undefined)
 		driver.transports = driver.transports.map(transformTransportParameters);
-	
+
 	return driver;
 }
 
@@ -44,4 +47,55 @@ export async function deleteEntityImages(list: any[])
 	).then(
 		res => res.reduce((p, c) => p + c, 0)
 	);
+}
+
+export function expandApiResult<T = any>(result: IApiResponse<T>) {
+	if(!result.data) {
+		return {
+			status:  result.statusCode,
+			message: result.message
+		};
+	}
+
+	const expandModel = <T extends IModel, M extends EntityModel<T>>(
+		model: M,
+		fromArray: boolean = false
+	) => (fromArray ? {
+			...(model.get({ clone: false, plain: true }) ?? {})
+		}
+	                : {
+			status:  result.statusCode,
+			message: result.message,
+			...(model.get({ clone: false, plain: true }) ?? {})
+		});
+
+	if(Array.isArray(result.data)) {
+		if(result.data.length > 0) {
+			if(result.data[0] instanceof EntityModel)
+				return result.data.map(d => expandModel(d, true));
+			else
+				return result.data;
+		}
+
+		return {
+			status:  result.statusCode,
+			message: result.message
+		};
+	}
+	else if(result.data instanceof EntityModel)
+		return expandModel(result.data);
+	else
+		return {
+			status:  result.statusCode,
+			message: result.message,
+			...(result.data ?? {})
+		};
+}
+
+export function sendResponse<T = any>(
+	response: ex.Response,
+	result: IApiResponse<T>
+) {
+	return response.status(result.statusCode)
+	               .send(expandApiResult(result));
 }
