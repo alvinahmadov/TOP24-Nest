@@ -21,6 +21,7 @@ import {
 	ISignInPhoneData,
 	IUserPayload
 }                              from '@common/interfaces';
+import { sendResponse }        from '@common/utils';
 import { Admin }               from '@models/index';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
@@ -72,8 +73,7 @@ export default class AdminController
 			result = { statusCode: 400, message: 'Incorrect token. Try again.' };
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
@@ -86,8 +86,7 @@ export default class AdminController
 	) {
 		const result = await this.adminService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.filter, {
@@ -101,8 +100,7 @@ export default class AdminController
 	) {
 		const result = await this.adminService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
@@ -115,8 +113,7 @@ export default class AdminController
 	) {
 		const result = await this.adminService.getById(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -142,8 +139,7 @@ export default class AdminController
 			result = await this.adminService.update(id, dto);
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
@@ -156,8 +152,7 @@ export default class AdminController
 	) {
 		const result = await this.adminService.create(dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -170,8 +165,7 @@ export default class AdminController
 	) {
 		const result = await this.adminService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.host_login, {
@@ -184,8 +178,7 @@ export default class AdminController
 		const { email, password } = credentials;
 		const result = await this.authService.loginAdmin(email, password);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.signin, { statuses: [HttpStatus.OK] })
@@ -205,7 +198,6 @@ export default class AdminController
 			result = await this.authService.loginUser({ email }, code, repeat);
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

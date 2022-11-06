@@ -18,6 +18,7 @@ import {
 	IWebhookResponse,
 	TAffectedRows
 }                              from '@common/interfaces';
+import { sendResponse }        from '@common/utils';
 import { Order }               from '@models/index';
 import {
 	CompanyInnUpdateDto,
@@ -49,8 +50,7 @@ export default class BitrixController
 	public async getOrders(@Res() response: ex.Response) {
 		const result = await this.bitrixService.getOrders();
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.updateOrder, {
@@ -63,8 +63,7 @@ export default class BitrixController
 	) {
 		const result = await this.bitrixService.synchronizeOrder(crmId);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.updateCargo, {
@@ -78,8 +77,7 @@ export default class BitrixController
 	) {
 		const result = await this.bitrixService.updateCargo(crmId, data);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.sync, {
@@ -92,8 +90,7 @@ export default class BitrixController
 	) {
 		const result = await this.bitrixService.synchronizeOrders(reset);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.deleteOrder, {
@@ -106,8 +103,7 @@ export default class BitrixController
 	) {
 		const result = await this.bitrixService.deleteOrder(crmId);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.webhook, {
@@ -119,7 +115,10 @@ export default class BitrixController
 		@Res() response: ex.Response
 	) {
 		const crmId = Number(crm.data['FIELDS']['ID']);
-		let result: IApiResponse<Order | TAffectedRows | null> = { statusCode: 404, message: 'Event not found!' };
+		let result: IApiResponse<Order | TAffectedRows | null> = {
+			statusCode: 404,
+			message:    'Event not found!'
+		};
 
 		switch(crm.event) {
 			case 'ONCRMDEALADD':
@@ -137,7 +136,6 @@ export default class BitrixController
 				break;
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

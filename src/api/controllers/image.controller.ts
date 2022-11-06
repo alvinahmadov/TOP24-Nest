@@ -11,6 +11,7 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { ApiRoute }            from '@common/decorators';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
@@ -43,8 +44,7 @@ export default class ImageController
 	) {
 		const result = await this.imageService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
@@ -57,8 +57,7 @@ export default class ImageController
 	) {
 		const result = await this.imageService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
@@ -71,8 +70,7 @@ export default class ImageController
 	) {
 		const result = await this.imageService.getById(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
@@ -85,8 +83,7 @@ export default class ImageController
 	): Promise<ex.Response> {
 		const result = await this.imageService.create(dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -100,8 +97,7 @@ export default class ImageController
 	) {
 		let result = await this.imageService.update(id, dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -114,7 +110,6 @@ export default class ImageController
 	) {
 		const result = await this.imageService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

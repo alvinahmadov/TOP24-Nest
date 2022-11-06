@@ -1,4 +1,4 @@
-import * as ex                        from 'express';
+import * as ex                 from 'express';
 import {
 	Body,
 	Controller,
@@ -10,48 +10,55 @@ import {
 	Res,
 	UploadedFile,
 	UseFilters
-}                                     from '@nestjs/common';
-import { ApiTags }                    from '@nestjs/swagger';
-import { FileInterceptor }            from '@nestjs/platform-express';
-import { Bucket }                     from '@common/constants';
-import { ApiRoute }                   from '@common/decorators';
-import { CompanyType, OfferStatus }   from '@common/enums';
+}                              from '@nestjs/common';
+import { ApiTags }             from '@nestjs/swagger';
+import { FileInterceptor }     from '@nestjs/platform-express';
+import { Bucket }              from '@common/constants';
+import { ApiRoute }            from '@common/decorators';
 import {
-	ICompany,
+	CompanyType,
+	OfferStatus
+}                              from '@common/enums';
+import {
 	IApiResponse,
 	IAuthRequest,
+	ICompany,
 	ICompanyLoginResponse,
 	ILoginResponse,
 	ISignInPhoneData,
 	TAsyncApiResponse,
 	TMulterFile
-}                                     from '@common/interfaces';
-import { formatArgs, getTranslation } from '@common/utils';
+}                              from '@common/interfaces';
+import {
+	formatArgs,
+	getTranslation,
+	sendResponse
+}                              from '@common/utils';
 import {
 	CargoCompany,
 	CargoInnCompany,
 	Transport
-}                                     from '@models/index';
-import * as dto                       from '@api/dto';
-import { HttpExceptionFilter }        from '@api/middlewares';
+}                              from '@models/index';
+import * as dto                from '@api/dto';
+import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	CompanyCreatePipe,
 	CompanyUpdatePipe,
 	DefaultBoolPipe
-}                                     from '@api/pipes';
-import { getRouteConfig }             from '@api/routes';
+}                              from '@api/pipes';
+import { getRouteConfig }      from '@api/routes';
 import {
 	AccessGuard,
 	CargoGuard
-}                                     from '@api/security';
+}                              from '@api/security';
 import {
 	AuthService,
 	CargoCompanyInnService,
 	CargoCompanyService,
 	OfferService,
 	PaymentService
-}                                     from '@api/services';
-import BaseController                 from './controller';
+}                              from '@api/services';
+import BaseController          from './controller';
 
 const { path, tag, routes } = getRouteConfig('company');
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
@@ -94,8 +101,7 @@ export default class CompanyController
 			message:    formatArgs(message, cargoCompanies.length + cargoinnCompanies.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
@@ -116,8 +122,7 @@ export default class CompanyController
 			message:    formatArgs(message, cargoCompanies.length + cargoinnCompanies.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
@@ -131,8 +136,7 @@ export default class CompanyController
 	): Promise<ex.Response> {
 		const result = await this.getCompany(id, full);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
@@ -176,8 +180,7 @@ export default class CompanyController
 			};
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -210,8 +213,7 @@ export default class CompanyController
 			}
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -244,8 +246,7 @@ export default class CompanyController
 			};
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.login, { statuses: [HttpStatus.OK] })
@@ -256,8 +257,7 @@ export default class CompanyController
 		const { phone, code } = signInData;
 		const result = await this.authService.loginCompany(phone, code);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.refresh, {
@@ -283,8 +283,7 @@ export default class CompanyController
 		}
 		else result = { statusCode, message };
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.transports, {
@@ -326,8 +325,7 @@ export default class CompanyController
 			)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.avatar, {
@@ -356,8 +354,7 @@ export default class CompanyController
 			)
 		) : { statusCode: 400, message: 'Not found!' };
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.passport, {
@@ -392,8 +389,7 @@ export default class CompanyController
 			}
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.certificate, {
@@ -415,8 +411,8 @@ export default class CompanyController
 			CompanyType.ORG, Bucket.COMPANY, 'certificate'
 		);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		result.data;
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.order, {
@@ -438,8 +434,7 @@ export default class CompanyController
 			CompanyType.ORG, Bucket.COMPANY, 'director_order'
 		);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.attorney, {
@@ -461,8 +456,7 @@ export default class CompanyController
 			CompanyType.ORG, Bucket.COMPANY, 'attorney'
 		);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.passport_sign, {
@@ -484,8 +478,7 @@ export default class CompanyController
 			CompanyType.ORG, Bucket.COMPANY, 'passport'
 		);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.passport_selfie, {
@@ -507,8 +500,7 @@ export default class CompanyController
 			CompanyType.IE, Bucket.COMPANY, 'passport'
 		);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.ogrnip, {
@@ -543,8 +535,7 @@ export default class CompanyController
 			}
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	private async getCompany(id: string, full?: boolean)
@@ -568,7 +559,7 @@ export default class CompanyController
 		type: CompanyType = CompanyType.ORG,
 		bucketId: string = '',
 		folder?: string
-	) {
+	): Promise<IApiResponse<ICompany>> {
 		const saveName = folder ? `${folder}/${name}`
 		                        : name;
 		return (

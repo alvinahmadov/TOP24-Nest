@@ -14,6 +14,7 @@ import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { DefaultBoolPipe }     from '@api/pipes';
@@ -53,8 +54,7 @@ export default class DriverController
 	) {
 		const result = await this.driverService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
@@ -67,8 +67,7 @@ export default class DriverController
 	) {
 		const result = await this.driverService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
@@ -82,8 +81,7 @@ export default class DriverController
 	) {
 		const result = await this.driverService.getById(id, full);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
@@ -96,8 +94,7 @@ export default class DriverController
 	) {
 		const result = await this.driverService.create(dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -117,8 +114,7 @@ export default class DriverController
 		}
 		const result = await this.driverService.update(id, dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -131,8 +127,7 @@ export default class DriverController
 	) {
 		const result = await this.driverService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.avatar, {
@@ -151,8 +146,7 @@ export default class DriverController
 		const { originalname: name, buffer } = image;
 		const result = await this.driverService.uploadAvatarPhoto(id, buffer, name);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.front, {
@@ -171,8 +165,7 @@ export default class DriverController
 		const { originalname: name, buffer } = image;
 		const result = await this.driverService.uploadLicenseFront(id, buffer, name);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.back, {
@@ -191,7 +184,6 @@ export default class DriverController
 		const { originalname: name, buffer } = image;
 		const result = await this.driverService.uploadLicenseBack(id, buffer, name);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

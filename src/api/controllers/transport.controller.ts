@@ -14,6 +14,7 @@ import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
@@ -53,8 +54,7 @@ export default class TransportController
 	): Promise<ex.Response> {
 		const result = await this.transportService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
@@ -67,8 +67,7 @@ export default class TransportController
 	): Promise<ex.Response> {
 		const result = await this.transportService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
@@ -82,8 +81,7 @@ export default class TransportController
 	): Promise<ex.Response> {
 		const result = await this.transportService.getById(id, full);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
@@ -96,8 +94,7 @@ export default class TransportController
 	): Promise<ex.Response> {
 		const result = await this.transportService.create(dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -111,8 +108,7 @@ export default class TransportController
 	): Promise<ex.Response> {
 		const result = await this.transportService.update(id, dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -125,8 +121,7 @@ export default class TransportController
 	): Promise<ex.Response> {
 		const result = await this.transportService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.driver, {
@@ -141,8 +136,7 @@ export default class TransportController
 	) {
 		const result = await this.transportService.getByDriverId(driverId, listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.image, {
@@ -161,8 +155,7 @@ export default class TransportController
 		const { originalname: name, buffer } = image;
 		const result = await this.transportService.uploadImage(id, buffer, name);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.diag, {
@@ -181,8 +174,7 @@ export default class TransportController
 		const { originalname: name, buffer } = image;
 		const result = await this.transportService.uploadDiagnosticsPhoto(id, name, buffer);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.osago, {
@@ -201,7 +193,6 @@ export default class TransportController
 		const { originalname: name, buffer } = image;
 		const result = await this.transportService.uploadOsagoPhoto(id, name, buffer);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

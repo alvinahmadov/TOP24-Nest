@@ -1,4 +1,4 @@
-import * as ex                        from 'express';
+import * as ex                 from 'express';
 import {
 	Body,
 	Controller,
@@ -9,22 +9,29 @@ import {
 	Res,
 	Scope,
 	UseFilters
-}                                     from '@nestjs/common';
-import { ApiTags }                    from '@nestjs/swagger';
-import { Reference }                  from '@common/constants';
-import { ApiRoute }                   from '@common/decorators';
+}                              from '@nestjs/common';
+import { ApiTags }             from '@nestjs/swagger';
+import { Reference }           from '@common/constants';
+import { ApiRoute }            from '@common/decorators';
 import {
 	LoadingType,
 	loadingTypeToStr
-}                                     from '@common/enums';
-import { IApiResponse, TBitrixData }  from '@common/interfaces';
-import { formatArgs, getTranslation } from '@common/utils';
-import * as dto                       from '@api/dto';
-import { HttpExceptionFilter }        from '@api/middlewares';
-import { getRouteConfig }             from '@api/routes';
-import { AccessGuard }                from '@api/security';
-import { AddressService }             from '@api/services';
-import { StaticController }           from './controller';
+}                              from '@common/enums';
+import {
+	IApiResponse,
+	TBitrixData
+}                              from '@common/interfaces';
+import {
+	formatArgs,
+	getTranslation,
+	sendResponse
+}                              from '@common/utils';
+import * as dto                from '@api/dto';
+import { HttpExceptionFilter } from '@api/middlewares';
+import { getRouteConfig }      from '@api/routes';
+import { AccessGuard }         from '@api/security';
+import { AddressService }      from '@api/services';
+import { StaticController }    from './controller';
 
 type TCrmItem = { id: string; value: string; };
 
@@ -56,8 +63,7 @@ export default class ReferenceController
 	) {
 		const result = await this.addressService.getById(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.addresses, {
@@ -76,8 +82,7 @@ export default class ReferenceController
 		                        : this.addressService.search(search, rest, Boolean(Number(regions))))
 		               : await this.addressService.getList(rest);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.filter, {
@@ -91,8 +96,7 @@ export default class ReferenceController
 	) {
 		const result = await this.addressService.filter(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.fixtures, {
@@ -110,8 +114,7 @@ export default class ReferenceController
 			message:    formatArgs(TRANSLATIONS['FIXTURES'], fixtures.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.loadingTypes, {
@@ -133,8 +136,7 @@ export default class ReferenceController
 			message:    formatArgs(TRANSLATIONS['LOADING_TYPES'], loadingTypes.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.payloads, {
@@ -152,8 +154,7 @@ export default class ReferenceController
 			message:    formatArgs(TRANSLATIONS['PAYLOAD_TYPES'], payloads.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.paymentTypes, {
@@ -173,8 +174,7 @@ export default class ReferenceController
 			message:    formatArgs(TRANSLATIONS['PAYMENT_TYPES'], paymentTypes.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.riskClasses, {
@@ -192,8 +192,7 @@ export default class ReferenceController
 			message:    formatArgs(TRANSLATIONS['RISK_CLASSES'], riskClasses.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.transportTypes, {
@@ -211,7 +210,6 @@ export default class ReferenceController
 			message:    formatArgs(TRANSLATIONS['TRANSPORT_TYPES'], transportTypes.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

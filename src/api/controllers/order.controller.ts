@@ -14,6 +14,7 @@ import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { DefaultBoolPipe }     from '@api/pipes';
@@ -55,8 +56,7 @@ export default class OrderController
 		}
 		const result = await this.orderService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
@@ -69,8 +69,7 @@ export default class OrderController
 	) {
 		const result = await this.orderService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
@@ -84,8 +83,7 @@ export default class OrderController
 	) {
 		const result = await this.orderService.getById(id, full);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
@@ -98,8 +96,7 @@ export default class OrderController
 	) {
 		const result = await this.orderService.create(dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -113,8 +110,7 @@ export default class OrderController
 	) {
 		const result = await this.orderService.update(id, dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -127,8 +123,7 @@ export default class OrderController
 	) {
 		const result = await this.orderService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.cargos, {
@@ -142,8 +137,7 @@ export default class OrderController
 	) {
 		const result = await this.orderService.getCargoList(cargoId, listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.driver, {
@@ -157,8 +151,7 @@ export default class OrderController
 	) {
 		const result = await this.orderService.getByDriver(driverId);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.send, {
@@ -171,8 +164,7 @@ export default class OrderController
 	) {
 		const result = await this.orderService.send(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.shipping, {
@@ -192,8 +184,7 @@ export default class OrderController
 		const { originalname: name, buffer } = image;
 		const result = await this.orderService.sendShippingDocuments(id, point, buffer, name);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.payment, {
@@ -212,8 +203,7 @@ export default class OrderController
 		const { originalname: name, buffer } = image;
 		const result = await this.orderService.sendDocuments(id, buffer, name, 'payment');
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.contract, {
@@ -232,8 +222,7 @@ export default class OrderController
 		const { originalname: name, buffer } = image;
 		const result = await this.orderService.sendDocuments(id, buffer, name, 'contract');
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.receipt, {
@@ -252,7 +241,6 @@ export default class OrderController
 		const { originalname: name, buffer } = image;
 		const result = await this.orderService.sendDocuments(id, buffer, name, 'contract');
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

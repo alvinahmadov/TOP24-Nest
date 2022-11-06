@@ -15,6 +15,7 @@ import {
 	IOfferFilter,
 	IUserPayload
 }                              from '@common/interfaces';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { DefaultBoolPipe }     from '@api/pipes';
@@ -47,8 +48,7 @@ export default class OfferController
 	) {
 		const result = await this.offerService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
@@ -61,8 +61,7 @@ export default class OfferController
 	) {
 		const result = await this.offerService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
@@ -76,8 +75,7 @@ export default class OfferController
 	) {
 		const result = await this.offerService.getById(id, full);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -92,8 +90,7 @@ export default class OfferController
 	) {
 		const result = await this.offerService.update(orderId, driverId, dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.order, {
@@ -108,8 +105,7 @@ export default class OfferController
 	) {
 		let result = await this.offerService.getDrivers(orderId, listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.driver, {
@@ -124,8 +120,7 @@ export default class OfferController
 	) {
 		let result = await this.offerService.getOrders(driverId, listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.transport, {
@@ -140,8 +135,7 @@ export default class OfferController
 	) {
 		const result = await this.offerService.getTransports(orderId, listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -154,8 +148,7 @@ export default class OfferController
 	) {
 		const result = await this.offerService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.accept, {
@@ -171,8 +164,7 @@ export default class OfferController
 		const { role } = user;
 		const result = await this.offerService.accept(orderId, driverId, role);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.decline, {
@@ -189,8 +181,7 @@ export default class OfferController
 		const { role } = user;
 		const result = await this.offerService.decline(orderId, driverId, reason, role);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.sendList, {
@@ -206,8 +197,7 @@ export default class OfferController
 		const { drivers } = dto;
 		const result = await this.offerService.sendToDrivers(orderId, drivers, full);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.send, {
@@ -222,7 +212,6 @@ export default class OfferController
 	) {
 		const result = await this.offerService.sendToDriver(orderId, driverId, dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }
