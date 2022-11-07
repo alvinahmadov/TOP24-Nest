@@ -1155,7 +1155,7 @@ export interface IPayment
 	 * Url to the main state registration
 	 * number of an individual entrepreneur scan.
 	 * */
-	ogrnipLink?: string;
+	ogrnipPhotoLink?: string;
 	/**
 	 * Cargo company giro transfer account number.
 	 *
@@ -1303,7 +1303,7 @@ export interface ITransport
 	/**
 	 * Number of cargo pallets that transport is available to carry.
 	 * */
-	pallet?: number;
+	pallets?: number;
 	/**
 	 * Transport risk class for cargo.
 	 * 
