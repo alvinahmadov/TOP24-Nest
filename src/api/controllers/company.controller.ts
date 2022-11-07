@@ -528,7 +528,7 @@ export default class CompanyController
 						id:       company.payment.id,
 						name:     destination,
 						buffer,
-						linkName: 'ogrnipLink',
+						linkName: 'ogrnipPhotoLink',
 						bucketId: Bucket.COMPANY
 					}
 				);

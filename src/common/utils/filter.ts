@@ -114,7 +114,7 @@ export function filterTransports(
 		               (trailer?.weight ?? 0),
 			volume = (transport.volumeExtra > 0 ? transport.volumeExtra : transport.volume) +
 			         (trailer?.volume ?? 0),
-			pallets = (transport.pallet ?? 0) + (trailer?.pallet ?? 0);
+			pallets = (transport.pallets ?? 0) + (trailer?.pallets ?? 0);
 
 		let height = transport.height,
 			width = transport.width,
@@ -153,7 +153,7 @@ export function filterTransports(
 
 		transport.weight += trailer?.weight ?? 0;
 		transport.volume += trailer?.volume ?? 0;
-		transport.pallet += trailer?.pallet ?? 0;
+		transport.pallets += trailer?.pallets ?? 0;
 
 		return transport;
 	};

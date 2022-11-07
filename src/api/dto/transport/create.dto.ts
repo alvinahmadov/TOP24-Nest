@@ -128,7 +128,7 @@ export default class TransportCreateDto
 	@IsBoolean()
 	isDedicated?: boolean = false;
 
-	@ApiProperty(prop.pallet)
+	@ApiProperty(prop.pallets)
 	@IsInt()
 	pallets?: number = 0;
 

@@ -74,10 +74,10 @@ export default class Payment
 	@StringColumn()
 	bankBic: string;
 
-	@ApiProperty(prop.ogrnipLink)
+	@ApiProperty(prop.ogrnipPhotoLink)
 	@IsUrl
 	@UrlColumn()
-	ogrnipLink?: string;
+	ogrnipPhotoLink?: string;
 
 	@ApiProperty(prop.info)
 	@StringColumn()
@@ -97,6 +97,6 @@ export default class Payment
 		data.fields[PAYMENT.CORRESPONDENT_ACCOUNT] = this.correspondentAccount ?? '';
 		data.fields[PAYMENT.CURRENT_ACCOUNT] = this.currentAccount ?? '';
 		data.fields[PAYMENT.OGRNIP] = this.ogrnip;
-		data.fields[PAYMENT.OGRNIP_LINK] = this.ogrnipLink ?? '';
+		data.fields[PAYMENT.OGRNIP_LINK] = this.ogrnipPhotoLink ?? '';
 	}
 }

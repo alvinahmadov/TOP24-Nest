@@ -106,7 +106,7 @@ export default class TransportRepository
 						           .between('length', lengthMin, lengthMax)
 						           .between('width', widthMin, widthMax)
 						           .between('height', heightMin, heightMax)
-						           .lteOrNull('pallet', pallets)
+						           .lteOrNull('pallets', pallets)
 						           .iLike('payload', payload)
 						           .inArray('type', types)
 						           .eq('status', status)

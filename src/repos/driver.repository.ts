@@ -148,7 +148,7 @@ export default class DriverRepository
 									              .between('length', filter?.lengthMin, filter?.lengthMax)
 									              .between('width', filter?.widthMin, filter?.widthMax)
 									              .between('height', filter?.heightMin, filter?.heightMax)
-									              .gte('pallet', filter?.pallets)
+									              .gte('pallets', filter?.pallets)
 									              .iLike('payload', filter?.payload)
 									              .inArray('type', filter?.types, true)
 									              .eq('status', filter?.status)

@@ -49,9 +49,9 @@ export default class PaymentCreateDto
 	@IsString()
 	bankBic: string;
 
-	@ApiProperty(prop.ogrnipLink)
+	@ApiProperty(prop.ogrnipPhotoLink)
 	@IsString()
-	ogrnipLink?: string;
+	ogrnipPhotoLink?: string;
 
 	@ApiProperty(prop.info)
 	@IsString()
