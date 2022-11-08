@@ -29,7 +29,7 @@ import {
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
-import { AccessGuard }         from '@api/security';
+// import { AccessGuard }         from '@api/security';
 import { AddressService }      from '@api/services';
 import { StaticController }    from './controller';
 
@@ -54,7 +54,7 @@ export default class ReferenceController
 	}
 
 	@ApiRoute(routes.address, {
-		guards:   [AccessGuard],
+		// guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getAddress(
@@ -67,7 +67,7 @@ export default class ReferenceController
 	}
 
 	@ApiRoute(routes.addresses, {
-		guards:   [AccessGuard],
+		// guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getAddresses(
@@ -86,7 +86,7 @@ export default class ReferenceController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [AccessGuard],
+		// guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async filterAddresses(
@@ -100,7 +100,7 @@ export default class ReferenceController
 	}
 
 	@ApiRoute(routes.fixtures, {
-		guards:   [AccessGuard],
+		// guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getFixtures(@Res() response: ex.Response) {
@@ -118,7 +118,7 @@ export default class ReferenceController
 	}
 
 	@ApiRoute(routes.loadingTypes, {
-		guards:   [AccessGuard],
+		// guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getLoadingTypes(@Res() response: ex.Response) {
@@ -147,7 +147,7 @@ export default class ReferenceController
 	}
 
 	@ApiRoute(routes.payloads, {
-		guards:   [AccessGuard],
+		// guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getPayloads(@Res() response: ex.Response) {
@@ -165,7 +165,7 @@ export default class ReferenceController
 	}
 
 	@ApiRoute(routes.paymentTypes, {
-		guards:   [AccessGuard],
+		// guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getPaymentTypes(
@@ -185,7 +185,7 @@ export default class ReferenceController
 	}
 
 	@ApiRoute(routes.riskClasses, {
-		guards:   [AccessGuard],
+		// guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getRiskClasses(@Res() response: ex.Response) {
@@ -203,7 +203,7 @@ export default class ReferenceController
 	}
 
 	@ApiRoute(routes.transportTypes, {
-		guards:   [AccessGuard],
+		// guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getTransportTypes(@Res() response: ex.Response) {
