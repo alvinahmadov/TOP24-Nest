@@ -25,6 +25,8 @@ export default class DriverRepository
 	implements IRepository {
 	protected override readonly model = Driver;
 	protected override include: Includeable[] = [
+		{ model: CargoCompany },
+		{ model: CargoInnCompany },
 		{ model: Order },
 		{
 			model:   Transport,
