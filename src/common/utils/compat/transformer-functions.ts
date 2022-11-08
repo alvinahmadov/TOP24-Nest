@@ -502,7 +502,7 @@ export function transformToTransport(data: transformers.ITransportTransformer)
 	return null;
 }
 
-export function transformEntity<T extends IModel, E extends EntityModel<T>>(entity: E): IModel {
+export function transformEntity<T extends IModel, E extends EntityModel<T>>(entity: E) {
 	if(entity instanceof models.Address) {
 		return transformAddress(entity);
 	}
@@ -536,7 +536,7 @@ export function transformEntity<T extends IModel, E extends EntityModel<T>>(enti
 	return entity;
 }
 
-export function transformEntities<T extends IModel, E extends EntityModel<T>>(entities: E[]): IModel[] {
+export function transformEntities<T extends IModel, E extends EntityModel<T>>(entities: E[]) {
 	if(entities && entities.length > 0) {
 		return entities.map(transformEntity);
 	}
