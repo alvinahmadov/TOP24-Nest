@@ -2,12 +2,12 @@ import {
 	Request,
 	Response,
 	NextFunction
-}                          from 'express';
+} from 'express';
 import {
 	Injectable,
 	NestMiddleware,
 	Logger as NestLogger
-}                          from '@nestjs/common';
+} from '@nestjs/common';
 
 @Injectable()
 export default class LoggerMiddleware
@@ -20,22 +20,18 @@ export default class LoggerMiddleware
 
 	public use(request: Request, response: Response, next: NextFunction) {
 		const { ip, method, path: url, body, query, params } = request;
+		let route: string;
 		const isEmptyObject = (obj: any) => !Object.entries(obj).length;
 
-		response.on('finish', () =>
-		{
-			const { statusCode } = response;
-			
-			const res: any = {};
-			
-			if(!isEmptyObject(body)) res['body'] = body;
-			if(!isEmptyObject(query)) res['query'] = query;
-			if(!isEmptyObject(params)) res['params'] = Object.values(params);
-			
-			this.logger.log(
-				`${method} ${url} ${statusCode} - ${ip}`, { ...res }
-			);
-		});
+		const res: any = {};
+
+		if(!isEmptyObject(body)) res['body'] = body;
+		if(!isEmptyObject(query)) res['query'] = query;
+		if(!isEmptyObject(params)) route = params[0];
+
+		this.logger.log(
+			`${method} ${url}${route} - ${ip}`, { ...res }
+		);
 
 		next();
 	}
