@@ -578,7 +578,7 @@ export const routeConfig: TApiRouteList = {
 				}
 			},
 			transports:     {
-				path:   'transports',
+				path:   '/transports/:id',
 				method: RequestMethod.POST,
 				api:    {
 					operation: {
