@@ -37,8 +37,10 @@ import {
 }                              from '@common/utils';
 import {
 	transformToCargoCompany,
-	transformToCargoInnCompany
-}                              from '@common/utils/compat/transformer-functions';
+	transformToCargoInnCompany,
+	transformToCompanyFilter,
+	transformToCompanyInnFilter
+}                              from '@common/utils/compat';
 import {
 	CargoCompany,
 	CargoInnCompany,
@@ -49,8 +51,6 @@ import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	CompanyCreatePipe,
 	CompanyUpdatePipe,
-	CargoCompanyFilterPipe,
-	CargoInnCompanyFilterPipe,
 	DefaultBoolPipe
 }                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
@@ -92,14 +92,13 @@ export default class CompanyController
 	public override async filter(
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body(CargoCompanyFilterPipe, CargoInnCompanyFilterPipe)
-			filter?: dto.CompanyFilter | dto.CompanyInnFilter
+		@Body() filter?: any
 	) {
 		const { data: cargoCompanies } = await this.cargoService.getList(
-			listFilter, filter as dto.CompanyFilter
+			listFilter, transformToCompanyFilter(filter) as dto.CompanyFilter
 		);
 		const { data: cargoinnCompanies } = await this.cargoInnService.getList(
-			listFilter, filter as dto.CompanyInnFilter
+			listFilter, transformToCompanyInnFilter(filter) as dto.CompanyInnFilter
 		);
 		const message: string = TRANSLATIONS['LIST'];
 
