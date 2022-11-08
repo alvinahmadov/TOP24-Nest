@@ -34,7 +34,7 @@ const generateTransport = async(driver?: dto.DriverCreateDto): Promise<dto.Trans
 		model:                faker.vehicle.model(),
 		registrationNumber:   generateRegistrationNumber(),
 		prodYear:             faker.datatype.number({ min: 2010, max: 2021 }),
-		payload:              faker.helpers.arrayElement(common.PAYLOADS),
+		payload:              faker.helpers.arrayElement(common.TRANSPORT_PAYLOADS),
 		payloadExtra:         faker.datatype.boolean(),
 		fixtures:             faker.helpers.arrayElements(common.FIXTURES, 3),
 		riskClasses:          faker.helpers.arrayElements(

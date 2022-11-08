@@ -24,7 +24,7 @@ export const BASE_URL = `${SCHEME}${HOST}:${PORT}/api`;
 export const ADMIN_HOSTLOGIN = `${BASE_URL}/admin/hostlogin`;
 
 /**@ignore*/
-export const PAYLOADS: string[] = Reference.PAYLOADS.map(payload => payload.VALUE);
+export const TRANSPORT_PAYLOADS: string[] = Reference.TRANSPORT_PAYLOADS.map(payload => payload.VALUE);
 
 /**@ignore*/
 export const PAYMENT_TYPES: string[] = Reference.PAYMENT_TYPES.map(paymentType => paymentType.VALUE);
