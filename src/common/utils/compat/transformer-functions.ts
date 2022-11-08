@@ -8,6 +8,41 @@ import EntityModel       from '@models/entity-model';
 import * as transformers from './transformer-types';
 import * as helpers      from './helpers';
 
+function transformAddress(address: models.Address)
+	: transformers.IAddressTransformer {
+	if(address) {
+		return {
+			id:               address.getDataValue('id'),
+			area:             address.getDataValue('area'),
+			area_type:        address.getDataValue('areaType'),
+			capital_marker:   address.getDataValue('capitalMarker'),
+			city:             address.getDataValue('city'),
+			city_type:        address.getDataValue('cityType'),
+			country:          address.getDataValue('country'),
+			federal_district: address.getDataValue('federalDistrict'),
+			fias_id:          address.getDataValue('fiasId'),
+			fias_level:       address.getDataValue('fiasLevel'),
+			kladr_id:         address.getDataValue('kladrId'),
+			latitude:         address.getDataValue('latitude'),
+			longitude:        address.getDataValue('longitude'),
+			okato:            address.getDataValue('okato'),
+			oktmo:            address.getDataValue('oktmo'),
+			postal_code:      address.getDataValue('postalCode'),
+			region:           address.getDataValue('region'),
+			region_type:      address.getDataValue('regionType'),
+			settlement:       address.getDataValue('settlement'),
+			settlement_type:  address.getDataValue('settlementType'),
+			street:           address.getDataValue('street'),
+			tax_office:       address.getDataValue('taxOffice'),
+			timezone:         address.getDataValue('timezone'),
+			createdAt:        address.getDataValue('createdAt'),
+			updatedAt:        address.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
 function transformAdmin(admin: models.Admin)
 	: transformers.IAdminTransformer {
 	if(admin) {
@@ -468,7 +503,10 @@ export function transformToTransport(data: transformers.ITransportTransformer)
 }
 
 export function transformEntity<T extends IModel, E extends EntityModel<T>>(entity: E): IModel {
-	if(entity instanceof models.Admin) {
+	if(entity instanceof models.Address) {
+		return transformAddress(entity);
+	}
+	else if(entity instanceof models.Admin) {
 		return transformAdmin(entity);
 	}
 	else if(entity instanceof models.CargoCompany) {

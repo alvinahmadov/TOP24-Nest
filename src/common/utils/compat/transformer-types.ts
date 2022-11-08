@@ -44,6 +44,32 @@ export interface IAdminTransformer
 	confirmed?: boolean;
 }
 
+export interface IAddressTransformer
+	extends IModel {
+		country: string;
+		postal_code?: string;
+		federal_district?: string;
+		region_type?: string;
+		region?: string;
+		area_type?: string;
+		area?: string;
+		city_type?: string;
+		city?: string;
+		settlement_type?: string;
+		settlement?: string;
+		street?: string;
+		kladr_id?: string;
+		fias_id?: string;
+		fias_level?: string;
+		capital_marker?: string;
+		okato?: string;
+		oktmo?: string;
+		tax_office?: string;
+		timezone?: string;
+		latitude?: number;
+		longitude?: number;
+}
+
 /**
  * @see ICompany
  * */
