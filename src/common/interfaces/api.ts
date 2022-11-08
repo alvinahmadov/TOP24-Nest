@@ -174,7 +174,7 @@ export interface IApiRouteMetadata<M = any> {
 	/**
 	 * Api path to fetch
 	 * */
-	path: string;
+	path: string | string[];
 
 	/**
 	 * Method type to use for api endpoint
