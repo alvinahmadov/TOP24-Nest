@@ -26,9 +26,9 @@ export function dateValidator(dateString: string) {
 	return date;
 }
 
-export function reformatDateString<T extends IModel>(
+export function reformatDateString<T extends IModel, K = keyof T>(
 	data: TUpdateAttribute<T>,
-	keys: (keyof T)[]
+	keys: K[]
 ) {
 	for(const key of keys) {
 		if(key in data) {
