@@ -108,9 +108,9 @@ export default class ReferenceController
 		                          .sort(compareByValFn)
 		                          .map(lowerCaseFn);
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       fixtures,
+			data:       { extraFixtures: fixtures },
 			message:    formatArgs(TRANSLATIONS['FIXTURES'], fixtures.length)
 		};
 
@@ -155,9 +155,9 @@ export default class ReferenceController
 		                          .sort(compareByValFn)
 		                          .map(lowerCaseFn);
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       payloads,
+			data:       { payloads },
 			message:    formatArgs(TRANSLATIONS['PAYLOAD_TYPES'], payloads.length)
 		};
 
@@ -175,9 +175,9 @@ export default class ReferenceController
 		                              .sort(compareByValFn)
 		                              .map(lowerCaseFn);
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       paymentTypes,
+			data:       { paymentTypes },
 			message:    formatArgs(TRANSLATIONS['PAYMENT_TYPES'], paymentTypes.length)
 		};
 
@@ -193,9 +193,9 @@ export default class ReferenceController
 		                             .sort(compareByValFn)
 		                             .map(lowerCaseFn);
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       riskClasses,
+			data:       { risk_classes: riskClasses },
 			message:    formatArgs(TRANSLATIONS['RISK_CLASSES'], riskClasses.length)
 		};
 
@@ -211,9 +211,9 @@ export default class ReferenceController
 		                                .sort(compareByValFn)
 		                                .map(lowerCaseFn);
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       transportTypes,
+			data:       { transportTypes, auto_types: transportTypes },
 			message:    formatArgs(TRANSLATIONS['TRANSPORT_TYPES'], transportTypes.length)
 		};
 
