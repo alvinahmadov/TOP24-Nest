@@ -1,29 +1,10 @@
-import {
-	IAdmin,
-	ICargoCompany,
-	ICargoInnCompany,
-	IDriver,
-	IImage, IModel,
-	IOffer,
-	IOrder,
-	IPayment,
-	ITransport
-} from '@common/interfaces';
-import {
-	IAdminTransformer,
-	ICargoCompanyTransformer,
-	ICargoInnCompanyTransformer,
-	IDriverTransformer,
-	IImageTransformer,
-	IOfferTransformer,
-	IOrderTransformer,
-	IPaymentTransformer,
-	ITransportTransformer
-} from '@common/utils/compat/transformer-types';
+import * as attributes   from '@common/interfaces/attributes';
+import * as transformers from './transformer-types';
 
-type TOmitTimestamp<T extends IModel> = Omit<T, 'createdAt' | 'updatedAt'>
+type TOmitTimestamp<T extends attributes.IModel> = Omit<T, 'createdAt' | 'updatedAt'>
 
-export const translateAdmin = (data: IAdminTransformer): TOmitTimestamp<IAdmin> =>
+export const translateAdmin = (data: transformers.IAdminTransformer)
+	: TOmitTimestamp<attributes.IAdmin> =>
 	({
 		id:    data?.id,
 		name:  data?.name,
@@ -32,7 +13,8 @@ export const translateAdmin = (data: IAdminTransformer): TOmitTimestamp<IAdmin> 
 		role:  data?.type
 	});
 
-export const translateCargoCompany = (data: ICargoCompanyTransformer): TOmitTimestamp<ICargoCompany> =>
+export const translateCargoCompany = (data: transformers.ICargoCompanyTransformer)
+	: TOmitTimestamp<attributes.ICargoCompany> =>
 	({
 		id:                          data?.id,
 		name:                        data?.name,
@@ -70,7 +52,8 @@ export const translateCargoCompany = (data: ICargoCompanyTransformer): TOmitTime
 		contactThird:                data?.contact_third
 	});
 
-export const translateCargoInnCompany = (data: ICargoInnCompanyTransformer): TOmitTimestamp<ICargoInnCompany> =>
+export const translateCargoInnCompany = (data: transformers.ICargoInnCompanyTransformer)
+	: TOmitTimestamp<attributes.ICargoInnCompany> =>
 	({
 		id:                          data?.id,
 		name:                        data?.name,
@@ -105,7 +88,8 @@ export const translateCargoInnCompany = (data: ICargoInnCompanyTransformer): TOm
 		passportSelfieLink:          data?.passport_selfie_link
 	});
 
-export const translateDriver = (data: IDriverTransformer): TOmitTimestamp<IDriver> =>
+export const translateDriver = (data: transformers.IDriverTransformer)
+	: TOmitTimestamp<attributes.IDriver> =>
 	({
 		id:                          data?.id,
 		cargoId:                     data?.cargoId,
@@ -148,7 +132,8 @@ export const translateDriver = (data: IDriverTransformer): TOmitTimestamp<IDrive
 		fullName:                    data?.fullName
 	});
 
-export const translateImage = (data: IImageTransformer): TOmitTimestamp<IImage> =>
+export const translateImage = (data: transformers.IImageTransformer)
+	: TOmitTimestamp<attributes.IImage> =>
 	({
 		id:          data?.id,
 		cargoId:     data?.cargoId,
@@ -157,7 +142,8 @@ export const translateImage = (data: IImageTransformer): TOmitTimestamp<IImage> 
 		url:         data?.link
 	});
 
-export const translateOffer = (data: IOfferTransformer): TOmitTimestamp<IOffer> =>
+export const translateOffer = (data: transformers.IOfferTransformer)
+	: TOmitTimestamp<attributes.IOffer> =>
 	({
 		id:          data?.id,
 		orderId:     data?.orderId,
@@ -169,7 +155,8 @@ export const translateOffer = (data: IOfferTransformer): TOmitTimestamp<IOffer> 
 		bidComment:  data?.comments
 	});
 
-export const translateOrder = (data: IOrderTransformer): TOmitTimestamp<IOrder> =>
+export const translateOrder = (data: transformers.IOrderTransformer)
+	: TOmitTimestamp<attributes.IOrder> =>
 	({
 		id:                       data?.id,
 		cargoId:                  data?.cargoId,
@@ -213,7 +200,8 @@ export const translateOrder = (data: IOrderTransformer): TOmitTimestamp<IOrder> 
 		contractPhotoLink:        data?.contract_link
 	});
 
-export const translatePayment = (data: IPaymentTransformer): TOmitTimestamp<IPayment> =>
+export const translatePayment = (data: transformers.IPaymentTransformer)
+	: TOmitTimestamp<attributes.IPayment> =>
 	({
 		id:                   data?.id,
 		cargoId:              data?.cargoId,
@@ -227,7 +215,8 @@ export const translatePayment = (data: IPaymentTransformer): TOmitTimestamp<IPay
 		info:                 data?.info
 	});
 
-export const translateTransport = (data: ITransportTransformer): TOmitTimestamp<ITransport> =>
+export const translateTransport = (data: transformers.ITransportTransformer)
+	: TOmitTimestamp<attributes.ITransport> =>
 	({
 		id:                   data?.id,
 		cargoId:              data?.cargoId,
