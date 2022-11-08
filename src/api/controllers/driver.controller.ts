@@ -138,7 +138,7 @@ export default class DriverController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
@@ -157,7 +157,7 @@ export default class DriverController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
@@ -176,7 +176,7 @@ export default class DriverController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})

@@ -144,7 +144,7 @@ export default class TransportController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['application/json']
 		}
 	})
@@ -163,7 +163,7 @@ export default class TransportController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['application/json']
 		}
 	})
@@ -182,7 +182,7 @@ export default class TransportController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['application/json']
 		}
 	})
