@@ -1,5 +1,6 @@
 import { Injectable }      from '@nestjs/common';
-import { setOrderSent }    from '@config/env';
+import env,
+{ setOrderSent }           from '@config/env';
 import {
 	DriverStatus,
 	OfferStatus,
@@ -19,8 +20,6 @@ import {
 	TAffectedRows,
 	TAsyncApiResponse,
 	TOfferDriver,
-	TOfferOrder,
-	TOfferTransport,
 	TSentOffer
 }                          from '@common/interfaces';
 import {
@@ -28,6 +27,7 @@ import {
 	formatArgs,
 	getTranslation
 }                          from '@common/utils';
+import { transformEntity } from '@common/utils/compat';
 import {
 	Driver,
 	Offer,
@@ -151,7 +151,7 @@ export default class OfferService
 						}
 					}
 				);
-				
+
 				if(dto.orderStatus === OrderStatus.PENDING) {
 					dto.status = OfferStatus.DECLINED;
 				}
@@ -206,30 +206,37 @@ export default class OfferService
 		driverId: string,
 		listFilter?: IListFilter,
 		filter?: OfferFilter & OrderFilter
-	): TAsyncApiResponse<TOfferOrder[]> {
+	) {
 		const offers = await this.repository.getDriverOrders(driverId, listFilter, filter);
-		const orders: TOfferOrder[] =
+		const orders =
 			await offers?.filter(offer => offer !== null && offer.order !== null)
 			            ?.map(
-				            offer => ({
-					            ...(offer.order.get({ plain: true, clone: false })),
-					            transports: offer.transports
-				            })
+				            (offer) =>
+				            {
+					            return {
+						            ...(
+							            env.api.compatMode
+							            ? transformEntity(offer.order)
+							            : offer.order.get({ plain: true, clone: false })
+						            ),
+						            transports: offer.transports
+					            };
+				            }
 			            );
 
 		return {
 			statusCode: 200,
 			data:       orders,
 			message:    formatArgs(OFFER_TRANSLATIONS['ORDERS'], orders.length)
-		} as IApiResponse<TOfferOrder[]>;
+		};
 	}
 
 	public async getTransports(
 		orderId: string,
 		listFilter: IListFilter,
 		filter?: Pick<IOfferFilter, 'transportStatus'> & DriverFilter
-	): TAsyncApiResponse<TOfferTransport[]> {
-		const transports: TOfferTransport[] = [];
+	): TAsyncApiResponse<any[]> {
+		const transports: any[] = [];
 		const offers = await this.repository.getOrderTransports(orderId, listFilter, filter);
 
 		offers.forEach(
@@ -253,13 +260,22 @@ export default class OfferService
 
 					transports.push(
 						...mainTransports.map(
-							t => ({
-								...t.get({ plain: true, clone: true }),
-								offerStatus: offer.status,
-								bidPrice:    offer.bidPrice,
-								bidPriceVat: offer.bidPriceVat,
-								bidComment:  offer.bidComment
-							})
+							t =>
+								(env.api.compatMode
+								 ? {
+										...transformEntity(t),
+										offer_status:  offer.status,
+										bid_price:     offer.bidPrice,
+										bid_price_max: offer.bidPriceVat,
+										comments:      offer.bidComment
+									}
+								 : {
+										...t.get({ plain: true, clone: true }),
+										offerStatus: offer.status,
+										bidPrice:    offer.bidPrice,
+										bidPriceVat: offer.bidPriceVat,
+										bidComment:  offer.bidComment
+									})
 						)
 					);
 				}
@@ -270,7 +286,7 @@ export default class OfferService
 			statusCode: 200,
 			data:       transports,
 			message:    formatArgs(OFFER_TRANSLATIONS['TRANSPORTS'], transports.length)
-		} as IApiResponse<TOfferTransport[]>;
+		};
 	}
 
 	public async sendToDriver(
