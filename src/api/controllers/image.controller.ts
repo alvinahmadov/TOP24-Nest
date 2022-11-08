@@ -14,6 +14,7 @@ import { ApiRoute }            from '@common/decorators';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
+import { ImagePipe }           from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
 	CargoGuard,
@@ -78,7 +79,7 @@ export default class ImageController
 		statuses: [HttpStatus.OK]
 	})
 	public override async create(
-		@Body() dto: dto.ImageCreateDto,
+		@Body(ImagePipe) dto: dto.ImageCreateDto,
 		@Res() response: ex.Response
 	): Promise<ex.Response> {
 		const result = await this.imageService.create(dto);
@@ -92,7 +93,7 @@ export default class ImageController
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body() dto: dto.ImageUpdateDto,
+		@Body(ImagePipe) dto: dto.ImageUpdateDto,
 		@Res() response: ex.Response
 	) {
 		let result = await this.imageService.update(id, dto);
