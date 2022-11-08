@@ -96,7 +96,9 @@ export default class AuthService
 						const { id } = company;
 						const accessToken = this.createAccess({ id, role: company.role });
 						const refreshToken = this.createRefresh({ id, role: company.role });
-						company = await repository.update(id, { verify: '', confirmed: true });
+						company.verify = null;
+						company.confirmed = true;
+						await company.save({ fields: ['verify', 'confirmed'] });
 
 						return {
 							statusCode: 200,
