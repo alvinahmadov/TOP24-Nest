@@ -19,5 +19,9 @@ import EventsModule         from './events.module';
         })
 export default class RESTModule
 	implements NestModule {
-	configure = (consumer: MiddlewareConsumer) => consumer.apply(LoggerMiddleware);
+	configure(consumer: MiddlewareConsumer): void {
+		consumer.apply(LoggerMiddleware)
+		        .forRoutes('*');
+	}
 }
+
