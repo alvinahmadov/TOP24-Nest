@@ -1,5 +1,5 @@
 import {
-	forwardRef, 
+	forwardRef,
 	Inject,
 	Injectable
 }                            from '@nestjs/common';
