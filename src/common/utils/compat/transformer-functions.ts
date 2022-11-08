@@ -582,10 +582,6 @@ export function transformApiResult<T>(result: IApiResponse<T>)
 			}
 		}
 
-		return {
-			status:  result.statusCode,
-			message: result.message,
-			...(result.data ?? {})
-		};
+		return result.data;
 	}
 }
