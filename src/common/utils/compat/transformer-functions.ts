@@ -175,7 +175,7 @@ function transformCargoInnCompany(company: models.CargoInnCompany)
 	return null;
 }
 
-export function transformToCargoInnCompany(data: Partial<transformers.ICargoInnCompanyTransformer>)
+export function transformToCargoInnCompany(data: transformers.ICargoInnCompanyTransformer)
 	: attributes.ICargoInnCompany {
 	if(data) {
 		return {
@@ -243,7 +243,7 @@ function transformDriver(driver: models.Driver)
 	return null;
 }
 
-export function transformToDriver(data: Partial<transformers.IDriverTransformer>)
+export function transformToDriver(data: transformers.IDriverTransformer)
 	: attributes.IDriver {
 	if(data) {
 		return {
@@ -272,7 +272,7 @@ function transformImage(image: models.Image)
 	return null;
 }
 
-export function transformToImage(data: Partial<transformers.IImageTransformer>)
+export function transformToImage(data: transformers.IImageTransformer)
 	: attributes.IImage {
 	if(data) {
 		return {
@@ -308,7 +308,7 @@ function transformOffer(offer: models.Offer)
 	return null;
 }
 
-export function transformToOffer(data: Partial<transformers.IOfferTransformer>)
+export function transformToOffer(data: transformers.IOfferTransformer)
 	: attributes.IOffer {
 	if(data) {
 		return {
