@@ -128,7 +128,7 @@ export const translateDriver = (data: transformers.IDriverTransformer)
 		currentAddress:              data?.current_address,
 		payloadCity:                 data?.payload_city,
 		payloadRegion:               data?.payload_region,
-		payloadDate:                 new Date(data?.payload_date),
+		payloadDate:                 data?.payload_date,
 		fullName:                    data?.fullName
 	});
 
