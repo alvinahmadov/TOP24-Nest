@@ -21,7 +21,9 @@ import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
 	OfferPipe,
-	OfferFilterPipe
+	OfferFilterPipe,
+	OfferDriverFilterPipe,
+	OfferOrderFilterPipe
 }                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import { AccessGuard }         from '@api/security';
@@ -104,7 +106,7 @@ export default class OfferController
 	public async getDrivers(
 		@Param('orderId', ParseUUIDPipe) orderId: string,
 		@Res() response: ex.Response,
-		@Body() filter?: dto.OfferFilter & dto.DriverFilter,
+		@Body(OfferDriverFilterPipe) filter?: dto.OfferFilter & dto.DriverFilter,
 		@Query() listFilter?: dto.ListFilter
 	) {
 		let result = await this.offerService.getDrivers(orderId, listFilter, filter);
@@ -119,7 +121,7 @@ export default class OfferController
 	public async getOrders(
 		@Param('driverId', ParseUUIDPipe) driverId: string,
 		@Res() response: ex.Response,
-		@Body() filter?: dto.OfferFilter & dto.OrderFilter,
+		@Body(OfferOrderFilterPipe) filter?: dto.OfferFilter & dto.OrderFilter,
 		@Query() listFilter?: dto.ListFilter
 	) {
 		let result = await this.offerService.getOrders(driverId, listFilter, filter);
@@ -135,7 +137,7 @@ export default class OfferController
 		@Param('orderId', ParseUUIDPipe) orderId: string,
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: Pick<IOfferFilter, 'transportStatus'> & dto.DriverFilter
+		@Body(OfferDriverFilterPipe) filter?: Pick<IOfferFilter, 'transportStatus'> & dto.DriverFilter
 	) {
 		const result = await this.offerService.getTransports(orderId, listFilter, filter);
 
