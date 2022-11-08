@@ -116,6 +116,19 @@ export default class AdminController
 		return sendResponse(response, result);
 	}
 
+	@ApiRoute(routes.create, {
+		guards:   [AdminGuard],
+		statuses: [HttpStatus.CREATED, HttpStatus.BAD_REQUEST]
+	})
+	public override async create(
+		@Res() response: ex.Response,
+		@Body(UserPipe) dto: dto.AdminCreateDto
+	) {
+		const result = await this.adminService.create(dto);
+
+		return sendResponse(response, result);
+	}
+
 	@ApiRoute(routes.update, {
 		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
@@ -138,19 +151,6 @@ export default class AdminController
 			}
 			result = await this.adminService.update(id, dto);
 		}
-
-		return sendResponse(response, result);
-	}
-
-	@ApiRoute(routes.create, {
-		guards:   [AdminGuard],
-		statuses: [HttpStatus.CREATED, HttpStatus.BAD_REQUEST]
-	})
-	public override async create(
-		@Res() response: ex.Response,
-		@Body(UserPipe) dto: dto.AdminCreateDto
-	) {
-		const result = await this.adminService.create(dto);
 
 		return sendResponse(response, result);
 	}
