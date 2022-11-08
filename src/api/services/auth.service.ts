@@ -83,10 +83,8 @@ export default class AuthService
 		repeat?: boolean
 	): TAsyncApiResponse<ICompanyLoginResponse | ICodeResponse> {
 		if(phone && phone !== '') {
-			let company = await (
-				this.cargoCompanyRepo.getByPhone(phone, true) ||
-				this.cargoCompanyInnRepo.getByPhone(phone, true)
-			);
+			let company = await this.cargoCompanyRepo.getByPhone(phone, true) ??
+			              await this.cargoCompanyInnRepo.getByPhone(phone, true);
 
 			if(company) {
 				const repository = company.type === CompanyType.ORG
