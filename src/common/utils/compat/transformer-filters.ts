@@ -52,24 +52,6 @@ export interface IDriverTransformerFilter
 }
 
 /**
- * @summary Image model filters
- *
- * @see IImage
- * */
-export interface IImageTransformerFilter
-	extends IFilter,
-	        TModelFilter<types.IImageTransformer> {}
-
-/**
- * @summary Payment model filters
- *
- * @see IPayment
- * */
-export interface IPaymentTransformerFilter
-	extends IFilter,
-	        TModelFilter<types.IPaymentTransformer> {}
-
-/**
  * Order model filters
  * */
 export interface IOrderTransformerFilter
@@ -145,30 +127,10 @@ export interface ITransportTransformerFilter
 	status?: TransportStatus;
 }
 
-/**
- * Cargo transport filters
- * */
-export interface ICompanyTransportTransformerFilter
-	extends IFilter,
-	        ITransportTransformerFilter {
-	cargoId?: string;
-	cargoinnId?: string;
-	risk_class?: string;
-	payment_types?: string[];
-	dedicated?: string;
-	directions?: string[];
-	has_driver?: boolean;
-	payload_city?: string;
-	payload_region?: string;
-	payload_date?: Date | string;
-	from_date?: Date | string;
-	to_date?: Date | string;
-}
-
 export function transformToAdminFilter(data: IAdminTransformerFilter)
 	: filters.IAdminFilter {
 	if(data) {
-		return helpers.translateAdmin(data);
+		return helpers.translateAdmin(data as any);
 	}
 
 	return null;
@@ -177,7 +139,7 @@ export function transformToAdminFilter(data: IAdminTransformerFilter)
 export function transformToCompanyFilter(data: ICargoCompanyTransformerFilter)
 	: filters.ICargoCompanyFilter {
 	if(data) {
-		return helpers.translateCargoCompany(data);
+		return helpers.translateCargoCompany(data as any);
 	}
 
 	return null;
@@ -186,7 +148,7 @@ export function transformToCompanyFilter(data: ICargoCompanyTransformerFilter)
 export function transformToCompanyInnFilter(data: ICargoCompanyInnTransformerFilter)
 	: filters.ICargoCompanyInnFilter {
 	if(data) {
-		return helpers.translateCargoInnCompany(data);
+		return helpers.translateCargoInnCompany(data as any);
 	}
 	return null;
 }
@@ -195,7 +157,7 @@ export function transformToDriverFilter(data: IDriverTransformerFilter)
 	: filters.IDriverFilter {
 	if(data) {
 		return {
-			...helpers.translateDriver(data),
+			...helpers.translateDriver(data as any),
 			statuses:    data.statuses,
 			orderStatus: data.order_status
 		};
@@ -207,7 +169,7 @@ export function transformToOfferFilter(data: IOfferTransformerFilter)
 	: filters.IOfferFilter {
 	if(data) {
 		return {
-			...helpers.translateOffer(data),
+			...helpers.translateOffer(data as any),
 			orderStatuses:   data.order_statuses,
 			driverStatus:    data.driver_status,
 			transportStatus: data.transport_status,
@@ -222,7 +184,7 @@ export function transformToOrderFilter(data: IOrderTransformerFilter)
 	: filters.IOrderFilter {
 	if(data) {
 		return {
-			...helpers.translateOrder(data),
+			...helpers.translateOrder(data as any),
 			weightMin:    data.weight_min,
 			weightMax:    data.weight_max,
 			volumeMin:    data.volume_min,
@@ -251,7 +213,7 @@ export function transformToOrderFilter(data: IOrderTransformerFilter)
 export function transformToTransportFilter(data: ITransportTransformerFilter)
 	: filters.ITransportFilter {
 	if(data) {
-		return helpers.translateTransport(data);
+		return helpers.translateTransport(data as any);
 	}
 	return null;
 }
