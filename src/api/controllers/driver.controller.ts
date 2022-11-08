@@ -17,7 +17,10 @@ import { TMulterFile }         from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
-import { DefaultBoolPipe }     from '@api/pipes';
+import {
+	DefaultBoolPipe,
+	DriverPipe
+}                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
 	AccessGuard,
@@ -89,7 +92,7 @@ export default class DriverController
 		statuses: [HttpStatus.CREATED, HttpStatus.BAD_REQUEST]
 	})
 	public override async create(
-		@Body() dto: dto.DriverCreateDto,
+		@Body(DriverPipe) dto: dto.DriverCreateDto,
 		@Res() response: ex.Response
 	) {
 		const result = await this.driverService.create(dto);
@@ -103,7 +106,7 @@ export default class DriverController
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body() dto: dto.DriverUpdateDto,
+		@Body(DriverPipe) dto: dto.DriverUpdateDto,
 		@Res() response: ex.Response
 	) {
 		const { data } = await this.orderService.getByDriver(id);

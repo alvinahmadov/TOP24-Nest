@@ -1,0 +1,751 @@
+import {
+	IApiResponse,
+	IModel, IOrderDestination, IOrderFilter, TOfferDriver
+}                                                                from '@common/interfaces';
+import * as attributes                                           from '@common/interfaces/attributes';
+import * as models                                               from '@models/index';
+import EntityModel                                               from '@models/entity-model';
+import * as transformers                                         from './transformer-types';
+import { LoadingType, OrderStage, OrderStatus, TransportStatus } from '@common/enums';
+import { TOfferDriverTransformer }                               from './transformer-types';
+
+function transformAdmin(admin: models.Admin)
+	: transformers.IAdminTransformer {
+	if(admin) {
+		return {
+			id:        admin.getDataValue('id'),
+			name:      admin.getDataValue('name'),
+			email:     admin.getDataValue('email'),
+			phone:     admin.getDataValue('phone'),
+			type:      admin.getDataValue('role'),
+			confirmed: admin.getDataValue('confirmed'),
+			privilege: admin.getDataValue('privilege'),
+			verify:    admin.getDataValue('verify'),
+			createdAt: admin.getDataValue('createdAt'),
+			updatedAt: admin.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+export function transformToAdmin(data: transformers.IAdminTransformer)
+	: attributes.IAdmin {
+	if(data) {
+		return {
+			id:        data.id,
+			createdAt: data.createdAt,
+			updatedAt: data.updatedAt,
+			name:      data.name,
+			email:     data.email,
+			phone:     data.phone,
+			role:      data.type
+		};
+	}
+
+	return null;
+}
+
+function transformCargoCompany(company: models.CargoCompany)
+	: transformers.ICargoCompanyTransformer {
+	if(company) {
+		return {
+			id:                            company.getDataValue('id'),
+			name:                          company.getDataValue('name'),
+			email:                         company.getDataValue('email'),
+			company_type:                  company.getDataValue('type'),
+			type:                          company.getDataValue('role'),
+			inn:                           company.getDataValue('taxpayerNumber'),
+			shortname:                     company.getDataValue('shortName'),
+			passport_serial_number:        company.getDataValue('passportSerialNumber'),
+			passport_date:                 company.getDataValue('passportGivenDate'),
+			passport_subdivision_code:     company.getDataValue('passportSubdivisionCode'),
+			passport_issued_by:            company.getDataValue('passportIssuedBy'),
+			passport_registration_address: company.getDataValue('passportRegistrationAddress'),
+			crm_id:                        company.getDataValue('crmId'),
+			phone:                         company.getDataValue('phone'),
+			phone_second:                  company.getDataValue('contactPhone'),
+			directions:                    company.getDataValue('directions'),
+			verify:                        company.getDataValue('verify'),
+			nds:                           company.getDataValue('paymentType'),
+			confirmed:                     company.getDataValue('confirmed'),
+			avatar_link:                   company.getDataValue('avatarLink'),
+			passport_photo_link:           company.getDataValue('passportPhotoLink'),
+			info:                          company.getDataValue('info'),
+			status:                        company.getDataValue('status'),
+			kpp:                           company.getDataValue('taxReasonCode'),
+			ogpn:                          company.getDataValue('registrationNumber'),
+			director_order_photo_link:     company.getDataValue('directorOrderPhotoLink'),
+			attorney_sign_link:            company.getDataValue('attorneySignLink'),
+			certificate_photo_link:        company.getDataValue('certificatePhotoLink'),
+			images:                        company.images?.map(transformImage),
+			drivers:                       company.drivers?.map(transformDriver),
+			orders:                        company.orders?.map(transformOrder),
+			payment:                       transformPayment(company.payment),
+			transports:                    company.transports?.map(transformTransport),
+			createdAt:                     company.getDataValue('createdAt'),
+			updatedAt:                     company.getDataValue('updatedAt')
+		};
+	}
+	return null;
+}
+
+export function transformToCargoCompany(data: transformers.ICargoCompanyTransformer)
+	: attributes.ICargoCompany {
+	if(data) {
+		return {
+			id:                          data.id,
+			createdAt:                   data.createdAt,
+			updatedAt:                   data.updatedAt,
+			name:                        data.name,
+			email:                       data.email,
+			type:                        data.company_type,
+			role:                        data.type,
+			taxpayerNumber:              data.inn,
+			passportSerialNumber:        data.passport_serial_number,
+			passportGivenDate:           data.passport_date,
+			passportSubdivisionCode:     data.passport_subdivision_code,
+			passportIssuedBy:            data.passport_issued_by,
+			passportRegistrationAddress: data.passport_registration_address,
+			crmId:                       data.crm_id,
+			phone:                       data.phone,
+			contactPhone:                data.phone_second,
+			directions:                  data.directions,
+			verify:                      data.verify,
+			paymentType:                 data.nds,
+			confirmed:                   data.confirmed,
+			avatarLink:                  data.avatar_link,
+			passportPhotoLink:           data.passport_photo_link,
+			info:                        data.info,
+			status:                      data.status,
+			shortName:                   data.shortname,
+			taxReasonCode:               data.kpp,
+			registrationNumber:          data.ogpn,
+			director:                    data.director,
+			certificatePhotoLink:        data.certificate_photo_link,
+			directorOrderPhotoLink:      data.director_order_photo_link,
+			attorneySignLink:            data.attorney_sign_link,
+			legalAddress:                data.address_first,
+			postalAddress:               data.address_second,
+			contact:                     data.contact_first,
+			contactSecond:               data.contact_second,
+			contactThird:                data.contact_third
+		};
+	}
+
+	return null;
+}
+
+function transformCargoInnCompany(company: models.CargoInnCompany)
+	: transformers.ICargoInnCompanyTransformer {
+	if(company) {
+		return {
+			id:                            company.getDataValue('id'),
+			name:                          company.getDataValue('name'),
+			email:                         company.getDataValue('email'),
+			company_type:                  company.getDataValue('type'),
+			type:                          company.getDataValue('role'),
+			inn:                           company.getDataValue('taxpayerNumber'),
+			middle_name:                   company.getDataValue('patronymic'),
+			surname:                       company.getDataValue('lastName'),
+			birth_date:                    company.getDataValue('birthDate'),
+			passport_serial_number:        company.getDataValue('passportSerialNumber'),
+			passport_date:                 company.getDataValue('passportGivenDate'),
+			passport_subdivision_code:     company.getDataValue('passportSubdivisionCode'),
+			passport_issued_by:            company.getDataValue('passportIssuedBy'),
+			passport_registration_address: company.getDataValue('passportRegistrationAddress'),
+			crm_id:                        company.getDataValue('crmId'),
+			phone:                         company.getDataValue('phone'),
+			phone_second:                  company.getDataValue('contactPhone'),
+			directions:                    company.getDataValue('directions'),
+			verify:                        company.getDataValue('verify'),
+			nds:                           company.getDataValue('paymentType'),
+			confirmed:                     company.getDataValue('confirmed'),
+			avatar_link:                   company.getDataValue('avatarLink'),
+			passport_link:                 company.getDataValue('passportPhotoLink'),
+			passport_selfie_link:          company.getDataValue('passportSelfieLink'),
+			passport_sign_link:            company.getDataValue('passportSignLink'),
+			images:                        company.images?.map(transformImage),
+			drivers:                       company.drivers?.map(transformDriver),
+			orders:                        company.orders?.map(transformOrder),
+			payment:                       transformPayment(company.payment),
+			transports:                    company.transports?.map(transformTransport),
+			createdAt:                     company.getDataValue('createdAt'),
+			updatedAt:                     company.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+export function transformToCargoInnCompany(data: Partial<transformers.ICargoInnCompanyTransformer>)
+	: attributes.ICargoInnCompany {
+	if(data) {
+		return {
+			id:                          data.id,
+			createdAt:                   data.createdAt,
+			updatedAt:                   data.updatedAt,
+			name:                        data.name,
+			email:                       data.email,
+			type:                        data.company_type,
+			role:                        data.type,
+			taxpayerNumber:              data.inn,
+			passportSerialNumber:        data.passport_serial_number,
+			passportGivenDate:           data.passport_date,
+			passportSubdivisionCode:     data.passport_subdivision_code,
+			passportIssuedBy:            data.passport_issued_by,
+			passportRegistrationAddress: data.passport_registration_address,
+			crmId:                       data.crm_id,
+			phone:                       data.phone,
+			contactPhone:                data.phone_second,
+			directions:                  data.directions,
+			verify:                      data.verify,
+			paymentType:                 data.nds,
+			confirmed:                   data.confirmed,
+			avatarLink:                  data.avatar_link,
+			info:                        data.info,
+			status:                      data.status,
+			birthDate:                   data.birth_date,
+			lastName:                    data.surname,
+			patronymic:                  data.middle_name,
+			address:                     '',
+			personalPhone:               data.phone_second,
+			postalAddress:               '',
+			actualAddress:               '',
+			passportPhotoLink:           data.passport_photo_link || data.passport_link,
+			passportSignLink:            data.passport_sign_link,
+			passportSelfieLink:          data.passport_selfie_link
+		};
+	}
+
+	return null;
+}
+
+function transformDriver(driver: models.Driver)
+	: transformers.IDriverTransformer {
+	if(driver) {
+		return {
+			id:                            driver.getDataValue('id'),
+			cargoId:                       driver.getDataValue('cargoId'),
+			cargoinnId:                    driver.getDataValue('cargoinnId'),
+			crm_id:                        driver.getDataValue('crmId'),
+			email:                         driver.getDataValue('email'),
+			name:                          driver.getDataValue('name'),
+			middle_name:                   driver.getDataValue('patronymic'),
+			surname:                       driver.getDataValue('lastName'),
+			is_ready:                      driver.getDataValue('isReady'),
+			date_of_birth:                 driver.getDataValue('birthDate'),
+			current_point:                 driver.getDataValue('currentPoint'),
+			phone:                         driver.getDataValue('phone'),
+			taxpayer_number:               driver.getDataValue('taxpayerNumber'),
+			passport_serial_number:        driver.getDataValue('passportSerialNumber'),
+			passport_date:                 driver.getDataValue('passportDate'),
+			passport_subdivision_code:     driver.getDataValue('passportSubdivisionCode'),
+			passport_issued_by:            driver.getDataValue('passportIssuedBy'),
+			passport_registration_address: driver.getDataValue('passportRegistrationAddress'),
+			passport_link:                 driver.getDataValue('passportPhotoLink'),
+			passport_sign_link:            driver.getDataValue('passportSignLink'),
+			passport_selfie_link:          driver.getDataValue('passportSelfieLink'),
+			avatar_link:                   driver.getDataValue('avatarLink'),
+			registration_address:          driver.getDataValue('registrationAddress'),
+			physical_address:              driver.getDataValue('address'),
+			additional_phone:              driver.getDataValue('phoneSecond'),
+			license:                       driver.getDataValue('licenseNumber'),
+			license_date:                  driver.getDataValue('licenseDate'),
+			link_front:                    driver.getDataValue('licenseFrontLink'),
+			link_back:                     driver.getDataValue('licenseBackLink'),
+			info:                          driver.getDataValue('info'),
+			status:                        driver.getDataValue('status'),
+			operation:                     driver.getDataValue('operation'),
+			payload_city:                  driver.getDataValue('payloadCity'),
+			payload_region:                driver.getDataValue('payloadRegion'),
+			payload_date:                  driver.getDataValue('payloadDate'),
+			latitude:                      driver.getDataValue('latitude'),
+			longitude:                     driver.getDataValue('longitude'),
+			current_address:               driver.getDataValue('currentAddress'),
+			fullName:                      driver.getDataValue('fullName'),
+			cargo:                         transformCargoCompany(driver.cargo),
+			cargoinn:                      transformCargoInnCompany(driver.cargoinn),
+			order:                         transformOrder(driver.order),
+			transports:                    driver.transports?.map(transformTransport),
+			createdAt:                     driver.getDataValue('createdAt'),
+			updatedAt:                     driver.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+export function transformToDriver(data: Partial<transformers.IDriverTransformer>)
+	: attributes.IDriver {
+	if(data) {
+		return {
+			id:                          data.id,
+			createdAt:                   data.createdAt,
+			updatedAt:                   data.updatedAt,
+			cargoId:                     data.cargoId,
+			cargoinnId:                  data.cargoinnId,
+			crmId:                       data.crm_id,
+			name:                        data.name,
+			patronymic:                  data.middle_name,
+			lastName:                    data.surname,
+			email:                       data.email,
+			phone:                       data.phone,
+			birthDate:                   data.date_of_birth,
+			status:                      data.status,
+			isReady:                     data.is_ready,
+			taxpayerNumber:              data.taxpayer_number,
+			passportDate:                data.passport_date,
+			passportIssuedBy:            data.passport_issued_by,
+			passportSerialNumber:        data.passport_serial_number,
+			passportSubdivisionCode:     data.passport_subdivision_code,
+			passportRegistrationAddress: data.passport_registration_address,
+			avatarLink:                  data.avatar_link,
+			passportPhotoLink:           data.passport_link,
+			passportSignLink:            data.passport_sign_link,
+			passportSelfieLink:          data.passport_selfie_link,
+			registrationAddress:         data.registration_address,
+			address:                     data.physical_address,
+			phoneSecond:                 data.additional_phone,
+			licenseNumber:               data.license,
+			licenseDate:                 data.license_date,
+			licenseFrontLink:            data.link_front,
+			licenseBackLink:             data.link_back,
+			info:                        data.info,
+			operation:                   data.operation,
+			latitude:                    data.latitude,
+			longitude:                   data.longitude,
+			currentPoint:                data.current_point,
+			currentAddress:              data.current_address,
+			payloadCity:                 data.payload_city,
+			payloadRegion:               data.payload_region,
+			payloadDate:                 data.payload_date,
+			fullName:                    data.fullName
+		};
+	}
+
+	return null;
+}
+
+function transformImage(image: models.Image)
+	: transformers.IImageTransformer {
+	if(image) {
+		return {
+			id:         image.getDataValue('id'),
+			cargoId:    image.getDataValue('cargoId'),
+			cargoinnId: image.getDataValue('cargoinnId'),
+			link:       image.getDataValue('url'),
+			createdAt:  image.getDataValue('createdAt'),
+			updatedAt:  image.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+export function transformToImage(data: Partial<transformers.IImageTransformer>)
+	: attributes.IImage {
+	if(data) {
+		return {
+			id:          data.id,
+			createdAt:   data.createdAt,
+			updatedAt:   data.updatedAt,
+			cargoId:     data.cargoId,
+			cargoinnId:  data.cargoinnId,
+			transportId: data.transportId,
+			url:         data.link
+		};
+	}
+
+	return null;
+}
+
+function transformOffer(offer: models.Offer)
+	: transformers.IOfferTransformer {
+	if(offer) {
+		return {
+			id:            offer.getDataValue('id'),
+			orderId:       offer.getDataValue('orderId'),
+			driverId:      offer.getDataValue('driverId'),
+			status:        offer.getDataValue('status'),
+			order_status:  offer.getDataValue('orderStatus'),
+			bid_price:     offer.getDataValue('bidPrice'),
+			bid_price_max: offer.getDataValue('bidPriceVat'),
+			comments:      offer.getDataValue('bidComment'),
+			transports:    offer.getDataValue('transports'),
+			driver:        transformDriver(offer.driver),
+			order:         transformOrder(offer.order),
+			createdAt:     offer.getDataValue('createdAt'),
+			updatedAt:     offer.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+export function transformToOffer(data: Partial<transformers.IOfferTransformer>)
+	: attributes.IOffer {
+	return {
+		id:          data.id,
+		createdAt:   data.createdAt,
+		updatedAt:   data.updatedAt,
+		orderId:     data.orderId,
+		driverId:    data.driverId,
+		status:      data.status,
+		orderStatus: data.order_status,
+		bidPrice:    data.bid_price,
+		bidPriceVat: data.bid_price_max,
+		bidComment:  data.comments
+	};
+}
+
+export function transformToOfferDriver(data: Partial<transformers.TOfferDriverTransformer>)
+	: attributes.TOfferDriver {
+	if(data) {
+		return {
+			driverId:    data.driverId,
+			bidPrice:    data.bid_price,
+			bidPriceVat: data.bid_price_max,
+			bidComment:  data.comments,
+			orderStatus: data.order_status
+		};
+	}
+
+	return null;
+}
+
+function transformOrder(order: models.Order)
+	: transformers.IOrderTransformer {
+	if(order) {
+		return {
+			id:                         order.getDataValue('id'),
+			cargoId:                    order.getDataValue('cargoId'),
+			cargoinnId:                 order.getDataValue('cargoinnId'),
+			driverId:                   order.getDataValue('driverId'),
+			crm_id:                     order.getDataValue('crmId'),
+			title:                      order.getDataValue('title'),
+			price:                      order.getDataValue('price'),
+			dateAt:                     order.getDataValue('date'),
+			number:                     order.getDataValue('number'),
+			mileage:                    order.getDataValue('mileage'),
+			status:                     order.getDataValue('status'),
+			stage:                      order.getDataValue('stage'),
+			is_open:                    order.getDataValue('isOpen'),
+			is_free:                    order.getDataValue('isFree'),
+			cancel_cause:               order.getDataValue('cancelCause'),
+			is_canceled:                order.getDataValue('isCanceled'),
+			has_problem:                order.getDataValue('hasProblem'),
+			is_bid:                     order.getDataValue('isBid'),
+			bid_price:                  order.getDataValue('bidPrice'),
+			bid_price_max:              order.getDataValue('bidPriceVat'),
+			bid_info:                   order.getDataValue('bidInfo'),
+			payment_type:               order.getDataValue('paymentType'),
+			payload:                    order.getDataValue('payload'),
+			payload_type:               order.getDataValue('payloadRiskType'),
+			loading_types:              order.getDataValue('loadingTypes'),
+			weight:                     order.getDataValue('weight'),
+			volume:                     order.getDataValue('volume'),
+			length:                     order.getDataValue('length'),
+			width:                      order.getDataValue('width'),
+			height:                     order.getDataValue('height'),
+			palets:                     order.getDataValue('pallets'),
+			transport_types:            order.getDataValue('transportTypes'),
+			destinations:               order.getDataValue('destinations'),
+			driver_deferral_conditions: order.getDataValue('driverDeferralConditions'),
+			owner_deferral_conditions:  order.getDataValue('ownerDeferralConditions'),
+			dedicated_machine:          order.getDataValue('dedicated'),
+			payment_link:               order.getDataValue('paymentPhotoLink'),
+			receipt_link:               order.getDataValue('receiptPhotoLink'),
+			contract_link:              order.getDataValue('contractPhotoLink'),
+			filter:                     order.getDataValue('filter'),
+			cargo:                      transformCargoCompany(order?.cargo),
+			cargoinn:                   transformCargoInnCompany(order?.cargoinn),
+			driver:                     transformDriver(order?.driver),
+			createdAt:                  order.getDataValue('createdAt'),
+			updatedAt:                  order.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+export function transformToOrder(data: transformers.IOrderTransformer)
+	: attributes.IOrder {
+	if(data) {
+		return {
+			id:                       data.id,
+			createdAt:                data.createdAt,
+			updatedAt:                data.updatedAt,
+			cargoId:                  data.cargoId,
+			cargoinnId:               data.cargoinnId,
+			driverId:                 data.driverId,
+			crmId:                    data.crm_id,
+			title:                    data.title,
+			price:                    data.price,
+			date:                     data.dateAt,
+			status:                   data.status,
+			stage:                    data.stage,
+			weight:                   data.weight,
+			volume:                   data.volume,
+			length:                   data.length,
+			height:                   data.height,
+			width:                    data.weight,
+			number:                   data.number,
+			mileage:                  data.mileage,
+			pallets:                  data.palets,
+			loadingTypes:             data.loading_types,
+			transportTypes:           data.transport_types,
+			isOpen:                   data.is_open,
+			isFree:                   data.is_free,
+			isCanceled:               data.is_canceled,
+			isBid:                    data.is_bid,
+			hasProblem:               data.has_problem,
+			cancelCause:              data.cancel_cause,
+			bidPrice:                 data.bid_price,
+			bidPriceVat:              data.bid_price_max,
+			bidInfo:                  data.bid_info,
+			paymentType:              data.payment_type,
+			payload:                  data.payload,
+			payloadRiskType:          data.payload_type,
+			destinations:             data.destinations,
+			filter:                   data.filter,
+			driverDeferralConditions: data.driver_deferral_conditions,
+			ownerDeferralConditions:  data.owner_deferral_conditions,
+			dedicated:                data.dedicated_machine,
+			paymentPhotoLink:         data.payment_link,
+			receiptPhotoLink:         data.receipt_link,
+			contractPhotoLink:        data.contract_link
+		};
+	}
+	return null;
+}
+
+function transformPayment(payment: models.Payment)
+	: transformers.IPaymentTransformer {
+	if(payment) {
+		return {
+			id:          payment.getDataValue('id'),
+			cargoId:     payment.getDataValue('cargoId'),
+			cargoinnId:  payment.getDataValue('cargoinnId'),
+			bank:        payment.getDataValue('bankName'),
+			bankbik:     payment.getDataValue('bankBic'),
+			ogrnip:      payment.getDataValue('ogrnip'),
+			ogrnip_link: payment.getDataValue('ogrnipPhotoLink'),
+			rs:          payment.getDataValue('currentAccount'),
+			ks:          payment.getDataValue('correspondentAccount'),
+			info:        payment.getDataValue('info'),
+			createdAt:   payment.getDataValue('createdAt'),
+			updatedAt:   payment.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+export function transformToPayment(data: transformers.IPaymentTransformer)
+	: attributes.IPayment {
+	if(data) {
+		return {
+			id:                   data.id,
+			createdAt:            data.createdAt,
+			updatedAt:            data.updatedAt,
+			cargoId:              data.cargoId,
+			cargoinnId:           data.cargoinnId,
+			bankName:             data.bank,
+			bankBic:              data.bankbik,
+			ogrnip:               data.ogrnip,
+			ogrnipPhotoLink:      data.ogrnip_link,
+			currentAccount:       data.rs,
+			correspondentAccount: data.ks,
+			info:                 data.info
+		};
+	}
+
+	return null;
+}
+
+function transformTransport(transport: models.Transport)
+	: transformers.ITransportTransformer {
+	if(transport) {
+		return {
+			id:             transport.getDataValue('id'),
+			cargoId:        transport.getDataValue('cargoId'),
+			cargoinnId:     transport.getDataValue('cargoinnId'),
+			driverId:       transport.getDataValue('driverId'),
+			crm_id:         transport.getDataValue('crmId'),
+			status:         transport.getDataValue('status'),
+			type:           transport.getDataValue('type'),
+			extra_fixtures: transport.getDataValue('fixtures'),
+			brand:          transport.getDataValue('brand'),
+			model:          transport.getDataValue('model'),
+			registr_num:    transport.getDataValue('registrationNumber'),
+			prod_year:      transport.getDataValue('prodYear'),
+			payload:        transport.getDataValue('payload'),
+			payload_extra:  transport.getDataValue('payloadExtra'),
+			is_trailer:     transport.getDataValue('isTrailer'),
+			is_dedicated:   transport.getDataValue('isDedicated'),
+			sts:            transport.getDataValue('certificateNumber'),
+			weight_extra:   transport.getDataValue('weightExtra'),
+			volume_extra:   transport.getDataValue('volumeExtra'),
+			weight:         transport.getDataValue('weight'),
+			volume:         transport.getDataValue('volume'),
+			length:         transport.getDataValue('length'),
+			width:          transport.getDataValue('width'),
+			height:         transport.getDataValue('height'),
+			polets:         transport.getDataValue('pallets'),
+			risk_classes:   transport.getDataValue('riskClasses'),
+			loading_types:  transport.getDataValue('loadingTypes'),
+			osago_number:   transport.getDataValue('osagoNumber'),
+			osago_date:     transport.getDataValue('osagoExpiryDate'),
+			osago_link:     transport.getDataValue('osagoPhotoLink'),
+			diag_num:       transport.getDataValue('diagnosticsNumber'),
+			diag_date:      transport.getDataValue('diagnosticsDate'),
+			diag_link:      transport.getDataValue('diagnosticsPhotoLink'),
+			info:           transport.getDataValue('info'),
+			comments:       transport.getDataValue('comments'),
+			trailer:        transformTransport(transport.trailer),
+			offer_status:   transport.getDataValue('offerStatus'),
+			driver:         transformDriver(transport.driver),
+			images:         transport.images?.map(transformImage),
+			createdAt:      transport.getDataValue('createdAt'),
+			updatedAt:      transport.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+export function transformToTransport(data: transformers.ITransportTransformer)
+	: attributes.ITransport {
+	if(data) {
+		return {
+			id:                   data.id,
+			createdAt:            data.createdAt,
+			updatedAt:            data.updatedAt,
+			cargoId:              data.cargoId,
+			cargoinnId:           data.cargoinnId,
+			driverId:             data.driverId,
+			crmId:                data.crm_id,
+			status:               data.status,
+			type:                 data.type,
+			brand:                data.brand,
+			model:                data.model,
+			registrationNumber:   data.registr_num,
+			prodYear:             data.prod_year,
+			payload:              data.payload,
+			payloadExtra:         data.payload_extra,
+			isTrailer:            data.is_trailer,
+			isDedicated:          data.is_dedicated,
+			certificateNumber:    data.sts,
+			weightExtra:          data.weight_extra,
+			volumeExtra:          data.volume_extra,
+			weight:               data.weight,
+			volume:               data.volume,
+			length:               data.length,
+			width:                data.width,
+			height:               data.height,
+			pallets:              data.polets,
+			riskClasses:          data.risk_classes,
+			loadingTypes:         data.loading_types,
+			fixtures:             data.extra_fixtures,
+			osagoNumber:          data.osago_number,
+			osagoExpiryDate:      data.osago_date,
+			osagoPhotoLink:       data.osago_link,
+			diagnosticsNumber:    data.diag_num,
+			diagnosticsDate:      data.diag_date,
+			diagnosticsPhotoLink: data.diag_link,
+			comments:             data.comments,
+			info:                 data.info
+		};
+	}
+
+	return null;
+}
+
+export function transformEntity<T extends IModel, E extends EntityModel<T>>(entity: E): IModel {
+	if(entity instanceof models.Admin) {
+		return transformAdmin(entity);
+	}
+	else if(entity instanceof models.CargoCompany) {
+		return transformCargoCompany(entity);
+	}
+	else if(entity instanceof models.CargoInnCompany) {
+		return transformCargoInnCompany(entity);
+	}
+	else if(entity instanceof models.Driver) {
+		return transformDriver(entity);
+	}
+	else if(entity instanceof models.Image) {
+		return transformImage(entity);
+	}
+	else if(entity instanceof models.Offer) {
+		return transformOffer(entity);
+	}
+	else if(entity instanceof models.Order) {
+		return transformOrder(entity);
+	}
+	else if(entity instanceof models.Payment) {
+		return transformPayment(entity);
+	}
+	else if(entity instanceof models.Transport) {
+		return transformTransport(entity);
+	}
+	return entity;
+}
+
+export function transformEntities<T extends IModel, E extends EntityModel<T>>(entities: E[]): IModel[] {
+	if(entities && entities.length > 0) {
+		return entities.map(transformEntity);
+	}
+
+	return entities;
+}
+
+export function transformApiResult<T>(result: IApiResponse<T>)
+	: IModel | IModel[] | IApiResponse<T> | (T & any[]) | transformers.TTransformerApiResponse {
+	if(!result.data) {
+		return {
+			status:  result.statusCode ?? 404,
+			message: result.message
+		};
+	}
+
+	if(Array.isArray(result.data)) {
+		if(result.data.length > 0) {
+			if(result.data[0] instanceof EntityModel) {
+				return transformEntities(result.data);
+			}
+			else {
+				return result.data;
+			}
+		}
+
+		return {
+			status:  result.statusCode,
+			message: result.message
+		};
+	}
+	else if(result.data instanceof EntityModel) {
+		return transformEntity(result.data);
+	}
+	else {
+		if(typeof result.data === 'object') {
+			for(const dataKey in result.data) {
+				if(result.data[dataKey] instanceof EntityModel) {
+					//@ts-ignore
+					result.data[dataKey] = transformEntity(result.data[dataKey]);
+				}
+				else if(Array.isArray(result.data[dataKey])) {
+					//@ts-ignore
+					result.data[dataKey] = transformEntities(result.data[dataKey]);
+				}
+			}
+		}
+
+		return {
+			status:  result.statusCode,
+			message: result.message,
+			...(result.data ?? {})
+		};
+	}
+}

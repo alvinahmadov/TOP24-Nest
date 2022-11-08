@@ -18,7 +18,10 @@ import {
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
-import { DefaultBoolPipe }     from '@api/pipes';
+import {
+	DefaultBoolPipe,
+	OfferPipe
+}                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import { AccessGuard }         from '@api/security';
 import { OfferService }        from '@api/services';
@@ -85,7 +88,7 @@ export default class OfferController
 	public override async update(
 		@Param('orderId', ParseUUIDPipe) orderId: string,
 		@Param('driverId', ParseUUIDPipe) driverId: string,
-		@Body() dto: dto.OfferUpdateDto,
+		@Body(OfferPipe) dto: dto.OfferUpdateDto,
 		@Res() response: ex.Response
 	) {
 		const result = await this.offerService.update(orderId, driverId, dto);
@@ -190,12 +193,11 @@ export default class OfferController
 	})
 	public async makeOffers(
 		@Param('orderId', ParseUUIDPipe) orderId: string,
-		@Body() dto: { drivers?: dto.DriverOfferDto[] },
+		@Body('drivers', OfferPipe) dto: dto.DriverOfferDto[],
 		@Res() response: ex.Response,
 		@Query('full', ...DefaultBoolPipe) full?: boolean
 	) {
-		const { drivers } = dto;
-		const result = await this.offerService.sendToDrivers(orderId, drivers, full);
+		const result = await this.offerService.sendToDrivers(orderId, dto, full);
 
 		return sendResponse(response, result);
 	}

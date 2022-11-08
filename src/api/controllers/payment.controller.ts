@@ -14,6 +14,7 @@ import { ApiRoute }            from '@common/decorators';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
+import { PaymentPipe }         from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
 	AccessGuard,
@@ -78,7 +79,7 @@ export default class PaymentController
 		statuses: [HttpStatus.OK]
 	})
 	public override async create(
-		@Body() dto: dto.PaymentCreateDto,
+		@Body(PaymentPipe) dto: dto.PaymentCreateDto,
 		@Res() response: ex.Response
 	): Promise<ex.Response> {
 		const result = await this.paymentService.create(dto);
@@ -92,7 +93,7 @@ export default class PaymentController
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body() dto: dto.PaymentUpdateDto,
+		@Body(PaymentPipe) dto: dto.PaymentUpdateDto,
 		@Res() response: ex.Response
 	): Promise<ex.Response> {
 		const result = await this.paymentService.update(id, dto);

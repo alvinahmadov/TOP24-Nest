@@ -22,17 +22,18 @@ import {
 import {
 	ISwaggerOptionsRecord,
 	ISwaggerTag
-}                                 from '@common/interfaces';
-import { CustomLogger }           from '@common/utils';
-import env                        from '@config/env';
-import * as mo                    from '@models/index';
-import * as dto                   from '@api/dto';
-import { RedisIoAdapter }         from '@api/events';
+}                             from '@common/interfaces';
+import { CustomLogger }       from '@common/utils';
+import env                    from '@config/env';
+import * as mo                from '@models/index';
+import * as dto               from '@api/dto';
+import { RedisIoAdapter }     from '@api/events';
 import {
 	getRouteConfig,
 	TApiRouteList
-}                                 from '@api/routes';
-import AppModule                  from './app.module';
+}                             from '@api/routes';
+import AppModule              from './app.module';
+import { LoggingInterceptor } from '@api/middlewares/log.middleware';
 
 faker.setLocale('ru');
 
@@ -189,6 +190,7 @@ async function bootstrap(): Promise<INestApplication> {
 		join(__dirname, '..', 'docs'),
 		{ dotfiles: 'ignore' }
 	);
+	app.useGlobalInterceptors(new LoggingInterceptor());
 	app.enableCors(CORS_OPTIONS);
 	await app.listen(PORT);
 

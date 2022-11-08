@@ -1,4 +1,6 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
+import env                           from '@config/env';
+import { CompanyType }               from '@common/enums';
 import { ICompany }                  from '@common/interfaces';
 import {
 	convertBitrix,
@@ -6,14 +8,23 @@ import {
 	isNumber
 }                                    from '@common/utils';
 import {
+	transformToCargoCompany,
+	transformToCargoInnCompany
+}                                    from '@common/utils/compat/transformer-functions';
+import {
 	CargoCompanyRepository,
 	CargoInnCompanyRepository
 }                                    from '@repos/index';
 
-const cargoCompanyRepo = new CargoCompanyRepository();
-const cargoCompanyInnRepo = new CargoInnCompanyRepository();
-
 class CompanyValidator {
+	protected cargoCompanyRepo: CargoCompanyRepository;
+	protected cargoCompanyInnRepo: CargoInnCompanyRepository;
+
+	constructor() {
+		this.cargoCompanyRepo = new CargoCompanyRepository();
+		this.cargoCompanyInnRepo = new CargoInnCompanyRepository();
+	}
+
 	protected checkPaymentType(company: ICompany) {
 		if(company.paymentType) {
 			if(!isNumber(company.paymentType))
@@ -26,10 +37,10 @@ class CompanyValidator {
 
 	protected async checkPhoneNumber(phone: string, name: string) {
 		if(phone !== undefined) {
-			const company = await cargoCompanyRepo.getByPhone(phone) ||
-			                await cargoCompanyInnRepo.getByPhone(phone);
+			const company = await this.cargoCompanyRepo.getByPhone(phone) ||
+			                await this.cargoCompanyInnRepo.getByPhone(phone);
 
-			if(company.name !== name) {
+			if(company && company.name !== name) {
 				throw Error('This Phone is already taken.');
 			}
 		}
@@ -43,32 +54,41 @@ class CompanyValidator {
 export class CompanyCreatePipe
 	extends CompanyValidator
 	implements PipeTransform<ICompany> {
-	async transform(value: ICompany) {
-		const { phone, name } = value;
-		await this.checkPhoneNumber(phone, name);
-		this.checkPaymentType(value);
-		value.phone = formatPhone(value.phone);
-		return value;
+	async transform(data: any) {
+		if(data) {
+			let value: ICompany;
+			const companyType = env.api.compatMode ? data['company_type'] : data['type'];
+			if(companyType === CompanyType.ORG) {
+				value = !env.api.compatMode ? data : transformToCargoCompany(data);
+			}
+			else {
+				value = !env.api.compatMode ? data : transformToCargoInnCompany(data);
+			}
+			const { phone, name } = value;
+			await this.checkPhoneNumber(phone, name);
+			this.checkPaymentType(value);
+			value.phone = formatPhone(value.phone);
+			return value;
+		}
+
+		return data;
 	}
 }
 
 @Injectable()
 export class CompanyUpdatePipe
 	extends CompanyValidator
-	implements PipeTransform<ICompany> {
-	async transform(value: ICompany) {
-		const { phone, id } = value;
+	implements PipeTransform {
+	async transform(data: any) {
+		const { phone } = data;
 		if(phone !== undefined) {
-			const company = await cargoCompanyRepo.getByPhone(phone) ||
-			                await cargoCompanyInnRepo.getByPhone(phone);
+			const company = await this.cargoCompanyRepo.getByPhone(phone) ||
+			                await this.cargoCompanyInnRepo.getByPhone(phone);
 
 			if(company !== null) {
-				if(id && company.id !== id) {
-					throw Error('Указанный номер занят другим пользователем!');
-				}
-				return value;
+				throw Error('Указанный номер занят другим пользователем!');
 			}
 		}
-		return value;
+		return data;
 	}
 }

@@ -13,6 +13,7 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
+import env                     from '@config/env';
 import { Bucket }              from '@common/constants';
 import { ApiRoute }            from '@common/decorators';
 import {
@@ -34,6 +35,10 @@ import {
 	getTranslation,
 	sendResponse
 }                              from '@common/utils';
+import {
+	transformToCargoCompany,
+	transformToCargoInnCompany
+}                              from '@common/utils/compat/transformer-functions';
 import {
 	CargoCompany,
 	CargoInnCompany,
@@ -189,8 +194,7 @@ export default class CompanyController
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body(CompanyUpdatePipe) dto: dto.CompanyUpdateDto |
-		                              dto.CompanyInnUpdateDto,
+		@Body(CompanyUpdatePipe) dto: any,
 		@Res() response: ex.Response
 	) {
 		let result = await this.getCompany(id, false);
@@ -198,10 +202,14 @@ export default class CompanyController
 		if(result) {
 			if(result.data) {
 				const { data: company } = result;
-				if(company.type === CompanyType.ORG)
-					result = await this.cargoService.update(id, <dto.CompanyUpdateDto>dto);
-				else
-					result = await this.cargoInnService.update(id, <dto.CompanyInnUpdateDto>dto);
+				if(company.type === CompanyType.ORG) {
+					const data = !env.api.compatMode ? dto : transformToCargoCompany(dto);
+					result = await this.cargoService.update(id, <dto.CompanyUpdateDto>data);
+				}
+				else {
+					const data = !env.api.compatMode ? dto : transformToCargoInnCompany(dto);
+					result = await this.cargoInnService.update(id, <dto.CompanyInnUpdateDto>data);
+				}
 			}
 			else {
 				const message: string = TRANSLATIONS['NOT_FOUND'];
