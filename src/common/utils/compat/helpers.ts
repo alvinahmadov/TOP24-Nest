@@ -1,17 +1,39 @@
-export const translateAdmin = <T extends Record<any, any>, R extends Record<any, any>>
-(data: T): R => (
-	{
+import {
+	IAdmin,
+	ICargoCompany,
+	ICargoInnCompany,
+	IDriver,
+	IImage, IModel,
+	IOffer,
+	IOrder,
+	IPayment,
+	ITransport
+} from '@common/interfaces';
+import {
+	IAdminTransformer,
+	ICargoCompanyTransformer,
+	ICargoInnCompanyTransformer,
+	IDriverTransformer,
+	IImageTransformer,
+	IOfferTransformer,
+	IOrderTransformer,
+	IPaymentTransformer,
+	ITransportTransformer
+} from '@common/utils/compat/transformer-types';
+
+type TOmitTimestamp<T extends IModel> = Omit<T, 'createdAt' | 'updatedAt'>
+
+export const translateAdmin = (data: IAdminTransformer): TOmitTimestamp<IAdmin> =>
+	({
 		id:    data?.id,
 		name:  data?.name,
 		email: data?.email,
 		phone: data?.phone,
 		role:  data?.type
-	} as unknown as R
-);
+	});
 
-export const translateCargoCompany = <T extends Record<any, any> = any, R extends Record<any, any> = any>
-(data: T): R => (
-	{
+export const translateCargoCompany = (data: ICargoCompanyTransformer): TOmitTimestamp<ICargoCompany> =>
+	({
 		id:                          data?.id,
 		name:                        data?.name,
 		email:                       data?.email,
@@ -46,12 +68,10 @@ export const translateCargoCompany = <T extends Record<any, any> = any, R extend
 		contact:                     data?.contact_first,
 		contactSecond:               data?.contact_second,
 		contactThird:                data?.contact_third
-	} as unknown as R
-);
+	});
 
-export const translateCargoInnCompany = <T extends Record<any, any> = any, R extends Record<any, any> = any>
-(data: T): R => (
-	{
+export const translateCargoInnCompany = (data: ICargoInnCompanyTransformer): TOmitTimestamp<ICargoInnCompany> =>
+	({
 		id:                          data?.id,
 		name:                        data?.name,
 		email:                       data?.email,
@@ -83,12 +103,10 @@ export const translateCargoInnCompany = <T extends Record<any, any> = any, R ext
 		passportPhotoLink:           data?.passport_photo_link || data?.passport_link,
 		passportSignLink:            data?.passport_sign_link,
 		passportSelfieLink:          data?.passport_selfie_link
-	} as unknown as R
-);
+	});
 
-export const translateDriver = <T extends Record<any, any> = any, R extends Record<any, any> = any>
-(data: T): R => (
-	{
+export const translateDriver = (data: IDriverTransformer): TOmitTimestamp<IDriver> =>
+	({
 		id:                          data?.id,
 		cargoId:                     data?.cargoId,
 		cargoinnId:                  data?.cargoinnId,
@@ -128,23 +146,19 @@ export const translateDriver = <T extends Record<any, any> = any, R extends Reco
 		payloadRegion:               data?.payload_region,
 		payloadDate:                 new Date(data?.payload_date),
 		fullName:                    data?.fullName
-	} as unknown as R
-);
+	});
 
-export const translateImage = <T extends Record<any, any> = any, R extends Record<any, any> = any>
-(data: T): R => (
-	{
+export const translateImage = (data: IImageTransformer): TOmitTimestamp<IImage> =>
+	({
 		id:          data?.id,
 		cargoId:     data?.cargoId,
 		cargoinnId:  data?.cargoinnId,
 		transportId: data?.transportId,
 		url:         data?.link
-	} as unknown as R
-);
+	});
 
-export const translateOffer = <T extends Record<any, any> = any, R extends Record<any, any> = any>
-(data: T): R => (
-	{
+export const translateOffer = (data: IOfferTransformer): TOmitTimestamp<IOffer> =>
+	({
 		id:          data?.id,
 		orderId:     data?.orderId,
 		driverId:    data?.driverId,
@@ -153,12 +167,10 @@ export const translateOffer = <T extends Record<any, any> = any, R extends Recor
 		bidPrice:    data?.bid_price,
 		bidPriceVat: data?.bid_price_max,
 		bidComment:  data?.comments
-	} as unknown as R
-);
+	});
 
-export const translateOrder = <T extends Record<any, any> = any, R extends Record<any, any> = any>
-(data: T): R => (
-	{
+export const translateOrder = (data: IOrderTransformer): TOmitTimestamp<IOrder> =>
+	({
 		id:                       data?.id,
 		cargoId:                  data?.cargoId,
 		cargoinnId:               data?.cargoinnId,
@@ -199,12 +211,10 @@ export const translateOrder = <T extends Record<any, any> = any, R extends Recor
 		paymentPhotoLink:         data?.payment_link,
 		receiptPhotoLink:         data?.receipt_link,
 		contractPhotoLink:        data?.contract_link
-	} as unknown as R
-);
+	});
 
-export const translatePayment = <T extends Record<any, any> = any, R extends Record<any, any> = any>
-(data: T): R => (
-	{
+export const translatePayment = (data: IPaymentTransformer): TOmitTimestamp<IPayment> =>
+	({
 		id:                   data?.id,
 		cargoId:              data?.cargoId,
 		cargoinnId:           data?.cargoinnId,
@@ -215,12 +225,10 @@ export const translatePayment = <T extends Record<any, any> = any, R extends Rec
 		currentAccount:       data?.rs,
 		correspondentAccount: data?.ks,
 		info:                 data?.info
-	} as unknown as R
-);
+	});
 
-export const translateTransport = <T extends Record<any, any> = any, R extends Record<any, any> = any>
-(data: T): R => (
-	{
+export const translateTransport = (data: ITransportTransformer): TOmitTimestamp<ITransport> =>
+	({
 		id:                   data?.id,
 		cargoId:              data?.cargoId,
 		cargoinnId:           data?.cargoinnId,
@@ -256,5 +264,4 @@ export const translateTransport = <T extends Record<any, any> = any, R extends R
 		diagnosticsPhotoLink: data?.diag_link,
 		comments:             data?.comments,
 		info:                 data?.info
-	} as unknown as R
-);
+	});
