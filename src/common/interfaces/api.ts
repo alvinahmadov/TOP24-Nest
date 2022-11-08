@@ -188,7 +188,7 @@ export interface IApiRouteMetadata<M = any> {
 }
 
 export interface IApiRouteConfig<M = any> {
-	path: string;
+	path: string | string[];
 	routes: IApiRoute<M>;
 	description?: string;
 }
