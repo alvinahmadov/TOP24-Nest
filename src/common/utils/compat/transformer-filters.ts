@@ -194,7 +194,11 @@ export function transformToCompanyInnFilter(data: ICargoCompanyInnTransformerFil
 export function transformToDriverFilter(data: IDriverTransformerFilter)
 	: filters.IDriverFilter {
 	if(data) {
-		return helpers.translateDriver(data);
+		return {
+			...helpers.translateDriver(data),
+			statuses:    data.statuses,
+			orderStatus: data.order_status
+		};
 	}
 	return null;
 }
@@ -202,7 +206,14 @@ export function transformToDriverFilter(data: IDriverTransformerFilter)
 export function transformToOfferFilter(data: IOfferTransformerFilter)
 	: filters.IOfferFilter {
 	if(data) {
-		return helpers.translateOffer(data);
+		return {
+			...helpers.translateOffer(data),
+			orderStatuses:   data.order_statuses,
+			driverStatus:    data.driver_status,
+			transportStatus: data.transport_status,
+			hasComment:      data.has_comment,
+			hasBid:          data.has_bid
+		};
 	}
 	return null;
 }
