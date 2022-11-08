@@ -60,7 +60,7 @@ export default class OrderRepository
 	];
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(OrderRepository.name);
 	}

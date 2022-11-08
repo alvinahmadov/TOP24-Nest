@@ -12,7 +12,7 @@ export default class ImageRepository
 	protected override readonly model = Image;
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(ImageRepository.name);
 	}

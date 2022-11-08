@@ -17,7 +17,7 @@ export default class PaymentsRepository
 	protected override readonly model = Payment;
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(PaymentsRepository.name);
 	}

@@ -27,7 +27,15 @@ export default class CargoCompanyRepository
 	extends GenericRepository<CargoCompany, ICargoCompany> {
 	protected override readonly model = CargoCompany;
 	protected override readonly include: Includeable[] = [
-		{ model: Driver },
+		{
+			model:   Driver,
+			include: [
+				{
+					model:   Transport,
+					include: [{ model: Image }]
+				}
+			]
+		},
 		{ model: Image },
 		{ model: Payment },
 		{ model: Order },
@@ -38,7 +46,7 @@ export default class CargoCompanyRepository
 	];
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(CargoCompanyRepository.name);
 	}
@@ -197,7 +205,7 @@ export default class CargoCompanyRepository
 					where:   this.whereClause()
 					             .in('phone', [phone, formatPhone(phone)])
 						         .query,
-					include: !!full ? this.include : []
+					include: full ? this.include : []
 				}
 			),
 			{ id: 'getByPhone' },

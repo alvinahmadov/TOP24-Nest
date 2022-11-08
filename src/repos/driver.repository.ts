@@ -33,7 +33,7 @@ export default class DriverRepository
 	];
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(DriverRepository.name);
 	}
@@ -70,7 +70,7 @@ export default class DriverRepository
 				} = filter ?? {};
 
 				let hasTerm: boolean = term !== undefined && term !== '';
-				
+
 				if(statuses) {
 					if(!statuses.find(s => s === 1))
 						statuses.push(1);

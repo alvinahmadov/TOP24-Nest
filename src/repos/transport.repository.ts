@@ -28,7 +28,7 @@ export default class TransportRepository
 	];
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(TransportRepository.name);
 	}

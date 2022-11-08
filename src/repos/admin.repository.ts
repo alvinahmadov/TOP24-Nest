@@ -13,7 +13,7 @@ export default class AdminRepository
 	protected override readonly model = Admin;
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(AdminRepository.name);
 	}

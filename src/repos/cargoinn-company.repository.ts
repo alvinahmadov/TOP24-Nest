@@ -27,7 +27,15 @@ export default class CargoInnCompanyRepository
 	extends GenericRepository<CargoInnCompany, ICargoInnCompany> {
 	protected override readonly model = CargoInnCompany;
 	protected override readonly include: Includeable[] = [
-		{ model: Driver },
+		{
+			model:   Driver,
+			include: [
+				{
+					model:   Transport,
+					include: [{ model: Image }]
+				}
+			]
+		},
 		{ model: Image },
 		{ model: Payment },
 		{ model: Order },
@@ -38,7 +46,7 @@ export default class CargoInnCompanyRepository
 	];
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(CargoInnCompanyRepository.name);
 	}

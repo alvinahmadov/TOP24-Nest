@@ -16,7 +16,7 @@ export default class AddressRepository
 	protected override readonly model = Address;
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(AddressRepository.name);
 	}

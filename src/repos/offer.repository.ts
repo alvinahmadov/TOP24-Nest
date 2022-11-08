@@ -40,7 +40,7 @@ export default class OfferRepository
 	];
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(OfferRepository.name);
 	}
@@ -180,12 +180,10 @@ export default class OfferRepository
 				} = listFilter ?? {};
 				const {
 					sortOrder: order = DEFAULT_SORT_ORDER,
-					strict = false,
 					hasComment,
 					driverStatus,
-					transportStatus,
-					orderStatus,
-					...rest
+					orderStatus
+					// ...rest
 				} = filter ?? {};
 				return this.model.findAll(
 					{
@@ -200,6 +198,9 @@ export default class OfferRepository
 						include: [
 							{
 								model:   Driver,
+								where:   this.whereClause<IDriver>()
+								             .eq('status', driverStatus)
+									         .query,
 								include: full ? [{ all: true }] : []
 							}
 						]
@@ -227,7 +228,7 @@ export default class OfferRepository
 				const {
 					sortOrder: order = DEFAULT_SORT_ORDER,
 					orderStatus,
-					transportStatus,
+					transportStatus
 				} = filter ?? {};
 
 				return this.model.findAll(
