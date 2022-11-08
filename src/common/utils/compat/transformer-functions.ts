@@ -1,13 +1,11 @@
 import {
 	IApiResponse,
-	IModel, IOrderDestination, IOrderFilter, TOfferDriver
-}                                                                from '@common/interfaces';
-import * as attributes                                           from '@common/interfaces/attributes';
-import * as models                                               from '@models/index';
-import EntityModel                                               from '@models/entity-model';
-import * as transformers                                         from './transformer-types';
-import { LoadingType, OrderStage, OrderStatus, TransportStatus } from '@common/enums';
-import { TOfferDriverTransformer }                               from './transformer-types';
+	IModel
+}                        from '@common/interfaces';
+import * as attributes   from '@common/interfaces/attributes';
+import * as models       from '@models/index';
+import EntityModel       from '@models/entity-model';
+import * as transformers from './transformer-types';
 
 function transformAdmin(admin: models.Admin)
 	: transformers.IAdminTransformer {
@@ -720,10 +718,7 @@ export function transformApiResult<T>(result: IApiResponse<T>)
 			}
 		}
 
-		return {
-			status:  result.statusCode,
-			message: result.message
-		};
+		return [];
 	}
 	else if(result.data instanceof EntityModel) {
 		return transformEntity(result.data);
