@@ -128,11 +128,18 @@ export default class ReferenceController
 			{ ID: LoadingType.BACK.toString(), VALUE: loadingTypeToStr(LoadingType.BACK) }
 		];
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       loadingTypes
-				            .sort(compareByIdFn)
-				            .map(lowerCaseFn),
+			data:       {
+				loading_types:     [
+					loadingTypeToStr(LoadingType.TOP),
+					loadingTypeToStr(LoadingType.SIDE),
+					loadingTypeToStr(LoadingType.BACK)
+				],
+				loading_typesinfo: loadingTypes
+					                   .sort(compareByIdFn)
+					                   .map(lowerCaseFn)
+			},
 			message:    formatArgs(TRANSLATIONS['LOADING_TYPES'], loadingTypes.length)
 		};
 
