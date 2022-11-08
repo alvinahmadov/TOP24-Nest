@@ -107,7 +107,6 @@ export default class BitrixController
 	}
 
 	@ApiRoute(routes.webhook, {
-		guards:   [AdminGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async webhookListen(
