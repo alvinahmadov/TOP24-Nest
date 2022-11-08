@@ -394,7 +394,7 @@ export const routeConfig: TApiRouteList = {
 		}
 	},
 	company:   {
-		path:        'company',
+		path:        ['company', 'cargo', 'cargoinn'],
 		description: 'Cargo company related operations.',
 		routes:      {
 			list:           {
