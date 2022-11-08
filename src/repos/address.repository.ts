@@ -64,8 +64,8 @@ export default class AddressRepository
 				return this.model.findAll(
 					{
 						where: this.whereClause('or')
-						           .nullOrEq('latitude', filter.latitude)
-						           .nullOrEq('longitude', filter.longitude)
+						           .nullOrEq('latitude', filter?.latitude)
+						           .nullOrEq('longitude', filter?.longitude)
 						           .fromFilter(filter, 'eq')
 							       .query,
 						offset,
