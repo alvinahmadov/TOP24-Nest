@@ -145,7 +145,7 @@ export default class TransportController
 		statuses: [HttpStatus.OK],
 		fileOpts: {
 			interceptors: [FileInterceptor('image')],
-			mimeTypes:    ['application/json']
+			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async image(
@@ -164,7 +164,7 @@ export default class TransportController
 		statuses: [HttpStatus.OK],
 		fileOpts: {
 			interceptors: [FileInterceptor('image')],
-			mimeTypes:    ['application/json']
+			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async diagnostic(
@@ -183,7 +183,7 @@ export default class TransportController
 		statuses: [HttpStatus.OK],
 		fileOpts: {
 			interceptors: [FileInterceptor('image')],
-			mimeTypes:    ['application/json']
+			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async osago(
