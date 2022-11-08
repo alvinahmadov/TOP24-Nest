@@ -70,10 +70,16 @@ export default class DriverRepository
 				} = filter ?? {};
 
 				let hasTerm: boolean = term !== undefined && term !== '';
+				
+				if(statuses) {
+					if(!statuses.find(s => s === 1))
+						statuses.push(1);
+				}
 
 				if(hasTerm) {
 					full = true;
 					strict = false;
+					statuses = statuses.filter((s: number) => s !== 4);
 				}
 
 				const conjunct: 'and' | 'or' | null = (strict === undefined ||
