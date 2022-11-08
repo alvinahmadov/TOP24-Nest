@@ -1077,7 +1077,10 @@ export const routeConfig: TApiRouteList = {
 		}
 	},
 	offer:     {
-		path:        'offer',
+		path:        [
+			'offer',
+			'order_association'
+		],
 		description: 'Offer operations between order and driver.',
 		routes:      {
 			list:      {
