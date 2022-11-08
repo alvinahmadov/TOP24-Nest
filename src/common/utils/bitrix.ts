@@ -70,11 +70,7 @@ function convertLoadingTypes(loadingType: number[]): LoadingType[] {
 	const setLoadingType = (value: number): LoadingType =>
 	{
 		const item = convertBitrix<string, string>('loadingType', value.toString(), true);
-		if(item === null) {
-			console.warn('Loading type is null');
-			return LoadingType.NONE;
-		}
-		switch(item.toLowerCase().trim()) {
+		switch(item?.toLowerCase()?.trim()) {
 			case 'задняя':
 				return LoadingType.BACK;
 			case 'боковая':
