@@ -17,7 +17,10 @@ import { TMulterFile }         from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
-import { DefaultBoolPipe }     from '@api/pipes';
+import {
+	DefaultBoolPipe,
+	OrderPipe
+}                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
 	AccessGuard,
@@ -105,7 +108,7 @@ export default class OrderController
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body() dto: dto.OrderUpdateDto,
+		@Body(OrderPipe) dto: dto.OrderUpdateDto,
 		@Res() response: ex.Response
 	) {
 		const result = await this.orderService.update(id, dto);

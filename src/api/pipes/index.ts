@@ -10,6 +10,7 @@ import OrderMessageBodyPipe  from './gateways/order-message-body.pipe';
 import DriverPipe            from './driver.pipe';
 import ImagePipe             from './image.pipe';
 import OfferPipe             from './offer.pipe';
+import OrderPipe             from './order.pipe';
 import PaymentPipe           from './payment.pipe';
 import UserPipe              from './user.pipe';
 
@@ -28,6 +29,7 @@ export {
 	DriverPipe,
 	ImagePipe,
 	OfferPipe,
+	OrderPipe,
 	PaymentPipe,
 	UserPipe
 };
