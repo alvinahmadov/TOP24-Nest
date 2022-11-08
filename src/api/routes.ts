@@ -1651,7 +1651,10 @@ export const routeConfig: TApiRouteList = {
 				}
 			},
 			transportTypes: {
-				path:   'transport_types',
+				path:   [
+					'transport_types',
+					'auto_types'
+				],
 				method: RequestMethod.GET,
 				api:    {
 					operation: { summary: 'Get list of transport types.' }
