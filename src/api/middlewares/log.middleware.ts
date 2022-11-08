@@ -26,18 +26,12 @@ export default class LoggerMiddleware
 
 	public use(request: Request, response: Response, next: NextFunction) {
 		const { ip, method, path: url, body, query, params } = request;
-		const userAgent = request.get('user-agent') || '';
 
-		response.on('close', () =>
+		response.on('finish', () =>
 		{
 			const { statusCode } = response;
 			this.logger.log(
-				{
-					route: `${method} ${url} ${statusCode} - ${userAgent} ${ip}`,
-					body,
-					query,
-					params
-				}
+				`${method} ${url} ${statusCode} - ${ip}`, body, query, params
 			);
 		});
 
