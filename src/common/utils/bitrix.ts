@@ -350,7 +350,7 @@ export function orderFromBitrix(crmFields: TCRMFields): OrderCreateDto {
 		date:            dateValidator(crmFields[ORDER.DATE_AT]),
 		price:           crmFields[ORDER.PRICE],
 		mileage:         typeFromCrm(crmFields[ORDER.MILEAGE], 0),
-		payload:         convertBitrix('transportPayload', crmFields[ORDER.PAYLOAD.SELF]),
+		payload:         convertBitrix('orderPayload', crmFields[ORDER.PAYLOAD.SELF]),
 		payloadRiskType: convertBitrix('riskClass', crmFields[ORDER.PAYLOAD.RISK_TYPE]),
 		loadingTypes:    convertLoadingTypes(crmFields[ORDER.LOADING_TYPE]),
 		weight:          typeFromCrm(crmFields[ORDER.PARAMS.WEIGHT], 0.0),
