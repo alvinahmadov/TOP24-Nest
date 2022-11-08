@@ -154,7 +154,8 @@ export default class OfferService
 				
 				if(dto.orderStatus === OrderStatus.PENDING) {
 					dto.status = OfferStatus.DECLINED;
-				} else {
+				}
+				else {
 					dto.status = OfferStatus.RESPONDED;
 				}
 			}
