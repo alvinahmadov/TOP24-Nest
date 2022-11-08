@@ -7,6 +7,9 @@ import {
 import CargoMessageBodyPipe  from './gateways/cargo-message-body.pipe';
 import DriverMessageBodyPipe from './gateways/driver-message-body.pipe';
 import OrderMessageBodyPipe  from './gateways/order-message-body.pipe';
+import DriverPipe            from './driver.pipe';
+import OfferPipe             from './offer.pipe';
+import PaymentPipe           from './payment.pipe';
 import UserPipe              from './user.pipe';
 
 export * from './company.pipe';
@@ -21,5 +24,8 @@ export {
 	CargoMessageBodyPipe,
 	DriverMessageBodyPipe,
 	OrderMessageBodyPipe,
+	DriverPipe,
+	OfferPipe,
+	PaymentPipe,
 	UserPipe
 };
