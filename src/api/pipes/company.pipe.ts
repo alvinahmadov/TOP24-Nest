@@ -67,7 +67,6 @@ export class CompanyCreatePipe
 			const { phone, name } = value;
 			await this.checkPhoneNumber(phone, name);
 			this.checkPaymentType(value);
-			value.phone = formatPhone(value.phone);
 			return value;
 		}
 
