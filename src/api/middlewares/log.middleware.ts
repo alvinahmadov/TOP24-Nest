@@ -26,12 +26,20 @@ export default class LoggerMiddleware
 
 	public use(request: Request, response: Response, next: NextFunction) {
 		const { ip, method, path: url, body, query, params } = request;
+		const isEmptyObject = (obj: any) => !Object.entries(obj).length;
 
 		response.on('finish', () =>
 		{
 			const { statusCode } = response;
+			
+			const res: any = {};
+			
+			if(!isEmptyObject(body)) res['body'] = body;
+			if(!isEmptyObject(query)) res['query'] = query;
+			if(!isEmptyObject(params)) res['params'] = Object.values(params);
+			
 			this.logger.log(
-				`${method} ${url} ${statusCode} - ${ip}`, { body, query, params: Object.values(params) }
+				`${method} ${url} ${statusCode} - ${ip}`, { ...res }
 			);
 		});
 
