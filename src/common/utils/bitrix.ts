@@ -30,7 +30,8 @@ import FIXTURES = Reference.FIXTURES;
 import LOADING_TYPES = Reference.LOADING_TYPES;
 import ORDER_STATUSES = Reference.ORDER_STATUSES;
 import ORDER_STAGES = Reference.ORDER_STAGES;
-import PAYLOADS = Reference.PAYLOADS;
+import ORDER_PAYLOADS = Reference.ORDER_PAYLOADS;
+import TRANSPORT_PAYLOADS = Reference.TRANSPORT_PAYLOADS;
 import PAYMENT_TYPES = Reference.PAYMENT_TYPES;
 import RISK_CLASSES = Reference.RISK_CLASSES;
 import TRANSPORT_BRANDS = Reference.TRANSPORT_BRANDS;
@@ -42,6 +43,7 @@ export type TBitrixKey = 'fixtures' |
                          'loadingType' |
                          'orderStatus' |
                          'orderStage' |
+                         'orderPayload' |
                          'paymentType' |
                          'riskClass' |
                          'transportBrand' |
@@ -129,6 +131,8 @@ function selectBitrixEnum<R>(
 			return callback(ORDER_STATUSES);
 		case 'orderStage':
 			return callback(ORDER_STAGES);
+		case 'orderPayload':
+			return callback(ORDER_PAYLOADS);
 		case 'paymentType':
 			return callback(PAYMENT_TYPES);
 		case 'riskClass':
@@ -138,7 +142,7 @@ function selectBitrixEnum<R>(
 		case 'transportDedicated':
 			return callback(DEDICATED_MACHINE);
 		case 'transportPayload':
-			return callback(PAYLOADS);
+			return callback(TRANSPORT_PAYLOADS);
 		case 'transportType':
 			return callback(TRANSPORT_TYPES);
 	}

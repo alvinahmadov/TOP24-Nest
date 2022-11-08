@@ -124,7 +124,9 @@ export namespace Reference {
 	/**@ignore*/
 	export const ORDER_STAGES: TBitrixEnum = CRM.ORDER.STAGES;
 	/**@ignore*/
-	export const PAYLOADS: TBitrixEnum = CRM.TRANSPORT.PAYLOADS;
+	export const ORDER_PAYLOADS: TBitrixEnum = CRM.ORDER.PAYLOADS;
+	/**@ignore*/
+	export const TRANSPORT_PAYLOADS: TBitrixEnum = CRM.TRANSPORT.PAYLOADS;
 	/**@ignore*/
 	export const PAYMENT_TYPES: TBitrixEnum = CRM.COMPANY.PAYMENT_TYPES;
 	/**@ignore*/
