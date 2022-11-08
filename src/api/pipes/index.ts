@@ -16,6 +16,7 @@ import UserPipe              from './user.pipe';
 
 export * from './company.pipe';
 export * from './transport.pipe';
+export * from './filter';
 
 export const DefaultBoolPipe: (Type<PipeTransform> | PipeTransform)[] = [
 	new DefaultValuePipe(false),
