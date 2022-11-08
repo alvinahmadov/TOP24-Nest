@@ -31,7 +31,7 @@ export default class LoggerMiddleware
 		{
 			const { statusCode } = response;
 			this.logger.log(
-				`${method} ${url} ${statusCode} - ${ip}`, body, query, { params }
+				`${method} ${url} ${statusCode} - ${ip}`, { body, query, params: Object.values(params) }
 			);
 		});
 
