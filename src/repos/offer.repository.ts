@@ -200,9 +200,6 @@ export default class OfferRepository
 						include: [
 							{
 								model:   Driver,
-								where:   this.whereClause<IDriver>('and')
-								             .fromFilter<IDriverFilter>(rest, 'nullOrEq')
-									         .query,
 								include: full ? [{ all: true }] : []
 							}
 						]
@@ -231,7 +228,6 @@ export default class OfferRepository
 					sortOrder: order = DEFAULT_SORT_ORDER,
 					orderStatus,
 					transportStatus,
-					...driverFilters
 				} = filter ?? {};
 
 				return this.model.findAll(
@@ -246,9 +242,6 @@ export default class OfferRepository
 						include: [
 							{
 								model:    Driver,
-								where:    this.whereClause<IDriver>('or')
-								              .fromFilter<IDriverFilter>(driverFilters, 'nullOrEq')
-									          .query,
 								order:    DEFAULT_SORT_ORDER,
 								required: true,
 								include:  [
