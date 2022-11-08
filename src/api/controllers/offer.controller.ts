@@ -20,7 +20,8 @@ import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
-	OfferPipe
+	OfferPipe,
+	OfferFilterPipe
 }                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import { AccessGuard }         from '@api/security';
@@ -47,7 +48,7 @@ export default class OfferController
 	public override async filter(
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: dto.OfferFilter
+		@Body(OfferFilterPipe) filter?: dto.OfferFilter
 	) {
 		const result = await this.offerService.getList(listFilter, filter);
 

@@ -49,6 +49,8 @@ import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	CompanyCreatePipe,
 	CompanyUpdatePipe,
+	CargoCompanyFilterPipe,
+	CargoInnCompanyFilterPipe,
 	DefaultBoolPipe
 }                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
@@ -90,7 +92,8 @@ export default class CompanyController
 	public override async filter(
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: dto.CompanyFilter | dto.CompanyInnFilter
+		@Body(CargoCompanyFilterPipe, CargoInnCompanyFilterPipe)
+			filter?: dto.CompanyFilter | dto.CompanyInnFilter
 	) {
 		const { data: cargoCompanies } = await this.cargoService.getList(
 			listFilter, filter as dto.CompanyFilter

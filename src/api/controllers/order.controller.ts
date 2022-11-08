@@ -19,7 +19,8 @@ import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
-	OrderPipe
+	OrderPipe,
+	OrderFilterPipe
 }                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
@@ -49,7 +50,7 @@ export default class OrderController
 	})
 	public override async filter(
 		@Query() listFilter: dto.ListFilter,
-		@Body() filter: dto.OrderFilter,
+		@Body(OrderFilterPipe) filter: dto.OrderFilter,
 		@Res() response: ex.Response
 	) {
 		if(filter && filter.crmId) {

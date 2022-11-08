@@ -25,7 +25,10 @@ import { sendResponse }        from '@common/utils';
 import { Admin }               from '@models/index';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
-import { UserPipe }            from '@api/pipes';
+import {
+	AdminFilterPipe,
+	UserPipe
+}                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
 	AccessGuard,
@@ -96,7 +99,7 @@ export default class AdminController
 	public override async filter(
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: dto.AdminFilter
+		@Body(AdminFilterPipe) filter?: dto.AdminFilter
 	) {
 		const result = await this.adminService.getList(listFilter, filter);
 

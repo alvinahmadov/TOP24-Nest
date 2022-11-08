@@ -20,7 +20,8 @@ import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
 	TransportCreatePipe,
-	TransportUpdatePipe
+	TransportUpdatePipe,
+	TransportFilterPipe
 }                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
@@ -50,7 +51,7 @@ export default class TransportController
 	public override async filter(
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: dto.TransportFilter
+		@Body(TransportFilterPipe) filter?: dto.TransportFilter
 	): Promise<ex.Response> {
 		const result = await this.transportService.getList(listFilter, filter);
 

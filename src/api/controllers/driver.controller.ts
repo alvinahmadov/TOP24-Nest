@@ -19,7 +19,8 @@ import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
-	DriverPipe
+	DriverPipe,
+	DriverFilterPipe
 }                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
@@ -53,7 +54,7 @@ export default class DriverController
 	public override async filter(
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: dto.DriverFilter
+		@Body(DriverFilterPipe) filter?: dto.DriverFilter
 	) {
 		const result = await this.driverService.getList(listFilter, filter);
 
