@@ -39,6 +39,23 @@ export interface ICargoCompanyInnTransformerFilter
 	extends IFilter,
 	        TModelFilter<types.ICargoInnCompanyTransformer> {}
 
+export interface ICompanyTransportTransformerFilter
+	extends IFilter,
+	        ITransportTransformerFilter {
+	cargoId?: string;
+	cargoinnId?: string;
+	risk_class?: string;
+	payment_types?: string[];
+	dedicated?: string;
+	directions?: string[];
+	has_driver?: boolean;
+	payload_city?: string;
+	payload_region?: string;
+	payload_date?: Date | string;
+	from_date?: Date | string;
+	to_date?: Date | string;
+}
+
 /**
  * Driver model filters
  *
@@ -214,6 +231,28 @@ export function transformToTransportFilter(data: ITransportTransformerFilter)
 	: filters.ITransportFilter {
 	if(data) {
 		return helpers.translateTransport(data as any);
+	}
+	return null;
+}
+
+export function transformToCompanyTransportFilter(data: ICompanyTransportTransformerFilter)
+	: filters.ICompanyTransportFilter {
+	if(data) {
+		return {
+			...helpers.translateTransport(data as any),
+			weightMin:   data.weight_min,
+			weightMax:   data.weight_max,
+			volumeMin:   data.volume_min,
+			volumeMax:   data.volume_max,
+			lengthMin:   data.length_min,
+			lengthMax:   data.length_max,
+			widthMin:    data.width_min,
+			widthMax:    data.width_max,
+			heightMin:   data.height_min,
+			heightMax:   data.height_max,
+			types:       data.types,
+			payloadType: data.payload_type
+		};
 	}
 	return null;
 }
