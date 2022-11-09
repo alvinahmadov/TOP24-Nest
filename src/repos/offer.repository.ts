@@ -180,18 +180,17 @@ export default class OfferRepository
 				} = listFilter ?? {};
 				const {
 					sortOrder: order = DEFAULT_SORT_ORDER,
-					hasComment,
 					driverStatus,
 					statuses,
 					orderStatus
 					// ...rest
 				} = filter ?? {};
+				
 				return this.model.findAll(
 					{
 						where:   this.whereClause('and')
 						             .eq('orderId', orderId)
 						             .eq('orderStatus', orderStatus)
-						             .notNull('bidComment', hasComment)
 							         .query,
 						offset,
 						limit,
