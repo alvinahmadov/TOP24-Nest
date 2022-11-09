@@ -182,6 +182,7 @@ export default class OfferRepository
 					sortOrder: order = DEFAULT_SORT_ORDER,
 					hasComment,
 					driverStatus,
+					statuses,
 					orderStatus
 					// ...rest
 				} = filter ?? {};
@@ -198,8 +199,9 @@ export default class OfferRepository
 						include: [
 							{
 								model:   Driver,
-								where:   this.whereClause<IDriver>()
+								where:   this.whereClause<IDriver>('or')
 								             .eq('status', driverStatus)
+								             .in('status', statuses)
 									         .query,
 								include: full ? [{ all: true }] : []
 							}
