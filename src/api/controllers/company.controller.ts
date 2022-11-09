@@ -51,6 +51,7 @@ import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	CompanyCreatePipe,
 	CompanyUpdatePipe,
+	CompanyTransportFilterPipe,
 	DefaultBoolPipe
 }                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
@@ -267,6 +268,16 @@ export default class CompanyController
 		const { phone, code } = signInData;
 		const result = await this.authService.loginCompany(phone, code);
 
+		if(env.api.compatMode && result.data) {
+			if('company' in result.data) {
+				const { company: cargo, accessToken, refreshToken } = result.data;
+				result.data = { accessToken, refreshToken, cargo } as any;
+			}
+			else if('code' in result.data) {
+				result.data = { code: result.data['code'] };
+			}
+		}
+
 		return sendResponse(response, result);
 	}
 
@@ -304,7 +315,7 @@ export default class CompanyController
 		@Res() response: ex.Response,
 		@Param('id') orderId?: string,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: dto.CompanyTransportFilter
+		@Body(CompanyTransportFilterPipe) filter?: dto.CompanyTransportFilter
 	) {
 		let { data: cargoTransports } = await this.cargoService.getTransports(listFilter, filter);
 		let { data: cargoInnTransports } = await this.cargoInnService.getTransports(listFilter, filter);
