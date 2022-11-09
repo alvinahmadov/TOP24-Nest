@@ -99,21 +99,6 @@ export default class OfferController
 		return sendResponse(response, result);
 	}
 
-	@ApiRoute(routes.order, {
-		guards:   [AccessGuard],
-		statuses: [HttpStatus.OK]
-	})
-	public async getDrivers(
-		@Param('orderId', ParseUUIDPipe) orderId: string,
-		@Res() response: ex.Response,
-		@Body(OfferDriverFilterPipe) filter?: dto.OfferFilter & dto.DriverFilter,
-		@Query() listFilter?: dto.ListFilter
-	) {
-		let result = await this.offerService.getDrivers(orderId, listFilter, filter);
-
-		return sendResponse(response, result);
-	}
-
 	@ApiRoute(routes.driver, {
 		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
@@ -125,6 +110,21 @@ export default class OfferController
 		@Query() listFilter?: dto.ListFilter
 	) {
 		let result = await this.offerService.getOrders(driverId, listFilter, filter);
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.order, {
+		guards:   [AccessGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async getDrivers(
+		@Param('orderId', ParseUUIDPipe) orderId: string,
+		@Res() response: ex.Response,
+		@Body(OfferDriverFilterPipe) filter?: dto.OfferFilter & dto.DriverFilter,
+		@Query() listFilter?: dto.ListFilter
+	) {
+		let result = await this.offerService.getDrivers(orderId, listFilter, filter);
 
 		return sendResponse(response, result);
 	}
