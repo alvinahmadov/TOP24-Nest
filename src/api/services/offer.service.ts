@@ -10,7 +10,6 @@ import {
 	UserRole
 }                          from '@common/enums';
 import {
-	IApiResponse,
 	IApiResponses,
 	IDriverFilter,
 	IListFilter,
@@ -84,7 +83,7 @@ export default class OfferService
 			statusCode: 200,
 			data:       offer,
 			message:    formatArgs(OFFER_TRANSLATIONS['GET'], offer.id)
-		} as IApiResponse<Offer>;
+		}
 	}
 
 	public async getList(
@@ -97,7 +96,7 @@ export default class OfferService
 			statusCode: 200,
 			data:       offers,
 			message:    formatArgs(OFFER_TRANSLATIONS['LIST'], offers.length)
-		} as IApiResponse<Offer[]>;
+		}
 	}
 
 	public async update(
@@ -168,7 +167,7 @@ export default class OfferService
 				statusCode: 200,
 				data:       offer,
 				message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
-			} as IApiResponse<Offer>;
+			};
 		else
 			return this.repository.getRecord('update');
 	}
@@ -184,7 +183,7 @@ export default class OfferService
 			statusCode: 200,
 			data:       await this.repository.delete(id),
 			message:    formatArgs(OFFER_TRANSLATIONS['DELETE'], id)
-		} as IApiResponse<TAffectedRows>;
+		}
 	}
 
 	public async getDrivers(
@@ -199,7 +198,7 @@ export default class OfferService
 			statusCode: 200,
 			data:       drivers,
 			message:    formatArgs(OFFER_TRANSLATIONS['DRIVERS'], drivers.length)
-		} as IApiResponse<Driver[]>;
+		};
 	}
 
 	public async getOrders(
@@ -412,16 +411,16 @@ export default class OfferService
 
 		if(createCount > 0) {
 			const offers = await this.repository.bulkCreate(offersToCreate);
-			for(let offer of offers) {
-				this.gateway.sendDriverEvent(
+			offers.forEach(
+				offer => this.gateway.sendDriverEvent(
 					{
 						id:      offer.driverId,
 						source:  'offer',
 						message: formatArgs(DRIVER_TRANSLATIONS['SENT'], order.title)
 					},
 					UserRole.CARGO
-				);
-			}
+				)
+			);
 		}
 
 		offers = await this.repository.getOrderDrivers(orderId, { full });
