@@ -21,8 +21,6 @@ export const PORT = env.port;
 /**@ignore*/
 export const SCHEME = env.scheme;
 /**@ignore*/
-export const HOSTS: string[] = [];
-/**@ignore*/
 export const SWAGGER_PATH = 'api-docs/swagger';
 
 export const GEO_LOOKUP_SERVICE: 'osm' | 'kladr' = 'osm';

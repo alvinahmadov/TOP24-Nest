@@ -13,7 +13,6 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import faker                      from '@faker-js/faker';
 import {
 	HOST,
-	HOSTS,
 	PORT,
 	SCHEME,
 	SWAGGER_PATH,
@@ -36,6 +35,7 @@ import AppModule                  from './app.module';
 
 faker.setLocale('ru');
 
+const HOSTS: string[] = [];
 const BASE_URL = `${HOST ?? 'localhost'}${PORT ? ':' + PORT : ''}`;
 const DTOS = [
 	// Admin
