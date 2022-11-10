@@ -1,28 +1,29 @@
-import { Request } from 'express';
+import { Request }       from 'express';
 // @ts-ignore
-import { Multer }  from 'multer';
-import { Model }   from 'sequelize-typescript';
+import { Multer }        from 'multer';
+import { Model }         from 'sequelize-typescript';
 import {
 	CanActivate,
 	HttpStatus,
+	LoggerService,
 	NestInterceptor,
 	RequestMethod
-}                  from '@nestjs/common';
+}                        from '@nestjs/common';
 import {
 	ApiOperationOptions,
 	ApiPropertyOptions,
 	ApiResponseOptions
-}                  from '@nestjs/swagger';
+}                        from '@nestjs/swagger';
 import {
 	IAdmin,
 	ICompany,
 	IModel
-}                  from './attributes';
+}                        from './attributes';
 import {
 	DriverStatus,
 	OrderStage,
 	OrderStatus
-}                  from '../enums';
+}                        from '../enums';
 
 //////////////
 //  Types  //
@@ -330,6 +331,8 @@ export interface IKladrResponse {
 
 /**@ignore*/
 export interface ILoggable {
+	 readonly logger: LoggerService;
+
 	log: <R>(
 		callback: TLoggerCallback<R>,
 		identifier: TLogIdentifier,

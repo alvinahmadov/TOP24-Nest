@@ -46,10 +46,10 @@ export class GenericRepository<M extends Model, Attribute extends IModel>
 	 * @ignore
 	 * */
 	declare attributes: Attribute;
+	public readonly logger: Logger;
 	protected readonly model: ModelStatic<M>;
 	protected readonly include: Includeable[] = [];
 	protected responseRecord: Record<string, IApiResponse<null>> = {};
-	protected logger: Logger;
 
 	protected constructor(name: string = GenericRepository.name) {
 		this.logger = new Logger(name, { timestamp: true });
