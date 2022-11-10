@@ -74,13 +74,13 @@ export default class WhereClause<T extends IModel> {
 	 * */
 	public in<V>(
 		key: keyof T,
-		values: V
+		values: V[]
 	): this {
 		return this._exec(
 			key,
 			() =>
 			{
-				if(values === undefined) return;
+				if(values === undefined || values.length === 0) return;
 				if(this.debug)
 					console.debug({ name: 'in', conj: this._conjunct, key, values });
 				if(values) {
