@@ -1,4 +1,5 @@
 import * as ex                 from 'express';
+import { validate as isUuid }  from 'uuid';
 import {
 	Body,
 	Controller,
@@ -28,6 +29,7 @@ import {
 	CargoGuard
 }                              from '@api/security';
 import {
+	AddressService,
 	DriverService,
 	OrderService
 }                              from '@api/services';
@@ -41,6 +43,7 @@ const { path, tag, routes } = getRouteConfig('driver');
 export default class DriverController
 	extends BaseController {
 	public constructor(
+		private readonly addressService: AddressService,
 		private readonly driverService: DriverService,
 		private readonly orderService: OrderService
 	) {
@@ -116,6 +119,15 @@ export default class DriverController
 			const driverGeo = await this.driverService.updateGeoData(data);
 			dto = Object.assign(dto, driverGeo);
 		}
+		if(isUuid(dto.payloadCity)) {
+			const { data: { city = dto.payloadCity } } = await this.addressService.getById(dto.payloadCity);
+			dto.payloadCity = city;
+		}
+		if(isUuid(dto.payloadRegion)) {
+			const { data: { region = dto.payloadRegion } } = await this.addressService.getById(dto.payloadRegion);
+			dto.payloadRegion = region;
+		}
+		
 		const result = await this.driverService.update(id, dto);
 
 		return sendResponse(response, result);
