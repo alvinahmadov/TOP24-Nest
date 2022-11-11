@@ -185,7 +185,7 @@ export default class OfferRepository
 					orderStatus
 					// ...rest
 				} = filter ?? {};
-				
+
 				return this.model.findAll(
 					{
 						where:   this.whereClause('and')
@@ -321,6 +321,11 @@ export default class OfferRepository
 								           .inArray('status', statuses)
 								           .fromFilter<IOrderFilter>(rest)
 									       .query
+							},
+							{
+								model:    Driver,
+								required: false,
+								include:  [{ model: Transport }]
 							}
 						]
 					}
