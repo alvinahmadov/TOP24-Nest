@@ -1,29 +1,30 @@
-import { Request }       from 'express';
+import { Request } from 'express';
 // @ts-ignore
-import { Multer }        from 'multer';
-import { Model }         from 'sequelize-typescript';
+import { Multer }  from 'multer';
+import { Model }   from 'sequelize-typescript';
 import {
 	CanActivate,
 	HttpStatus,
 	LoggerService,
 	NestInterceptor,
 	RequestMethod
-}                        from '@nestjs/common';
+}                  from '@nestjs/common';
 import {
 	ApiOperationOptions,
 	ApiPropertyOptions,
+	ApiQueryOptions,
 	ApiResponseOptions
-}                        from '@nestjs/swagger';
+}                  from '@nestjs/swagger';
 import {
 	IAdmin,
 	ICompany,
 	IModel
-}                        from './attributes';
+}                  from './attributes';
 import {
 	DriverStatus,
 	OrderStage,
 	OrderStatus
-}                        from '../enums';
+}                  from '../enums';
 
 //////////////
 //  Types  //
@@ -38,6 +39,7 @@ export type TApiResponseSchemaOptions = {
 	message?: string;
 	isArray?: boolean;
 	description?: string;
+	data?: any;
 }
 
 /**@ignore*/
@@ -185,6 +187,7 @@ export interface IApiRouteMetadata<M = any> {
 	api?: {
 		operation?: ApiOperationOptions;
 		responses?: Record<number, ApiResponseOptions>;
+		queryOptions?: ApiQueryOptions | ApiQueryOptions[];
 	};
 }
 
@@ -331,7 +334,7 @@ export interface IKladrResponse {
 
 /**@ignore*/
 export interface ILoggable {
-	 readonly logger: LoggerService;
+	readonly logger: LoggerService;
 
 	log: <R>(
 		callback: TLoggerCallback<R>,
