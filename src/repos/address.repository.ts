@@ -49,6 +49,9 @@ export default class AddressRepository
 		listFilter: IListFilter & { short?: boolean },
 		filter?: IAddressFilter
 	): Promise<Address[]> {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			() =>
 			{

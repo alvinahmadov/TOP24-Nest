@@ -91,6 +91,9 @@ export default class OrderRepository
 		listFilter: IListFilter,
 		filter?: IOrderFilter
 	): Promise<Order[]> {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			() =>
 			{

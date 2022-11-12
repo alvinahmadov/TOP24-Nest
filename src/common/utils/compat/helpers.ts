@@ -1,256 +1,262 @@
+import FieldTransformer,
+{ TOmitTimestamp }       from '@common/classes/field-transformer';
 import * as attributes   from '@common/interfaces/attributes';
 import * as transformers from './transformer-types';
 
-type TOmitTimestamp<T extends attributes.IModel> = Omit<T, 'createdAt' | 'updatedAt'>
-
-export const translateAdmin = (data: transformers.IAdminTransformer)
+export const translateAdmin = <T extends transformers.IAdminTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.IAdmin> =>
-	({
-		id:    data?.id,
-		name:  data?.name,
-		email: data?.email,
-		phone: data?.phone,
-		role:  data?.type
-	});
+{
+	return new FieldTransformer<T, attributes.IAdmin>(data)
+		.set('id')
+		.set('name')
+		.set('email')
+		.set('phone')
+		.set('role', 'type')
+		.set('confirmed')
+		.set('privilege')
+		.set('verify')
+		.get();
+};
 
-export const translateCargoCompany = (data: transformers.ICargoCompanyTransformer)
+export const translateCargoCompany = <T extends transformers.ICargoCompanyTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.ICargoCompany> =>
-	({
-		id:                          data?.id,
-		name:                        data?.name,
-		email:                       data?.email,
-		type:                        data?.company_type,
-		role:                        data?.type,
-		taxpayerNumber:              data?.inn,
-		passportSerialNumber:        data?.passport_serial_number,
-		passportGivenDate:           data?.passport_date,
-		passportSubdivisionCode:     data?.passport_subdivision_code,
-		passportIssuedBy:            data?.passport_issued_by,
-		passportRegistrationAddress: data?.passport_registration_address,
-		crmId:                       data?.crm_id,
-		phone:                       data?.phone,
-		contactPhone:                data?.phone_second,
-		directions:                  data?.directions,
-		verify:                      data?.verify,
-		paymentType:                 data?.nds,
-		confirmed:                   data?.confirmed,
-		avatarLink:                  data?.avatar_link,
-		passportPhotoLink:           data?.passport_photo_link,
-		info:                        data?.info,
-		status:                      data?.status,
-		shortName:                   data?.shortname,
-		taxReasonCode:               data?.kpp,
-		registrationNumber:          data?.ogpn,
-		director:                    data?.director,
-		certificatePhotoLink:        data?.certificate_photo_link,
-		directorOrderPhotoLink:      data?.director_order_photo_link,
-		attorneySignLink:            data?.attorney_sign_link,
-		legalAddress:                data?.address_first,
-		postalAddress:               data?.address_second,
-		contact:                     data?.contact_first,
-		contactSecond:               data?.contact_second,
-		contactThird:                data?.contact_third
-	});
+{
+	return new FieldTransformer<T, attributes.ICargoCompany>(data)
+		.set('id')
+		.set('name')
+		.set('email')
+		.set('director')
+		.set('role', 'type')
+		.set('type', 'company_type')
+		.set('taxpayerNumber', 'inn')
+		.set('passportSerialNumber', 'passport_serial_number')
+		.set('passportGivenDate', 'passport_date')
+		.set('passportSubdivisionCode', 'passport_subdivision_code')
+		.set('passportIssuedBy', 'passport_issued_by')
+		.set('passportRegistrationAddress', 'passport_registration_address')
+		.set('crmId', 'crm_id')
+		.set('phone')
+		.set('contactPhone', 'phone_second')
+		.set('taxReasonCode', 'kpp')
+		.set('directions')
+		.set('verify')
+		.set('paymentType', 'nds')
+		.set('confirmed')
+		.set('avatarLink', 'avatar_link')
+		.set('passportPhotoLink', 'passport_photo_link')
+		.set('attorneySignLink', 'attorney_sign_link')
+		.set('directorOrderPhotoLink', 'director_order_photo_link')
+		.set('certificatePhotoLink', 'certificate_photo_link')
+		.set('legalAddress', 'address_first')
+		.set('postalAddress', 'address_second')
+		.set('contact', 'contact_first')
+		.set('contactSecond', 'contact_second')
+		.set('contactThird', 'contact_third')
+		.get();
+};
 
-export const translateCargoInnCompany = (data: transformers.ICargoInnCompanyTransformer)
+export const translateCargoInnCompany = <T extends transformers.ICargoInnCompanyTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.ICargoInnCompany> =>
-	({
-		id:                          data?.id,
-		name:                        data?.name,
-		email:                       data?.email,
-		type:                        data?.company_type,
-		role:                        data?.type,
-		taxpayerNumber:              data?.inn,
-		passportSerialNumber:        data?.passport_serial_number,
-		passportGivenDate:           data?.passport_date,
-		passportSubdivisionCode:     data?.passport_subdivision_code,
-		passportIssuedBy:            data?.passport_issued_by,
-		passportRegistrationAddress: data?.passport_registration_address,
-		crmId:                       data?.crm_id,
-		phone:                       data?.phone,
-		contactPhone:                data?.phone_second,
-		directions:                  data?.directions,
-		verify:                      data?.verify,
-		paymentType:                 data?.nds,
-		confirmed:                   data?.confirmed,
-		avatarLink:                  data?.avatar_link,
-		info:                        data?.info,
-		status:                      data?.status,
-		birthDate:                   data?.birth_date,
-		lastName:                    data?.surname,
-		patronymic:                  data?.middle_name,
-		address:                     '',
-		personalPhone:               data?.phone_second,
-		postalAddress:               '',
-		actualAddress:               '',
-		passportPhotoLink:           data?.passport_photo_link || data?.passport_link,
-		passportSignLink:            data?.passport_sign_link,
-		passportSelfieLink:          data?.passport_selfie_link
-	});
+{
+	return new FieldTransformer<T, attributes.ICargoInnCompany>(data)
+		.set('id')
+		.set('name')
+		.set('email')
+		.set('phone')
+		.set('role', 'type')
+		.set('crmId', 'crm_id')
+		.set('type', 'company_type')
+		.set('confirmed')
+		.set('verify')
+		.set('info')
+		.set('status')
+		.set('birthDate', 'birth_date')
+		.set('patronymic', 'middle_name')
+		.set('lastName', 'surname')
+		.set('taxpayerNumber', 'inn')
+		.set('passportIssuedBy', 'passport_issued_by')
+		.set('passportGivenDate', 'passport_date')
+		.set('passportSerialNumber', 'passport_serial_number')
+		.set('passportSubdivisionCode', 'passport_subdivision_code')
+		.set('passportRegistrationAddress', 'passport_registration_address')
+		.set('contactPhone', 'phone_second')
+		.set('directions')
+		.set('paymentType', 'nds')
+		.set('address', 'address_first')
+		.set('actualAddress', 'address_second')
+		.set('postalAddress', 'address_third')
+		.set('avatarLink', 'avatar_link')
+		.set('passportPhotoLink', 'passport_photo_link', 'passport_link')
+		.set('passportSelfieLink', 'passport_selfie_link')
+		.set('passportSignLink', 'passport_sign_link')
+		.get();
+};
 
-export const translateDriver = (data: transformers.IDriverTransformer)
+export const translateDriver = <T extends transformers.IDriverTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.IDriver> =>
-	({
-		id:                          data?.id,
-		cargoId:                     data?.cargoId,
-		cargoinnId:                  data?.cargoinnId,
-		crmId:                       data?.crm_id,
-		name:                        data?.name,
-		patronymic:                  data?.middle_name,
-		lastName:                    data?.surname,
-		email:                       data?.email,
-		phone:                       data?.phone,
-		birthDate:                   data?.date_of_birth,
-		status:                      data?.status,
-		isReady:                     data?.is_ready,
-		taxpayerNumber:              data?.taxpayer_number,
-		passportDate:                data?.passport_date,
-		passportIssuedBy:            data?.passport_issued_by,
-		passportSerialNumber:        data?.passport_serial_number,
-		passportSubdivisionCode:     data?.passport_subdivision_code,
-		passportRegistrationAddress: data?.passport_registration_address,
-		avatarLink:                  data?.avatar_link,
-		passportPhotoLink:           data?.passport_link,
-		passportSignLink:            data?.passport_sign_link,
-		passportSelfieLink:          data?.passport_selfie_link,
-		registrationAddress:         data?.registration_address,
-		address:                     data?.physical_address,
-		phoneSecond:                 data?.additional_phone,
-		licenseNumber:               data?.license,
-		licenseDate:                 data?.license_date,
-		licenseFrontLink:            data?.link_front,
-		licenseBackLink:             data?.link_back,
-		info:                        data?.info,
-		operation:                   data?.operation,
-		latitude:                    data?.latitude,
-		longitude:                   data?.longitude,
-		currentPoint:                data?.current_point,
-		currentAddress:              data?.current_address,
-		payloadCity:                 data?.payload_city,
-		payloadRegion:               data?.payload_region,
-		payloadDate:                 data?.payload_date,
-		fullName:                    data?.fullName
-	});
+{
+	return new FieldTransformer<T, attributes.IDriver>(data)
+		.set('id')
+		.set('cargoId')
+		.set('cargoinnId')
+		.set('name')
+		.set('email')
+		.set('status')
+		.set('birthDate', 'date_of_birth')
+		.set('crmId', 'crm_id')
+		.set('patronymic', 'middle_name')
+		.set('lastName', 'surname')
+		.set('birthDate', 'date_of_birth')
+		.set('isReady', 'is_ready')
+		.set('taxpayerNumber', 'taxpayer_number')
+		.set('passportDate', 'passport_date')
+		.set('passportIssuedBy', 'passport_issued_by')
+		.set('passportSerialNumber', 'passport_serial_number')
+		.set('passportSubdivisionCode', 'passport_subdivision_code')
+		.set('passportRegistrationAddress', 'passport_registration_address')
+		.set('avatarLink', 'avatar_link')
+		.set('passportPhotoLink', 'passport_link')
+		.set('passportSignLink', 'passport_sign_link')
+		.set('passportSelfieLink', 'passport_selfie_link')
+		.set('registrationAddress', 'registration_address')
+		.set('address', 'physical_address')
+		.set('phone')
+		.set('phoneSecond', 'additional_phone')
+		.set('licenseNumber', 'license')
+		.set('licenseDate', 'license_date')
+		.set('licenseBackLink', 'link_back')
+		.set('licenseFrontLink', 'link_front')
+		.set('operation')
+		.set('longitude')
+		.set('latitude')
+		.set('currentPoint', 'current_point')
+		.set('currentAddress', 'current_address')
+		.set('payloadCity', 'payload_city')
+		.set('payloadRegion', 'payload_region')
+		.set('payloadDate', 'payload_date')
+		.set('fullName', 'fullName')
+		.get();
+};
 
-export const translateImage = (data: transformers.IImageTransformer)
+export const translateImage = <T extends transformers.IImageTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.IImage> =>
-	({
-		id:          data?.id,
-		cargoId:     data?.cargoId,
-		cargoinnId:  data?.cargoinnId,
-		transportId: data?.transportId,
-		url:         data?.link
-	});
+{
+	return new FieldTransformer<T, attributes.IImage>(data)
+		.set('id')
+		.set('cargoId')
+		.set('cargoinnId')
+		.set('transportId')
+		.set('url', 'link')
+		.get();
+};
 
-export const translateOffer = (data: transformers.IOfferTransformer)
+export const translateOffer = <T extends transformers.IOfferTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.IOffer> =>
-	({
-		id:          data?.id,
-		orderId:     data?.orderId,
-		driverId:    data?.driverId,
-		status:      data?.status,
-		orderStatus: data?.order_status,
-		bidPrice:    data?.bid_price,
-		bidPriceVat: data?.bid_price_max,
-		bidComment:  data?.comments
-	});
+{
+	return new FieldTransformer<T, attributes.IOffer>(data)
+		.set('id')
+		.set('orderId')
+		.set('driverId')
+		.set('status')
+		.set('orderStatus', 'order_status')
+		.set('bidPrice', 'bid_price')
+		.set('bidPriceVat', 'bid_price_max')
+		.set('bidComment', 'comments')
+		.get();
+};
 
-export const translateOrder = (data: transformers.IOrderTransformer)
+export const translateOrder = <T extends transformers.IOrderTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.IOrder> =>
-	({
-		id:                       data?.id,
-		cargoId:                  data?.cargoId,
-		cargoinnId:               data?.cargoinnId,
-		driverId:                 data?.driverId,
-		crmId:                    data?.crm_id,
-		title:                    data?.title,
-		price:                    data?.price,
-		date:                     data?.dateAt,
-		status:                   data?.status,
-		stage:                    data?.stage,
-		weight:                   data?.weight,
-		volume:                   data?.volume,
-		length:                   data?.length,
-		height:                   data?.height,
-		width:                    data?.weight,
-		number:                   data?.number,
-		mileage:                  data?.mileage,
-		pallets:                  data?.palets,
-		loadingTypes:             data?.loading_types,
-		transportTypes:           data?.transport_types,
-		isOpen:                   data?.is_open,
-		isFree:                   data?.is_free,
-		isCanceled:               data?.is_canceled,
-		isBid:                    data?.is_bid,
-		hasProblem:               data?.has_problem,
-		cancelCause:              data?.cancel_cause,
-		bidPrice:                 data?.bid_price,
-		bidPriceVat:              data?.bid_price_max,
-		bidInfo:                  data?.bid_info,
-		paymentType:              data?.payment_type,
-		payload:                  data?.payload,
-		payloadRiskType:          data?.payload_type,
-		destinations:             data?.destinations,
-		filter:                   data?.filter,
-		driverDeferralConditions: data?.driver_deferral_conditions,
-		ownerDeferralConditions:  data?.owner_deferral_conditions,
-		dedicated:                data?.dedicated_machine,
-		paymentPhotoLink:         data?.payment_link,
-		receiptPhotoLink:         data?.receipt_link,
-		contractPhotoLink:        data?.contract_link
-	});
+{
+	return new FieldTransformer<T, attributes.IOrder>(data)
+		.set('id')
+		.set('cargoId')
+		.set('cargoinnId')
+		.set('driverId')
+		.set('weight')
+		.set('volume')
+		.set('height')
+		.set('length')
+		.set('width')
+		.set('number')
+		.set('filter')
+		.set('price')
+		.set('crmId', 'crm_id')
+		.set('date', 'dateAt')
+		.set('dedicated', 'dedicated_machine')
+		.set('pallets', 'palets')
+		.set('loadingTypes', 'loading_types')
+		.set('transportTypes', 'transport_types')
+		.set('isOpen', 'is_open')
+		.set('isFree', 'is_free')
+		.set('isBid', 'is_bid')
+		.set('isCanceled', 'is_canceled')
+		.set('cancelCause', 'cancel_cause')
+		.set('destinations')
+		.set('bidInfo', 'bid_info')
+		.set('bidPrice', 'bid_price')
+		.set('bidPriceVat', 'bid_price_max')
+		.set('paymentType', 'payment_type')
+		.set('payloadRiskType', 'payload_type')
+		.set('driverDeferralConditions', 'driver_deferral_conditions')
+		.set('ownerDeferralConditions', 'owner_deferral_conditions')
+		.set('contractPhotoLink', 'contract_link')
+		.set('paymentPhotoLink', 'payment_link')
+		.set('receiptPhotoLink', 'receipt_link')
+		.get();
+};
 
-export const translatePayment = (data: transformers.IPaymentTransformer)
+export const translatePayment = <T extends transformers.IPaymentTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.IPayment> =>
-	({
-		id:                   data?.id,
-		cargoId:              data?.cargoId,
-		cargoinnId:           data?.cargoinnId,
-		bankName:             data?.bank,
-		bankBic:              data?.bankbik,
-		ogrnip:               data?.ogrnip,
-		ogrnipPhotoLink:      data?.ogrnip_link,
-		currentAccount:       data?.rs,
-		correspondentAccount: data?.ks,
-		info:                 data?.info
-	});
+{
+	return new FieldTransformer<T, attributes.IPayment>(data)
+		.set('id')
+		.set('bankBic', 'bankbik')
+		.set('bankName', 'bank')
+		.set('correspondentAccount', 'ks')
+		.set('currentAccount', 'rs')
+		.set('ogrnipPhotoLink', 'ogrnip_link')
+		.set('ogrnip')
+		.set('info')
+		.get();
+};
 
-export const translateTransport = (data: transformers.ITransportTransformer)
-	: TOmitTimestamp<attributes.ITransport> =>
-	({
-		id:                   data?.id,
-		cargoId:              data?.cargoId,
-		cargoinnId:           data?.cargoinnId,
-		driverId:             data?.driverId,
-		crmId:                data?.crm_id,
-		status:               data?.status,
-		type:                 data?.type,
-		brand:                data?.brand,
-		model:                data?.model,
-		registrationNumber:   data?.registr_num,
-		prodYear:             data?.prod_year,
-		payload:              data?.payload,
-		payloadExtra:         data?.payload_extra,
-		isTrailer:            data?.is_trailer,
-		isDedicated:          data?.is_dedicated,
-		certificateNumber:    data?.sts,
-		weightExtra:          data?.weight_extra,
-		volumeExtra:          data?.volume_extra,
-		weight:               data?.weight,
-		volume:               data?.volume,
-		length:               data?.length,
-		width:                data?.width,
-		height:               data?.height,
-		pallets:              data?.polets,
-		riskClasses:          data?.risk_classes,
-		loadingTypes:         data?.loading_types,
-		fixtures:             data?.extra_fixtures,
-		osagoNumber:          data?.osago_number,
-		osagoExpiryDate:      data?.osago_date,
-		osagoPhotoLink:       data?.osago_link,
-		diagnosticsNumber:    data?.diag_num,
-		diagnosticsDate:      data?.diag_date,
-		diagnosticsPhotoLink: data?.diag_link,
-		comments:             data?.comments,
-		info:                 data?.info
-	});
+export const translateTransport = <T extends transformers.ITransportTransformer>(data: T | Partial<T>)
+	: attributes.ITransport =>
+{
+	return new FieldTransformer<T, attributes.ITransport>(data)
+		.set('id')
+		.set('cargoId')
+		.set('cargoinnId')
+		.set('driverId')
+		.set('status')
+		.set('type')
+		.set('brand')
+		.set('model')
+		.set('height')
+		.set('width')
+		.set('length')
+		.set('weight')
+		.set('volume')
+		.set('pallets')
+		.set('weightExtra', 'weight_extra')
+		.set('volumeExtra', 'volume_extra')
+		.set('payload')
+		.set('payloadExtra', 'payload_extra')
+		.set('crmId', 'crm_id')
+		.set('registrationNumber', 'registr_num')
+		.set('prodYear', 'prod_year')
+		.set('certificateNumber', 'sts')
+		.set('fixtures', 'extra_fixtures')
+		.set('riskClasses', 'risk_classes')
+		.set('osagoNumber', 'osago_number')
+		.set('osagoExpiryDate', 'osago_date')
+		.set('osagoPhotoLink', 'osago_link')
+		.set('diagnosticsNumber', 'diag_num')
+		.set('diagnosticsDate', 'diag_date')
+		.set('diagnosticsPhotoLink', 'diag_link')
+		.set('comments')
+		.set('info')
+		.set('offerStatus', 'offer_status')
+		.get();
+};

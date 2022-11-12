@@ -47,6 +47,9 @@ export default class DriverRepository
 		listFilter: IListFilter,
 		filter?: IDriverFilter
 	): Promise<Driver[]> {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			async() =>
 			{

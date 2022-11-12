@@ -3,14 +3,11 @@ import {
 	LoadingType,
 	OrderStatus,
 	TransportStatus
-}                   from '@common/enums';
-import {
-	IFilter,
-	TModelFilter
-}                   from '@common/interfaces';
-import * as filters from '@common/interfaces/filters';
-import * as helpers from './helpers';
-import * as types   from './transformer-types';
+}                                  from '@common/enums';
+import { IFilter, IModelSortable } from '@common/interfaces';
+import * as filters                from '@common/interfaces/filters';
+import * as transformers           from '@common/utils/compat/transformer-types';
+import * as helpers                from './helpers';
 
 /**
  * Admin model filters
@@ -19,7 +16,8 @@ import * as types   from './transformer-types';
  * */
 export interface IAdminTransformerFilter
 	extends IFilter,
-	        TModelFilter<types.IAdminTransformer> {}
+	        IModelSortable,
+	        Partial<transformers.IAdminTransformer> {}
 
 /**
  * Cargo model filters
@@ -28,7 +26,8 @@ export interface IAdminTransformerFilter
  * */
 export interface ICargoCompanyTransformerFilter
 	extends IFilter,
-	        TModelFilter<types.ICargoCompanyTransformer> {}
+	        IModelSortable,
+	        Partial<transformers.ICargoCompanyTransformer> {}
 
 /**
  * CargoInn model filters
@@ -37,7 +36,8 @@ export interface ICargoCompanyTransformerFilter
  * */
 export interface ICargoCompanyInnTransformerFilter
 	extends IFilter,
-	        TModelFilter<types.ICargoInnCompanyTransformer> {}
+	        IModelSortable,
+	        Partial<transformers.ICargoInnCompanyTransformer> {}
 
 export interface ICompanyTransportTransformerFilter
 	extends IFilter,
@@ -63,7 +63,8 @@ export interface ICompanyTransportTransformerFilter
  * */
 export interface IDriverTransformerFilter
 	extends IFilter,
-	        TModelFilter<types.IDriverTransformer> {
+	        IModelSortable,
+	        Partial<transformers.IDriverTransformer> {
 	order_status?: OrderStatus;
 	statuses?: DriverStatus[];
 }
@@ -73,13 +74,8 @@ export interface IDriverTransformerFilter
  * */
 export interface IOrderTransformerFilter
 	extends IFilter,
-	        TModelFilter<Omit<types.IOrderTransformer,
-		        'width' |
-		        'height' |
-		        'volume' |
-		        'length' |
-		        'weight' |
-		        'status'>> {
+	        IModelSortable,
+	        Partial<transformers.IOrderTransformer> {
 	weight_min?: number;
 	weight_max?: number;
 	volume_min?: number;
@@ -95,10 +91,6 @@ export interface IOrderTransformerFilter
 	pallets?: number;
 	is_dedicated?: boolean;
 	payload_extra?: boolean;
-	payload?: string;
-	payload_type?: string;
-	loading_types?: LoadingType[];
-	status?: OrderStatus;
 	risk_class?: string;
 	payment_types?: string[];
 	dedicated?: string;
@@ -110,7 +102,8 @@ export interface IOrderTransformerFilter
 
 export interface IOfferTransformerFilter
 	extends IFilter,
-	        TModelFilter<types.IOfferTransformer> {
+	        IModelSortable,
+	        Partial<transformers.IOfferTransformer> {
 	order_statuses?: OrderStatus[];
 	driver_status?: DriverStatus;
 	transport_status?: TransportStatus;
@@ -123,7 +116,8 @@ export interface IOfferTransformerFilter
  * */
 export interface ITransportTransformerFilter
 	extends IFilter,
-	        TModelFilter<types.ITransportTransformer> {
+	        IModelSortable,
+	        Partial<transformers.ITransportTransformer> {
 	weight_min?: number;
 	weight_max?: number;
 	volume_min?: number;
@@ -147,7 +141,7 @@ export interface ITransportTransformerFilter
 export function transformToAdminFilter(data: IAdminTransformerFilter)
 	: filters.IAdminFilter {
 	if(data) {
-		return helpers.translateAdmin(data as any);
+		return helpers.translateAdmin(data);
 	}
 
 	return null;
@@ -156,7 +150,7 @@ export function transformToAdminFilter(data: IAdminTransformerFilter)
 export function transformToCompanyFilter(data: ICargoCompanyTransformerFilter)
 	: filters.ICargoCompanyFilter {
 	if(data) {
-		return helpers.translateCargoCompany(data as any);
+		return helpers.translateCargoCompany(data);
 	}
 
 	return null;
@@ -165,7 +159,7 @@ export function transformToCompanyFilter(data: ICargoCompanyTransformerFilter)
 export function transformToCompanyInnFilter(data: ICargoCompanyInnTransformerFilter)
 	: filters.ICargoCompanyInnFilter {
 	if(data) {
-		return helpers.translateCargoInnCompany(data as any);
+		return helpers.translateCargoInnCompany(data);
 	}
 	return null;
 }
@@ -174,7 +168,7 @@ export function transformToDriverFilter(data: IDriverTransformerFilter)
 	: filters.IDriverFilter {
 	if(data) {
 		return {
-			...helpers.translateDriver(data as any),
+			...helpers.translateDriver(data),
 			statuses:    data.statuses,
 			orderStatus: data.order_status
 		};
@@ -186,7 +180,7 @@ export function transformToOfferFilter(data: IOfferTransformerFilter)
 	: filters.IOfferFilter {
 	if(data) {
 		return {
-			...helpers.translateOffer(data as any),
+			...helpers.translateOffer(data),
 			orderStatuses:   data.order_statuses,
 			driverStatus:    data.driver_status,
 			transportStatus: data.transport_status,
@@ -201,7 +195,7 @@ export function transformToOrderFilter(data: IOrderTransformerFilter)
 	: filters.IOrderFilter {
 	if(data) {
 		return {
-			...helpers.translateOrder(data as any),
+			...helpers.translateOrder(data),
 			weightMin:    data.weight_min,
 			weightMax:    data.weight_max,
 			volumeMin:    data.volume_min,
@@ -230,7 +224,22 @@ export function transformToOrderFilter(data: IOrderTransformerFilter)
 export function transformToTransportFilter(data: ITransportTransformerFilter)
 	: filters.ITransportFilter {
 	if(data) {
-		return helpers.translateTransport(data as any);
+		return {
+			...helpers.translateTransport(data),
+			weightMin:   data.weight_min,
+			weightMax:   data.weight_max,
+			volumeMin:   data.volume_min,
+			volumeMax:   data.volume_max,
+			lengthMin:   data.length_min,
+			lengthMax:   data.length_max,
+			widthMin:    data.width_min,
+			widthMax:    data.width_max,
+			heightMin:   data.height_min,
+			heightMax:   data.height_max,
+			types:       data.types,
+			isDedicated: data.is_dedicated,
+			payloadType: data.payload_type
+		};
 	}
 	return null;
 }
@@ -239,7 +248,7 @@ export function transformToCompanyTransportFilter(data: ICompanyTransportTransfo
 	: filters.ICompanyTransportFilter {
 	if(data) {
 		return {
-			...helpers.translateTransport(data as any),
+			...helpers.translateTransport(data),
 			weightMin:   data.weight_min,
 			weightMax:   data.weight_max,
 			volumeMin:   data.volume_min,

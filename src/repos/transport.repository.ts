@@ -40,6 +40,9 @@ export default class TransportRepository
 		listFilter: IListFilter,
 		filter?: ITransportFilter
 	): Promise<Transport[]> {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			() =>
 			{

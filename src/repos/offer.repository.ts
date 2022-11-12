@@ -109,6 +109,9 @@ export default class OfferRepository
 		listFilter: IListFilter,
 		filter?: IOfferFilter
 	): Promise<Offer[]> {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			() =>
 			{

@@ -29,6 +29,9 @@ export default class PaymentsRepository
 		listFilter: IListFilter,
 		filter?: IPaymentFilter
 	) {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			async() =>
 			{

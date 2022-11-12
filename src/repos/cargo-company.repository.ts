@@ -58,6 +58,9 @@ export default class CargoCompanyRepository
 		listFilter: IListFilter,
 		filter?: ICargoCompanyFilter
 	): Promise<CargoCompany[]> {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			async() =>
 			{
