@@ -330,6 +330,7 @@ export interface IDriverTransformer
 	 * @see IDriver.licenseBackLink
 	 * */
 	link_back?: string;
+	phone_second?: string;
 	info?: string;
 	status?: DriverStatus;
 	operation?: IDriverOperation;
