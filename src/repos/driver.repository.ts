@@ -97,8 +97,7 @@ export default class DriverRepository
 						               .inArray('status', statuses)
 							         .query
 						         : this.whereClause(conjunct)
-						               .eq('phone', rest?.phone)
-						               .eq('phone', formatPhone(rest?.phone), 'or')
+						               .in('phone', [rest?.phone, formatPhone(rest?.phone)])
 						               .iLike('name', name)
 						               .iLike('patronymic', patronymic)
 						               .iLike('lastName', lastName)
