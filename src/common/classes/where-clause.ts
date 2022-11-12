@@ -80,12 +80,11 @@ export default class WhereClause<T extends IModel> {
 			key,
 			() =>
 			{
-				if(values === undefined || values.length === 0) return;
+				if(values === undefined || values.every(v => v === undefined) || values.length === 0) return;
 				if(this.debug)
 					console.debug({ name: 'in', conj: this._conjunct, key, values });
-				if(values) {
-					this._query[key] = { [Op.in]: values };
-				}
+				
+				this._query[key] = { [Op.in]: values.filter(v => v !== undefined) };
 			}
 		);
 	}
@@ -205,12 +204,10 @@ export default class WhereClause<T extends IModel> {
 	 *
 	 * @param {String!} key Model field name as a key.
 	 * @param {String!} value Value to check against.
-	 * @param {TOpType} op Operation to override
 	 * */
 	public eq<V>(
 		key: keyof T,
-		value: V,
-		op: TOpType = null
+		value: V
 	): this {
 		return this._exec(
 			key,
@@ -220,9 +217,7 @@ export default class WhereClause<T extends IModel> {
 				if(this.debug)
 					console.debug({ name: 'eq', conj: this._conjunct, key, value });
 
-				if(!this.combine(key, value, op)) {
-					this._query[key] = { [Op.eq]: value };
-				}
+				this._query[key] = { [Op.eq]: value };
 			}
 		);
 	}
@@ -475,26 +470,6 @@ export default class WhereClause<T extends IModel> {
 		}
 
 		return this;
-	}
-
-	private combine<V>(
-		key: keyof T,
-		value: V,
-		op: TOpType = null
-	) {
-		if(this._query[key] !== undefined) {
-			this._query[key] = op !== null ? {
-				[Op[op]]: [
-					this._query[key],
-					{ [Op.eq]: value }
-				]
-			} : [
-				this._query[key],
-				{ [Op.eq]: value }
-			];
-			return true;
-		}
-		return false;
 	}
 
 	private _exec(
