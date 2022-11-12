@@ -58,7 +58,6 @@ export default class ImageFileService
 		let affectedCount: number = 0;
 
 		if(fileList) {
-			const deleteImage = this.deleteImage;
 			imageList = Array.isArray(fileList) ? fileList
 			                                    : fileList.split(',');
 			affectedCount = await Promise.all(
@@ -66,7 +65,7 @@ export default class ImageFileService
 					async(item: string): Promise<number> =>
 					{
 						if(item)
-							return Number(await deleteImage(item, bucketId));
+							return Number(await this.deleteImage(item, bucketId));
 						return 0;
 					}
 				)
