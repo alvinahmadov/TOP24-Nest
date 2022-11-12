@@ -204,6 +204,7 @@ function transformDriver(driver: models.Driver)
 			date_of_birth:                 driver.getDataValue('birthDate'),
 			current_point:                 driver.getDataValue('currentPoint'),
 			phone:                         driver.getDataValue('phone'),
+			phone_second:                  driver.getDataValue('phoneSecond'),
 			taxpayer_number:               driver.getDataValue('taxpayerNumber'),
 			passport_serial_number:        driver.getDataValue('passportSerialNumber'),
 			passport_date:                 driver.getDataValue('passportDate'),
