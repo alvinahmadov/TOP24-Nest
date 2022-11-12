@@ -46,28 +46,28 @@ export interface IAdminTransformer
 
 export interface IAddressTransformer
 	extends IModel {
-		country: string;
-		postal_code?: string;
-		federal_district?: string;
-		region_type?: string;
-		region?: string;
-		area_type?: string;
-		area?: string;
-		city_type?: string;
-		city?: string;
-		settlement_type?: string;
-		settlement?: string;
-		street?: string;
-		kladr_id?: string;
-		fias_id?: string;
-		fias_level?: string;
-		capital_marker?: string;
-		okato?: string;
-		oktmo?: string;
-		tax_office?: string;
-		timezone?: string;
-		latitude?: number;
-		longitude?: number;
+	country: string;
+	postal_code?: string;
+	federal_district?: string;
+	region_type?: string;
+	region?: string;
+	area_type?: string;
+	area?: string;
+	city_type?: string;
+	city?: string;
+	settlement_type?: string;
+	settlement?: string;
+	street?: string;
+	kladr_id?: string;
+	fias_id?: string;
+	fias_level?: string;
+	capital_marker?: string;
+	okato?: string;
+	oktmo?: string;
+	tax_office?: string;
+	timezone?: string;
+	latitude?: number;
+	longitude?: number;
 }
 
 /**
@@ -126,6 +126,9 @@ export interface ICompanyTransformer
 	 * */
 	nds?: string;
 	confirmed?: boolean;
+	address_first?: string;
+	address_second?: string;
+	address_third?: string;
 	/**
 	 * @see ICompany.avatarLink
 	 * */
@@ -214,6 +217,18 @@ export interface ICargoInnCompanyTransformer
 	 * @see ICargoInnCompany.birthDate
 	 * */
 	birth_date: Date;
+	/**
+	 * @see ICargoInnCompany.address
+	 * */
+	address_first?: string;
+	/**
+	 * @see ICargoInnCompany.actualAddress
+	 * */
+	address_second?: string;
+	/**
+	 * @see ICargoInnCompany.postalAddress
+	 * */
+	address_third?: string;
 	/**
 	 * @see ICargoInnCompany.passportPhotoLink
 	 * */
