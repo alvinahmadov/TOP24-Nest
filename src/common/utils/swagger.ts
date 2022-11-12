@@ -1,17 +1,15 @@
+import { RequestMethod, Type } from '@nestjs/common';
 import {
-	Type,
-	RequestMethod
-}                        from '@nestjs/common';
-import {
-	getSchemaPath,
-	ApiResponseSchemaHost
-}                        from '@nestjs/swagger';
-import { ContentObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+	ApiResponseSchemaHost,
+	getSchemaPath
+}                              from '@nestjs/swagger';
+import { ContentObject }       from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import env                     from '@config/env';
 import {
 	IApiRoute,
 	TApiResponseSchemaOptions,
 	TMediaType
-}                        from '@common/interfaces';
+}                              from '@common/interfaces';
 
 /**@ignore*/
 export const commonRoutes = <T = any, K extends keyof IApiRoute<T> = keyof IApiRoute<T>>
@@ -108,27 +106,31 @@ export const getApiResponseSchema = (
 ): ApiResponseSchemaHost =>
 {
 	return {
-		schema: {
+		schema: env.api.compatMode ? (
+			(!!options?.isArray)
+			? { type: 'array', items: { $ref: getSchemaPath(classRef) } }
+			: { $ref: getSchemaPath(classRef) }
+		) : {
 			type:        'object',
 			description: options?.description,
 			properties:  !!classRef ? {
-				status:  {
+				statusCode: {
 					type:     'number',
 					nullable: false
 				},
-				data:    (!!options?.isArray)
-				         ? { type: 'array', items: { $ref: getSchemaPath(classRef) } }
-				         : { $ref: getSchemaPath(classRef) },
-				message: {
+				data:       (!!options?.isArray)
+				            ? { type: 'array', items: { $ref: getSchemaPath(classRef) } }
+				            : { $ref: getSchemaPath(classRef) },
+				message:    {
 					type:     'string',
 					nullable: true
 				}
 			} : {
-				status:  {
+				statusCode: {
 					type:     'number',
 					nullable: false
 				},
-				message: {
+				message:    {
 					type:     'string',
 					nullable: false
 				}
@@ -138,27 +140,34 @@ export const getApiResponseSchema = (
 };
 
 /**@ignore*/
+const getItems = (key: 'oneOf' | 'anyOf' | 'allOf', classRefs: Type[]) =>
+	({ [key]: classRefs.map(classRef => ({ $ref: getSchemaPath(classRef) })) });
+
+/**@ignore*/
 export const getApiResponseSchemaOf = (
 	key: 'oneOf' | 'anyOf' | 'allOf',
 	classRefs?: Type[],
 	options?: TApiResponseSchemaOptions
 ): ApiResponseSchemaHost =>
 {
-	const items = { [key]: classRefs.map(classRef => ({ $ref: getSchemaPath(classRef) })) };
-
 	return {
-		schema: {
+		schema: env.api.compatMode ? (
+			(!!options?.isArray)
+			? { type: 'array', items: getItems(key, classRefs) }
+			: getItems(key, classRefs)
+		) : {
 			type:        'object',
 			description: options?.description,
+			items:       { type: 'array', items: getItems(key, classRefs) },
 			properties:  {
-				status:  {
+				statusCode: {
 					type:     'number',
 					nullable: false
 				},
-				data:    (!!options?.isArray)
-				         ? { type: 'array', items }
-				         : items,
-				message: {
+				data:       (!!options?.isArray)
+				            ? { type: 'array', items: getItems(key, classRefs) }
+				            : getItems(key, classRefs),
+				message:    {
 					type:     'string',
 					nullable: true
 				}

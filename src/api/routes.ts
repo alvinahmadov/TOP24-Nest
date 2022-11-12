@@ -1,8 +1,8 @@
 import { RequestMethod }   from '@nestjs/common';
 import {
+	ApiQueryOptions,
 	getSchemaPath
 }                          from '@nestjs/swagger';
-import { ParameterObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import { IApiRouteConfig } from '@common/interfaces';
 import {
 	commonRoutes,
@@ -28,15 +28,7 @@ export type TApiRouteList = {
 	transport: IApiRouteConfig<mo.Transport>;
 }
 
-type TApiParameterList = {
-	[k: string]: any;
-	id: ParameterObject;
-	crmId: ParameterObject;
-	by: ParameterObject;
-	full: ParameterObject;
-}
-
-const parameter: TApiParameterList = {
+const parameter: Record<string, any> = {
 	id:    {
 		in:       'path',
 		name:     'id',
@@ -48,22 +40,22 @@ const parameter: TApiParameterList = {
 		name:     'crmId',
 		required: true,
 		schema:   { type: 'number' }
-	},
-	by:    {
-		in:          'query',
-		name:        'by',
-		description: 'Used method for signin',
-		example:     ['email', 'phone'],
-		required:    true
-	},
-	full:  {
+	}
+};
+
+const queryOptions: { [key: string]: ApiQueryOptions } = {
+	full: {
 		name:        'full',
-		in:          'query',
-		description: 'Return with associated entities.',
+		description: 'Return with child entities.',
 		required:    false,
+		schema:      { default: false }
+	},
+	by:   {
+		description: 'Used method for signin',
+		enum:        ['email', 'phone'],
+		required:    true,
 		schema:      {
-			type:    'boolean',
-			default: false
+			default: 'email'
 		}
 	}
 };
@@ -394,7 +386,11 @@ export const routeConfig: TApiRouteList = {
 		}
 	},
 	company:   {
-		path:        ['company', 'cargo', 'cargoinn'],
+		path:        [
+			'company',
+			'cargo',
+			'cargoinn'
+		],
 		description: 'Cargo company related operations.',
 		routes:      {
 			list:           {
@@ -449,14 +445,23 @@ export const routeConfig: TApiRouteList = {
 							status:      200,
 							description: 'List of filtered cargo company items.',
 							content:     {
-								'application/json': getApiResponseSchemaOf(
-									'allOf',
-									[mo.CargoCompany, mo.CargoInnCompany],
-									{
-										isArray:     true,
-										description: 'List of filtered cargo company entities'
+								'application/json': {
+									schema: {
+										type:  'array',
+										allOf: [
+											{ $ref: getSchemaPath(mo.CargoCompany) },
+											{ $ref: getSchemaPath(mo.CargoInnCompany) }
+										]
 									}
-								)
+								}
+								// 'application/json': getApiResponseSchemaOf(
+								// 	'allOf',
+								// 	[mo.CargoCompany, mo.CargoInnCompany],
+								// 	{
+								// 		isArray:     true,
+								// 		description: 'List of filtered cargo company entities'
+								// 	}
+								// )
 							}
 						}
 					}
@@ -466,20 +471,21 @@ export const routeConfig: TApiRouteList = {
 				path:   ':id',
 				method: RequestMethod.GET,
 				api:    {
-					operation: {
+					operation:    {
 						summary:     'Get cargo company',
 						description: 'Gets single cargo company specified by `id`',
-						parameters:  [parameter.id, parameter.full],
+						parameters:  parameter.id,
 						security
 					},
-					responses: {
+					queryOptions: queryOptions.full,
+					responses:    {
 						200: {
 							status:      200,
 							description: 'Retreive single company item.',
 							...getApiResponseContentOf(
 								'application/json',
 								'oneOf',
-								[mo.CargoCompany, mo.CargoInnCompany]
+								[dto.CompanyCreateDto, dto.CompanyInnCreateDto]
 							)
 						},
 						404: {
@@ -610,6 +616,23 @@ export const routeConfig: TApiRouteList = {
 						summary:     'Login to company account.',
 						description: 'Try to login to the account if code is supplied.\n'
 						             + 'Otherwise request login code'
+					},
+					responses: {
+						200: {
+							status:      200,
+							description: 'Login as company user.',
+							...getApiResponseContentOf(
+								'application/json',
+								'oneOf',
+								[mo.CargoCompany, mo.CargoInnCompany],
+								{ isArray: true }
+							)
+						},
+						404: {
+							status:      404,
+							description: 'Company entity not found.',
+							...getApiResponseContent('application/json')
+						}
 					}
 				}
 			},
