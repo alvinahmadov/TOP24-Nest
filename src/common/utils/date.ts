@@ -1,19 +1,32 @@
 import { IModel, TUpdateAttribute } from '@common/interfaces';
 
 /**
- * Formats date from form of DD-MM-YYYY to YYYY-MM-DD
+ * Formats date form to YYYY-MM-DD.
  *
  * @example
- * 22-05-2022 => 2022-05-22
+ * 22-05-2022 => 2022-22-05
  * */
 export function formatDateString(date: Date | string, sep: string = '-'): Date {
 	let fmtDateString = date;
 	let dateChunks: string[] = [];
 	if(typeof (date) === 'string') {
 		dateChunks = date.split(sep);
+		let day, month, year;
+
 		if(dateChunks.length == 3 && dateChunks[2].length == 4) {
-			fmtDateString = `${dateChunks[2]}-${dateChunks[1]}-${dateChunks[0]}`;
-		} else {
+			if(Number(dateChunks[1]) > 12) {
+				day = dateChunks[1];
+				month = dateChunks[0];
+				year = dateChunks[2];
+			}
+			else {
+				day = dateChunks[0];
+				month = dateChunks[1];
+				year = dateChunks[2];
+			}
+			fmtDateString = `${year}-${month}-${day}`;
+		}
+		else {
 			fmtDateString = date;
 		}
 		return new Date(fmtDateString);
