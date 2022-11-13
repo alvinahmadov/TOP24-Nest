@@ -17,9 +17,7 @@ import {
 	UseGuards
 }                              from '@nestjs/common';
 import {
-	ADMIN_ROOM_ID,
 	CARGO_EVENT,
-	CARGO_ROOM_ID,
 	DRIVER_EVENT,
 	ORDER_EVENT,
 	SOCKET_OPTIONS
@@ -43,10 +41,9 @@ import {
 	DriverMessageBodyPipe,
 	OrderMessageBodyPipe
 }                              from '@api/pipes';
+import { Admin }               from '@models/index';
 import { AuthService }         from '@api/services';
 import * as guards             from '@api/security/guards';
-
-const makeRoom = (...parts: string[]) => parts.join('#');
 
 @WebSocketGateway(SOCKET_OPTIONS)
 @Injectable()
@@ -55,7 +52,6 @@ export default class EventsGateway
 	           OnGatewayDisconnect {
 	@WebSocketServer()
 	public server: IOServer<any, IServerEvents, any, IUserPayload>;
-	private readonly rooms: Map<string, string> = new Map<string, string>();
 
 	private readonly logger: Logger = new Logger(EventsGateway.name, { timestamp: true });
 	private readonly adminRepo: AdminRepository = new AdminRepository({ log: false });
@@ -72,19 +68,25 @@ export default class EventsGateway
 		const token = socketAuthExtractor(client);
 		if(token) {
 			let { id, role, reff } = await this.authService.validateAsync(token);
-			const item = await this.cargoRepo.get(id) ||
-			             await this.cargoInnRepo.get(id) ||
+			const item = await this.cargoRepo.get(id, true) ||
+			             await this.cargoInnRepo.get(id, true) ||
 			             await this.adminRepo.get(id);
 			if(item) {
-				if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
-					client.data = { id, role, reff };
-					this.rooms.set(id, makeRoom(ADMIN_ROOM_ID, id));
-					client.join(this.rooms.get(id));
+				if(item instanceof Admin) {
+					if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
+						client.data = { id, role, reff };
+						client.join(id);
+					}
 				}
-				else if(role === UserRole.CARGO) {
-					client.data = { id, role, reff };
-					this.rooms.set(id, makeRoom(CARGO_ROOM_ID, id));
-					client.join(this.rooms.get(id));
+				else {
+					if(role === UserRole.CARGO) {
+						client.data = { id, role, reff };
+						client.join(id);
+
+						item.drivers
+						    .map(d => d.id)
+						    .forEach(client.join);
+					}
 				}
 				return;
 			}
@@ -111,7 +113,7 @@ export default class EventsGateway
 	public sendCargoEvent(
 		@MessageBody(CargoMessageBodyPipe) data: ICargoGatewayData
 	) {
-		this.server.to(this.rooms.get(data.id)).emit(CARGO_EVENT, data);
+		this.server.to(data.id).emit(CARGO_EVENT, data);
 	}
 
 	@UseGuards(guards.AdminGuard, guards.LogistGuard)
@@ -121,10 +123,10 @@ export default class EventsGateway
 		role: UserRole
 	) {
 		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
-			this.server.to(this.rooms.get(data.id)).emit(DRIVER_EVENT, data);
+			this.server.to(data.id).emit(DRIVER_EVENT, data);
 		}
 		if(role === UserRole.CARGO) {
-			this.server.to(this.rooms.get(data.id)).emit(DRIVER_EVENT, data);
+			this.server.to(data.id).emit(DRIVER_EVENT, data);
 		}
 	};
 
@@ -135,10 +137,10 @@ export default class EventsGateway
 		role?: UserRole
 	) {
 		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
-			this.server.to(this.rooms.get(data.id)).emit(ORDER_EVENT, data);
+			this.server.to(data.id).emit(ORDER_EVENT, data);
 		}
 		if(role === UserRole.CARGO) {
-			this.server.to(this.rooms.get(data.id)).emit(ORDER_EVENT, data);
+			this.server.to(data.id).emit(ORDER_EVENT, data);
 		}
 	}
 }
