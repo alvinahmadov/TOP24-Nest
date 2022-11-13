@@ -116,7 +116,7 @@ export default class EventsGateway
 		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
 			this.server.to(ADMIN_ROOM_ID).emit(DRIVER_EVENT, data);
 		}
-		else if(role === UserRole.CARGO) {
+		if(role === UserRole.CARGO) {
 			this.server.to(CARGO_ROOM_ID).emit(DRIVER_EVENT, data);
 		}
 	};
@@ -127,14 +127,10 @@ export default class EventsGateway
 		@MessageBody(OrderMessageBodyPipe) data: IOrderGatewayData,
 		role?: UserRole
 	) {
-		if(role === undefined) {
-			this.server.to(ADMIN_ROOM_ID).emit(ORDER_EVENT, data);
-			this.server.to(CARGO_ROOM_ID).emit(ORDER_EVENT, data);
-		}
-		if(role === UserRole.ADMIN) {
+		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
 			this.server.to(ADMIN_ROOM_ID).emit(ORDER_EVENT, data);
 		}
-		if(role <= UserRole.CARGO) {
+		if(role === UserRole.CARGO) {
 			this.server.to(CARGO_ROOM_ID).emit(ORDER_EVENT, data);
 		}
 	}
