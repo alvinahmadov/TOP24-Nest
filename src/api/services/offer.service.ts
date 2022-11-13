@@ -459,7 +459,7 @@ export default class OfferService
 					{
 						id:      offer.driverId,
 						source:  'offer',
-						message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order.crmId.toString())
+						message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order.crmId?.toString())
 					},
 					UserRole.CARGO
 				)
