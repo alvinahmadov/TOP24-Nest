@@ -1,13 +1,13 @@
 import {
 	forwardRef, Inject,
 	Injectable
-}                             from '@nestjs/common';
-import { setOrderSent }       from '@config/env';
+}                                       from '@nestjs/common';
+import { setOrderSent }                 from '@config/env';
 import {
 	BitrixUrl,
 	Bucket
-}                             from '@common/constants';
-import { TransportStatus }    from '@common/enums';
+}                                       from '@common/constants';
+import { OfferStatus, TransportStatus } from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -18,32 +18,32 @@ import {
 	TCRMResponse,
 	TDocumentMode,
 	TMergedEntities
-}                             from '@common/interfaces';
+}                                       from '@common/interfaces';
 import {
 	buildBitrixRequestUrl,
 	filterOrders,
 	formatArgs,
 	getTranslation,
 	transformTransportParameters
-}                             from '@common/utils';
+}                                       from '@common/utils';
 import {
 	Driver,
 	Order,
 	Transport
-}                             from '@models/index';
-import { OrderRepository }    from '@repos/index';
+}                                       from '@models/index';
+import { OrderRepository }              from '@repos/index';
 import {
 	ListFilter,
 	OrderCreateDto,
 	OrderFilter,
 	OrderUpdateDto
-}                             from '@api/dto';
-import { EventsGateway }      from '@api/events';
-import Service                from './service';
-import CargoCompanyService    from './cargo-company.service';
-import CargoCompanyInnService from './cargoinn-company.service';
-import DriverService          from './driver.service';
-import ImageFileService       from './image-file.service';
+}                                       from '@api/dto';
+import { EventsGateway }                from '@api/events';
+import Service                          from './service';
+import CargoCompanyService              from './cargo-company.service';
+import CargoCompanyInnService           from './cargoinn-company.service';
+import DriverService                    from './driver.service';
+import ImageFileService                 from './image-file.service';
 
 const ORDER_TRANSLATIONS = getTranslation('REST', 'ORDER');
 const EVENT_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
@@ -277,14 +277,17 @@ export default class OrderService
 			if(driver.transports) {
 				if(driver.transports.length == 1) {
 					result.transport = transformTransportParameters(driver.transports[0]);
+					result.transport.offerStatus = OfferStatus.RESPONDED;
 				}
 				else {
 					const transport = driver.transports.find(
 						t => !t.isTrailer &&
 						     t.status === TransportStatus.ACTIVE
 					);
-					if(transport)
+					if(transport) {
 						result.transport = transformTransportParameters(transport);
+						result.transport.offerStatus = OfferStatus.RESPONDED;
+					}
 				}
 			}
 			result.driver = driver;
