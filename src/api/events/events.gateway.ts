@@ -1,4 +1,7 @@
-import { Server as IOServer, Socket } from 'socket.io';
+import {
+	Server as IOServer,
+	Socket
+}                              from 'socket.io';
 import {
 	ConnectedSocket,
 	MessageBody,
@@ -7,12 +10,12 @@ import {
 	SubscribeMessage,
 	WebSocketGateway,
 	WebSocketServer
-}                                     from '@nestjs/websockets';
+}                              from '@nestjs/websockets';
 import {
 	Injectable,
 	Logger,
 	UseGuards
-}                                     from '@nestjs/common';
+}                              from '@nestjs/common';
 import {
 	ADMIN_ROOM_ID,
 	CARGO_EVENT,
@@ -20,28 +23,30 @@ import {
 	DRIVER_EVENT,
 	ORDER_EVENT,
 	SOCKET_OPTIONS
-}                                     from '@common/constants';
-import { UserRole }                   from '@common/enums';
+}                              from '@common/constants';
+import { UserRole }            from '@common/enums';
 import {
 	ICargoGatewayData,
 	IDriverGatewayData,
 	IOrderGatewayData,
 	IServerEvents,
 	IUserPayload
-}                                     from '@common/interfaces';
-import { socketAuthExtractor }        from '@common/utils';
+}                              from '@common/interfaces';
+import { socketAuthExtractor } from '@common/utils';
 import {
 	AdminRepository,
 	CargoCompanyRepository,
 	CargoInnCompanyRepository
-}                                     from '@repos/index';
+}                              from '@repos/index';
 import {
 	CargoMessageBodyPipe,
 	DriverMessageBodyPipe,
 	OrderMessageBodyPipe
-}                                     from '@api/pipes';
-import { AuthService }                from '@api/services';
-import * as guards                    from '@api/security/guards';
+}                              from '@api/pipes';
+import { AuthService }         from '@api/services';
+import * as guards             from '@api/security/guards';
+
+const makeRoom = (...parts: string[]) => parts.join('#');
 
 @WebSocketGateway(SOCKET_OPTIONS)
 @Injectable()
@@ -50,6 +55,7 @@ export default class EventsGateway
 	           OnGatewayDisconnect {
 	@WebSocketServer()
 	public server: IOServer<any, IServerEvents, any, IUserPayload>;
+	private readonly rooms: Map<string, string> = new Map<string, string>();
 
 	private readonly logger: Logger = new Logger(EventsGateway.name, { timestamp: true });
 	private readonly adminRepo: AdminRepository = new AdminRepository({ log: false });
@@ -70,15 +76,16 @@ export default class EventsGateway
 			             await this.cargoInnRepo.get(id) ||
 			             await this.adminRepo.get(id);
 			if(item) {
-				if(role === UserRole.ADMIN) {
+				if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
 					client.data = { id, role, reff };
-					client.join(ADMIN_ROOM_ID);
+					this.rooms.set(id, makeRoom(ADMIN_ROOM_ID, id));
+					client.join(this.rooms.get(id));
 				}
 				else if(role === UserRole.CARGO) {
 					client.data = { id, role, reff };
-					client.join(CARGO_ROOM_ID);
+					this.rooms.set(id, makeRoom(CARGO_ROOM_ID, id));
+					client.join(this.rooms.get(id));
 				}
-
 				return;
 			}
 			else {
@@ -104,7 +111,7 @@ export default class EventsGateway
 	public sendCargoEvent(
 		@MessageBody(CargoMessageBodyPipe) data: ICargoGatewayData
 	) {
-		this.server.to(ADMIN_ROOM_ID).emit(CARGO_EVENT, data);
+		this.server.to(this.rooms.get(data.id)).emit(CARGO_EVENT, data);
 	}
 
 	@UseGuards(guards.AdminGuard, guards.LogistGuard)
@@ -114,10 +121,10 @@ export default class EventsGateway
 		role: UserRole
 	) {
 		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
-			this.server.to(ADMIN_ROOM_ID).emit(DRIVER_EVENT, data);
+			this.server.to(this.rooms.get(data.id)).emit(DRIVER_EVENT, data);
 		}
 		if(role === UserRole.CARGO) {
-			this.server.to(CARGO_ROOM_ID).emit(DRIVER_EVENT, data);
+			this.server.to(this.rooms.get(data.id)).emit(DRIVER_EVENT, data);
 		}
 	};
 
@@ -128,10 +135,10 @@ export default class EventsGateway
 		role?: UserRole
 	) {
 		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
-			this.server.to(ADMIN_ROOM_ID).emit(ORDER_EVENT, data);
+			this.server.to(this.rooms.get(data.id)).emit(ORDER_EVENT, data);
 		}
 		if(role === UserRole.CARGO) {
-			this.server.to(CARGO_ROOM_ID).emit(ORDER_EVENT, data);
+			this.server.to(this.rooms.get(data.id)).emit(ORDER_EVENT, data);
 		}
 	}
 }
