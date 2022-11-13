@@ -111,7 +111,7 @@ export default class OfferRepository
 	): Promise<Offer[]> {
 		if(filter === null)
 			return [];
-		
+
 		return this.log(
 			() =>
 			{
@@ -174,8 +174,7 @@ export default class OfferRepository
 		filter?: IOfferFilter & IDriverFilter
 	): Promise<Offer[]> {
 		const {
-			from: offset = 0,
-			full = false,
+			from:  offset = 0,
 			count: limit
 		} = listFilter ?? {};
 		const {
@@ -196,7 +195,7 @@ export default class OfferRepository
 					offset,
 					limit,
 					order,
-					include: full ? [
+					include: [
 						{
 							model:   Driver,
 							where:   this.whereClause<IDriver>('or')
@@ -212,7 +211,7 @@ export default class OfferRepository
 								}
 							]
 						}
-					] : []
+					]
 				}
 			),
 			{ id: 'getOrderDrivers' },
