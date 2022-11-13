@@ -684,7 +684,7 @@ export default class OfferService
 									{
 										id:      driver.id,
 										status:  driver.status,
-										message: `Вы отказались от заявки '${order.title}'.`
+										message: formatArgs(EVENT_DRIVER_TRANSLATIONS['DECLINE'], order.crmId?.toString() ?? 0)
 									},
 									UserRole.CARGO
 								);
