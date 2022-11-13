@@ -111,7 +111,7 @@ export default class EventsGateway
 	@SubscribeMessage(DRIVER_EVENT)
 	public sendDriverEvent(
 		@MessageBody(DriverMessageBodyPipe) data: IDriverGatewayData,
-		role?: UserRole
+		role: UserRole
 	) {
 		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
 			this.server.to(ADMIN_ROOM_ID).emit(DRIVER_EVENT, data);
