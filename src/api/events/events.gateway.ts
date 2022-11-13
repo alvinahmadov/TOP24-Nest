@@ -113,8 +113,6 @@ export default class EventsGateway
 		@MessageBody(DriverMessageBodyPipe) data: IDriverGatewayData,
 		role?: UserRole
 	) {
-		console.log({ role });
-
 		if(role === undefined) {
 			this.server.to(ADMIN_ROOM_ID).emit(DRIVER_EVENT, data);
 			this.server.to(CARGO_ROOM_ID).emit(DRIVER_EVENT, data);
