@@ -1,7 +1,4 @@
-import {
-	Server as IOServer,
-	Socket
-}                              from 'socket.io';
+import { Server as IOServer, Socket } from 'socket.io';
 import {
 	ConnectedSocket,
 	MessageBody,
@@ -10,12 +7,12 @@ import {
 	SubscribeMessage,
 	WebSocketGateway,
 	WebSocketServer
-}                              from '@nestjs/websockets';
+}                                     from '@nestjs/websockets';
 import {
 	Injectable,
 	Logger,
 	UseGuards
-}                              from '@nestjs/common';
+}                                     from '@nestjs/common';
 import {
 	ADMIN_ROOM_ID,
 	CARGO_EVENT,
@@ -23,28 +20,28 @@ import {
 	DRIVER_EVENT,
 	ORDER_EVENT,
 	SOCKET_OPTIONS
-}                              from '@common/constants';
-import { UserRole }            from '@common/enums';
+}                                     from '@common/constants';
+import { UserRole }                   from '@common/enums';
 import {
 	ICargoGatewayData,
 	IDriverGatewayData,
 	IOrderGatewayData,
 	IServerEvents,
 	IUserPayload
-}                              from '@common/interfaces';
-import { socketAuthExtractor } from '@common/utils';
+}                                     from '@common/interfaces';
+import { socketAuthExtractor }        from '@common/utils';
 import {
 	AdminRepository,
 	CargoCompanyRepository,
 	CargoInnCompanyRepository
-}                              from '@repos/index';
+}                                     from '@repos/index';
 import {
 	CargoMessageBodyPipe,
 	DriverMessageBodyPipe,
 	OrderMessageBodyPipe
-}                              from '@api/pipes';
-import { AuthService }         from '@api/services';
-import * as guards             from '@api/security/guards';
+}                                     from '@api/pipes';
+import { AuthService }                from '@api/services';
+import * as guards                    from '@api/security/guards';
 
 @WebSocketGateway(SOCKET_OPTIONS)
 @Injectable()
@@ -55,9 +52,9 @@ export default class EventsGateway
 	public server: IOServer<any, IServerEvents, any, IUserPayload>;
 
 	private readonly logger: Logger = new Logger(EventsGateway.name, { timestamp: true });
-	private readonly adminRepo: AdminRepository = new AdminRepository();
-	private readonly cargoRepo: CargoCompanyRepository = new CargoCompanyRepository();
-	private readonly cargoInnRepo: CargoInnCompanyRepository = new CargoInnCompanyRepository();
+	private readonly adminRepo: AdminRepository = new AdminRepository({ log: false });
+	private readonly cargoRepo: CargoCompanyRepository = new CargoCompanyRepository({ log: false });
+	private readonly cargoInnRepo: CargoInnCompanyRepository = new CargoInnCompanyRepository({ log: false });
 
 	constructor(
 		protected readonly authService: AuthService
@@ -116,11 +113,13 @@ export default class EventsGateway
 		@MessageBody(DriverMessageBodyPipe) data: IDriverGatewayData,
 		role?: UserRole
 	) {
+		console.log({ role });
+
 		if(role === undefined) {
 			this.server.to(ADMIN_ROOM_ID).emit(DRIVER_EVENT, data);
 			this.server.to(CARGO_ROOM_ID).emit(DRIVER_EVENT, data);
 		}
-		else if(role === UserRole.ADMIN) {
+		else if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
 			this.server.to(ADMIN_ROOM_ID).emit(DRIVER_EVENT, data);
 		}
 		else if(role <= UserRole.CARGO) {
