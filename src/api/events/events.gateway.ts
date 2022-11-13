@@ -84,8 +84,7 @@ export default class EventsGateway
 						client.join(id);
 
 						item.drivers
-						    .map(d => d.id)
-						    .forEach(client.join);
+						    .forEach(d => client.join(d.id));
 					}
 				}
 				return;
