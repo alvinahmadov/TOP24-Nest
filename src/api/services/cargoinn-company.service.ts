@@ -34,6 +34,7 @@ import AddressService                from './address.service';
 import PaymentService                from './payment.service';
 
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
+const EVENT_TRANSLATIONS = getTranslation('EVENT', 'COMPANY');
 
 @Injectable()
 export default class CargoCompanyInnService
@@ -134,6 +135,14 @@ export default class CargoCompanyInnService
 
 		if(!company)
 			return this.repository.getRecord('create');
+
+		this.gateway.sendCargoEvent(
+			{
+				id:      company.id,
+				source:  'registration',
+				message: EVENT_TRANSLATIONS['MODERATION']
+			}
+		);
 
 		return {
 			statusCode: 201,
