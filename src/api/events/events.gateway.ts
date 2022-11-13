@@ -120,7 +120,7 @@ export default class EventsGateway
 		else if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
 			this.server.to(ADMIN_ROOM_ID).emit(DRIVER_EVENT, data);
 		}
-		else if(role <= UserRole.CARGO) {
+		else if(role === UserRole.CARGO) {
 			this.server.to(CARGO_ROOM_ID).emit(DRIVER_EVENT, data);
 		}
 	};
