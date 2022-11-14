@@ -835,47 +835,47 @@ export const entityConfig: TEntityConfigList = {
 	},
 	payment:    {
 		...base,
-		cargoId:        {
+		cargoId:         {
 			description: 'Id of cargo company for payments.',
 			format:      'uuid'
 		},
-		cargoinnId:     {
+		cargoinnId:      {
 			description: 'Id of individual cargo company for payments.',
 			format:      'uuid',
 			example:     ''
 		},
 		correspondentAccount:
-		                {
-			                description: 'Cargo company correspondent account number',
-			                example:     '30101643600000000957'
-		                },
-		currentAccount: {
+		                 {
+			                 description: 'Cargo company correspondent account number',
+			                 example:     '30101643600000000957'
+		                 },
+		currentAccount:  {
 			description: 'Cargo company giro transfer account number.',
 			example:     '40817810099910004312'
 		},
-		ogrnip:         {
+		ogrnip:          {
 			description: 'The main state registration number of an individual entrepreneur.',
 			example:     '321244848332114'
 		},
-		ogrnipLink:     {
+		ogrnipPhotoLink: {
 			description: 'Url to the main state registration number of an individual entrepreneur scan.'
 		},
-		bankName:       {
+		bankName:        {
 			description: 'Name of the Bank of cargo company.',
 			example:     'ПАО "Сбербанк"'
 		},
-		bankBic:        {
+		bankBic:         {
 			description: 'Bank identification code for cargo company.',
 			example:     '869049586'
 		},
-		info:           {
+		info:            {
 			description: 'Additional information about cargo company payments.'
 		},
-		cargo:          {
+		cargo:           {
 			description: 'Cargo company entity that payment belongs to.',
 			readOnly:    true
 		},
-		cargoinn:       {
+		cargoinn:        {
 			description: 'Cargo company (individual) entity that payment belongs to.',
 			readOnly:    true
 		}
@@ -957,7 +957,7 @@ export const entityConfig: TEntityConfigList = {
 		isDedicated:        {
 			description: 'Transport is dedicated for execution of only one order.\nOpposite of payloadExtra'
 		},
-		pallet:             {
+		pallets:            {
 			description: 'Number of cargo pallets that transport is available to carry.',
 			format:      'integer'
 		},

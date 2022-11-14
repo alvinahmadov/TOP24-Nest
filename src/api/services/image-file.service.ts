@@ -50,6 +50,34 @@ export default class ImageFileService
 		           .upload({ buffer: fileBlob, name: storeName });
 	}
 
+	public async uploadFiles(
+		files: {
+			fileBlob: Buffer,
+			storeName?: string
+		}[],
+		bucketId?: string
+	): Promise<{ Location: string[] }> {
+		if(!bucketId) bucketId = Bucket.COMMON;
+
+		if(files) {
+			files.forEach((file, index) =>
+			              {
+				              if(file.storeName === undefined)
+					              file.storeName = `image_${index}.png`;
+			              });
+
+			return this.objectStorage
+			           .setBucket(bucketId)
+			           .uploadMulti(
+				           files.map(
+					           ({ fileBlob, storeName }) => ({ buffer: fileBlob, name: storeName })
+				           )
+			           );
+		}
+
+		return { Location: [] };
+	}
+
 	public async deleteImageList(
 		fileList: string | string[],
 		bucketId?: string
@@ -58,7 +86,6 @@ export default class ImageFileService
 		let affectedCount: number = 0;
 
 		if(fileList) {
-			const deleteImage = this.deleteImage;
 			imageList = Array.isArray(fileList) ? fileList
 			                                    : fileList.split(',');
 			affectedCount = await Promise.all(
@@ -66,7 +93,7 @@ export default class ImageFileService
 					async(item: string): Promise<number> =>
 					{
 						if(item)
-							return Number(await deleteImage(item, bucketId));
+							return Number(await this.deleteImage(item, bucketId));
 						return 0;
 					}
 				)

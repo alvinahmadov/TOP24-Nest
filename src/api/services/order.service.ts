@@ -1,13 +1,13 @@
 import {
 	forwardRef, Inject,
 	Injectable
-}                             from '@nestjs/common';
-import { setOrderSent }       from '@config/env';
+}                                       from '@nestjs/common';
+import { setOrderSent }                 from '@config/env';
 import {
 	BitrixUrl,
 	Bucket
-}                             from '@common/constants';
-import { TransportStatus }    from '@common/enums';
+}                                       from '@common/constants';
+import { OfferStatus, TransportStatus } from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -18,32 +18,32 @@ import {
 	TCRMResponse,
 	TDocumentMode,
 	TMergedEntities
-}                             from '@common/interfaces';
+}                                       from '@common/interfaces';
 import {
 	buildBitrixRequestUrl,
 	filterOrders,
 	formatArgs,
 	getTranslation,
 	transformTransportParameters
-}                             from '@common/utils';
+}                                       from '@common/utils';
 import {
 	Driver,
 	Order,
 	Transport
-}                             from '@models/index';
-import { OrderRepository }    from '@repos/index';
+}                                       from '@models/index';
+import { OrderRepository }              from '@repos/index';
 import {
 	ListFilter,
 	OrderCreateDto,
 	OrderFilter,
 	OrderUpdateDto
-}                             from '@api/dto';
-import { EventsGateway }      from '@api/events';
-import Service                from './service';
-import CargoCompanyService    from './cargo-company.service';
-import CargoCompanyInnService from './cargoinn-company.service';
-import DriverService          from './driver.service';
-import ImageFileService       from './image-file.service';
+}                                       from '@api/dto';
+import { EventsGateway }                from '@api/events';
+import Service                          from './service';
+import CargoCompanyService              from './cargo-company.service';
+import CargoCompanyInnService           from './cargoinn-company.service';
+import DriverService                    from './driver.service';
+import ImageFileService                 from './image-file.service';
 
 const ORDER_TRANSLATIONS = getTranslation('REST', 'ORDER');
 const EVENT_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
@@ -277,14 +277,17 @@ export default class OrderService
 			if(driver.transports) {
 				if(driver.transports.length == 1) {
 					result.transport = transformTransportParameters(driver.transports[0]);
+					result.transport.offerStatus = OfferStatus.RESPONDED;
 				}
 				else {
 					const transport = driver.transports.find(
 						t => !t.isTrailer &&
 						     t.status === TransportStatus.ACTIVE
 					);
-					if(transport)
+					if(transport) {
 						result.transport = transformTransportParameters(transport);
+						result.transport.offerStatus = OfferStatus.RESPONDED;
+					}
 				}
 			}
 			result.driver = driver;
@@ -384,19 +387,21 @@ export default class OrderService
 	 *
 	 * @param {String!} id Id of cargo company driver which uploads document.
 	 * @param {String!} point Name of point of destination. Optional when mode is not shipping.
-	 * @param {Buffer!} file File buffer of sent image.
-	 * @param {String!} fileName Name for save in storage.
+	 * @param {Buffer!} files File buffer of sent image.
+	 * @param {String!} files.fileName Name for save in storage.
 	 * */
 	public async sendShippingDocuments(
 		id: string,
 		point: string,
-		file: Buffer,
-		fileName: string
+		files: {
+			file: Buffer,
+			fileName: string
+		}[]
 	): TAsyncApiResponse<Order> {
 		let order = await this.repository.get(id);
 		let fileUploaded = false;
 		let message: string = '';
-
+		
 		if(!order)
 			return this.responses['NOT_FOUND'];
 
@@ -404,19 +409,26 @@ export default class OrderService
 		const index = destinations.findIndex(d => d.point === point);
 
 		if(index >= 0) {
-			if(destinations[index].shippingPhotoLink) {
-				await this.imageFileService.deleteImage(
-					destinations[index].shippingPhotoLink, Bucket.COMMON
+			if(destinations[index].shippingPhotoLinks) {
+				await this.imageFileService.deleteImageList(
+					destinations[index].shippingPhotoLinks, Bucket.COMMON
 				);
 			}
-			const { Location: shippingPhotoLink } = await this.imageFileService.uploadFile(
-				file, `${id}/shipping/${point}/${fileName}`, Bucket.COMMON
-			);
+			const { Location: shippingPhotoLinks } = await this.imageFileService
+			                                                   .uploadFiles(
+				                                                   files.map(
+					                                                   f => ({
+						                                                   fileBlob:  f.file,
+						                                                   storeName: `${id}/shipping/${point}/${f.fileName}`
+					                                                   })
+				                                                   ),
+				                                                   Bucket.COMMON
+			                                                   );
 
-			if(shippingPhotoLink) {
+			if(shippingPhotoLinks?.length > 0) {
 				fileUploaded = true;
-				message = formatArgs(ORDER_TRANSLATIONS['SHIPPING'], shippingPhotoLink, point);
-				destinations[index].shippingPhotoLink = shippingPhotoLink;
+				message = formatArgs(ORDER_TRANSLATIONS['SHIPPING'], shippingPhotoLinks.join(','), point);
+				destinations[index].shippingPhotoLinks = shippingPhotoLinks;
 				const { data: updOrder } = await this.update(order.id, { destinations });
 
 				if(!updOrder)

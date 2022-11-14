@@ -9,7 +9,10 @@ import {
 import { ApiTags }             from '@nestjs/swagger';
 import { ApiRoute }            from '@common/decorators';
 import { CompanyType }         from '@common/enums';
-import { randomOf }            from '@common/utils';
+import {
+	randomOf,
+	sendResponse
+}                              from '@common/utils';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
 import { AdminGuard }          from '@api/security';
@@ -41,8 +44,7 @@ export default class GeneratorController {
 
 		const result = await this.generatorService.generateCompanies(count, companyType);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.order, {
@@ -54,7 +56,6 @@ export default class GeneratorController {
 	) {
 		const result = await this.generatorService.generateOrders(data.count);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

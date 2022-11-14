@@ -34,7 +34,7 @@ export default class AddressService
 		this.repository = new AddressRepository();
 	}
 
-	public async getList(filter: ListFilter)
+	public async getList(filter: ListFilter & { short?: boolean })
 		: TAsyncApiResponse<Address[]> {
 		const addresses = await this.repository.getList(filter);
 

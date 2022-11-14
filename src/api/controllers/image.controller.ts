@@ -11,8 +11,10 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { ApiRoute }            from '@common/decorators';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
+import { ImagePipe }           from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
 	CargoGuard,
@@ -43,8 +45,7 @@ export default class ImageController
 	) {
 		const result = await this.imageService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
@@ -57,8 +58,7 @@ export default class ImageController
 	) {
 		const result = await this.imageService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
@@ -71,8 +71,7 @@ export default class ImageController
 	) {
 		const result = await this.imageService.getById(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
@@ -80,13 +79,12 @@ export default class ImageController
 		statuses: [HttpStatus.OK]
 	})
 	public override async create(
-		@Body() dto: dto.ImageCreateDto,
+		@Body(ImagePipe) dto: dto.ImageCreateDto,
 		@Res() response: ex.Response
 	): Promise<ex.Response> {
 		const result = await this.imageService.create(dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -95,13 +93,12 @@ export default class ImageController
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body() dto: dto.ImageUpdateDto,
+		@Body(ImagePipe) dto: dto.ImageUpdateDto,
 		@Res() response: ex.Response
 	) {
 		let result = await this.imageService.update(id, dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -114,7 +111,6 @@ export default class ImageController
 	) {
 		const result = await this.imageService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

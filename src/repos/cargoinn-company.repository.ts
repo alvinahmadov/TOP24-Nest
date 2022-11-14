@@ -27,7 +27,15 @@ export default class CargoInnCompanyRepository
 	extends GenericRepository<CargoInnCompany, ICargoInnCompany> {
 	protected override readonly model = CargoInnCompany;
 	protected override readonly include: Includeable[] = [
-		{ model: Driver },
+		{
+			model:   Driver,
+			include: [
+				{
+					model:   Transport,
+					include: [{ model: Image }]
+				}
+			]
+		},
 		{ model: Image },
 		{ model: Payment },
 		{ model: Order },
@@ -38,7 +46,7 @@ export default class CargoInnCompanyRepository
 	];
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(CargoInnCompanyRepository.name);
 	}
@@ -50,6 +58,9 @@ export default class CargoInnCompanyRepository
 		listFilter: IListFilter,
 		filter?: ICargoCompanyInnFilter
 	): Promise<CargoInnCompany[]> {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			() =>
 			{
@@ -199,9 +210,8 @@ export default class CargoInnCompanyRepository
 		return this.log(
 			() => this.model.findOne(
 				{
-					where:   this.whereClause('or')
-					             .eq('phone', phone)
-					             .eq('phone', formatPhone(phone), 'or')
+					where:   this.whereClause()
+					             .in('phone', [phone, formatPhone(phone)])
 						         .query,
 					include: full ? this.include : []
 				}

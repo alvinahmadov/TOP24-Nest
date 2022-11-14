@@ -28,7 +28,7 @@ export default class TransportRepository
 	];
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(TransportRepository.name);
 	}
@@ -40,6 +40,9 @@ export default class TransportRepository
 		listFilter: IListFilter,
 		filter?: ITransportFilter
 	): Promise<Transport[]> {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			() =>
 			{
@@ -106,7 +109,7 @@ export default class TransportRepository
 						           .between('length', lengthMin, lengthMax)
 						           .between('width', widthMin, widthMax)
 						           .between('height', heightMin, heightMax)
-						           .lteOrNull('pallet', pallets)
+						           .lteOrNull('pallets', pallets)
 						           .iLike('payload', payload)
 						           .inArray('type', types)
 						           .eq('status', status)

@@ -27,13 +27,14 @@ const env: IEnvironment = {
 	port:             parser.num('PORT', DEFAULT_PORT),
 	scheme:           parser.str('SCHEME', DEFAULT_SCHEME),
 	app:              {
-		lang:       parser.str('LANG', 'ru'),
-		randomCode: parser.bool('RANDOM_CODE', !isProd),
+		lang:          parser.str('LANG', 'ru'),
+		randomCode:    parser.bool('RANDOM_CODE', !isProd),
 		enableGraphql: parser.bool('ENABLE_GRAPHQL', false),
 		enableEvents:  parser.bool('ENABLE_EVENTS', true)
 	},
 	api:              {
-		prefix: parser.str('API_PREFIX', 'api')
+		prefix:     parser.str('API_PREFIX', 'api'),
+		compatMode: parser.bool('COMPAT_MODE', false)
 	},
 	jwt:              {
 		secret:    parser.str('JWT_SECRET'),

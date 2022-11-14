@@ -25,6 +25,8 @@ export default class DriverRepository
 	implements IRepository {
 	protected override readonly model = Driver;
 	protected override include: Includeable[] = [
+		{ model: CargoCompany },
+		{ model: CargoInnCompany },
 		{ model: Order },
 		{
 			model:   Transport,
@@ -33,7 +35,7 @@ export default class DriverRepository
 	];
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(DriverRepository.name);
 	}
@@ -45,6 +47,9 @@ export default class DriverRepository
 		listFilter: IListFilter,
 		filter?: IDriverFilter
 	): Promise<Driver[]> {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			async() =>
 			{
@@ -71,9 +76,15 @@ export default class DriverRepository
 
 				let hasTerm: boolean = term !== undefined && term !== '';
 
+				if(statuses) {
+					if(!statuses.find(s => s === 1))
+						statuses.push(1);
+				}
+
 				if(hasTerm) {
 					full = true;
 					strict = false;
+					statuses = statuses.filter((s: number) => s !== 4);
 				}
 
 				const conjunct: 'and' | 'or' | null = (strict === undefined ||
@@ -89,8 +100,7 @@ export default class DriverRepository
 						               .inArray('status', statuses)
 							         .query
 						         : this.whereClause(conjunct)
-						               .eq('phone', rest?.phone)
-						               .eq('phone', formatPhone(rest?.phone), 'or')
+						               .in('phone', [rest?.phone, formatPhone(rest?.phone)])
 						               .iLike('name', name)
 						               .iLike('patronymic', patronymic)
 						               .iLike('lastName', lastName)
@@ -148,7 +158,7 @@ export default class DriverRepository
 									              .between('length', filter?.lengthMin, filter?.lengthMax)
 									              .between('width', filter?.widthMin, filter?.widthMax)
 									              .between('height', filter?.heightMin, filter?.heightMax)
-									              .gte('pallet', filter?.pallets)
+									              .gte('pallets', filter?.pallets)
 									              .iLike('payload', filter?.payload)
 									              .inArray('type', filter?.types, true)
 									              .eq('status', filter?.status)

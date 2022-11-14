@@ -53,10 +53,14 @@ export interface IEnvironment {
 		lang?: string;
 		randomCode: boolean;
 		enableGraphql?: boolean;
-		enableEvents?: boolean
+		enableEvents?: boolean;
 	};
 	api: {
 		prefix: string;
+		/**
+		 * Enable backward compatibility mode with old version of api.
+		 * */
+		compatMode: boolean;
 	};
 	jwt: {
 		secret: string;
@@ -141,6 +145,7 @@ export interface IEnvParseOutput
 	PORT: string;
 	HOST: string;
 	API_PREFIX: string;
+	COMPAT_MODE: string;
 	ENABLE_GRAPHQL?: string;
 	ENABLE_EVENTS?: string;
 	NEST_DEBUG?: string;

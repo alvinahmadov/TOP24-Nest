@@ -1,36 +1,37 @@
-import { CRM, ORDER, TRANSPORT } from '@config/json';
+import { CRM, ORDER, TRANSPORT }   from '@config/json';
 import {
 	BitrixUrl,
 	Reference
-}                                from '@common/constants';
+}                                  from '@common/constants';
 import {
 	AxiosStatic,
 	ApiQuery
-}                                from '@common/classes';
+}                                  from '@common/classes';
 import {
 	DestinationType,
 	LoadingType,
 	OrderStage,
 	OrderStatus
-}                                from '@common/enums';
+}                                  from '@common/enums';
 import {
 	IApiResponse,
 	IOrderDestination,
 	ICRMEntity,
 	TBitrixEnum,
 	TCRMData,
-	TCRMFields
-}                                from '@common/interfaces';
-import { dateValidator }         from '@common/utils';
-import { OrderCreateDto }        from '@api/dto';
-import { splitAddress }          from './address';
+	TCRMFields, TBitrixData
+}                                  from '@common/interfaces';
+import { dateValidator, isNumber } from '@common/utils';
+import { OrderCreateDto }          from '@api/dto';
+import { splitAddress }            from './address';
 
 import DEDICATED_MACHINE = Reference.DEDICATED_MACHINE;
 import FIXTURES = Reference.FIXTURES;
 import LOADING_TYPES = Reference.LOADING_TYPES;
 import ORDER_STATUSES = Reference.ORDER_STATUSES;
 import ORDER_STAGES = Reference.ORDER_STAGES;
-import PAYLOADS = Reference.PAYLOADS;
+import ORDER_PAYLOADS = Reference.ORDER_PAYLOADS;
+import TRANSPORT_PAYLOADS = Reference.TRANSPORT_PAYLOADS;
 import PAYMENT_TYPES = Reference.PAYMENT_TYPES;
 import RISK_CLASSES = Reference.RISK_CLASSES;
 import TRANSPORT_BRANDS = Reference.TRANSPORT_BRANDS;
@@ -38,16 +39,17 @@ import TRANSPORT_TYPES = Reference.TRANSPORT_TYPES;
 
 const DESTINATIONS: { [k: string]: TBitrixEnum } = CRM.ORDER.DESTINATION_TYPES;
 
-type TBitrixKey = 'fixtures' |
-                  'loadingType' |
-                  'orderStatus' |
-                  'orderStage' |
-                  'paymentType' |
-                  'riskClass' |
-                  'transportBrand' |
-                  'transportDedicated' |
-                  'transportPayload' |
-                  'transportType';
+export type TBitrixKey = 'fixtures' |
+                         'loadingType' |
+                         'orderStatus' |
+                         'orderStage' |
+                         'orderPayload' |
+                         'paymentType' |
+                         'riskClass' |
+                         'transportBrand' |
+                         'transportDedicated' |
+                         'transportPayload' |
+                         'transportType';
 
 type TCrmOrderDestination = {
 	NAME: string;
@@ -70,11 +72,7 @@ function convertLoadingTypes(loadingType: number[]): LoadingType[] {
 	const setLoadingType = (value: number): LoadingType =>
 	{
 		const item = convertBitrix<string, string>('loadingType', value.toString(), true);
-		if(item === null) {
-			console.warn('Loading type is null');
-			return LoadingType.NONE;
-		}
-		switch(item.toLowerCase().trim()) {
+		switch(item?.toLowerCase()?.trim()) {
 			case 'задняя':
 				return LoadingType.BACK;
 			case 'боковая':
@@ -106,14 +104,14 @@ function typeFromCrm<T extends number | string | boolean>(
 		return crmItem ?? [];
 	}
 	switch(typeof defaultValue) {
-		case "string":
-		case "symbol":
+		case 'string':
+		case 'symbol':
 			return crmItem ?? '';
-		case "number":
+		case 'number':
 			return Number(crmItem ?? defaultValue) as unknown as T;
-		case "boolean":
+		case 'boolean':
 			return (isBool() || defaultValue) as unknown as T;
-		case "undefined":
+		case 'undefined':
 			return null;
 		default:
 			return null;
@@ -133,6 +131,8 @@ function selectBitrixEnum<R>(
 			return callback(ORDER_STATUSES);
 		case 'orderStage':
 			return callback(ORDER_STAGES);
+		case 'orderPayload':
+			return callback(ORDER_PAYLOADS);
 		case 'paymentType':
 			return callback(PAYMENT_TYPES);
 		case 'riskClass':
@@ -142,7 +142,7 @@ function selectBitrixEnum<R>(
 		case 'transportDedicated':
 			return callback(DEDICATED_MACHINE);
 		case 'transportPayload':
-			return callback(PAYLOADS);
+			return callback(TRANSPORT_PAYLOADS);
 		case 'transportType':
 			return callback(TRANSPORT_TYPES);
 	}
@@ -193,10 +193,10 @@ function parseDestination(crmFields: TCRMFields)
 				contact: string = crmFields[crmElement['CONTACT']] || null,
 				phone: string = crmFields[crmElement['PHONE']] || null,
 				comment: string = crmFields[crmElement['COMMENT']] || null,
-				shippingPhotoLink: string = (shippingLinkList?.length > 0 &&
-				                             index < shippingLinkList.length)
-				                            ? shippingLinkList[index] :
-				                            null;
+				shippingPhotoLinks: string[] = (shippingLinkList?.length > 0 &&
+				                                index < shippingLinkList.length)
+				                               ? shippingLinkList :
+				                               [];
 			destinations.push(
 				{
 					point:     name,
@@ -209,7 +209,7 @@ function parseDestination(crmFields: TCRMFields)
 					comment,
 					distance:  null,
 					fulfilled: false,
-					shippingPhotoLink
+					shippingPhotoLinks
 				}
 			);
 		}
@@ -224,7 +224,7 @@ function parseDestination(crmFields: TCRMFields)
 }
 
 export function getCrm(data: TCRMFields | string | boolean): TCRMFields {
-	const isCrm = (data: any): boolean => 
+	const isCrm = (data: any): boolean =>
 		typeof data !== 'boolean' && typeof data !== 'string';
 
 	if(isCrm(data)) {
@@ -262,6 +262,37 @@ export function convertBitrix<V, R>(
 	};
 
 	return selectBitrixEnum<R>(key, find);
+}
+
+export function checkAndConvertBitrix(
+	data: any,
+	key: string,
+	bitrixKey: TBitrixKey
+) {
+	if(data) {
+		if(data[key]) {
+			if(isNumber(data[key])) {
+				data[key] = convertBitrix<string, string>(bitrixKey, data[key]);
+			}
+		}
+	}
+}
+
+export function checkAndConvertArrayBitrix(
+	data: any,
+	key: string,
+	bitrixKey: TBitrixKey,
+	ref: TBitrixEnum
+) {
+	if(data) {
+		if(data[key]) {
+			data[key] = data[key].map((ef: string) => String(ef));
+
+			if(ref.some((ef: TBitrixData) => data[key].includes(ef.ID))) {
+				data[key] = data[key].map((ef: string) => convertBitrix<string, string>(bitrixKey, ef));
+			}
+		}
+	}
 }
 
 export function buildBitrixRequestUrl(
@@ -319,7 +350,7 @@ export function orderFromBitrix(crmFields: TCRMFields): OrderCreateDto {
 		date:            dateValidator(crmFields[ORDER.DATE_AT]),
 		price:           crmFields[ORDER.PRICE],
 		mileage:         typeFromCrm(crmFields[ORDER.MILEAGE], 0),
-		payload:         convertBitrix('transportPayload', crmFields[ORDER.PAYLOAD.SELF]),
+		payload:         convertBitrix('orderPayload', crmFields[ORDER.PAYLOAD.SELF]),
 		payloadRiskType: convertBitrix('riskClass', crmFields[ORDER.PAYLOAD.RISK_TYPE]),
 		loadingTypes:    convertLoadingTypes(crmFields[ORDER.LOADING_TYPE]),
 		weight:          typeFromCrm(crmFields[ORDER.PARAMS.WEIGHT], 0.0),

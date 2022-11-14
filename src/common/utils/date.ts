@@ -1,19 +1,37 @@
 import { IModel, TUpdateAttribute } from '@common/interfaces';
 
+/**
+ * Formats date form to YYYY-MM-DD.
+ *
+ * @example
+ * 22-05-2022 => 2022-22-05
+ * */
 export function formatDateString(date: Date | string, sep: string = '-'): Date {
 	let fmtDateString = date;
 	let dateChunks: string[] = [];
 	if(typeof (date) === 'string') {
 		dateChunks = date.split(sep);
+		let day, month, year;
+
+		if(dateChunks.length == 3 && dateChunks[2].length == 4) {
+			if(Number(dateChunks[1]) > 12) {
+				day = dateChunks[1];
+				month = dateChunks[0];
+				year = dateChunks[2];
+			}
+			else {
+				day = dateChunks[0];
+				month = dateChunks[1];
+				year = dateChunks[2];
+			}
+			fmtDateString = `${year}-${month}-${day}`;
+		}
+		else {
+			fmtDateString = date;
+		}
+		return new Date(fmtDateString);
 	}
-	else if(date instanceof Date) {
-		dateChunks = date.toISOString()
-		                 .split('T')[0].split(sep);
-	}
-	if(dateChunks.length == 3 && dateChunks[2].length == 4) {
-		fmtDateString = `${dateChunks[2]}-${dateChunks[1]}-${dateChunks[0]}`;
-	}
-	return new Date(fmtDateString);
+	return date;
 }
 
 export function dateValidator(dateString: string) {
@@ -26,9 +44,9 @@ export function dateValidator(dateString: string) {
 	return date;
 }
 
-export function reformatDateString<T extends IModel>(
+export function reformatDateString<T extends IModel, K = keyof T>(
 	data: TUpdateAttribute<T>,
-	keys: (keyof T)[]
+	keys: K[]
 ) {
 	for(const key of keys) {
 		if(key in data) {

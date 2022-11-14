@@ -106,7 +106,7 @@ export class OrderDestination
 	/**
 	 * Optional shipping document scan link.
 	 * */
-	shippingPhotoLink?: string;
+	shippingPhotoLinks?: string[];
 }
 
 @InterfaceType()
@@ -427,7 +427,7 @@ export default class Order
 				const DESTINATION = ORDER.DESTINATIONS.find(({ NAME }) => NAME === destination.point);
 
 				if(DESTINATION) {
-					data.fields[DESTINATION.SHIPPING_LINK] = destination.shippingPhotoLink;
+					data.fields[DESTINATION.SHIPPING_LINK] = destination.shippingPhotoLinks;
 				}
 			}
 		}

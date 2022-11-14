@@ -14,15 +14,20 @@ import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
 	TransportCreatePipe,
-	TransportUpdatePipe
+	TransportUpdatePipe,
+	TransportFilterPipe
 }                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
-import { CargoGuard }          from '@api/security';
+import {
+	AccessGuard,
+	CargoGuard
+}                              from '@api/security';
 import { TransportService }    from '@api/services';
 import BaseController          from './controller';
 
@@ -40,22 +45,21 @@ export default class TransportController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: dto.TransportFilter
+		@Body(TransportFilterPipe) filter?: dto.TransportFilter
 	): Promise<ex.Response> {
 		const result = await this.transportService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -64,12 +68,11 @@ export default class TransportController
 	): Promise<ex.Response> {
 		const result = await this.transportService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async index(
@@ -79,8 +82,7 @@ export default class TransportController
 	): Promise<ex.Response> {
 		const result = await this.transportService.getById(id, full);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
@@ -93,8 +95,7 @@ export default class TransportController
 	): Promise<ex.Response> {
 		const result = await this.transportService.create(dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -108,8 +109,7 @@ export default class TransportController
 	): Promise<ex.Response> {
 		const result = await this.transportService.update(id, dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -122,12 +122,11 @@ export default class TransportController
 	): Promise<ex.Response> {
 		const result = await this.transportService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.driver, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getByDriverId(
@@ -138,16 +137,15 @@ export default class TransportController
 	) {
 		const result = await this.transportService.getByDriverId(driverId, listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.image, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
-			mimeTypes:    ['application/json']
+			interceptors: [FileInterceptor('image')],
+			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async image(
@@ -158,16 +156,15 @@ export default class TransportController
 		const { originalname: name, buffer } = image;
 		const result = await this.transportService.uploadImage(id, buffer, name);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.diag, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
-			mimeTypes:    ['application/json']
+			interceptors: [FileInterceptor('image')],
+			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async diagnostic(
@@ -178,16 +175,15 @@ export default class TransportController
 		const { originalname: name, buffer } = image;
 		const result = await this.transportService.uploadDiagnosticsPhoto(id, name, buffer);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.osago, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
-			mimeTypes:    ['application/json']
+			interceptors: [FileInterceptor('image')],
+			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async osago(
@@ -198,7 +194,6 @@ export default class TransportController
 		const { originalname: name, buffer } = image;
 		const result = await this.transportService.uploadOsagoPhoto(id, name, buffer);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

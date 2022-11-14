@@ -1,4 +1,4 @@
-import * as ex                        from 'express';
+import * as ex                 from 'express';
 import {
 	Body,
 	Controller,
@@ -9,22 +9,28 @@ import {
 	Res,
 	Scope,
 	UseFilters
-}                                     from '@nestjs/common';
-import { ApiTags }                    from '@nestjs/swagger';
-import { Reference }                  from '@common/constants';
-import { ApiRoute }                   from '@common/decorators';
+}                              from '@nestjs/common';
+import { ApiTags }             from '@nestjs/swagger';
+import { Reference }           from '@common/constants';
+import { ApiRoute }            from '@common/decorators';
 import {
 	LoadingType,
 	loadingTypeToStr
-}                                     from '@common/enums';
-import { IApiResponse, TBitrixData }  from '@common/interfaces';
-import { formatArgs, getTranslation } from '@common/utils';
-import * as dto                       from '@api/dto';
-import { HttpExceptionFilter }        from '@api/middlewares';
-import { getRouteConfig }             from '@api/routes';
-import { AccessGuard }                from '@api/security';
-import { AddressService }             from '@api/services';
-import { StaticController }           from './controller';
+}                              from '@common/enums';
+import {
+	IApiResponse,
+	TBitrixData
+}                              from '@common/interfaces';
+import {
+	formatArgs,
+	getTranslation,
+	sendResponse
+}                              from '@common/utils';
+import * as dto                from '@api/dto';
+import { HttpExceptionFilter } from '@api/middlewares';
+import { getRouteConfig }      from '@api/routes';
+import { AddressService }      from '@api/services';
+import { StaticController }    from './controller';
 
 type TCrmItem = { id: string; value: string; };
 
@@ -47,7 +53,6 @@ export default class ReferenceController
 	}
 
 	@ApiRoute(routes.address, {
-		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getAddress(
@@ -56,17 +61,15 @@ export default class ReferenceController
 	) {
 		const result = await this.addressService.getById(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.addresses, {
-		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getAddresses(
 		@Res() response: ex.Response,
-		@Query() listFilter?: dto.ListFilter & { search?: string; regions?: string }
+		@Query() listFilter?: dto.ListFilter & { search?: string; regions?: string; short?: boolean }
 	) {
 		const { search, regions, ...rest } = listFilter;
 
@@ -76,12 +79,10 @@ export default class ReferenceController
 		                        : this.addressService.search(search, rest, Boolean(Number(regions))))
 		               : await this.addressService.getList(rest);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async filterAddresses(
@@ -91,12 +92,10 @@ export default class ReferenceController
 	) {
 		const result = await this.addressService.filter(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.fixtures, {
-		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getFixtures(@Res() response: ex.Response) {
@@ -104,18 +103,16 @@ export default class ReferenceController
 		                          .sort(compareByValFn)
 		                          .map(lowerCaseFn);
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       fixtures,
+			data:       { extraFixtures: fixtures },
 			message:    formatArgs(TRANSLATIONS['FIXTURES'], fixtures.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.loadingTypes, {
-		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getLoadingTypes(@Res() response: ex.Response) {
@@ -125,39 +122,42 @@ export default class ReferenceController
 			{ ID: LoadingType.BACK.toString(), VALUE: loadingTypeToStr(LoadingType.BACK) }
 		];
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       loadingTypes
-				            .sort(compareByIdFn)
-				            .map(lowerCaseFn),
+			data:       {
+				loading_types:     [
+					loadingTypeToStr(LoadingType.TOP),
+					loadingTypeToStr(LoadingType.SIDE),
+					loadingTypeToStr(LoadingType.BACK)
+				],
+				loading_typesinfo: loadingTypes
+					                   .sort(compareByIdFn)
+					                   .map(lowerCaseFn)
+			},
 			message:    formatArgs(TRANSLATIONS['LOADING_TYPES'], loadingTypes.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.payloads, {
-		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getPayloads(@Res() response: ex.Response) {
-		const payloads = Reference.PAYLOADS
+		const payloads = Reference.TRANSPORT_PAYLOADS
 		                          .sort(compareByValFn)
 		                          .map(lowerCaseFn);
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       payloads,
+			data:       { payloads },
 			message:    formatArgs(TRANSLATIONS['PAYLOAD_TYPES'], payloads.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.paymentTypes, {
-		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getPaymentTypes(
@@ -167,18 +167,16 @@ export default class ReferenceController
 		                              .sort(compareByValFn)
 		                              .map(lowerCaseFn);
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       paymentTypes,
+			data:       { paymentTypes },
 			message:    formatArgs(TRANSLATIONS['PAYMENT_TYPES'], paymentTypes.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.riskClasses, {
-		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getRiskClasses(@Res() response: ex.Response) {
@@ -186,18 +184,16 @@ export default class ReferenceController
 		                             .sort(compareByValFn)
 		                             .map(lowerCaseFn);
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       riskClasses,
+			data:       { risk_classes: riskClasses },
 			message:    formatArgs(TRANSLATIONS['RISK_CLASSES'], riskClasses.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.transportTypes, {
-		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public getTransportTypes(@Res() response: ex.Response) {
@@ -205,13 +201,12 @@ export default class ReferenceController
 		                                .sort(compareByValFn)
 		                                .map(lowerCaseFn);
 
-		const result: IApiResponse<TCrmItem[]> = {
+		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       transportTypes,
+			data:       { transportTypes, auto_types: transportTypes },
 			message:    formatArgs(TRANSLATIONS['TRANSPORT_TYPES'], transportTypes.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

@@ -16,7 +16,7 @@ export default class AddressRepository
 	protected override readonly model = Address;
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(AddressRepository.name);
 	}
@@ -49,6 +49,9 @@ export default class AddressRepository
 		listFilter: IListFilter & { short?: boolean },
 		filter?: IAddressFilter
 	): Promise<Address[]> {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			() =>
 			{
@@ -64,8 +67,8 @@ export default class AddressRepository
 				return this.model.findAll(
 					{
 						where: this.whereClause('or')
-						           .nullOrEq('latitude', filter.latitude)
-						           .nullOrEq('longitude', filter.longitude)
+						           .nullOrEq('latitude', filter?.latitude)
+						           .nullOrEq('longitude', filter?.longitude)
 						           .fromFilter(filter, 'eq')
 							       .query,
 						offset,

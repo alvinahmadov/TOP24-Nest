@@ -20,8 +20,8 @@ import {
 	TUpdateAttribute
 }                             from '@common/interfaces';
 import {
-	orderFromBitrix,
-	getCrm
+	getCrm,
+	orderFromBitrix
 }                             from '@common/utils';
 import { Order }              from '@models/index';
 import { OrderCreateDto }     from '@api/dto';
@@ -225,7 +225,7 @@ export default class BitrixService
 	public async updateCargo(
 		crmId: number,
 		cargo: TUpdateAttribute<ICompany>
-	) {
+	): TAsyncApiResponse<ICompany> {
 		const { data: item } = await this.cargoService.getByCrmId(crmId);
 		if(item) {
 			return this.cargoService.update(item.id, cargo);
@@ -286,17 +286,20 @@ export default class BitrixService
 				}
 
 				if(order) {
-					if(orderData.isCanceled && order.driverId) {
-						await this.offerService.decline(order.id, order.driverId);
+					if(orderData.isCanceled) {
+						if(order.driverId) {
+							await this.offerService.decline(order.id, order.driverId);
+						}
+						await this.offerService.cancel(order.id, order.crmId);
 					}
 
 					return this.orderService
 					           .update(order.id, orderData, false)
 					           .then(
-						           (res) =>
+						           async(response) =>
 						           {
-							           if(res.data) {
-								           const order = res.data;
+							           if(response.data) {
+								           const order = response.data;
 								           this.gateway.sendOrderEvent(
 									           {
 										           id:      order.id,
@@ -307,7 +310,7 @@ export default class BitrixService
 									           }
 								           );
 							           }
-							           return res;
+							           return response;
 						           }
 					           );
 				}

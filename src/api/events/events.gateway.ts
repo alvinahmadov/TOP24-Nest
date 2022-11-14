@@ -17,9 +17,7 @@ import {
 	UseGuards
 }                              from '@nestjs/common';
 import {
-	ADMIN_ROOM_ID,
 	CARGO_EVENT,
-	CARGO_ROOM_ID,
 	DRIVER_EVENT,
 	ORDER_EVENT,
 	SOCKET_OPTIONS
@@ -43,6 +41,7 @@ import {
 	DriverMessageBodyPipe,
 	OrderMessageBodyPipe
 }                              from '@api/pipes';
+import { Admin }               from '@models/index';
 import { AuthService }         from '@api/services';
 import * as guards             from '@api/security/guards';
 
@@ -55,9 +54,9 @@ export default class EventsGateway
 	public server: IOServer<any, IServerEvents, any, IUserPayload>;
 
 	private readonly logger: Logger = new Logger(EventsGateway.name, { timestamp: true });
-	private readonly adminRepo: AdminRepository = new AdminRepository();
-	private readonly cargoRepo: CargoCompanyRepository = new CargoCompanyRepository();
-	private readonly cargoInnRepo: CargoInnCompanyRepository = new CargoInnCompanyRepository();
+	private readonly adminRepo: AdminRepository = new AdminRepository({ log: false });
+	private readonly cargoRepo: CargoCompanyRepository = new CargoCompanyRepository({ log: false });
+	private readonly cargoInnRepo: CargoInnCompanyRepository = new CargoInnCompanyRepository({ log: false });
 
 	constructor(
 		protected readonly authService: AuthService
@@ -69,19 +68,25 @@ export default class EventsGateway
 		const token = socketAuthExtractor(client);
 		if(token) {
 			let { id, role, reff } = await this.authService.validateAsync(token);
-			const item = await this.cargoRepo.get(id) ||
-			             await this.cargoInnRepo.get(id) ||
+			const item = await this.cargoRepo.get(id, true) ||
+			             await this.cargoInnRepo.get(id, true) ||
 			             await this.adminRepo.get(id);
 			if(item) {
-				if(role === UserRole.ADMIN) {
-					client.data = { id, role, reff };
-					client.join(ADMIN_ROOM_ID);
+				if(item instanceof Admin) {
+					if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
+						client.data = { id, role, reff };
+						client.join(id);
+					}
 				}
-				else if(role === UserRole.CARGO) {
-					client.data = { id, role, reff };
-					client.join(CARGO_ROOM_ID);
-				}
+				else {
+					if(role === UserRole.CARGO) {
+						client.data = { id, role, reff };
+						client.join(id);
 
+						item.drivers
+						    .forEach(d => client.join(d.id));
+					}
+				}
 				return;
 			}
 			else {
@@ -107,24 +112,20 @@ export default class EventsGateway
 	public sendCargoEvent(
 		@MessageBody(CargoMessageBodyPipe) data: ICargoGatewayData
 	) {
-		this.server.to(ADMIN_ROOM_ID).emit(CARGO_EVENT, data);
+		this.server.to(data.id).emit(CARGO_EVENT, data);
 	}
 
 	@UseGuards(guards.AdminGuard, guards.LogistGuard)
 	@SubscribeMessage(DRIVER_EVENT)
 	public sendDriverEvent(
 		@MessageBody(DriverMessageBodyPipe) data: IDriverGatewayData,
-		role?: UserRole
+		role: UserRole
 	) {
-		if(role === undefined) {
-			this.server.to(ADMIN_ROOM_ID).emit(DRIVER_EVENT, data);
-			this.server.to(CARGO_ROOM_ID).emit(DRIVER_EVENT, data);
+		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
+			this.server.to(data.id).emit(DRIVER_EVENT, data);
 		}
-		else if(role === UserRole.ADMIN) {
-			this.server.to(ADMIN_ROOM_ID).emit(DRIVER_EVENT, data);
-		}
-		else if(role <= UserRole.CARGO) {
-			this.server.to(CARGO_ROOM_ID).emit(DRIVER_EVENT, data);
+		if(role === UserRole.CARGO) {
+			this.server.to(data.id).emit(DRIVER_EVENT, data);
 		}
 	};
 
@@ -134,15 +135,11 @@ export default class EventsGateway
 		@MessageBody(OrderMessageBodyPipe) data: IOrderGatewayData,
 		role?: UserRole
 	) {
-		if(role === undefined) {
-			this.server.to(ADMIN_ROOM_ID).emit(ORDER_EVENT, data);
-			this.server.to(CARGO_ROOM_ID).emit(ORDER_EVENT, data);
+		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
+			this.server.to(data.id).emit(ORDER_EVENT, data);
 		}
-		if(role === UserRole.ADMIN) {
-			this.server.to(ADMIN_ROOM_ID).emit(ORDER_EVENT, data);
-		}
-		if(role <= UserRole.CARGO) {
-			this.server.to(CARGO_ROOM_ID).emit(ORDER_EVENT, data);
+		if(role === UserRole.CARGO) {
+			this.server.to(data.id).emit(ORDER_EVENT, data);
 		}
 	}
 }

@@ -8,7 +8,7 @@ import {
 	Query,
 	Req,
 	Res,
-	UseFilters, UseGuards
+	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { ApiRoute, UserParam } from '@common/decorators';
@@ -21,12 +21,20 @@ import {
 	ISignInPhoneData,
 	IUserPayload
 }                              from '@common/interfaces';
+import { sendResponse }        from '@common/utils';
 import { Admin }               from '@models/index';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
-import { UserPipe }            from '@api/pipes';
+import {
+	AdminFilterPipe,
+	UserPipe
+}                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
-import { AdminGuard }          from '@api/security';
+import {
+	AccessGuard,
+	AdminGuard,
+	LogistGuard
+}                              from '@api/security';
 import {
 	AdminService,
 	AuthService
@@ -48,7 +56,7 @@ export default class AdminController
 	}
 
 	@ApiRoute(routes.refresh, {
-		guards:   [AdminGuard],
+		guards:   [LogistGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async refresh(
@@ -68,12 +76,11 @@ export default class AdminController
 			result = { statusCode: 400, message: 'Incorrect token. Try again.' };
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [AdminGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -82,27 +89,25 @@ export default class AdminController
 	) {
 		const result = await this.adminService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [AdminGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: dto.AdminFilter
+		@Body(AdminFilterPipe) filter?: dto.AdminFilter
 	) {
 		const result = await this.adminService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [AdminGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK, HttpStatus.NOT_FOUND]
 	})
 	public override async index(
@@ -111,12 +116,24 @@ export default class AdminController
 	) {
 		const result = await this.adminService.getById(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.create, {
+		guards:   [AdminGuard],
+		statuses: [HttpStatus.CREATED, HttpStatus.BAD_REQUEST]
+	})
+	public override async create(
+		@Res() response: ex.Response,
+		@Body(UserPipe) dto: dto.AdminCreateDto
+	) {
+		const result = await this.adminService.create(dto);
+
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
-		guards:   [AdminGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async update(
@@ -138,37 +155,20 @@ export default class AdminController
 			result = await this.adminService.update(id, dto);
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
-	}
-
-	@ApiRoute(routes.create, {
-		guards:   [AdminGuard],
-		statuses: [HttpStatus.CREATED, HttpStatus.BAD_REQUEST]
-	})
-	public override async create(
-		@Res() response: ex.Response,
-		@Body(UserPipe) dto: dto.AdminCreateDto
-	) {
-		const result = await this.adminService.create(dto);
-
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
-		guards:   [AdminGuard],
+		guards:   [LogistGuard],
 		statuses: [HttpStatus.OK]
 	})
-	@UseGuards(AdminGuard)
 	public override async delete(
 		@Res() response: ex.Response,
 		@Param('id', ParseUUIDPipe) id: string
 	) {
 		const result = await this.adminService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.host_login, {
@@ -181,8 +181,7 @@ export default class AdminController
 		const { email, password } = credentials;
 		const result = await this.authService.loginAdmin(email, password);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.signin, { statuses: [HttpStatus.OK] })
@@ -202,7 +201,6 @@ export default class AdminController
 			result = await this.authService.loginUser({ email }, code, repeat);
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

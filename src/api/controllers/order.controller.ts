@@ -8,17 +8,27 @@ import {
 	Query,
 	Res,
 	UploadedFile,
+	UploadedFiles,
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { FileInterceptor }     from '@nestjs/platform-express';
+import {
+	FileInterceptor,
+	FilesInterceptor
+}                              from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
-import { DefaultBoolPipe }     from '@api/pipes';
+import {
+	DefaultBoolPipe,
+	OrderPipe,
+	OrderFilterPipe
+}                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
+	AccessGuard,
 	CargoGuard,
 	LogistGuard
 }                              from '@api/security';
@@ -39,12 +49,12 @@ export default class OrderController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
 		@Query() listFilter: dto.ListFilter,
-		@Body() filter: dto.OrderFilter,
+		@Body(OrderFilterPipe) filter: dto.OrderFilter,
 		@Res() response: ex.Response
 	) {
 		if(filter && filter.crmId) {
@@ -54,12 +64,11 @@ export default class OrderController
 		}
 		const result = await this.orderService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -68,12 +77,11 @@ export default class OrderController
 	) {
 		const result = await this.orderService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async index(
@@ -83,12 +91,11 @@ export default class OrderController
 	) {
 		const result = await this.orderService.getById(id, full);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
-		guards:   [CargoGuard],
+		guards:   [LogistGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async create(
@@ -97,23 +104,21 @@ export default class OrderController
 	) {
 		const result = await this.orderService.create(dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body() dto: dto.OrderUpdateDto,
+		@Body(OrderPipe) dto: dto.OrderUpdateDto,
 		@Res() response: ex.Response
 	) {
 		const result = await this.orderService.update(id, dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -126,12 +131,11 @@ export default class OrderController
 	) {
 		const result = await this.orderService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.cargos, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async cargoList(
@@ -141,12 +145,11 @@ export default class OrderController
 	) {
 		const result = await this.orderService.getCargoList(cargoId, listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.driver, {
-		guards:   [CargoGuard, LogistGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async driver(
@@ -156,12 +159,11 @@ export default class OrderController
 	) {
 		const result = await this.orderService.getByDriver(driverId);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.send, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async send(
@@ -170,36 +172,35 @@ export default class OrderController
 	) {
 		const result = await this.orderService.send(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.shipping, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FilesInterceptor('images')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async uploadShipping(
 		@Param('id', ParseUUIDPipe) id: string,
 		@Query('pt') point: string,
-		@UploadedFile() image: TMulterFile,
+		@UploadedFiles() images: Array<TMulterFile>,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.orderService.sendShippingDocuments(id, point, buffer, name);
-
-		return response.status(result.statusCode)
-		               .send(result);
+		const result = await this.orderService.sendShippingDocuments(
+			id, point, images.map(i => ({ file: i.buffer, fileName: i.originalname }))
+		);
+		
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.payment, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
@@ -211,15 +212,14 @@ export default class OrderController
 		const { originalname: name, buffer } = image;
 		const result = await this.orderService.sendDocuments(id, buffer, name, 'payment');
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.contract, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
@@ -231,15 +231,14 @@ export default class OrderController
 		const { originalname: name, buffer } = image;
 		const result = await this.orderService.sendDocuments(id, buffer, name, 'contract');
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.receipt, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
@@ -251,7 +250,6 @@ export default class OrderController
 		const { originalname: name, buffer } = image;
 		const result = await this.orderService.sendDocuments(id, buffer, name, 'contract');
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

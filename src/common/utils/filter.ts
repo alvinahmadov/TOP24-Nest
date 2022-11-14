@@ -73,19 +73,13 @@ export function filterDirections(
 	return contains.some(c => c == true);
 }
 
-export function filterTransports(
-	transports: Transport[],
-	filter: ICompanyTransportFilter = {}
-): Transport[] {
-	let {
-		loadingTypes = [],
-		riskClasses = [],
-		fixtures = [],
-		types = [],
-		riskClass
-	} = filter;
-
-	const filterParams = {
+export function checkTransportRequirements(
+	filter: ICompanyTransportFilter,
+	transport: Transport,
+	trailer?: Transport,
+	messageObj?: { message?: string; }
+): boolean {
+	const paramFilter = {
 		weightMin: filter?.weightMin ?? MIN_FLOAT,
 		weightMax: filter?.weightMax ?? MAX_FLOAT,
 
@@ -104,47 +98,81 @@ export function filterTransports(
 		pallets: filter?.pallets ?? 0
 	};
 
+	const setMessage = (paramName: string, { min = MIN_FLOAT, max = MAX_FLOAT }: { min?: number, max?: number }, param: number) =>
+		`Ваш транспорт не соответствует по параметру ${paramName} груза: (Г) [${min}, ${max}] против (Т) ${param}.`;
+
+	const weight = (transport.weightExtra > 0 ? transport.weightExtra : transport.weight) +
+	               (trailer?.weight ?? 0),
+		volume = (transport.volumeExtra > 0 ? transport.volumeExtra : transport.volume) +
+		         (trailer?.volume ?? 0),
+		pallets = (transport.pallets ?? 0) + (trailer?.pallets ?? 0);
+
+	let height = transport.height,
+		width = transport.width,
+		length = transport.length;
+
+	if(trailer !== undefined) {
+		if(trailer.height > 0)
+			height = min(transport.height, trailer.height);
+		if(trailer.width > 0)
+			width = min(transport.width, trailer.width);
+		if(trailer.length > 0)
+			length = min(transport.length, trailer.length);
+	}
+
+	const matchesWeight = paramFilter.weightMin <= weight && weight <= paramFilter.weightMax,
+		matchesVolume = paramFilter.volumeMin <= volume && volume <= paramFilter.volumeMax,
+		matchesHeight = paramFilter.heightMin <= height && height <= paramFilter.heightMax,
+		matchesWidth = paramFilter.widthMin <= width && width <= paramFilter.widthMax,
+		matchesLength = paramFilter.lengthMin <= length && length <= paramFilter.lengthMax,
+		matchesPallet = paramFilter.pallets <= pallets;
+
+	if(messageObj) {
+		if(!matchesWeight) {
+			messageObj.message = setMessage('веса', { min: paramFilter.weightMin, max: paramFilter.weightMax }, weight);
+		}
+		if(!matchesVolume) {
+			messageObj.message = setMessage('объема', { min: paramFilter.volumeMin, max: paramFilter.volumeMax }, volume);
+		}
+		if(!matchesHeight) {
+			messageObj.message = setMessage('высоты', { min: paramFilter.heightMin, max: paramFilter.heightMax }, height);
+		}
+		if(!matchesWidth) {
+			messageObj.message = setMessage('ширины', { min: paramFilter.widthMin, max: paramFilter.widthMax }, width);
+		}
+		if(!matchesLength) {
+			messageObj.message = setMessage('длины', { min: paramFilter.lengthMin, max: paramFilter.lengthMax }, length);
+		}
+		if(!matchesPallet) {
+			messageObj.message = setMessage('паллетов', { max: paramFilter.pallets }, pallets);
+		}
+	}
+
+	return (
+		matchesWeight &&
+		matchesVolume &&
+		matchesPallet &&
+		matchesHeight &&
+		matchesWidth &&
+		matchesLength
+	);
+}
+
+export function filterTransports(
+	transports: Transport[],
+	filter: ICompanyTransportFilter = {}
+): Transport[] {
+	let {
+		loadingTypes = [],
+		riskClasses = [],
+		fixtures = [],
+		types = [],
+		riskClass
+	} = filter;
+
 	const hasValues = (arr?: Array<any>) => arr && arr.length > 0;
 	const isActive = (transport: Transport) => transport.status === TransportStatus.ACTIVE;
 	const isTrailer = (transport: Transport) => transport.isTrailer;
-
-	const checkRequirements = (transport: Transport, trailer?: Transport): boolean =>
-	{
-		const weight = (transport.weightExtra > 0 ? transport.weightExtra : transport.weight) +
-		               (trailer?.weight ?? 0),
-			volume = (transport.volumeExtra > 0 ? transport.volumeExtra : transport.volume) +
-			         (trailer?.volume ?? 0),
-			pallets = (transport.pallet ?? 0) + (trailer?.pallet ?? 0);
-
-		let height = transport.height,
-			width = transport.width,
-			length = transport.length;
-
-		if(trailer !== undefined) {
-			if(trailer.height > 0)
-				height = min(transport.height, trailer.height);
-			if(trailer.width > 0)
-				width = min(transport.width, trailer.width);
-			if(trailer.length > 0)
-				length = min(transport.length, trailer.length);
-		}
-
-		const matchesWeight = filterParams.weightMin <= weight && weight <= filterParams.weightMax,
-			matchesVolume = filterParams.volumeMin <= volume && volume <= filterParams.volumeMax,
-			matchesHeight = filterParams.heightMin <= height && height <= filterParams.heightMax,
-			matchesWidth = filterParams.widthMin <= width && width <= filterParams.widthMax,
-			matchesLength = filterParams.lengthMin <= length && length <= filterParams.lengthMax,
-			matchesPallet = filterParams.pallets <= pallets;
-
-		return (
-			matchesWeight &&
-			matchesVolume &&
-			matchesPallet &&
-			matchesHeight &&
-			matchesWidth &&
-			matchesLength
-		);
-	};
 
 	const getSummedParams = (transport: Transport, trailer?: Transport): Transport =>
 	{
@@ -153,7 +181,7 @@ export function filterTransports(
 
 		transport.weight += trailer?.weight ?? 0;
 		transport.volume += trailer?.volume ?? 0;
-		transport.pallet += trailer?.pallet ?? 0;
+		transport.pallets += trailer?.pallets ?? 0;
 
 		return transport;
 	};
@@ -163,21 +191,21 @@ export function filterTransports(
 		.filter(
 			transport =>
 				hasValues(loadingTypes) ? transport.loadingTypes.some(
-					                        loadingType => loadingTypes.includes(loadingType)
+					loadingType => loadingTypes.includes(loadingType)
 				                        )
 				                        : true
 		)
 		.filter(
 			transport =>
 				hasValues(riskClasses) ? transport.riskClasses.some(
-					                       riskClass => riskClasses.includes(riskClass)
+					riskClass => riskClasses.includes(riskClass)
 				                       )
 				                       : true
 		)
 		.filter(
 			transport =>
 				hasValues(fixtures) ? transport.fixtures.some(
-					                    v => fixtures.includes(v)
+					v => fixtures.includes(v)
 				                    )
 				                    : true
 		)
@@ -189,7 +217,7 @@ export function filterTransports(
 		.filter(
 			transport =>
 				riskClass ? transport.riskClasses.some(
-					          rc => filter.riskClass === rc
+					rc => filter.riskClass === rc
 				          )
 				          : true
 		);
@@ -205,14 +233,14 @@ export function filterTransports(
 		let transport: Transport = null;
 		if(
 			transportTrailer &&
-			checkRequirements(mainTransport, transportTrailer)
+			checkTransportRequirements(filter, mainTransport, transportTrailer)
 		) {
 			transport = getSummedParams(mainTransport, transportTrailer);
 			transport.trailer = transportTrailer;
 		}
-		else if(checkRequirements(mainTransport))
+		else if(checkTransportRequirements(filter, mainTransport))
 			transport = getSummedParams(mainTransport);
-		else console.info("Transport doesn't match requirements!");
+		else console.info('Transport doesn\'t match requirements!');
 
 		if(transport)
 			transportsWithTrailers.push(transport);

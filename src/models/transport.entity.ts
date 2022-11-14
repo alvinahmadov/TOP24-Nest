@@ -197,10 +197,10 @@ export default class Transport
 	@BooleanColumn()
 	isDedicated?: boolean;
 
-	@ApiProperty(prop.pallet)
+	@ApiProperty(prop.pallets)
 	@Default(0)
 	@IntColumn()
-	pallet?: number;
+	pallets?: number;
 
 	@ApiProperty(prop.prodYear)
 	@IntColumn()
@@ -291,7 +291,7 @@ export default class Transport
 		data.fields[TRANSPORT.PARAMS.LENGTH] = this.length;
 		data.fields[TRANSPORT.PARAMS.WIDTH] = this.width;
 		data.fields[TRANSPORT.PARAMS.HEIGHT] = this.height;
-		data.fields[TRANSPORT.PARAMS.PALLETS] = this.pallet;
+		data.fields[TRANSPORT.PARAMS.PALLETS] = this.pallets;
 		data.fields[TRANSPORT.LOADING_TYPES] = this.loadingTypes ? this.loadingTypes.map(
 			lt => convertBitrix('loadingType', loadingTypeToStr(lt), false)
 		) : [];

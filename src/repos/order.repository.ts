@@ -60,7 +60,7 @@ export default class OrderRepository
 	];
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(OrderRepository.name);
 	}
@@ -91,6 +91,9 @@ export default class OrderRepository
 		listFilter: IListFilter,
 		filter?: IOrderFilter
 	): Promise<Order[]> {
+		if(filter === null)
+			return [];
+		
 		return this.log(
 			() =>
 			{

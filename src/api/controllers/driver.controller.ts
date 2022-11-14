@@ -1,4 +1,5 @@
 import * as ex                 from 'express';
+import { validate as isUuid }  from 'uuid';
 import {
 	Body,
 	Controller,
@@ -14,12 +15,21 @@ import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
-import { DefaultBoolPipe }     from '@api/pipes';
-import { getRouteConfig }      from '@api/routes';
-import { CargoGuard }          from '@api/security';
 import {
+	DefaultBoolPipe,
+	DriverPipe,
+	DriverFilterPipe
+}                              from '@api/pipes';
+import { getRouteConfig }      from '@api/routes';
+import {
+	AccessGuard,
+	CargoGuard
+}                              from '@api/security';
+import {
+	AddressService,
 	DriverService,
 	OrderService
 }                              from '@api/services';
@@ -33,6 +43,7 @@ const { path, tag, routes } = getRouteConfig('driver');
 export default class DriverController
 	extends BaseController {
 	public constructor(
+		private readonly addressService: AddressService,
 		private readonly driverService: DriverService,
 		private readonly orderService: OrderService
 	) {
@@ -40,22 +51,21 @@ export default class DriverController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: dto.DriverFilter
+		@Body(DriverFilterPipe) filter?: dto.DriverFilter
 	) {
 		const result = await this.driverService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -64,12 +74,11 @@ export default class DriverController
 	) {
 		const result = await this.driverService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async index(
@@ -79,8 +88,7 @@ export default class DriverController
 	) {
 		const result = await this.driverService.getById(id, full);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
@@ -88,13 +96,12 @@ export default class DriverController
 		statuses: [HttpStatus.CREATED, HttpStatus.BAD_REQUEST]
 	})
 	public override async create(
-		@Body() dto: dto.DriverCreateDto,
+		@Body(DriverPipe) dto: dto.DriverCreateDto,
 		@Res() response: ex.Response
 	) {
 		const result = await this.driverService.create(dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -103,7 +110,7 @@ export default class DriverController
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body() dto: dto.DriverUpdateDto,
+		@Body(DriverPipe) dto: dto.DriverUpdateDto,
 		@Res() response: ex.Response
 	) {
 		const { data } = await this.orderService.getByDriver(id);
@@ -112,10 +119,18 @@ export default class DriverController
 			const driverGeo = await this.driverService.updateGeoData(data);
 			dto = Object.assign(dto, driverGeo);
 		}
+		if(isUuid(dto.payloadCity)) {
+			const { data: { city = dto.payloadCity } } = await this.addressService.getById(dto.payloadCity);
+			dto.payloadCity = city;
+		}
+		if(isUuid(dto.payloadRegion)) {
+			const { data: { region = dto.payloadRegion } } = await this.addressService.getById(dto.payloadRegion);
+			dto.payloadRegion = region;
+		}
+		
 		const result = await this.driverService.update(id, dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -128,15 +143,14 @@ export default class DriverController
 	) {
 		const result = await this.driverService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.avatar, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
@@ -148,15 +162,14 @@ export default class DriverController
 		const { originalname: name, buffer } = image;
 		const result = await this.driverService.uploadAvatarPhoto(id, buffer, name);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.front, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
@@ -168,15 +181,14 @@ export default class DriverController
 		const { originalname: name, buffer } = image;
 		const result = await this.driverService.uploadLicenseFront(id, buffer, name);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.back, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
@@ -188,7 +200,6 @@ export default class DriverController
 		const { originalname: name, buffer } = image;
 		const result = await this.driverService.uploadLicenseBack(id, buffer, name);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }

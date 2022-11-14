@@ -21,8 +21,6 @@ export const PORT = env.port;
 /**@ignore*/
 export const SCHEME = env.scheme;
 /**@ignore*/
-export const HOSTS: string[] = [];
-/**@ignore*/
 export const SWAGGER_PATH = 'api-docs/swagger';
 
 export const GEO_LOOKUP_SERVICE: 'osm' | 'kladr' = 'osm';
@@ -124,7 +122,9 @@ export namespace Reference {
 	/**@ignore*/
 	export const ORDER_STAGES: TBitrixEnum = CRM.ORDER.STAGES;
 	/**@ignore*/
-	export const PAYLOADS: TBitrixEnum = CRM.TRANSPORT.PAYLOADS;
+	export const ORDER_PAYLOADS: TBitrixEnum = CRM.ORDER.PAYLOADS;
+	/**@ignore*/
+	export const TRANSPORT_PAYLOADS: TBitrixEnum = CRM.TRANSPORT.PAYLOADS;
 	/**@ignore*/
 	export const PAYMENT_TYPES: TBitrixEnum = CRM.COMPANY.PAYMENT_TYPES;
 	/**@ignore*/

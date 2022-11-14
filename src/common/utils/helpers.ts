@@ -1,9 +1,13 @@
+import * as ex                from 'express';
+import env                    from '@config/env';
 import {
 	RANDOM_CODE_MAX,
 	RANDOM_CODE_DIGITS
-}                from '@common/constants';
-import Driver    from '@models/driver.entity';
-import Transport from '@models/transport.entity';
+}                             from '@common/constants';
+import { IApiResponse }       from '@common/interfaces';
+import Driver                 from '@models/driver.entity';
+import Transport              from '@models/transport.entity';
+import { transformApiResult } from './compat/transformer-functions';
 
 const phoneRegex = RegExp(/[\s+()]+/gi);
 
@@ -30,7 +34,7 @@ export function transformTransportParameters(transport: Transport): Transport {
 export function transformDriverTransports(driver: Driver): Driver {
 	if(driver.transports !== undefined)
 		driver.transports = driver.transports.map(transformTransportParameters);
-	
+
 	return driver;
 }
 
@@ -44,4 +48,15 @@ export async function deleteEntityImages(list: any[])
 	).then(
 		res => res.reduce((p, c) => p + c, 0)
 	);
+}
+
+export function sendResponse<T = any>(
+	response: ex.Response,
+	result: IApiResponse<T>
+) {
+	return response.status(result.statusCode)
+	               .send(
+		               env.api.compatMode ? transformApiResult(result)
+		                                  : result
+	               );
 }

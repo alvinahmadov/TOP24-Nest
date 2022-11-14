@@ -82,7 +82,7 @@ export function generateOrder(): dto.OrderCreateDto {
 			common.TRANSPORT_TYPES,
 			faker.datatype.number({ min: 1, max: 5 })
 		),
-		payload:         faker.helpers.arrayElement(common.PAYLOADS),
+		payload:         faker.helpers.arrayElement(common.TRANSPORT_PAYLOADS),
 		payloadRiskType: faker.helpers.arrayElement(common.RISK_CLASSES),
 		weight:          faker.datatype.float(paramRange),
 		volume:          faker.datatype.float(paramRange),

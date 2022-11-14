@@ -7,10 +7,16 @@ import {
 import CargoMessageBodyPipe  from './gateways/cargo-message-body.pipe';
 import DriverMessageBodyPipe from './gateways/driver-message-body.pipe';
 import OrderMessageBodyPipe  from './gateways/order-message-body.pipe';
+import DriverPipe            from './driver.pipe';
+import ImagePipe             from './image.pipe';
+import OfferPipe             from './offer.pipe';
+import OrderPipe             from './order.pipe';
+import PaymentPipe           from './payment.pipe';
 import UserPipe              from './user.pipe';
 
 export * from './company.pipe';
 export * from './transport.pipe';
+export * from './filter';
 
 export const DefaultBoolPipe: (Type<PipeTransform> | PipeTransform)[] = [
 	new DefaultValuePipe(false),
@@ -21,5 +27,10 @@ export {
 	CargoMessageBodyPipe,
 	DriverMessageBodyPipe,
 	OrderMessageBodyPipe,
+	DriverPipe,
+	ImagePipe,
+	OfferPipe,
+	OrderPipe,
+	PaymentPipe,
 	UserPipe
 };

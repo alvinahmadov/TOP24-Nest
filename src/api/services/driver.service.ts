@@ -1,9 +1,5 @@
-import {
-	forwardRef, 
-	Inject,
-	Injectable
-}                            from '@nestjs/common';
-import { BitrixUrl, Bucket } from '@common/constants';
+import { forwardRef, Inject, Injectable }                                                                              from '@nestjs/common';
+import { BitrixUrl, Bucket }                                                                                           from '@common/constants';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -16,30 +12,17 @@ import {
 	TGeoCoordinate,
 	TMergedEntities,
 	TUpdateAttribute
-}                            from '@common/interfaces';
-import {
-	addressFromCoordinates,
-	buildBitrixRequestUrl,
-	calculateDistance,
-	filterDrivers,
-	formatArgs,
-	getTranslation
-}                            from '@common/utils';
-import { Driver, Order }     from '@models/index';
-import { DriverRepository }  from '@repos/index';
-import {
-	DriverCreateDto,
-	DriverFilter,
-	DriverUpdateDto,
-	ListFilter,
-	TransportFilter
-}                            from '@api/dto';
-import { EventsGateway }     from '@api/events';
-import Service               from './service';
-import ImageFileService      from './image-file.service';
-import OrderService          from './order.service';
-import TransportService      from './transport.service';
-
+}                                                                                                                      from '@common/interfaces';
+import { addressFromCoordinates, buildBitrixRequestUrl, calculateDistance, filterDrivers, formatArgs, getTranslation } from '@common/utils';
+import { Driver, Order }                                                                                               from '@models/index';
+import { DriverRepository }                                                                                            from '@repos/index';
+import { DriverCreateDto, DriverFilter, DriverUpdateDto, ListFilter, TransportFilter }                                 from '@api/dto';
+import { EventsGateway }                                                                                               from '@api/events';
+import Service                                                                                                         from './service';
+import ImageFileService                                                                                                from './image-file.service';
+import OrderService                                                                                                    from './order.service';
+import TransportService                                                                                                from './transport.service';
+import { UserRole }                                                                                                    from '@common/enums';
 import CONTACT_DEL_URL = BitrixUrl.CONTACT_DEL_URL;
 import CONTACT_UPD_URL = BitrixUrl.CONTACT_UPD_URL;
 import CONTACT_ADD_URL = BitrixUrl.CONTACT_ADD_URL;
@@ -172,7 +155,8 @@ export default class DriverService
 					longitude: data.longitude,
 					latitude:  data.latitude,
 					message
-				}
+				},
+				UserRole.CARGO
 			);
 		}
 
@@ -312,7 +296,8 @@ export default class DriverService
 						longitude:      driver.longitude,
 						currentPoint:   driver.currentAddress,
 						currentAddress: data.currentAddress
-					}
+					},
+					UserRole.CARGO
 				);
 				return data;
 			}

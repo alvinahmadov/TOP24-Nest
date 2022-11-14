@@ -1,4 +1,4 @@
-import * as ex                        from 'express';
+import * as ex                 from 'express';
 import {
 	Body,
 	Controller,
@@ -10,45 +10,63 @@ import {
 	Res,
 	UploadedFile,
 	UseFilters
-}                                     from '@nestjs/common';
-import { ApiTags }                    from '@nestjs/swagger';
-import { FileInterceptor }            from '@nestjs/platform-express';
-import { Bucket }                     from '@common/constants';
-import { ApiRoute }                   from '@common/decorators';
-import { CompanyType, OfferStatus }   from '@common/enums';
+}                              from '@nestjs/common';
+import { ApiTags }             from '@nestjs/swagger';
+import { FileInterceptor }     from '@nestjs/platform-express';
+import env                     from '@config/env';
+import { Bucket }              from '@common/constants';
+import { ApiRoute }            from '@common/decorators';
 import {
-	ICompany,
+	CompanyType,
+	OfferStatus
+}                              from '@common/enums';
+import {
 	IApiResponse,
 	IAuthRequest,
+	ICompany,
 	ICompanyLoginResponse,
 	ILoginResponse,
 	ISignInPhoneData,
 	TAsyncApiResponse,
 	TMulterFile
-}                                     from '@common/interfaces';
-import { formatArgs, getTranslation } from '@common/utils';
+}                              from '@common/interfaces';
+import {
+	formatArgs,
+	getTranslation,
+	sendResponse
+}                              from '@common/utils';
+import {
+	transformToCargoCompany,
+	transformToCargoInnCompany,
+	transformToCompanyFilter,
+	transformToCompanyInnFilter
+}                              from '@common/utils/compat';
 import {
 	CargoCompany,
 	CargoInnCompany,
 	Transport
-}                                     from '@models/index';
-import * as dto                       from '@api/dto';
-import { HttpExceptionFilter }        from '@api/middlewares';
+}                              from '@models/index';
+import * as dto                from '@api/dto';
+import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	CompanyCreatePipe,
 	CompanyUpdatePipe,
+	CompanyTransportFilterPipe,
 	DefaultBoolPipe
-}                                     from '@api/pipes';
-import { getRouteConfig }             from '@api/routes';
-import { CargoGuard }                 from '@api/security';
+}                              from '@api/pipes';
+import { getRouteConfig }      from '@api/routes';
+import {
+	AccessGuard,
+	CargoGuard
+}                              from '@api/security';
 import {
 	AuthService,
 	CargoCompanyInnService,
 	CargoCompanyService,
 	OfferService,
 	PaymentService
-}                                     from '@api/services';
-import BaseController                 from './controller';
+}                              from '@api/services';
+import BaseController          from './controller';
 
 const { path, tag, routes } = getRouteConfig('company');
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
@@ -69,19 +87,19 @@ export default class CompanyController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: dto.CompanyFilter | dto.CompanyInnFilter
+		@Body() filter?: any
 	) {
 		const { data: cargoCompanies } = await this.cargoService.getList(
-			listFilter, filter as dto.CompanyFilter
+			listFilter, transformToCompanyFilter(filter) as dto.CompanyFilter
 		);
 		const { data: cargoinnCompanies } = await this.cargoInnService.getList(
-			listFilter, filter as dto.CompanyInnFilter
+			listFilter, transformToCompanyInnFilter(filter) as dto.CompanyInnFilter
 		);
 		const message: string = TRANSLATIONS['LIST'];
 
@@ -91,12 +109,11 @@ export default class CompanyController
 			message:    formatArgs(message, cargoCompanies.length + cargoinnCompanies.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -113,12 +130,11 @@ export default class CompanyController
 			message:    formatArgs(message, cargoCompanies.length + cargoinnCompanies.length)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async index(
@@ -128,12 +144,10 @@ export default class CompanyController
 	): Promise<ex.Response> {
 		const result = await this.getCompany(id, full);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
-		guards:   [CargoGuard],
 		statuses: [HttpStatus.CREATED, HttpStatus.BAD_REQUEST]
 	})
 	public override async create(
@@ -174,8 +188,7 @@ export default class CompanyController
 			};
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -184,8 +197,7 @@ export default class CompanyController
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body(CompanyUpdatePipe) dto: dto.CompanyUpdateDto |
-		                              dto.CompanyInnUpdateDto,
+		@Body(CompanyUpdatePipe) dto: any,
 		@Res() response: ex.Response
 	) {
 		let result = await this.getCompany(id, false);
@@ -193,10 +205,14 @@ export default class CompanyController
 		if(result) {
 			if(result.data) {
 				const { data: company } = result;
-				if(company.type === CompanyType.ORG)
-					result = await this.cargoService.update(id, <dto.CompanyUpdateDto>dto);
-				else
-					result = await this.cargoInnService.update(id, <dto.CompanyInnUpdateDto>dto);
+				if(company.type === CompanyType.ORG) {
+					const data = !env.api.compatMode ? dto : transformToCargoCompany(dto);
+					result = await this.cargoService.update(id, <dto.CompanyUpdateDto>data);
+				}
+				else {
+					const data = !env.api.compatMode ? dto : transformToCargoInnCompany(dto);
+					result = await this.cargoInnService.update(id, <dto.CompanyInnUpdateDto>data);
+				}
 			}
 			else {
 				const message: string = TRANSLATIONS['NOT_FOUND'];
@@ -208,8 +224,7 @@ export default class CompanyController
 			}
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -242,8 +257,7 @@ export default class CompanyController
 			};
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.login, { statuses: [HttpStatus.OK] })
@@ -254,8 +268,17 @@ export default class CompanyController
 		const { phone, code } = signInData;
 		const result = await this.authService.loginCompany(phone, code);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		if(env.api.compatMode && result.data) {
+			if('company' in result.data) {
+				const { company: cargo, accessToken, refreshToken } = result.data;
+				result.data = { accessToken, refreshToken, cargo } as any;
+			}
+			else if('code' in result.data) {
+				result.data = { code: result.data['code'] };
+			}
+		}
+
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.refresh, {
@@ -281,19 +304,18 @@ export default class CompanyController
 		}
 		else result = { statusCode, message };
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.transports, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getTransports(
 		@Res() response: ex.Response,
 		@Param('id') orderId?: string,
 		@Query() listFilter?: dto.ListFilter,
-		@Body() filter?: dto.CompanyTransportFilter
+		@Body(CompanyTransportFilterPipe) filter?: dto.CompanyTransportFilter
 	) {
 		let { data: cargoTransports } = await this.cargoService.getTransports(listFilter, filter);
 		let { data: cargoInnTransports } = await this.cargoInnService.getTransports(listFilter, filter);
@@ -324,15 +346,14 @@ export default class CompanyController
 			)
 		};
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.avatar, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
@@ -354,15 +375,14 @@ export default class CompanyController
 			)
 		) : { statusCode: 400, message: 'Not found!' };
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.passport, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
@@ -390,15 +410,14 @@ export default class CompanyController
 			}
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.certificate, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('file')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
@@ -413,8 +432,8 @@ export default class CompanyController
 			CompanyType.ORG, Bucket.COMPANY, 'certificate'
 		);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		result.data;
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.order, {
@@ -436,8 +455,7 @@ export default class CompanyController
 			CompanyType.ORG, Bucket.COMPANY, 'director_order'
 		);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.attorney, {
@@ -459,8 +477,7 @@ export default class CompanyController
 			CompanyType.ORG, Bucket.COMPANY, 'attorney'
 		);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.passport_sign, {
@@ -482,8 +499,7 @@ export default class CompanyController
 			CompanyType.ORG, Bucket.COMPANY, 'passport'
 		);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.passport_selfie, {
@@ -505,8 +521,7 @@ export default class CompanyController
 			CompanyType.IE, Bucket.COMPANY, 'passport'
 		);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.ogrnip, {
@@ -534,15 +549,14 @@ export default class CompanyController
 						id:       company.payment.id,
 						name:     destination,
 						buffer,
-						linkName: 'ogrnipLink',
+						linkName: 'ogrnipPhotoLink',
 						bucketId: Bucket.COMPANY
 					}
 				);
 			}
 		}
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	private async getCompany(id: string, full?: boolean)
@@ -566,7 +580,7 @@ export default class CompanyController
 		type: CompanyType = CompanyType.ORG,
 		bucketId: string = '',
 		folder?: string
-	) {
+	): Promise<IApiResponse<ICompany>> {
 		const saveName = folder ? `${folder}/${name}`
 		                        : name;
 		return (

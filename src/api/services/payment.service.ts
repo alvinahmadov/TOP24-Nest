@@ -186,7 +186,7 @@ export default class PaymentService
 		const result = await this.repository.deleteCompanyPayments(options);
 
 		if(result.affectedCount > 0)
-			await this.imageFileService.deleteImage(payment.ogrnipLink);
+			await this.imageFileService.deleteImage(payment.ogrnipPhotoLink);
 
 		return {
 			statusCode: 200,

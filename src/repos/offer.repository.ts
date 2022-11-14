@@ -40,7 +40,7 @@ export default class OfferRepository
 	];
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(OfferRepository.name);
 	}
@@ -109,6 +109,9 @@ export default class OfferRepository
 		listFilter: IListFilter,
 		filter?: IOfferFilter
 	): Promise<Offer[]> {
+		if(filter === null)
+			return [];
+
 		return this.log(
 			() =>
 			{
@@ -170,45 +173,47 @@ export default class OfferRepository
 		listFilter: IListFilter = {},
 		filter?: IOfferFilter & IDriverFilter
 	): Promise<Offer[]> {
+		const {
+			from:  offset = 0,
+			count: limit
+		} = listFilter ?? {};
+		const {
+			sortOrder: order = DEFAULT_SORT_ORDER,
+			driverStatus,
+			statuses,
+			orderStatus,
+			...rest
+		} = filter ?? {};
+
 		return this.log(
-			() =>
-			{
-				const {
-					from: offset = 0,
-					full = false,
-					count: limit
-				} = listFilter ?? {};
-				const {
-					sortOrder: order = DEFAULT_SORT_ORDER,
-					strict = false,
-					hasComment,
-					driverStatus,
-					transportStatus,
-					orderStatus,
-					...rest
-				} = filter ?? {};
-				return this.model.findAll(
-					{
-						where:   this.whereClause('and')
-						             .eq('orderId', orderId)
-						             .eq('orderStatus', orderStatus)
-						             .notNull('bidComment', hasComment)
-							         .query,
-						offset,
-						limit,
-						order,
-						include: [
-							{
-								model:   Driver,
-								where:   this.whereClause<IDriver>('and')
-								             .fromFilter<IDriverFilter>(rest, 'nullOrEq')
-									         .query,
-								include: full ? [{ all: true }] : []
-							}
-						]
-					}
-				);
-			},
+			() => this.model.findAll(
+				{
+					where:   this.whereClause('and')
+					             .eq('orderId', orderId)
+					             .eq('orderStatus', orderStatus)
+						         .query,
+					offset,
+					limit,
+					order,
+					include: [
+						{
+							model:   Driver,
+							where:   this.whereClause<IDriver>('or')
+							             .eq('status', driverStatus)
+							             .in('status', statuses)
+								         .query,
+							include: [
+								{
+									model: Transport,
+									where: this.whereClause<ITransport>()
+									           .eq('status', rest?.transportStatus)
+										       .query
+								}
+							]
+						}
+					]
+				}
+			),
 			{ id: 'getOrderDrivers' },
 			{ orderId, listFilter, filter }
 		);
@@ -219,58 +224,50 @@ export default class OfferRepository
 		listFilter: IListFilter = {},
 		filter?: Pick<IOfferFilter, 'transportStatus'> & IDriverFilter
 	): Promise<Offer[]> {
+		const {
+			from:  offset = 0,
+			count: limit
+		} = listFilter;
+
+		const {
+			sortOrder: order = DEFAULT_SORT_ORDER,
+			orderStatus,
+			transportStatus
+		} = filter ?? {};
+
 		return this.log(
-			() =>
-			{
-				const {
-					from:  offset = 0,
-					count: limit
-				} = listFilter;
-
-				const {
-					sortOrder: order = DEFAULT_SORT_ORDER,
-					orderStatus,
-					transportStatus,
-					...driverFilters
-				} = filter ?? {};
-
-				return this.model.findAll(
-					{
-						where:   this.whereClause('and')
-						             .eq('orderId', orderId)
-						             .eq('orderStatus', orderStatus)
-							         .query,
-						offset,
-						limit,
-						order,
-						include: [
-							{
-								model:    Driver,
-								where:    this.whereClause<IDriver>('or')
-								              .fromFilter<IDriverFilter>(driverFilters, 'nullOrEq')
-									          .query,
-								order:    DEFAULT_SORT_ORDER,
-								required: true,
-								include:  [
-									{
-										model:    Transport,
-										where:    this.whereClause<ITransport>()
-										              .eq('status', transportStatus)
-											          .query,
-										required: true,
-										order:    DEFAULT_SORT_ORDER,
-										include:  [{ all: true }]
-									}
-								]
-							},
-							{
-								model: Order,
-								order: DEFAULT_SORT_ORDER
-							}
-						]
-					}
-				);
-			},
+			() => this.model.findAll(
+				{
+					where:   this.whereClause('and')
+					             .eq('orderId', orderId)
+					             .eq('orderStatus', orderStatus)
+						         .query,
+					offset,
+					limit,
+					order,
+					include: [
+						{
+							model:    Driver,
+							order:    DEFAULT_SORT_ORDER,
+							required: true,
+							include:  [
+								{
+									model:   Transport,
+									where:   this.whereClause<ITransport>()
+									             .eq('status', transportStatus)
+										         .query,
+									order:   DEFAULT_SORT_ORDER,
+									include: [{ all: true }]
+								}
+							]
+						},
+						{
+							model: Order,
+							order: DEFAULT_SORT_ORDER
+						}
+					]
+				}
+			),
 			{ id: 'getOrderTransports' },
 			{ orderId, listFilter, filter }
 		);
@@ -303,6 +300,7 @@ export default class OfferRepository
 					{
 						where:   this.whereClause('and')
 						             .eq('driverId', driverId)
+						             .eq('status', status)
 						             .eq('orderStatus', orderStatus)
 							         .query,
 						offset,
@@ -326,6 +324,11 @@ export default class OfferRepository
 								           .inArray('status', statuses)
 								           .fromFilter<IOrderFilter>(rest)
 									       .query
+							},
+							{
+								model:    Driver,
+								required: false,
+								include:  [{ model: Transport }]
 							}
 						]
 					}

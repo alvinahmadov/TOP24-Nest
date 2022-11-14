@@ -1,5 +1,6 @@
 import {
-	Request, Response,
+	Request,
+	Response,
 	NextFunction
 } from 'express';
 import {
@@ -8,33 +9,30 @@ import {
 	Logger as NestLogger
 } from '@nestjs/common';
 
-const DEBUG = true;
-
 @Injectable()
 export default class LoggerMiddleware
 	implements NestMiddleware {
 	private readonly logger: NestLogger;
 
 	constructor() {
-		this.logger = new NestLogger(LoggerMiddleware.name, { timestamp: false });
+		this.logger = new NestLogger(LoggerMiddleware.name, { timestamp: true });
 	}
 
-	public use(request: Request, _: Response, next: NextFunction) {
-		if(DEBUG) {
-			const endpoint: { [k: string]: any } = {
-				path:   request.path,
-				method: request.method
-			};
-			if(request.hostname !== 'localhost')
-				endpoint['hostname'] = request.hostname;
+	public use(request: Request, response: Response, next: NextFunction) {
+		const { ip, method, path: url, body, query, params } = request;
+		let route: string;
+		const isEmptyObject = (obj: any) => !Object.entries(obj).length;
 
-			this.logger.log({
-				                route:  endpoint,
-				                params: request.params,
-				                query:  request.query,
-				                body:   request.body
-			                });
-		}
+		const res: any = {};
+
+		if(!isEmptyObject(body)) res['body'] = body;
+		if(!isEmptyObject(query)) res['query'] = query;
+		if(!isEmptyObject(params)) route = params[0];
+
+		this.logger.log(
+			`${method} ${url}${route} - ${ip}`, { ...res }
+		);
+
 		next();
 	}
 }

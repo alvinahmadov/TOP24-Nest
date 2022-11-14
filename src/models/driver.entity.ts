@@ -212,6 +212,7 @@ export default class Driver
 	payloadRegion?: string;
 	
 	@ApiProperty(prop.payloadDate)
+	@DateColumn()
 	payloadDate?: Date;
 
 	@ApiProperty(prop.avatarLink)

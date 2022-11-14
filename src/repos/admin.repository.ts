@@ -13,7 +13,7 @@ export default class AdminRepository
 	protected override readonly model = Admin;
 
 	constructor(
-		protected override options: IRepositoryOptions = { log: true }
+		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(AdminRepository.name);
 	}
@@ -22,9 +22,8 @@ export default class AdminRepository
 		return this.log(
 			() => this.model.findOne(
 				{
-					where:         this.whereClause('or')
-					                   .eq('phone', phone)
-					                   .eq('phone', formatPhone(phone))
+					where:         this.whereClause()
+					                   .in('phone', [phone, formatPhone(phone)])
 						               .query,
 					rejectOnEmpty: false
 				}

@@ -5,12 +5,14 @@ import { Model }   from 'sequelize-typescript';
 import {
 	CanActivate,
 	HttpStatus,
+	LoggerService,
 	NestInterceptor,
 	RequestMethod
 }                  from '@nestjs/common';
 import {
 	ApiOperationOptions,
 	ApiPropertyOptions,
+	ApiQueryOptions,
 	ApiResponseOptions
 }                  from '@nestjs/swagger';
 import {
@@ -37,6 +39,7 @@ export type TApiResponseSchemaOptions = {
 	message?: string;
 	isArray?: boolean;
 	description?: string;
+	data?: any;
 }
 
 /**@ignore*/
@@ -174,7 +177,7 @@ export interface IApiRouteMetadata<M = any> {
 	/**
 	 * Api path to fetch
 	 * */
-	path: string;
+	path: string | string[];
 
 	/**
 	 * Method type to use for api endpoint
@@ -184,11 +187,12 @@ export interface IApiRouteMetadata<M = any> {
 	api?: {
 		operation?: ApiOperationOptions;
 		responses?: Record<number, ApiResponseOptions>;
+		queryOptions?: ApiQueryOptions | ApiQueryOptions[];
 	};
 }
 
 export interface IApiRouteConfig<M = any> {
-	path: string;
+	path: string | string[];
 	routes: IApiRoute<M>;
 	description?: string;
 }
@@ -330,6 +334,8 @@ export interface IKladrResponse {
 
 /**@ignore*/
 export interface ILoggable {
+	readonly logger: LoggerService;
+
 	log: <R>(
 		callback: TLoggerCallback<R>,
 		identifier: TLogIdentifier,

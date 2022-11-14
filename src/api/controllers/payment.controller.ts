@@ -11,10 +11,15 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { ApiRoute }            from '@common/decorators';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
+import { PaymentPipe }         from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
-import { CargoGuard }          from '@api/security';
+import {
+	AccessGuard,
+	CargoGuard
+}                              from '@api/security';
 import { PaymentService }      from '@api/services';
 import BaseController          from './controller';
 
@@ -30,7 +35,7 @@ export default class PaymentController
 	}
 
 	@ApiRoute(routes.filter, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async filter(
@@ -40,12 +45,11 @@ export default class PaymentController
 	): Promise<ex.Response> {
 		const result = await this.paymentService.getList(listFilter, filter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.list, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async list(
@@ -54,12 +58,11 @@ export default class PaymentController
 	): Promise<ex.Response> {
 		const result = await this.paymentService.getList(listFilter);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.index, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public override async index(
@@ -68,8 +71,7 @@ export default class PaymentController
 	): Promise<ex.Response> {
 		const result = await this.paymentService.getById(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.create, {
@@ -77,13 +79,12 @@ export default class PaymentController
 		statuses: [HttpStatus.OK]
 	})
 	public override async create(
-		@Body() dto: dto.PaymentCreateDto,
+		@Body(PaymentPipe) dto: dto.PaymentCreateDto,
 		@Res() response: ex.Response
 	): Promise<ex.Response> {
 		const result = await this.paymentService.create(dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.update, {
@@ -92,13 +93,12 @@ export default class PaymentController
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body() dto: dto.PaymentUpdateDto,
+		@Body(PaymentPipe) dto: dto.PaymentUpdateDto,
 		@Res() response: ex.Response
 	): Promise<ex.Response> {
 		const result = await this.paymentService.update(id, dto);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -111,12 +111,11 @@ export default class PaymentController
 	): Promise<ex.Response> {
 		const result = await this.paymentService.delete(id);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.company, {
-		guards:   [CargoGuard],
+		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async getByCompany(
@@ -125,7 +124,6 @@ export default class PaymentController
 	) {
 		const result = await this.paymentService.getByCompanyId(companyId);
 
-		return response.status(result.statusCode)
-		               .send(result);
+		return sendResponse(response, result);
 	}
 }
