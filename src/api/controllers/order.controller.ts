@@ -8,10 +8,14 @@ import {
 	Query,
 	Res,
 	UploadedFile,
+	UploadedFiles,
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { FileInterceptor }     from '@nestjs/platform-express';
+import {
+	FileInterceptor,
+	FilesInterceptor
+}                              from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
@@ -175,19 +179,20 @@ export default class OrderController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('image')],
+			interceptors: [FilesInterceptor('images')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async uploadShipping(
 		@Param('id', ParseUUIDPipe) id: string,
 		@Query('pt') point: string,
-		@UploadedFile() image: TMulterFile,
+		@UploadedFiles() images: Array<TMulterFile>,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.orderService.sendShippingDocuments(id, point, buffer, name);
-
+		const result = await this.orderService.sendShippingDocuments(
+			id, point, images.map(i => ({ file: i.buffer, fileName: i.originalname }))
+		);
+		
 		return sendResponse(response, result);
 	}
 

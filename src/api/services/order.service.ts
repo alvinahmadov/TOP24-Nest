@@ -387,19 +387,21 @@ export default class OrderService
 	 *
 	 * @param {String!} id Id of cargo company driver which uploads document.
 	 * @param {String!} point Name of point of destination. Optional when mode is not shipping.
-	 * @param {Buffer!} file File buffer of sent image.
-	 * @param {String!} fileName Name for save in storage.
+	 * @param {Buffer!} files File buffer of sent image.
+	 * @param {String!} files.fileName Name for save in storage.
 	 * */
 	public async sendShippingDocuments(
 		id: string,
 		point: string,
-		file: Buffer,
-		fileName: string
+		files: {
+			file: Buffer,
+			fileName: string
+		}[]
 	): TAsyncApiResponse<Order> {
 		let order = await this.repository.get(id);
 		let fileUploaded = false;
 		let message: string = '';
-
+		
 		if(!order)
 			return this.responses['NOT_FOUND'];
 
@@ -407,19 +409,26 @@ export default class OrderService
 		const index = destinations.findIndex(d => d.point === point);
 
 		if(index >= 0) {
-			if(destinations[index].shippingPhotoLink) {
-				await this.imageFileService.deleteImage(
-					destinations[index].shippingPhotoLink, Bucket.COMMON
+			if(destinations[index].shippingPhotoLinks) {
+				await this.imageFileService.deleteImageList(
+					destinations[index].shippingPhotoLinks, Bucket.COMMON
 				);
 			}
-			const { Location: shippingPhotoLink } = await this.imageFileService.uploadFile(
-				file, `${id}/shipping/${point}/${fileName}`, Bucket.COMMON
-			);
+			const { Location: shippingPhotoLinks } = await this.imageFileService
+			                                                   .uploadFiles(
+				                                                   files.map(
+					                                                   f => ({
+						                                                   fileBlob:  f.file,
+						                                                   storeName: `${id}/shipping/${point}/${f.fileName}`
+					                                                   })
+				                                                   ),
+				                                                   Bucket.COMMON
+			                                                   );
 
-			if(shippingPhotoLink) {
+			if(shippingPhotoLinks?.length > 0) {
 				fileUploaded = true;
-				message = formatArgs(ORDER_TRANSLATIONS['SHIPPING'], shippingPhotoLink, point);
-				destinations[index].shippingPhotoLink = shippingPhotoLink;
+				message = formatArgs(ORDER_TRANSLATIONS['SHIPPING'], shippingPhotoLinks.join(','), point);
+				destinations[index].shippingPhotoLinks = shippingPhotoLinks;
 				const { data: updOrder } = await this.update(order.id, { destinations });
 
 				if(!updOrder)

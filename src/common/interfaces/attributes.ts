@@ -1113,7 +1113,7 @@ export interface IOrderDestination {
 	/**
 	 * Link to the uploaded after fulfillment photo of the shipping documents.
 	 * */
-	shippingPhotoLink?: string;
+	shippingPhotoLinks?: string[];
 }
 
 /**

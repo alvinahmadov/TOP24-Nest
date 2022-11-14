@@ -104,14 +104,14 @@ function typeFromCrm<T extends number | string | boolean>(
 		return crmItem ?? [];
 	}
 	switch(typeof defaultValue) {
-		case "string":
-		case "symbol":
+		case 'string':
+		case 'symbol':
 			return crmItem ?? '';
-		case "number":
+		case 'number':
 			return Number(crmItem ?? defaultValue) as unknown as T;
-		case "boolean":
+		case 'boolean':
 			return (isBool() || defaultValue) as unknown as T;
-		case "undefined":
+		case 'undefined':
 			return null;
 		default:
 			return null;
@@ -193,10 +193,10 @@ function parseDestination(crmFields: TCRMFields)
 				contact: string = crmFields[crmElement['CONTACT']] || null,
 				phone: string = crmFields[crmElement['PHONE']] || null,
 				comment: string = crmFields[crmElement['COMMENT']] || null,
-				shippingPhotoLink: string = (shippingLinkList?.length > 0 &&
-				                             index < shippingLinkList.length)
-				                            ? shippingLinkList[index] :
-				                            null;
+				shippingPhotoLinks: string[] = (shippingLinkList?.length > 0 &&
+				                                index < shippingLinkList.length)
+				                               ? shippingLinkList :
+				                               [];
 			destinations.push(
 				{
 					point:     name,
@@ -209,7 +209,7 @@ function parseDestination(crmFields: TCRMFields)
 					comment,
 					distance:  null,
 					fulfilled: false,
-					shippingPhotoLink
+					shippingPhotoLinks
 				}
 			);
 		}

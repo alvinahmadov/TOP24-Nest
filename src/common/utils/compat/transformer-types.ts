@@ -550,9 +550,9 @@ export interface IOrderDestinationTransformer {
 	comment?: string;
 	fulfilled?: boolean;
 	/**
-	 * @see IOrderDestination.shippingPhotoLink
+	 * @see IOrderDestination.shippingPhotoLinks
 	 * */
-	shipping_link?: string;
+	shipping_links?: string[];
 }
 
 /**

@@ -50,6 +50,34 @@ export default class ImageFileService
 		           .upload({ buffer: fileBlob, name: storeName });
 	}
 
+	public async uploadFiles(
+		files: {
+			fileBlob: Buffer,
+			storeName?: string
+		}[],
+		bucketId?: string
+	): Promise<{ Location: string[] }> {
+		if(!bucketId) bucketId = Bucket.COMMON;
+
+		if(files) {
+			files.forEach((file, index) =>
+			              {
+				              if(file.storeName === undefined)
+					              file.storeName = `image_${index}.png`;
+			              });
+
+			return this.objectStorage
+			           .setBucket(bucketId)
+			           .uploadMulti(
+				           files.map(
+					           ({ fileBlob, storeName }) => ({ buffer: fileBlob, name: storeName })
+				           )
+			           );
+		}
+
+		return { Location: [] };
+	}
+
 	public async deleteImageList(
 		fileList: string | string[],
 		bucketId?: string
