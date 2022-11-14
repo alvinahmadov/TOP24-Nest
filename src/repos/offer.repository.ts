@@ -300,6 +300,7 @@ export default class OfferRepository
 					{
 						where:   this.whereClause('and')
 						             .eq('driverId', driverId)
+						             .eq('status', status)
 						             .eq('orderStatus', orderStatus)
 							         .query,
 						offset,
