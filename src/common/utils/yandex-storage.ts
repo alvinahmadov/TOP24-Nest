@@ -222,6 +222,19 @@ export class YandexStorage {
 
 	};
 
+	public async uploadMulti(files: IBucketItem[]): Promise<{ Location: string[] }> {
+
+		const uploadResponses = await Promise.all(
+			files.map(async(file) => await this.upload(file))
+		);
+
+		return {
+			Location: uploadResponses
+				          .map(u => ({ Location: u.Location }))
+				          .map(l => l.Location)
+		};
+	}
+
 	/**
 	 * Delete file from storage
 	 * @param {String} routeFullPath Full path to the file. Folder name, file name and extension
