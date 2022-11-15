@@ -5,9 +5,9 @@ import {
 	RANDOM_CODE_DIGITS
 }                             from '@common/constants';
 import { IApiResponse }       from '@common/interfaces';
+import { transformApiResult } from '@common/utils/compat';
 import Driver                 from '@models/driver.entity';
 import Transport              from '@models/transport.entity';
-import { transformApiResult } from './compat/transformer-functions';
 
 const phoneRegex = RegExp(/[\s+()]+/gi);
 
