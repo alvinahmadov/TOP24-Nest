@@ -175,20 +175,16 @@ export class YandexStorage {
 		else
 			throw new Error('file.path or file.buffer must be provided!');
 
-		if(bucket.slice(-1) != '/') bucket += '/';
-		if(bucket[0] == '/') bucket = bucket.slice(1);
-
 		if(!fileUploadName) {
 			file_md5 = md5(fileBody);
 			fileUploadName = `${file_md5}${extension}`;
 		}
 
 		const s3 = this.s3;
-		const Bucket = this.params.bucketId;
 		const ContentType = lookup(fileUploadName) || 'image/jpeg';
 		const params = {
-			Bucket,
-			Key:  `${bucket}${fileUploadName}`,
+			Bucket: bucket,
+			Key:  fileUploadName,
 			Body: fileBody,
 			ContentType
 		};
