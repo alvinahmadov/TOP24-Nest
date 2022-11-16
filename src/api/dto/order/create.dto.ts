@@ -122,6 +122,10 @@ export default class OrderCreateDto
 	@ApiProperty(prop.isBid)
 	@IsBoolean()
 	isBid?: boolean = false;
+	
+	@ApiProperty(prop.onPayment)
+	@IsBoolean()
+	onPayment?: boolean = false;
 
 	@ApiProperty(prop.hasProblem)
 	@IsBoolean()

@@ -299,6 +299,11 @@ export default class Order
 	@Default(true)
 	@BooleanColumn()
 	isOpen?: boolean;
+	
+	@ApiProperty(prop.onPayment)
+	@Default(false)
+	@BooleanColumn()
+	onPayment?: boolean;
 
 	@ApiProperty(prop.isFree)
 	@Default(true)

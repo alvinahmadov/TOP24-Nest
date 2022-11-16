@@ -450,6 +450,10 @@ export interface IOrderTransformer
 	 * */
 	is_free?: boolean;
 	/**
+	 * Is order on payment state.
+	 * */
+	on_payment?: boolean;
+	/**
 	 * @see IOrder.cancelCause
 	 * */
 	cancel_cause?: string;

@@ -363,6 +363,7 @@ function transformOrder(order: models.Order)
 			stage:                      order.getDataValue('stage'),
 			is_open:                    order.getDataValue('isOpen'),
 			is_free:                    order.getDataValue('isFree'),
+			on_payment:                 order.getDataValue('onPayment'),
 			cancel_cause:               order.getDataValue('cancelCause'),
 			is_canceled:                order.getDataValue('isCanceled'),
 			has_problem:                order.getDataValue('hasProblem'),

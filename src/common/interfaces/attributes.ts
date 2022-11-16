@@ -379,14 +379,14 @@ export interface ICargoCompany
 	attorneySignLink?: string;
 	/**
 	 * Legal address of the company.
-	 * 
+	 *
 	 * @example
 	 * Москва, 117312, ул. Вавилова, д. 19
 	 * */
 	legalAddress?: string;
 	/**
 	 * Postal address of the company.
-	 * 
+	 *
 	 * @example
 	 * Москва, 117312
 	 * */
@@ -407,7 +407,7 @@ export interface ICargoCompany
 
 /**
  * Indiviual cargo transportation company.
- * 
+ *
  * @extends ICompany
  * */
 export interface ICargoInnCompany
@@ -437,7 +437,7 @@ export interface ICargoInnCompany
 	patronymic?: string;
 	/**
 	 * Main address of the cargo company.
-	 * 
+	 *
 	 * @example
 	 * Москва, 117312, ул. Вавилова, д. 19
 	 * */
@@ -758,7 +758,7 @@ export interface IDriver
 
 export interface IGatewayEvent
 	extends IModel {
-	eventName?: 'cargo' | 'driver' | 'order'| string;
+	eventName?: 'cargo' | 'driver' | 'order' | string;
 	source?: string;
 	message?: string;
 	event?: any;
@@ -862,14 +862,14 @@ export interface IOrder
 	crmId?: number;
 	/**
 	 * Title of the order.
-	 * 
+	 *
 	 * @example
 	 * Сделка #01
 	 * */
 	title: string;
 	/**
 	 * Price of order for payment to driver.
-	 * 
+	 *
 	 * @example
 	 * 10.000|RUB
 	 * */
@@ -880,13 +880,13 @@ export interface IOrder
 	date: Date;
 	/**
 	 * Status of the order
-	 * 
+	 *
 	 * @see OrderStatus
 	 * */
 	status: OrderStatus;
 	/**
 	 * Implementation stage of the order
-	 * 
+	 *
 	 * @see OrderStage
 	 * */
 	stage: OrderStage;
@@ -921,7 +921,7 @@ export interface IOrder
 	pallets?: number;
 	/**
 	 * Cargo loading types available in transport for order.
-	 * 
+	 *
 	 * @example
 	 * BACK: 1
 	 * TOP: 2
@@ -930,7 +930,7 @@ export interface IOrder
 	loadingTypes?: LoadingType[];
 	/**
 	 * Types of transport that fits for cargo.
-	 * 
+	 *
 	 * @example
 	 * Тентованный
 	 * Изотермический
@@ -941,6 +941,10 @@ export interface IOrder
 	 * Order is not finished by assigned driver.
 	 * */
 	isOpen?: boolean;
+	/**
+	 * Order waiting for payment
+	 * */
+	onPayment?: boolean;
 	/**
 	 * Order is not assigned to any driver.
 	 * */
@@ -971,14 +975,14 @@ export interface IOrder
 	bidPriceVat?: number;
 	/**
 	 * Information about bargain/bid for the cargo order.
-	 * 
+	 *
 	 * @example
 	 * Необходимо уточнить детали торга по телефону.
 	 * */
 	bidInfo?: string;
 	/**
 	 * Type of payment for cargo order fullfilment.
-	 * 
+	 *
 	 * @example
 	 * НДС 20%
 	 * Без НДС
@@ -988,7 +992,7 @@ export interface IOrder
 	paymentType?: string;
 	/**
 	 * Cargo payload.
-	 * 
+	 *
 	 * @example
 	 * Арматура
 	 * Бумага
@@ -997,7 +1001,7 @@ export interface IOrder
 	payload: string;
 	/**
 	 * Risk type of cargo payload.
-	 * 
+	 *
 	 * @example
 	 * Не опасный
 	 * ADR1
@@ -1015,21 +1019,21 @@ export interface IOrder
 	filter?: IOrderFilter;
 	/**
 	 * Driver's deferral conditions for order execution.
-	 * 
+	 *
 	 * @example
 	 * 2 рабочих дня.
 	 * */
 	driverDeferralConditions?: string;
 	/**
 	 * Cargo owner's deferral conditions for order execution.
-	 * 
+	 *
 	 * @example
 	 * 2 рабочих дня.
 	 * */
 	ownerDeferralConditions?: string;
 	/**
 	 * Transport must be dedicated for one order or can carry additional payload.
-	 * 
+	 *
 	 * @default Не важно
 	 * @example
 	 * Выделенная машина
@@ -1057,7 +1061,7 @@ export interface IOrder
 export interface IOrderDestination {
 	/**
 	 * Point of destination
-	 * 
+	 *
 	 * @example
 	 * A
 	 * B
@@ -1071,7 +1075,7 @@ export interface IOrderDestination {
 	address: string;
 	/**
 	 * Geolocation coordinates of destination point in form of [latitude, longitude].
-	 * 
+	 *
 	 * @example
 	 * [37.617617, 55.755799]
 	 * */
@@ -1084,14 +1088,14 @@ export interface IOrderDestination {
 	type: DestinationType;
 	/**
 	 * Date of arrival for cargo to the destination point.
-	 * 
+	 *
 	 * @example
 	 * 01.01.2023
 	 * */
 	date?: Date;
 	/**
 	 * Contact person on destination point.
-	 * 
+	 *
 	 * @example
 	 * Иван Алексеевич Яров.
 	 * */
@@ -1103,13 +1107,13 @@ export interface IOrderDestination {
 	/**
 	 * Distance to destination point from driver.
 	 * Calculated automatically in the backend in kilometers.
-	 * 
+	 *
 	 * @readonly
 	 * */
 	distance?: number;
 	/**
 	 * Comment for destination point.
-	 * 
+	 *
 	 * @example
 	 * Не раньше обеда.
 	 * */
@@ -1207,14 +1211,14 @@ export interface ITransport
 	crmId?: number;
 	/**
 	 * Status of the transport.
-	 * 
+	 *
 	 * @example
 	 * ACTIVE: 1
 	 * */
 	status: TransportStatus;
 	/**
 	 * Type of the transport.
-	 * 
+	 *
 	 * @example
 	 * Тентованный
 	 * Промтоварный
@@ -1222,7 +1226,7 @@ export interface ITransport
 	type: string;
 	/**
 	 * Transport manufacturer brand.
-	 * 
+	 *
 	 * @example
 	 * ABACUS
 	 * BAUER
@@ -1230,19 +1234,19 @@ export interface ITransport
 	 * */
 	brand: string;
 	/**
-	 * Model of the transport. 
+	 * Model of the transport.
 	 * */
 	model: string;
 	/**
 	 * Transport registration number.
-	 * 
+	 *
 	 * @example
 	 * но 181 к 881
 	 * */
 	registrationNumber: string;
 	/**
 	 * Year of production of transport.
-	 * 
+	 *
 	 * @example
 	 * 2012
 	 * 2015
@@ -1250,7 +1254,7 @@ export interface ITransport
 	prodYear: number;
 	/**
 	 * Payload that transport may carry.
-	 * 
+	 *
 	 * @example
 	 * Арматура
 	 * Бумага
@@ -1276,14 +1280,14 @@ export interface ITransport
 	certificateNumber: string;
 	/**
 	 * Additional weight for cargo that transport can take for another order when has ongoing order.
-	 * 
+	 *
 	 * @example
 	 * 12.6
 	 * */
 	weightExtra?: number;
 	/**
 	 * Additional volume for cargo that transport can take for another order when has ongoing order.
-	 * 
+	 *
 	 * @example
 	 * 12.6
 	 * */
@@ -1314,7 +1318,7 @@ export interface ITransport
 	pallets?: number;
 	/**
 	 * Transport risk class for cargo.
-	 * 
+	 *
 	 * @example
 	 * ADR1
 	 * ADR2,ADR3
@@ -1322,7 +1326,7 @@ export interface ITransport
 	riskClasses?: string[];
 	/**
 	 * Cargo loading modes for transport.
-	 * 
+	 *
 	 * @example
 	 * Задняя
 	 * Боковая
@@ -1331,20 +1335,20 @@ export interface ITransport
 	loadingTypes?: LoadingType[];
 	/**
 	 * Extra fixtures of transport.
-	 * 
+	 *
 	 * @example
 	 * Аппарели, Без ворот, Со снятием стоек
 	 * Аппарели, Пирамида
 	 * */
 	fixtures?: string[];
 	/**
-	 * Certificate number of Compulsory insurance 
+	 * Certificate number of Compulsory insurance
 	 * of civil liability of vehicle owners (ОСАГО)
 	 * */
 	osagoNumber: string;
 	/**
 	 * OSAGO expiration date.
-	 * 
+	 *
 	 * @example
 	 * 26.05.2024
 	 * */
