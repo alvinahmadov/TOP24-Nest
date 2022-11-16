@@ -4,6 +4,7 @@ import AdminRepository           from './admin.repository';
 import CargoCompanyRepository    from './cargo-company.repository';
 import CargoInnCompanyRepository from './cargoinn-company.repository';
 import DriverRepository          from './driver.repository';
+import GatewayEventRepository    from './gateway-event.repository';
 import ImageRepository           from './image.repository';
 import OfferRepository           from './offer.repository';
 import OrderRepository           from './order.repository';
@@ -11,15 +12,16 @@ import PaymentsRepository        from './payment.repository';
 import TransportRepository       from './transport.repository';
 
 export {
-	GenericRepository,
-	AdminRepository,
-	AddressRepository,
-	CargoCompanyRepository,
-	CargoInnCompanyRepository,
-	DriverRepository,
-	ImageRepository,
-	OrderRepository,
-	OfferRepository,
-	PaymentsRepository,
-	TransportRepository
+  GenericRepository,
+  AdminRepository,
+  AddressRepository,
+  CargoCompanyRepository,
+  CargoInnCompanyRepository,
+  DriverRepository,
+  GatewayEventRepository,
+  ImageRepository,
+  OrderRepository,
+  OfferRepository,
+  PaymentsRepository,
+  TransportRepository
 };
