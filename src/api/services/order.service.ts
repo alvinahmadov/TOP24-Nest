@@ -511,6 +511,7 @@ export default class OrderService
 			}
 		}
 		else if(mode === 'contract') {
+			order = await this.repository.get(id, true);
 			if(order.contractPhotoLink)
 				await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON);
 			const { Location: contractPhotoLink } = await this.imageFileService.uploadFile(
