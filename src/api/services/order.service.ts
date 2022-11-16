@@ -485,13 +485,14 @@ export default class OrderService
 				await this.imageFileService.deleteImage(order.paymentPhotoLink, Bucket.COMMON);
 			const { Location: paymentPhotoLink } = await this.imageFileService.uploadFile(
 				file, `${id}/${mode}/${fileName}`, Bucket.COMMON
-			);
+			) ?? { Location: null };
 			if(paymentPhotoLink) {
 				fileUploaded = true;
 				message = formatArgs(ORDER_TRANSLATIONS['PAYMENT'], paymentPhotoLink);
 				this.gateway.sendOrderEvent({ id, message });
 
 				order.paymentPhotoLink = paymentPhotoLink;
+				order.onPayment = true;
 				await order.save({ fields: ['paymentPhotoLink'] });
 			}
 		}
@@ -500,7 +501,7 @@ export default class OrderService
 				await this.imageFileService.deleteImage(order.receiptPhotoLink, Bucket.COMMON);
 			const { Location: receiptPhotoLink } = await this.imageFileService.uploadFile(
 				file, `${id}/${mode}/${fileName}`, Bucket.COMMON
-			);
+			) ?? { Location: null };
 			if(receiptPhotoLink) {
 				fileUploaded = true;
 				message = formatArgs(ORDER_TRANSLATIONS['RECEIPT'], receiptPhotoLink);
@@ -516,7 +517,7 @@ export default class OrderService
 				await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON);
 			const { Location: contractPhotoLink } = await this.imageFileService.uploadFile(
 				file, `${id}/${mode}/${fileName}`, Bucket.COMMON
-			);
+			) ?? { Location: null };
 			if(contractPhotoLink) {
 				fileUploaded = true;
 				message = formatArgs(ORDER_TRANSLATIONS['CONTRACT'], contractPhotoLink);
