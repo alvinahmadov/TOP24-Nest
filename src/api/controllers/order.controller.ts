@@ -1,4 +1,5 @@
 import * as ex                 from 'express';
+import { Op }                  from 'sequelize';
 import {
 	Body,
 	Controller,
@@ -17,9 +18,19 @@ import {
 	FilesInterceptor
 }                              from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
+import {
+	OfferStatus,
+	OrderStatus,
+	UserRole
+}                              from '@common/enums';
 import { TMulterFile }         from '@common/interfaces';
-import { sendResponse }        from '@common/utils';
+import {
+	formatArgs,
+	getTranslation,
+	sendResponse
+}                              from '@common/utils';
 import * as dto                from '@api/dto';
+import { EventsGateway }       from '@api/events';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
@@ -32,10 +43,14 @@ import {
 	CargoGuard,
 	LogistGuard
 }                              from '@api/security';
-import { OrderService }        from '@api/services';
+import {
+	OfferService,
+	OrderService
+}                              from '@api/services';
 import BaseController          from './controller';
 
 const { path, tag, routes } = getRouteConfig('order');
+const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
 
 @ApiTags(tag)
 @Controller(path)
@@ -43,7 +58,9 @@ const { path, tag, routes } = getRouteConfig('order');
 export default class OrderController
 	extends BaseController {
 	public constructor(
-		private readonly orderService: OrderService
+		private readonly offerService: OfferService,
+		private readonly orderService: OrderService,
+		private readonly gateway: EventsGateway
 	) {
 		super();
 	}
@@ -192,7 +209,7 @@ export default class OrderController
 		const result = await this.orderService.sendShippingDocuments(
 			id, point, images.map(i => ({ file: i.buffer, fileName: i.originalname }))
 		);
-		
+
 		return sendResponse(response, result);
 	}
 
@@ -230,6 +247,44 @@ export default class OrderController
 	) {
 		const { originalname: name, buffer } = image;
 		const result = await this.orderService.sendDocuments(id, buffer, name, 'contract');
+
+		const { data: order } = result;
+
+		if(order && order.driver) {
+			const { data: offers } = await this.offerService.getList(
+				{},
+				{ orderId: id, driverId: order.driverId }
+			);
+
+			if(offers && offers.length === 1) {
+				const offer = offers[0];
+
+				await this.offerService.updateAll(
+					{
+						status:      OfferStatus.NO_MATCH,
+						orderStatus: OrderStatus.CANCELLED_BITRIX
+					},
+					{
+						[Op.and]: [
+							{ id: { [Op.eq]: offer.id } },
+							{ driverId: { [Op.ne]: offer.driverId } }
+						]
+					}
+				).then(
+					// then emit message for unselected drivers.
+					([, offers]) =>
+					{
+						offers.forEach(o => this.gateway.sendDriverEvent(
+							{
+								id:      o.driverId,
+								message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], order.crmId?.toString())
+							},
+							UserRole.CARGO
+						));
+					}
+				);
+			}
+		}
 
 		return sendResponse(response, result);
 	}
