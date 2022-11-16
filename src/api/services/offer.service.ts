@@ -250,6 +250,7 @@ export default class OfferService
 		filter?: Omit<OfferFilter, 'statuses'> & OrderFilter
 	) {
 		const offers = await this.repository.getDriverOrders(driverId, listFilter, filter);
+		const offerStatusKey = env.api.compatMode ? 'offer_status' : 'offerStatus';
 		const orders =
 			await offers?.filter(offer => offer !== null && offer.order !== null)
 			            ?.map(
@@ -261,6 +262,7 @@ export default class OfferService
 							            ? transformEntity(offer.order)
 							            : offer.order.get({ plain: true, clone: false })
 						            ),
+						            [offerStatusKey]: offer.status,
 						            transports: offer.transports
 					            };
 				            }
@@ -516,7 +518,8 @@ export default class OfferService
 					const { driver } = offer;
 					if(
 						driver.order &&
-						driver.order.status === OrderStatus.PROCESSING
+						(driver.order.id !== offer.orderId &&
+						driver.order.status === OrderStatus.PROCESSING)
 					) {
 						this.gateway.sendDriverEvent(
 							{
