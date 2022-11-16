@@ -263,7 +263,7 @@ export default class OfferService
 							            : offer.order.get({ plain: true, clone: false })
 						            ),
 						            [offerStatusKey]: offer.status,
-						            transports: offer.transports
+						            transports:       offer.transports
 					            };
 				            }
 			            );
@@ -607,28 +607,27 @@ export default class OfferService
 	): TAsyncApiResponse<Offer> {
 		const offer = await this.repository.getByAssociation(orderId, driverId);
 		const driverStatus = DriverStatus.NONE;
-		const status = (role ?? 0) < UserRole.CARGO ? OrderStatus.CANCELLED
-		                                            : OrderStatus.PENDING;
+		let status = (role ?? 0) < UserRole.CARGO ? OrderStatus.CANCELLED
+		                                          : OrderStatus.PENDING;
 
 		if(offer) {
 			if(offer.orderStatus < OrderStatus.CANCELLED) {
 				let order: Order = offer.order;
 				let driver: Driver = offer.driver;
 
+				if(order.isCanceled)
+					status = OrderStatus.CANCELLED_BITRIX;
+
 				if(order) {
 					if(order.contractPhotoLink) {
 						await this.imageFileService.deleteImage(offer.order.contractPhotoLink);
 					}
-
+					order.destinations.forEach(d => d.fulfilled = false);
 					this.orderService
 					    .update(order.id, {
 						    status,
-						    driverId:    null,
-						    cargoId:     null,
-						    cargoinnId:  null,
 						    isOpen:      true,
 						    isFree:      true,
-						    isCanceled:  true,
 						    cancelCause: reason ?? ''
 					    }, false)
 					    .then(({ data: order }) =>
@@ -681,7 +680,7 @@ export default class OfferService
 						{
 							bidPrice:    null,
 							bidPriceVat: null,
-							status:      OfferStatus.DECLINED,
+							status:      OfferStatus.CANCELLED,
 							orderStatus: status,
 							bidComment:  reason ?? ''
 						}
