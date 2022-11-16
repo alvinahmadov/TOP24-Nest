@@ -289,7 +289,7 @@ export default class OfferRepository
 	public async getDriverOrders(
 		driverId: string,
 		listFilter: IListFilter,
-		filter?: IOfferFilter & IOrderFilter
+		filter?: Omit<IOfferFilter, 'statuses'> & IOrderFilter
 	): Promise<Offer[]> {
 		return this.log(
 			() =>
