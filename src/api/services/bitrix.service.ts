@@ -7,7 +7,11 @@ import {
 }                             from '@config/json';
 import { WhereClause }        from '@common/classes';
 import { BitrixUrl }          from '@common/constants';
-import { CompanyType }        from '@common/enums';
+import {
+	CompanyType,
+	OrderStage,
+	OrderStatus
+}                             from '@common/enums';
 import {
 	IApiResponses,
 	ICompany,
@@ -31,7 +35,6 @@ import CargoCompanyService    from './cargo-company.service';
 import CargoCompanyInnService from './cargoinn-company.service';
 import OfferService           from './offer.service';
 import OrderService           from './order.service';
-
 import ORDER_LST_URL = BitrixUrl.ORDER_LST_URL;
 import ORDER_GET_URL = BitrixUrl.ORDER_GET_URL;
 import COMPANY_GET_URL = BitrixUrl.COMPANY_GET_URL;
@@ -283,6 +286,10 @@ export default class BitrixService
 						if(orderData && orderData.destinations?.length > 0)
 							orderData.destinations[0].contact = clientContact;
 					}
+				}
+				
+				if(orderData.stage === OrderStage.PAYMENT_RECEIVED) {
+					orderData.status = OrderStatus.FINISHED;
 				}
 
 				if(order) {
