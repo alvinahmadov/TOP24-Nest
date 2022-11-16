@@ -5,6 +5,7 @@ import {
 	ICargoCompany,
 	ICargoInnCompany,
 	IDriver,
+	IGatewayEvent,
 	IImage,
 	IModel,
 	IOffer,
@@ -14,10 +15,10 @@ import {
 }                             from './attributes';
 import {
 	DriverStatus,
-	LoadingType,
+	LoadingType, OfferStatus,
 	OrderStatus,
 	TransportStatus
-}                             from '../enums';
+} from '../enums';
 
 export interface IFilter {
 	term?: string;
@@ -110,6 +111,13 @@ export interface IDriverFilter
 	statuses?: DriverStatus[];
 }
 
+export interface IGatewayEventFilter
+	extends IFilter,
+	        TModelFilter<IGatewayEvent> {
+	events?: ('cargo' | 'driver' | 'order')[];
+	sources?: string[];
+}
+
 /**
  * @summary Image model filters
  *
@@ -121,7 +129,7 @@ export interface IImageFilter
 
 /**
  * @summary Payment model filters
- * 
+ *
  * @see IPayment
  * */
 export interface IPaymentFilter
@@ -173,6 +181,7 @@ export interface IOfferFilter
 	        TModelFilter<IOffer> {
 	orderStatuses?: OrderStatus[];
 	driverStatus?: DriverStatus;
+	statuses?: OfferStatus[];
 	transportStatus?: TransportStatus;
 	hasComment?: boolean;
 	hasBid?: boolean;
