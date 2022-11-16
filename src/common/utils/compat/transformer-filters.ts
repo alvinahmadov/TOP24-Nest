@@ -181,6 +181,7 @@ export function transformToOfferFilter(data: IOfferTransformerFilter)
 	if(data) {
 		return {
 			...helpers.translateOffer(data),
+			statuses:        data.statuses,
 			orderStatuses:   data.order_statuses,
 			driverStatus:    data.driver_status,
 			transportStatus: data.transport_status,
