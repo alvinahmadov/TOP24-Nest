@@ -3,6 +3,7 @@ import Address         from './address.entity';
 import CargoCompany    from './cargo.entity';
 import CargoInnCompany from './cargo-inn.entity';
 import Driver          from './driver.entity';
+import GatewayEvent    from './gateway-event.entity';
 import Image           from './image.entity';
 import Offer           from './offer.entity';
 import Order           from './order.entity';
@@ -15,6 +16,7 @@ export {
 	CargoCompany,
 	CargoInnCompany,
 	Driver,
+	GatewayEvent,
 	Image,
 	Offer,
 	Order,
