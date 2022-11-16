@@ -181,6 +181,8 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('number')
 		.set('filter')
 		.set('price')
+		.set('status')
+		.set('stage')
 		.set('crmId', 'crm_id')
 		.set('date', 'dateAt')
 		.set('dedicated', 'dedicated_machine')
