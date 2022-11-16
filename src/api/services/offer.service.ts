@@ -1,4 +1,4 @@
-import { Op }              from 'sequelize';
+// import { Op }              from 'sequelize';
 import { Injectable }      from '@nestjs/common';
 import env,
 { setOrderSent }           from '@config/env';
@@ -522,7 +522,7 @@ export default class OfferService
 							{
 								id:      driverId,
 								source:  'offer',
-								message: EVENT_DRIVER_TRANSLATIONS['EXTRA']
+								message: EVENT_DRIVER_TRANSLATIONS['HAS_EXISTING']
 							},
 							UserRole.CARGO
 						);
@@ -539,31 +539,6 @@ export default class OfferService
 							message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], orderTitle)
 						},
 						UserRole.CARGO
-					);
-					// Update offer status for unselected drivers
-					this.repository.bulkUpdate(
-						{
-							status:      OfferStatus.NO_MATCH,
-							orderStatus: OrderStatus.CANCELLED_BITRIX
-						},
-						{
-							[Op.and]: [
-								{ id: { [Op.eq]: offer.id } },
-								{ driverId: { [Op.ne]: offer.driverId } }
-							]
-						}
-					).then(
-						// then emit message for unselected drivers.
-						([, offers]) =>
-						{
-							offers.forEach(o => this.gateway.sendDriverEvent(
-								{
-									id:      o.driverId,
-									message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], orderTitle)
-								},
-								UserRole.CARGO
-							));
-						}
 					);
 				}
 
