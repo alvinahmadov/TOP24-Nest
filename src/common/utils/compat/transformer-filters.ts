@@ -1,6 +1,6 @@
 import {
 	DriverStatus,
-	LoadingType,
+	LoadingType, OfferStatus,
 	OrderStatus,
 	TransportStatus
 }                                  from '@common/enums';
@@ -104,6 +104,7 @@ export interface IOfferTransformerFilter
 	extends IFilter,
 	        IModelSortable,
 	        Partial<transformers.IOfferTransformer> {
+	statuses?: OfferStatus[];
 	order_statuses?: OrderStatus[];
 	driver_status?: DriverStatus;
 	transport_status?: TransportStatus;
