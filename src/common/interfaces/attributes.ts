@@ -756,6 +756,14 @@ export interface IDriver
 	readonly fullName?: string;
 }
 
+export interface IGatewayEvent
+	extends IModel {
+	eventName?: 'cargo' | 'driver' | 'order'| string;
+	source?: string;
+	message?: string;
+	event?: any;
+}
+
 /**
  * Image file link records for transport.
  * */
@@ -1390,8 +1398,10 @@ export type TOfferDriver = Pick<IOffer, 'driverId' |
                                         'orderStatus' |
                                         'bidPriceVat'>;
 
+// noinspection JSUnusedGlobalSymbols
 export type TOfferTransport = Pick<IOffer, 'bidPrice' |
                                            'bidPriceVat' |
                                            'bidComment'> & ITransport;
 
+// noinspection JSUnusedGlobalSymbols
 export type TOfferOrder = IOrder & { transports: string[] };
