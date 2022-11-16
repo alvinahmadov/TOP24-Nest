@@ -5,6 +5,7 @@ import BitrixService          from './bitrix.service';
 import CargoCompanyService    from './cargo-company.service';
 import CargoCompanyInnService from './cargoinn-company.service';
 import DriverService          from './driver.service';
+import EventService           from './event.service';
 import GeneratorService       from './generator.service';
 import ImageService           from './image.service';
 import ImageFileService       from './image-file.service';
@@ -37,6 +38,7 @@ export {
 	CargoCompanyService,
 	CargoCompanyInnService,
 	DriverService,
+	EventService,
 	GeneratorService,
 	ImageFileService,
 	ImageService,
