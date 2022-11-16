@@ -122,7 +122,7 @@ export default class OrderRepository
 
 				return this.model.findAll(
 					{
-						where:   this.whereClause('and', true)
+						where:   this.whereClause('and')
 						             .nullOrEq('cargoId', rest?.cargoId)
 						             .nullOrEq('cargoinnId', rest?.cargoinnId)
 						             .nullOrEq('driverId', rest?.driverId)
