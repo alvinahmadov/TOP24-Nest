@@ -184,7 +184,7 @@ export default class OfferService
 									source:  'offer',
 									message: formatArgs(
 										EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
-										order.crmId.toString(),
+										order.crmId?.toString() ?? '',
 										driver.fullName
 									)
 								},
