@@ -138,12 +138,8 @@ export default class OfferRepository
 							...this.whereClause('and')
 							       .eq('driverId', rest?.driverId)
 							       .eq('orderId', rest?.orderId)
-								   .query ?? {},
-							...this.whereClause('or')
 							       .eq('status', rest?.status)
 							       .eq('orderStatus', orderStatus)
-								   .query ?? {},
-							...this.whereClause('or')
 							       .in('orderStatus', orderStatuses)
 							       .in('status', statuses)
 								   .query ?? {}
