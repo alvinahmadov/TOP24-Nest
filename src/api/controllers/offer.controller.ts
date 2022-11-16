@@ -182,7 +182,7 @@ export default class OfferController
 		@Param('driverId', ParseUUIDPipe) driverId: string,
 		@UserParam() user: IUserPayload,
 		@Res() response: ex.Response,
-		@Body() reason?: string
+		@Body('reason') reason?: string
 	) {
 		const { role } = user;
 		const result = await this.offerService.decline(orderId, driverId, reason, role);
