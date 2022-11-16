@@ -127,14 +127,27 @@ export default class OfferRepository
 					driverStatus,
 					transportStatus,
 					hasComment,
+					orderStatuses,
+					statuses,
 					...rest
 				} = filter ?? {};
 
 				return this.model.findAll(
 					{
-						where:   this.whereClause()
-						             .fromFilter(rest)
-							         .query,
+						where:   {
+							...this.whereClause('and')
+							       .eq('driverId', rest?.driverId)
+							       .eq('orderId', rest?.orderId)
+								   .query ?? {},
+							...this.whereClause('or')
+							       .eq('status', rest?.status)
+							       .eq('orderStatus', orderStatus)
+								   .query ?? {},
+							...this.whereClause('or')
+							       .in('orderStatus', orderStatuses)
+							       .in('status', statuses)
+								   .query ?? {}
+						},
 						offset,
 						order:   sortOrder,
 						include: full ? [
