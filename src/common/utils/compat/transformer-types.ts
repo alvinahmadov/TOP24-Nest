@@ -397,6 +397,7 @@ export interface IOfferTransformer
 	orderId: string;
 	driverId: string;
 	status: OfferStatus;
+	statuses: OfferStatus[];
 	/**
 	 * @see IOffer.orderStatus
 	 * */
