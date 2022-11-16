@@ -247,7 +247,7 @@ export default class OfferService
 	public async getOrders(
 		driverId: string,
 		listFilter?: IListFilter,
-		filter?: OfferFilter & OrderFilter
+		filter?: Omit<OfferFilter, 'statuses'> & OrderFilter
 	) {
 		const offers = await this.repository.getDriverOrders(driverId, listFilter, filter);
 		const orders =
