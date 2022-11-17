@@ -429,6 +429,7 @@ export default class OrderService
 				fileUploaded = true;
 				message = formatArgs(ORDER_TRANSLATIONS['SHIPPING'], shippingPhotoLinks.join(','), point);
 				destinations[index].shippingPhotoLinks = shippingPhotoLinks;
+				destinations[index].fulfilled = true;
 				const { data: updOrder } = await this.update(order.id, { destinations });
 
 				if(!updOrder)
