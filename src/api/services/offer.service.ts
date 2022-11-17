@@ -208,7 +208,7 @@ export default class OfferService
 		if(result)
 			return {
 				statusCode: 200,
-				data:       offer,
+				data:       result,
 				message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
 			};
 		else
@@ -468,7 +468,7 @@ export default class OfferService
 			);
 		}
 
-		offers = await this.repository.getOrderDrivers(orderId, { full });
+		offers = await this.repository.getOrderDrivers(orderId, { full: full === undefined ? true : full });
 
 		this.gateway.sendOrderEvent(
 			{
