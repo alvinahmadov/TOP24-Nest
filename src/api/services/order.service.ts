@@ -494,7 +494,7 @@ export default class OrderService
 
 				order.paymentPhotoLink = paymentPhotoLink;
 				order.onPayment = true;
-				await order.save({ fields: ['paymentPhotoLink'] });
+				await order.save({ fields: ['paymentPhotoLink', 'onPayment'] });
 			}
 		}
 		else if(mode === 'receipt') {
