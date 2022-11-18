@@ -800,6 +800,9 @@ export const entityConfig: TEntityConfigList = {
 		filter:            {
 			description: 'Filter parameters on search for saving.'
 		},
+		priority:          {
+			description: 'Order has higher priority by destination date (close date higher priority)'
+		},
 		driverDeferralConditions:
 		                   {
 			                   description: 'Driver\'s deferral conditions for order execution'

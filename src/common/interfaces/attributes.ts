@@ -1017,6 +1017,7 @@ export interface IOrder
 	 * Filter cache data from admin.
 	 * */
 	filter?: IOrderFilter;
+	priority?: boolean;
 	/**
 	 * Driver's deferral conditions for order execution.
 	 *

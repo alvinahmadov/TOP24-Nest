@@ -37,8 +37,8 @@ import {
 	StringColumn,
 	TCRMData,
 	TGeoCoordinate,
-	UuidColumn
-}                                   from '@common/interfaces';
+	UuidColumn, VirtualColumn
+} from '@common/interfaces';
 import entityConfig                 from '@common/properties';
 import { convertBitrix }            from '@common/utils';
 import EntityModel                  from './entity-model';
@@ -359,6 +359,9 @@ export default class Order
 	@ApiProperty(prop.filter)
 	@JsonbColumn()
 	filter?: OrderFilter;
+	
+	@VirtualColumn()
+	priority?: boolean;
 
 	@ApiProperty(prop.driverDeferralConditions)
 	@StringColumn()

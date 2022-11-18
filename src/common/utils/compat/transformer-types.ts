@@ -533,6 +533,7 @@ export interface IOrderTransformer
 	 * */
 	contract_link?: string;
 	filter?: object;
+	priority?: boolean;
 
 	cargo?: ICargoCompanyTransformer;
 	cargoinn?: ICargoInnCompanyTransformer;
