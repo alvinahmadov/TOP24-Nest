@@ -15,6 +15,7 @@ import {
 	IDriverFilter,
 	IListFilter,
 	IOfferFilter,
+	IOrder,
 	IService,
 	ITransportFilter,
 	TAffectedRows,
@@ -28,7 +29,10 @@ import {
 	formatArgs,
 	getTranslation
 }                          from '@common/utils';
-import { transformEntity } from '@common/utils/compat';
+import {
+	transformEntity,
+	IOrderTransformer
+}                          from '@common/utils/compat';
 import {
 	Driver,
 	Offer,
@@ -193,13 +197,6 @@ export default class OfferService
 						}
 					}
 				);
-
-				if(dto.orderStatus === OrderStatus.PENDING) {
-					dto.status = OfferStatus.DECLINED;
-				}
-				else {
-					dto.status = OfferStatus.RESPONDED;
-				}
 			}
 		}
 
@@ -253,15 +250,27 @@ export default class OfferService
 		const offerStatusKey = env.api.compatMode ? 'offer_status' : 'offerStatus';
 		const orders =
 			await offers?.filter(offer => offer !== null && offer.order !== null)
+			            ?.sort((offer1, offer2) =>
+			                   {
+				                   const date1 = offer1.order.destinations[0].date,
+					                   date2 = offer2.order.destinations[0].date;
+				                   if(date1 > date2) return 1;
+				                   else if(date1 < date2) return -1;
+				                   return 0;
+			                   })
 			            ?.map(
-				            (offer) =>
+				            (offer, index) =>
 				            {
+					            let order: IOrderTransformer | IOrder =
+						            env.api.compatMode
+						            ? <IOrderTransformer>transformEntity(offer.order)
+						            : offer.order.get({ plain: true, clone: false });
+
+					            order.status = offer.orderStatus;
+					            order.priority = index === 0;
+
 					            return {
-						            ...(
-							            env.api.compatMode
-							            ? transformEntity(offer.order)
-							            : offer.order.get({ plain: true, clone: false })
-						            ),
+						            ...order,
 						            [offerStatusKey]: offer.status,
 						            transports:       offer.transports
 					            };
