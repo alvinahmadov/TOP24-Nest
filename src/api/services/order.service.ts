@@ -1,3 +1,4 @@
+import { v4 as uuid }                   from 'uuid';
 import {
 	forwardRef, Inject,
 	Injectable
@@ -401,7 +402,7 @@ export default class OrderService
 		let order = await this.repository.get(id);
 		let fileUploaded = false;
 		let message: string = '';
-		
+
 		if(!order)
 			return this.responses['NOT_FOUND'];
 
@@ -409,17 +410,21 @@ export default class OrderService
 		const index = destinations.findIndex(d => d.point === point);
 
 		if(index >= 0) {
-			if(destinations[index].shippingPhotoLinks) {
-				await this.imageFileService.deleteImageList(
-					destinations[index].shippingPhotoLinks, Bucket.COMMON
-				);
-			}
+			const renameFile = (fname: string) =>
+			{
+				let ext = 'jpg';
+				if(fname.lastIndexOf('.') >= 0) {
+					ext = fname.split('.')[1];
+				}
+				return `${uuid}.${ext}`;
+			};
+
 			const { Location: shippingPhotoLinks } = await this.imageFileService
 			                                                   .uploadFiles(
 				                                                   files.map(
 					                                                   f => ({
 						                                                   fileBlob:  f.file,
-						                                                   storeName: `${id}/shipping/${point}/${f.fileName}`
+						                                                   storeName: `${id}/shipping/${point}/${renameFile(f.fileName)}`
 					                                                   })
 				                                                   ),
 				                                                   Bucket.COMMON
@@ -428,8 +433,13 @@ export default class OrderService
 			if(shippingPhotoLinks?.length > 0) {
 				fileUploaded = true;
 				message = formatArgs(ORDER_TRANSLATIONS['SHIPPING'], shippingPhotoLinks.join(','), point);
-				destinations[index].shippingPhotoLinks = shippingPhotoLinks;
-				destinations[index].fulfilled = true;
+				destinations[index].shippingPhotoLinks.push(...shippingPhotoLinks);
+				destinations.forEach((destination, i) =>
+				                     {
+					                     if(i <= index) {
+						                     destination.fulfilled = true;
+					                     }
+				                     });
 				const { data: updOrder } = await this.update(order.id, { destinations });
 
 				if(!updOrder)

@@ -196,7 +196,7 @@ export default class OrderController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FilesInterceptor('images')],
+			interceptors: [FilesInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
