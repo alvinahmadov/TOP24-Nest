@@ -295,7 +295,7 @@ export default class OfferRepository
 					count: limit
 				} = listFilter;
 				const {
-					sortOrder: order = DEFAULT_SORT_ORDER,
+					sortOrder: order = [['order_status', 'ASC'], ['status', 'ASC']],
 					orderId,
 					driverStatus,
 					status,
