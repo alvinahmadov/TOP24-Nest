@@ -266,7 +266,9 @@ export default class OfferService
 						            ? <IOrderTransformer>transformEntity(offer.order)
 						            : offer.order.get({ plain: true, clone: false });
 
-					            order.status = offer.orderStatus;
+					            if(offer.orderStatus === OrderStatus.ACCEPTED) {
+						            order.status = offer.orderStatus;
+					            }
 					            order.priority = index === 0;
 
 					            return {
