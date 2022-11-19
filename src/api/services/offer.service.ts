@@ -701,7 +701,6 @@ export default class OfferService
 						{
 							bidPrice:    null,
 							bidPriceVat: null,
-							status:      OfferStatus.CANCELLED,
 							orderStatus: status,
 							bidComment:  reason ?? ''
 						}
