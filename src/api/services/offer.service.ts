@@ -5,7 +5,6 @@ import env,
 import {
 	DriverStatus,
 	OfferStatus,
-	OrderStage,
 	OrderStatus,
 	TransportStatus,
 	UserRole
@@ -162,10 +161,7 @@ export default class OfferService
 			if(dto.orderStatus > OrderStatus.ACCEPTED) {
 				this.orderService.update(
 					order.id,
-					{
-						status: dto.orderStatus,
-						stage:  OrderStage.SIGNED_DRIVER
-					},
+					{ status: dto.orderStatus },
 					false
 				).then(
 					({ data: uOrder }) =>
