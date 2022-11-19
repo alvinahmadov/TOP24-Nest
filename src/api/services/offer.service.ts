@@ -248,28 +248,38 @@ export default class OfferService
 	) {
 		const offers = await this.repository.getDriverOrders(driverId, listFilter, filter);
 		const offerStatusKey = env.api.compatMode ? 'offer_status' : 'offerStatus';
+		let priorityCounter = 0;
+		const inAcceptedRange = (offer: Offer) => OrderStatus.PENDING < offer.orderStatus &&
+		                                          offer.orderStatus <= OrderStatus.PROCESSING;
 		const orders =
 			await offers?.filter(offer => offer !== null && offer.order !== null)
 			            ?.sort((offer1, offer2) =>
 			                   {
 				                   const date1 = offer1.order.destinations[0].date,
 					                   date2 = offer2.order.destinations[0].date;
-				                   if(date1 > date2) return 1;
-				                   else if(date1 < date2) return -1;
+				                   // check both offers has same
+				                   // accepted status
+				                   if(inAcceptedRange(offer1) && inAcceptedRange(offer2)) {
+					                   if(date1 > date2) return 1;
+					                   else if(date1 < date2) return -1;
+				                   }
 				                   return 0;
 			                   })
 			            ?.map(
-				            (offer, index) =>
+				            (offer) =>
 				            {
 					            let order: IOrderTransformer | IOrder =
 						            env.api.compatMode
 						            ? <IOrderTransformer>transformEntity(offer.order)
 						            : offer.order.get({ plain: true, clone: false });
 
-					            if(offer.orderStatus === OrderStatus.ACCEPTED) {
+					            if(offer.orderStatus === OrderStatus.ACCEPTED)
 						            order.status = offer.orderStatus;
-					            }
-					            order.priority = index === 0;
+
+					            if(inAcceptedRange(offer))
+						            order.priority = priorityCounter++ === 0;
+					            else
+						            order.priority = false;
 
 					            return {
 						            ...order,
