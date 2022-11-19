@@ -184,8 +184,7 @@ export default class OfferController
 		@Res() response: ex.Response,
 		@Body('reason') reason?: string
 	) {
-		const { role } = user;
-		const result = await this.offerService.decline(orderId, driverId, reason, role);
+		const result = await this.offerService.decline(orderId, driverId, reason, user?.role ?? 1);
 
 		return sendResponse(response, result);
 	}
