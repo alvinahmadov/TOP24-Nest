@@ -628,8 +628,8 @@ export default class OfferService
 	): TAsyncApiResponse<Offer> {
 		const offer = await this.repository.getByAssociation(orderId, driverId);
 		const driverStatus = DriverStatus.NONE;
-		let status = (role ?? 0) < UserRole.CARGO ? OrderStatus.CANCELLED
-		                                          : OrderStatus.PENDING;
+		let status = role < UserRole.CARGO ? OrderStatus.PENDING
+		                                   : OrderStatus.CANCELLED;
 
 		if(offer) {
 			if(offer.orderStatus < OrderStatus.CANCELLED) {
