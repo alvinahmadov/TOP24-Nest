@@ -13,7 +13,8 @@ export function requestAuthExtractor(req: ex.Request): string {
 }
 
 export function socketAuthExtractor(client: Socket) {
-	let authHeader = client.handshake.headers.authorization;
+	let authHeader = client.handshake.headers['authorization'] ||
+	                 client.handshake.headers['Authorization'] as string;
 
 	if(authHeader) {
 		return authHeader.split(' ').length > 1
