@@ -319,7 +319,7 @@ export default class OfferRepository
 						where:   this.whereClause('and')
 						             .eq('driverId', driverId)
 						             .eq('status', status)
-						             .in('status', status !== undefined ? statuses : undefined)
+						             .in('status', statuses)
 						             .eq('orderStatus', orderStatus)
 							         .query,
 						offset,
