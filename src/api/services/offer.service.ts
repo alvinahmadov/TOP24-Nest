@@ -244,7 +244,7 @@ export default class OfferService
 	public async getOrders(
 		driverId: string,
 		listFilter?: IListFilter,
-		filter?: Omit<OfferFilter, 'statuses'> & OrderFilter
+		filter?: OfferFilter & Omit<OrderFilter, 'status' | 'statuses'>
 	) {
 		const offers = await this.repository.getDriverOrders(driverId, listFilter, filter);
 		const offerStatusKey = env.api.compatMode ? 'offer_status' : 'offerStatus';

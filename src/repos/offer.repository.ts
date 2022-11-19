@@ -1,6 +1,10 @@
-import { Includeable, Op }              from 'sequelize';
-import { DEFAULT_SORT_ORDER }           from '@common/constants';
-import { OrderStatus, TransportStatus } from '@common/enums';
+import { Includeable, Op }    from 'sequelize';
+import { DEFAULT_SORT_ORDER } from '@common/constants';
+import {
+	OfferStatus,
+	OrderStatus,
+	TransportStatus
+}                             from '@common/enums';
 import {
 	IDriver,
 	IDriverFilter,
@@ -13,7 +17,7 @@ import {
 	IRepositoryOptions,
 	ITransport,
 	TUpdateAttribute
-}                                       from '@common/interfaces';
+}                             from '@common/interfaces';
 import {
 	CargoCompany,
 	CargoInnCompany,
@@ -21,8 +25,8 @@ import {
 	Offer,
 	Order,
 	Transport
-}                                       from '@models/index';
-import GenericRepository                from './generic';
+}                             from '@models/index';
+import GenericRepository      from './generic';
 
 export default class OfferRepository
 	extends GenericRepository<Offer, IOffer>
@@ -285,7 +289,7 @@ export default class OfferRepository
 	public async getDriverOrders(
 		driverId: string,
 		listFilter: IListFilter,
-		filter?: Omit<IOfferFilter, 'statuses'> & IOrderFilter
+		filter?: IOfferFilter & Omit<IOrderFilter, 'status' | 'statuses'>
 	): Promise<Offer[]> {
 		return this.log(
 			() =>
@@ -300,16 +304,22 @@ export default class OfferRepository
 					driverStatus,
 					status,
 					orderStatus,
-					statuses,
+					statuses = [
+						OfferStatus.SENT,
+						OfferStatus.SEEN,
+						OfferStatus.RESPONDED
+					],
+					orderStatuses,
 					hasComment,
 					...rest
 				} = filter;
-
+				
 				return this.model.findAll(
 					{
 						where:   this.whereClause('and')
 						             .eq('driverId', driverId)
 						             .eq('status', status)
+						             .in('status', status !== undefined ? statuses : undefined)
 						             .eq('orderStatus', orderStatus)
 							         .query,
 						offset,
@@ -330,7 +340,7 @@ export default class OfferRepository
 								           .between('pallets', 0, rest?.pallets)
 								           .gteOrNull('bidPrice', rest?.bidPrice)
 								           .lteOrNull('bidPriceVat', rest?.bidPriceVat)
-								           .inArray('status', statuses)
+								           .in('status', orderStatuses)
 								           .fromFilter<IOrderFilter>(rest)
 									       .query
 							},
