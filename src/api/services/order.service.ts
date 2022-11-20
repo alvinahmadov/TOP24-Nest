@@ -607,7 +607,7 @@ export default class OrderService
 	public async deleteDocuments(
 		id: string,
 		mode: TDocumentMode
-	) {
+	): TAsyncApiResponse<Order> {
 		let order = await this.repository.get(id);
 		let isDeleted = false;
 
