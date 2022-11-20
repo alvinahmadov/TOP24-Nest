@@ -44,19 +44,37 @@ const parameter: Record<string, any> = {
 };
 
 const queryOptions: { [key: string]: ApiQueryOptions } = {
-	full: {
+	full:  {
 		name:        'full',
 		description: 'Return with child entities.',
 		required:    false,
 		schema:      { default: false }
 	},
-	by:   {
+	by:    {
 		description: 'Used method for signin',
 		enum:        ['email', 'phone'],
 		required:    true,
 		schema:      {
 			default: 'email'
 		}
+	},
+	pt:    {
+		description: 'Destination point label',
+		enum:        [
+			'A', 'B', 'C',
+			'D', 'E', 'F',
+			'G', 'H', 'I',
+			'J', 'K', 'L',
+			'M', 'N', 'O',
+			'P', 'Q', 'R',
+			'S', 'T', 'U',
+			'V', 'W', 'X',
+			'Y', 'Z'
+		]
+	},
+	index: {
+		description: 'Index of file',
+		type:        'number'
 	}
 };
 
@@ -1442,15 +1460,31 @@ export const routeConfig: TApiRouteList = {
 				path:   'shipping/:id',
 				method: RequestMethod.POST,
 				api:    {
-					operation: {
+					operation:    {
 						summary:     'Send shipping document.',
 						description: 'Upload document scans of cargo company driver with'
 						             + ' related order. Sent scan is stored in Yandex '
 						             + 'Storage Object which returns link to the '
 						             + 'uploaded file.'
-					}
+					},
+					queryOptions: [queryOptions.pt, queryOptions.index]
 				}
 			},
+			shippingDelete:
+			          {
+				          path:   'shipping/:id',
+				          method: RequestMethod.DELETE,
+				          api:    {
+					          operation:    {
+						          summary:     'Send shipping document.',
+						          description: 'Upload document scans of cargo company driver with'
+						                       + ' related order. Sent scan is stored in Yandex '
+						                       + 'Storage Object which returns link to the '
+						                       + 'uploaded file.'
+					          },
+					          queryOptions: [queryOptions.pt, queryOptions.index]
+				          }
+			          },
 			payment:  {
 				path:   'payment/:id',
 				method: RequestMethod.POST,
@@ -1464,6 +1498,20 @@ export const routeConfig: TApiRouteList = {
 					}
 				}
 			},
+			paymentDelete:
+			          {
+				          path:   'payment/:id',
+				          method: RequestMethod.DELETE,
+				          api:    {
+					          operation: {
+						          summary:     'Delete payment document.',
+						          description: 'Delete uploaded document scans of cargo company driver with'
+						                       + ' related order. Sent scan is stored in Yandex '
+						                       + 'Storage Object which returns link to the '
+						                       + 'uploaded file.'
+					          }
+				          }
+			          },
 			contract: {
 				path:   'contract/:id',
 				method: RequestMethod.POST,
@@ -1477,6 +1525,18 @@ export const routeConfig: TApiRouteList = {
 					}
 				}
 			},
+			contractDelete:
+			          {
+				          path:   'contract/:id',
+				          method: RequestMethod.DELETE,
+				          api:    {
+					          operation: {
+						          summary:     'Delete contract document.',
+						          description: 'Delete uploaded document scans of cargo company '
+						                       + 'driver with related order.'
+					          }
+				          }
+			          },
 			receipt:  {
 				path:   'receipt/:id',
 				method: RequestMethod.POST,
@@ -1489,7 +1549,21 @@ export const routeConfig: TApiRouteList = {
 						             + 'uploaded file.'
 					}
 				}
-			}
+			},
+			receiptDelete:
+			          {
+				          path:   'receipt/:id',
+				          method: RequestMethod.DELETE,
+				          api:    {
+					          operation: {
+						          summary:     'Delete receipt document.',
+						          description: 'Delete uploaded document scans of cargo company driver with'
+						                       + ' related order. Sent scan is stored in Yandex '
+						                       + 'Storage Object which returns link to the '
+						                       + 'uploaded file.'
+					          }
+				          }
+			          }
 		}
 	},
 	payment:   {
