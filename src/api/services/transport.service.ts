@@ -92,6 +92,19 @@ export default class TransportService
 		} as IApiResponse<Transport>;
 	}
 
+	public async getByCrmId(crmId: number, full?: boolean)
+		: TAsyncApiResponse<Transport | null> {
+		const transport = await this.repository.getByCrmId(crmId, full);
+		if(transport)
+			return {
+				statusCode: 200,
+				data:       transport,
+				message:    formatArgs(TRANSLATIONS['GET'], transport.brand)
+			};
+
+		return this.responses['NOT_FOUND'];
+	}
+
 	/**
 	 * @summary Get list of transports of the driver
 	 *

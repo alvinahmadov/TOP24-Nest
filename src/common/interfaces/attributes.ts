@@ -1211,6 +1211,7 @@ export interface ITransport
 	 * CRM id of transport from bitrix.
 	 * */
 	crmId?: number;
+	confirmed?: boolean;
 	/**
 	 * Status of the transport.
 	 *

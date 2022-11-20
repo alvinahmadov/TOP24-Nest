@@ -47,6 +47,9 @@ export default class TransportCreateDto
 	@ApiProperty(prop.crmId)
 	crmId?: number;
 
+	@ApiProperty(prop.confirmed)
+	confirmed?: boolean = false;
+
 	@ApiProperty(prop.status)
 	@IsInt()
 	status: TransportStatus = TransportStatus.NONE;

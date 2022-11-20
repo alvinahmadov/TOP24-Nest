@@ -3,14 +3,16 @@ import {
 	CARGO,
 	CARGOINN,
 	CRM,
-	ORDER
+	ORDER,
+	TRANSPORT
 }                             from '@config/json';
 import { WhereClause }        from '@common/classes';
 import { BitrixUrl }          from '@common/constants';
 import {
 	CompanyType,
 	OrderStage,
-	OrderStatus
+	OrderStatus,
+	UserRole
 }                             from '@common/enums';
 import {
 	IApiResponses,
@@ -24,6 +26,7 @@ import {
 	TUpdateAttribute
 }                             from '@common/interfaces';
 import {
+	formatArgs,
 	getCrm,
 	getTranslation,
 	orderFromBitrix
@@ -36,11 +39,14 @@ import CargoCompanyService    from './cargo-company.service';
 import CargoCompanyInnService from './cargoinn-company.service';
 import OfferService           from './offer.service';
 import OrderService           from './order.service';
+import TransportService       from './transport.service';
 import ORDER_LST_URL = BitrixUrl.ORDER_LST_URL;
 import ORDER_GET_URL = BitrixUrl.ORDER_GET_URL;
 import COMPANY_GET_URL = BitrixUrl.COMPANY_GET_URL;
+import CONTACT_GET_URL = BitrixUrl.CONTACT_GET_URL;
 
 const COMPANY_EVENT_TRANSLATION = getTranslation('EVENT', 'COMPANY');
+const DRIVER_EVENT_TRANSLATION = getTranslation('EVENT', 'DRIVER');
 
 /**
  * @summary Bitrix Service
@@ -52,10 +58,11 @@ export default class BitrixService
 	extends Service<any, any>
 	implements IService {
 	public override readonly responses: IApiResponses<null> = {
-		updateErr:     { statusCode: 404, message: 'Error Cargo updating ...' },
-		bitrixErr:     { statusCode: 404, message: 'Error in bitrix answer ...' },
-		cargoNotFound: { statusCode: 404, message: 'Cargo Not found ...' },
-		ordNotFound:   { statusCode: 404, message: 'Order Not found ...' }
+		updateErr:           { statusCode: 404, message: 'Error Cargo updating ...' },
+		bitrixErr:           { statusCode: 404, message: 'Error in bitrix answer ...' },
+		NOT_FOUND_COMPANY:   { statusCode: 404, message: 'Cargo Not found ...' },
+		NOT_FOUND_TRANSPORT: { statusCode: 404, message: 'Transport Not found ...' },
+		NOT_FOUND_ORDER:     { statusCode: 404, message: 'Order Not found ...' }
 	};
 
 	constructor(
@@ -63,6 +70,7 @@ export default class BitrixService
 		protected readonly cargoInnService: CargoCompanyInnService,
 		protected readonly orderService: OrderService,
 		protected readonly offerService: OfferService,
+		protected readonly transportService: TransportService,
 		protected readonly gateway: EventsGateway
 	) {
 		super();
@@ -297,7 +305,41 @@ export default class BitrixService
 			}
 		}
 
-		return this.responses['cargoNotFound'];
+		return this.responses['NOT_FOUND_COMPANY'];
+	}
+
+	public async updateTransport(crmId: number) {
+		const { result } = await this.httpClient.post<TCRMResponse>(`${CONTACT_GET_URL}?ID=${crmId}`);
+		const crmItem = getCrm(result);
+		let message: string = '';
+
+		if(crmItem) {
+			const { data: transport } = await this.transportService.getByCrmId(crmId, true);
+			message = formatArgs(DRIVER_EVENT_TRANSLATION['TRANSPORT_MODERATION'], transport?.brand);
+
+			if(transport) {
+				transport.confirmed = Number(crmItem[TRANSPORT.CONFIRMED]) === 1;
+				transport.save({ fields: ['confirmed'] })
+				         .then(() =>
+				               {
+					               this.gateway.sendDriverEvent(
+						               {
+							               id:     transport.driverId,
+							               source: 'bitrix',
+							               message
+						               },
+						               UserRole.CARGO
+					               );
+				               });
+
+				return {
+					statusCode: 200,
+					data:       transport
+				};
+			}
+		}
+
+		return this.responses['NOT_FOUND_TRANSPORT'];
 	}
 
 	/**
@@ -427,6 +469,6 @@ export default class BitrixService
 				message:    'Order deleted'
 			};
 		}
-		return this.responses['ordNotFound'];
+		return this.responses['NOT_FOUND_ORDER'];
 	}
 }

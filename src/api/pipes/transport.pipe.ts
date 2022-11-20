@@ -32,9 +32,6 @@ export class TransportCreatePipe
 export class TransportUpdatePipe
 	implements PipeTransform {
 	transform(data: any): Partial<ITransport> {
-		delete data.createdAt;
-		delete data.updatedAt;
-
 		const value: ITransport = !env.api.compatMode ? data : transformToTransport(data);
 		value.payloadExtra = value.volumeExtra > 0 || value.weightExtra > 0;
 		checkAndConvertBitrix(value, 'payload', 'transportPayload');
@@ -43,6 +40,10 @@ export class TransportUpdatePipe
 		checkAndConvertArrayBitrix(value, 'fixtures', 'fixtures', Reference.FIXTURES);
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'riskClass', Reference.RISK_CLASSES);
 		reformatDateString<ITransport>(value, ['diagnosticsDate', 'osagoExpiryDate']);
+		delete value.id;
+		delete value.confirmed;
+		delete value.createdAt;
+		delete value.updatedAt;
 
 		return value;
 	}

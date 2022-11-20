@@ -71,8 +71,6 @@ export const TABLE_OPTIONS: TableOptions = {
 	updatedAt:   'updatedAt'
 };
 
-export const ADMIN_ROOM_ID = 'ADMIN_ROOM';
-export const CARGO_ROOM_ID = 'CARGO_ROOM';
 export const DRIVER_EVENT = 'driver';
 export const CARGO_EVENT = 'cargo';
 export const ORDER_EVENT = 'order';
@@ -89,8 +87,9 @@ export namespace BitrixUrl {
 	export const COMPANY_ADD_URL = `${API}/crm.company.add.json`;
 	export const COMPANY_DEL_URL = `${API}/crm.company.delete.json`;
 
-	export const CONTACT_UPD_URL = `${API}/crm.contact.update.json`;
+	export const CONTACT_GET_URL = `${API}/crm.contact.get.json`;
 	export const CONTACT_ADD_URL = `${API}/crm.contact.add.json`;
+	export const CONTACT_UPD_URL = `${API}/crm.contact.update.json`;
 	export const CONTACT_DEL_URL = `${API}/crm.contact.delete.json`;
 
 	export const ORDER_GET_URL = `${API}/crm.deal.get.json`;

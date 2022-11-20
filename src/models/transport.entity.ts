@@ -87,6 +87,12 @@ export default class Transport
 	@IntColumn()
 	crmId?: number;
 
+	@ApiProperty(prop.confirmed)
+	@AllowNull(true)
+	@Default(false)
+	@BooleanColumn({ defaultValue: false })
+	confirmed?: boolean;
+
 	@ApiProperty(prop.status)
 	@Default(TransportStatus.NONE)
 	@IntColumn()
