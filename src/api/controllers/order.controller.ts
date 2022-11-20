@@ -8,15 +8,11 @@ import {
 	ParseUUIDPipe,
 	Query,
 	Res,
-	UploadedFile,
 	UploadedFiles,
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import {
-	FileInterceptor,
-	FilesInterceptor
-}                              from '@nestjs/platform-express';
+import { FilesInterceptor }    from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
 import {
 	OfferStatus,
@@ -206,9 +202,7 @@ export default class OrderController
 		@UploadedFiles() images: Array<TMulterFile>,
 		@Res() response: ex.Response
 	) {
-		const result = await this.orderService.sendShippingDocuments(
-			id, point, images.map(i => ({ file: i.buffer, fileName: i.originalname }))
-		);
+		const result = await this.orderService.sendShippingDocuments(id, point, images);
 
 		return sendResponse(response, result);
 	}
@@ -217,17 +211,16 @@ export default class OrderController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('image')],
+			interceptors: [FilesInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async uploadPayment(
 		@Param('id', ParseUUIDPipe) id: string,
-		@UploadedFile() image: TMulterFile,
+		@UploadedFiles() images: Array<TMulterFile>,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.orderService.sendDocuments(id, buffer, name, 'payment');
+		const result = await this.orderService.sendDocuments(id, images, 'payment');
 
 		return sendResponse(response, result);
 	}
@@ -236,17 +229,16 @@ export default class OrderController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('image')],
+			interceptors: [FilesInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async uploadContract(
 		@Param('id', ParseUUIDPipe) id: string,
-		@UploadedFile() image: TMulterFile,
+		@UploadedFiles() images: Array<TMulterFile>,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.orderService.sendDocuments(id, buffer, name, 'contract');
+		const result = await this.orderService.sendDocuments(id, images, 'contract');
 
 		const { data: order } = result;
 
@@ -293,28 +285,23 @@ export default class OrderController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('image')],
+			interceptors: [FilesInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async uploadReceipt(
 		@Param('id', ParseUUIDPipe) id: string,
-		@UploadedFile() image: TMulterFile,
+		@UploadedFiles() images: Array<TMulterFile>,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.orderService.sendDocuments(id, buffer, name, 'receipt');
+		const result = await this.orderService.sendDocuments(id, images, 'receipt');
 
 		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.shippingDelete, {
 		guards:   [CargoGuard],
-		statuses: [HttpStatus.OK],
-		fileOpts: {
-			interceptors: [FilesInterceptor('image')],
-			mimeTypes:    ['multipart/form-data']
-		}
+		statuses: [HttpStatus.OK]
 	})
 	public async deleteShippinh(
 		@Param('id', ParseUUIDPipe) id: string,
