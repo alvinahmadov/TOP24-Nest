@@ -113,7 +113,7 @@ export default class EventsGateway
 	@SubscribeMessage(CARGO_EVENT)
 	public sendCargoEvent(
 		@MessageBody(CargoMessageBodyPipe) data: ICargoGatewayData,
-		save: boolean = false
+		save: boolean = true
 	) {
 		this.server.to(data.id).emit(CARGO_EVENT, data);
 		if(save)
