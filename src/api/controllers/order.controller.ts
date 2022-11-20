@@ -319,8 +319,8 @@ export default class OrderController
 	public async deleteShippinh(
 		@Param('id', ParseUUIDPipe) id: string,
 		@Query('pt') point: string,
-		@Query('index') index: number,
-		@Res() response: ex.Response
+		@Res() response: ex.Response,
+		@Query('index') index?: number
 	) {
 		const result = await this.orderService.deleteShippingDocuments(id, point, index);
 

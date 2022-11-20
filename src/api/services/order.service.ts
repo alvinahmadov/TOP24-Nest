@@ -442,7 +442,7 @@ export default class OrderService
 					destinations[index].shippingPhotoLinks.push(...shippingPhotoLinks);
 				else
 					destinations[index].shippingPhotoLinks = shippingPhotoLinks;
-				
+
 				destinations.forEach((destination, i) =>
 				                     {
 					                     if(i <= index) {
@@ -476,10 +476,11 @@ export default class OrderService
 	public async deleteShippingDocuments(
 		id: string,
 		point: string,
-		index: number
+		index?: number
 	) {
 		let order = await this.repository.get(id);
 		let isDeleted: boolean = false;
+		let deleteAll: boolean = index === undefined;
 		let message: string = '';
 
 		if(!order)
@@ -491,10 +492,24 @@ export default class OrderService
 		if(dstIndex >= 0) {
 			const shippingLength = destinations[dstIndex].shippingPhotoLinks?.length;
 
-			if(0 < shippingLength && shippingLength > index) {
-				const photoLink = destinations[dstIndex].shippingPhotoLinks[index];
-				destinations[dstIndex].shippingPhotoLinks.splice(index, 1);
-				isDeleted = await this.imageFileService.deleteImage(photoLink);
+			if(0 < shippingLength) {
+				if(deleteAll) {
+					const affectedCount = await this.imageFileService
+					                                .deleteImageList(
+						                                destinations[dstIndex].shippingPhotoLinks, Bucket.COMMON
+					                                );
+					destinations[dstIndex].shippingPhotoLinks = [];
+
+					isDeleted = affectedCount > 0;
+				}
+				else {
+					if(shippingLength > index) {
+						const photoLink = destinations[dstIndex].shippingPhotoLinks[index];
+						destinations[dstIndex].shippingPhotoLinks.splice(index, 1);
+						isDeleted = await this.imageFileService.deleteImage(photoLink);
+					}
+				}
+
 				if(isDeleted) {
 					const { data: updOrder } = await this.update(order.id, { destinations });
 					if(!updOrder)
