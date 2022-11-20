@@ -420,7 +420,7 @@ export default class OrderService
 				if(fname.lastIndexOf('.') >= 0) {
 					ext = fname.split('.')[1];
 				}
-				return `${uuid}.${ext}`;
+				return `${uuid()}.${ext}`;
 			};
 
 			const { Location: shippingPhotoLinks } = await this.imageFileService

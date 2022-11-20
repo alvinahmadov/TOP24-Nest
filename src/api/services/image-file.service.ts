@@ -64,7 +64,7 @@ export default class ImageFileService
 			           .setBucket(bucketId)
 			           .uploadMulti(
 				           files.map(
-					           ({ fileBlob: buffer }) => ({ buffer, name: null })
+					           ({ fileBlob: buffer, storeName: name }) => ({ buffer, name })
 				           )
 			           );
 		}
