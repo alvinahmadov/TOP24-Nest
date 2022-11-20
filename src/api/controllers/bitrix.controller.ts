@@ -13,13 +13,8 @@ import {
 	setOrderSent
 }                              from '@config/env';
 import { ApiRoute }            from '@common/decorators';
-import {
-	IApiResponse,
-	IWebhookResponse,
-	TAffectedRows
-}                              from '@common/interfaces';
+import { IWebhookResponse }   from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
-import { Order }               from '@models/index';
 import {
 	CompanyInnUpdateDto,
 	CompanyUpdateDto
@@ -114,7 +109,7 @@ export default class BitrixController
 		@Res() response: ex.Response
 	) {
 		const crmId = Number(crm.data['FIELDS']['ID']);
-		let result: IApiResponse<Order | TAffectedRows | null> = {
+		let result: any = {
 			statusCode: 404,
 			message:    'Event not found!'
 		};
@@ -130,6 +125,12 @@ export default class BitrixController
 				break;
 			case 'ONCRMDEALDELETE':
 				result = await this.bitrixService.deleteOrder(crmId);
+				break;
+			case 'ONCRMCOMPANYUPDATE':
+				result = await this.bitrixService.updateCargo(crmId);
+				break;
+			case 'ONCRMCONTACTUPDATE':
+				result = await this.bitrixService.updateTransport(crmId);
 				break;
 			default:
 				break;
