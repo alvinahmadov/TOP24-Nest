@@ -303,7 +303,65 @@ export default class OrderController
 		@Res() response: ex.Response
 	) {
 		const { originalname: name, buffer } = image;
-		const result = await this.orderService.sendDocuments(id, buffer, name, 'contract');
+		const result = await this.orderService.sendDocuments(id, buffer, name, 'receipt');
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.shippingDelete, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK],
+		fileOpts: {
+			interceptors: [FilesInterceptor('image')],
+			mimeTypes:    ['multipart/form-data']
+		}
+	})
+	public async deleteShippinh(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Query('pt') point: string,
+		@Query('index') index: number,
+		@Res() response: ex.Response
+	) {
+		const result = await this.orderService.deleteShippingDocuments(id, point, index);
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.paymentDelete, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async deletePaymentPhoto(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.orderService.deleteDocuments(id, 'payment');
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.contractDelete, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async deleteContract(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.orderService.deleteDocuments(id, 'contract');
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.receiptDelete, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async deleteReceipt(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.orderService.deleteDocuments(id, 'receipt');
 
 		return sendResponse(response, result);
 	}
