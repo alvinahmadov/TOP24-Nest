@@ -21,6 +21,7 @@ const SERVICES = [
 	CargoCompanyService,
 	CargoCompanyInnService,
 	DriverService,
+	EventService,
 	GeneratorService,
 	ImageFileService,
 	ImageService,
