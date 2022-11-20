@@ -63,12 +63,12 @@ export default class EventService
 
 	public async create(dto: GatewayEventCreateDto)
 		: TAsyncApiResponse<GatewayEvent> {
-		const imageModel = await this.createModel(dto);
+		const eventModel = await this.createModel(dto);
 
-		if(imageModel)
+		if(eventModel)
 			return {
 				statusCode: 201,
-				data:       imageModel
+				data:       eventModel
 			};
 
 		return this.repository.getRecord('create');
@@ -76,11 +76,11 @@ export default class EventService
 
 	public async update(id: string, dto: GatewayEventUpdateDto)
 		: TAsyncApiResponse<GatewayEvent> {
-		const imageModel = await this.repository.update(id, dto);
-		if(imageModel)
+		const eventModel = await this.repository.update(id, dto);
+		if(eventModel)
 			return {
 				statusCode: 200,
-				data:       imageModel
+				data:       eventModel
 			};
 
 		return this.repository.getRecord('update');
@@ -105,9 +105,5 @@ export default class EventService
 			data:       { affectedCount: 0 },
 			message:    'Event not found!'
 		};
-	}
-	
-	public async getOrderEvents() {
-		
 	}
 }
