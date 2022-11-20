@@ -449,9 +449,7 @@ export default class OrderService
 				if(!updOrder)
 					return this.repository.getRecord('update');
 
-				this.gateway.sendOrderEvent(
-					{ id, message }
-				);
+				order = updOrder;
 			}
 
 			if(fileUploaded) {
@@ -468,6 +466,52 @@ export default class OrderService
 		}
 
 		return this.responses['NOT_FOUND'];
+	}
+
+	public async deleteShippingDocuments(
+		id: string,
+		point: string,
+		index: number
+	) {
+		let order = await this.repository.get(id);
+		let isDeleted: boolean = false;
+		let message: string = '';
+
+		if(!order)
+			return this.responses['NOT_FOUND'];
+
+		const destinations = order.destinations;
+		const dstIndex = destinations.findIndex(d => d.point === point);
+
+		if(dstIndex >= 0) {
+			const shippingLength = destinations[dstIndex].shippingPhotoLinks?.length;
+
+			if(0 < shippingLength && shippingLength > index) {
+				const photoLink = destinations[dstIndex].shippingPhotoLinks[index];
+				destinations[dstIndex].shippingPhotoLinks.splice(index, 1);
+				isDeleted = await this.imageFileService.deleteImage(photoLink);
+				if(isDeleted) {
+					const { data: updOrder } = await this.update(order.id, { destinations });
+					if(!updOrder)
+						return this.repository.getRecord('update');
+
+					message = ORDER_TRANSLATIONS['SHIPPING_DEL'];
+
+					order = updOrder;
+				}
+			}
+
+			if(isDeleted) {
+				await this.send(order.id)
+				          .catch(() => setOrderSent());
+			}
+		}
+
+		return {
+			statusCode: 200,
+			data:       order,
+			message
+		};
 	}
 
 	/**
@@ -558,5 +602,50 @@ export default class OrderService
 		}
 		else
 			return this.repository.getRecord('update');
+	}
+
+	public async deleteDocuments(
+		id: string,
+		mode: TDocumentMode
+	) {
+		let order = await this.repository.get(id);
+		let isDeleted = false;
+
+		if(!order)
+			return this.responses['NOT_FOUND'];
+
+		if(mode === 'payment') {
+			if(order.paymentPhotoLink) {
+				isDeleted = await this.imageFileService.deleteImage(order.paymentPhotoLink, Bucket.COMMON);
+				if(isDeleted) {
+					order.paymentPhotoLink = null;
+					order.onPayment = false;
+					await order.save({ fields: ['paymentPhotoLink', 'onPayment'] });
+				}
+			}
+		}
+		else if(mode === 'receipt') {
+			if(order.receiptPhotoLink) {
+				isDeleted = await this.imageFileService.deleteImage(order.receiptPhotoLink, Bucket.COMMON);
+				if(isDeleted) {
+					order.receiptPhotoLink = null;
+					await order.save({ fields: ['receiptPhotoLink'] });
+				}
+			}
+		}
+		else if(mode === 'contract') {
+			if(order.contractPhotoLink) {
+				isDeleted = await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON);
+				if(isDeleted) {
+					order.contractPhotoLink = null;
+					await order.save({ fields: ['contractPhotoLink'] });
+				}
+			}
+		}
+
+		return {
+			statusCode: 200,
+			data:       order
+		};
 	}
 }
