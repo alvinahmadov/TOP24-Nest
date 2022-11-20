@@ -133,7 +133,9 @@ export type TStatusCode = 200 |
 
 export type TWebHookEvent = 'ONCRMDEALADD' |
                             'ONCRMDEALUPDATE' |
-                            'ONCRMDEALDELETE';
+                            'ONCRMDEALDELETE' |
+                            'ONCRMCOMPANYUPDATE' |
+                            'ONCRMCONTACTUPDATE';
 
 //////////////////
 //  Interfaces  //
