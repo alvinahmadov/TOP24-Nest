@@ -115,8 +115,6 @@ export default class GeneratorService
 				companies.map(c => companyTypeToStr(c.type)).join(', ')
 			);
 
-			await this.gateway.sendCargoEvent({ id: null, message });
-
 			return {
 				statusCode: 201,
 				data:       companies,

@@ -25,6 +25,7 @@ import {
 }                             from '@common/interfaces';
 import {
 	getCrm,
+	getTranslation,
 	orderFromBitrix
 }                             from '@common/utils';
 import { Order }              from '@models/index';
@@ -38,6 +39,8 @@ import OrderService           from './order.service';
 import ORDER_LST_URL = BitrixUrl.ORDER_LST_URL;
 import ORDER_GET_URL = BitrixUrl.ORDER_GET_URL;
 import COMPANY_GET_URL = BitrixUrl.COMPANY_GET_URL;
+
+const COMPANY_EVENT_TRANSLATION = getTranslation('EVENT', 'COMPANY');
 
 /**
  * @summary Bitrix Service
@@ -227,16 +230,73 @@ export default class BitrixService
 	 * */
 	public async updateCargo(
 		crmId: number,
-		cargo: TUpdateAttribute<ICompany>
+		cargo?: TUpdateAttribute<ICompany>
 	): TAsyncApiResponse<ICompany> {
-		const { data: item } = await this.cargoService.getByCrmId(crmId);
-		if(item) {
-			return this.cargoService.update(item.id, cargo);
+		if(cargo) {
+			const { data: item } = await this.cargoService.getByCrmId(crmId);
+			if(item) {
+				return this.cargoService.update(item.id, cargo);
+			}
+			const { data: itemInn } = await this.cargoInnService.getByCrmId(crmId);
+			if(itemInn) {
+				return this.cargoInnService.update(item.id, cargo);
+			}
 		}
-		const { data: itemInn } = await this.cargoInnService.getByCrmId(crmId);
-		if(itemInn) {
-			return this.cargoInnService.update(item.id, cargo);
+		else {
+			const { result } = await this.httpClient.post<TCRMResponse>(`${COMPANY_GET_URL}?ID=${crmId}`);
+			const crmItem = getCrm(result);
+			let message: string = '';
+
+			if(crmItem) {
+				const { data: cargo } = await this.cargoService.getByCrmId(crmId);
+				if(cargo) {
+					cargo.confirmed = Number(crmItem[CARGO.CONFIRMED]) === 1;
+					if(cargo.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
+
+					cargo.save({ fields: ['confirmed'] })
+					     .then((res) =>
+					           {
+						           this.gateway.sendCargoEvent(
+							           {
+								           id:     res.id,
+								           event:  'cargo',
+								           source: 'bitrix',
+								           message
+							           }
+						           );
+					           });
+
+					return {
+						statusCode: 200,
+						data:       cargo
+					};
+				}
+				else {
+					const { data: cargoinn } = await this.cargoInnService.getByCrmId(crmId);
+					cargoinn.confirmed = Number(crmItem[CARGOINN.CONFIRMED]) === 1;
+					if(cargoinn.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
+
+					cargoinn.save({ fields: ['confirmed'] })
+					        .then((res) =>
+					              {
+						              this.gateway.sendCargoEvent(
+							              {
+								              id:     res.id,
+								              event:  'cargo',
+								              source: 'bitrix',
+								              message
+							              }
+						              );
+					              });
+
+					return {
+						statusCode: 200,
+						data:       cargoinn
+					};
+				}
+			}
 		}
+
 		return this.responses['cargoNotFound'];
 	}
 
@@ -261,7 +321,7 @@ export default class BitrixService
 					crmItem[ORDER.CATEGORY] !== '0' ||
 					crmItem[ORDER.STAGE] === 'WON' || crmItem[ORDER.STAGE] === 'LOSE' ||
 					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N'
-				) return { statusCode: 200, message: "Invalid order source/stage" };
+				) return { statusCode: 200, message: 'Invalid order source/stage' };
 
 				let { data: order } = await this.orderService.getByCrmId(crmId);
 				const orderData = orderFromBitrix(crmItem);
@@ -287,7 +347,7 @@ export default class BitrixService
 							orderData.destinations[0].contact = clientContact;
 					}
 				}
-				
+
 				if(orderData.stage === OrderStage.PAYMENT_RECEIVED) {
 					orderData.status = OrderStatus.FINISHED;
 				}
