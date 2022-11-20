@@ -297,7 +297,8 @@ export default class DriverService
 						currentPoint:   driver.currentAddress,
 						currentAddress: data.currentAddress
 					},
-					UserRole.CARGO
+					UserRole.ADMIN,
+					false
 				);
 				return data;
 			}
