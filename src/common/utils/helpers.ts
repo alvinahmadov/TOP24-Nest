@@ -1,11 +1,17 @@
+import md5                    from 'md5';
+import path                   from 'path';
 import * as ex                from 'express';
 import env                    from '@config/env';
 import {
 	RANDOM_CODE_MAX,
 	RANDOM_CODE_DIGITS
 }                             from '@common/constants';
-import { IApiResponse }       from '@common/interfaces';
+import {
+	IApiResponse,
+	TMulterFile
+}                             from '@common/interfaces/api';
 import { transformApiResult } from '@common/utils/compat';
+import { fileExt }            from '@common/utils/yandex-storage';
 import Driver                 from '@models/driver.entity';
 import Transport              from '@models/transport.entity';
 
@@ -24,6 +30,14 @@ export const isNumber = (value: any): boolean => !isNaN(Number(value));
 export const min = (a: number, b: number): number => a > b ? b : a;
 
 export const randomOf = <T>(...args: T[]): T => args[Math.floor(Math.random() * args?.length)];
+
+export function renameMulterFiles(files: TMulterFile[], ...args: string[]) {
+	path.join(...args);
+	return files.map(({ originalname: name, ...rest }) => ({
+		originalname: path.join(...args, `${md5(rest.buffer)}.${fileExt({ mimetype: rest.mimetype })}`),
+		...rest
+	})) as TMulterFile[];
+}
 
 export function transformTransportParameters(transport: Transport): Transport {
 	if(transport.weightExtra > 0) transport.weight = transport.weightExtra;
