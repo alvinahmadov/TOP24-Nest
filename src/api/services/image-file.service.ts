@@ -1,8 +1,12 @@
-import { Injectable, Scope }         from '@nestjs/common';
-import env                           from '@config/env';
-import { Bucket }                    from '@common/constants';
-import { IService, IUploadResponse } from '@common/interfaces';
-import { YandexStorage }             from '@common/utils';
+import { Injectable, Scope } from '@nestjs/common';
+import env                   from '@config/env';
+import { Bucket }            from '@common/constants';
+import {
+	IService,
+	IUploadResponse,
+	TMulterFile
+}                            from '@common/interfaces';
+import { YandexStorage }     from '@common/utils';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export default class ImageFileService
@@ -51,10 +55,7 @@ export default class ImageFileService
 	}
 
 	public async uploadFiles(
-		files: {
-			fileBlob: Buffer,
-			storeName?: string
-		}[],
+		files: TMulterFile[],
 		bucketId?: string
 	): Promise<{ Location: string[] }> {
 		if(!bucketId) bucketId = Bucket.COMMON;
@@ -64,7 +65,7 @@ export default class ImageFileService
 			           .setBucket(bucketId)
 			           .uploadMulti(
 				           files.map(
-					           ({ fileBlob: buffer, storeName: name }) => ({ buffer, name })
+					           ({ buffer, originalname: name }) => ({ buffer, name })
 				           )
 			           );
 		}
