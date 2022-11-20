@@ -320,7 +320,8 @@ export default class OrderController
 	})
 	public async deletePaymentPhoto(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Res() response: ex.Response
+		@Res() response: ex.Response,
+		@Query('index') index?: number
 	) {
 		const result = await this.orderService.deleteDocuments(id, 'payment');
 
@@ -333,7 +334,8 @@ export default class OrderController
 	})
 	public async deleteContract(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Res() response: ex.Response
+		@Res() response: ex.Response,
+		@Query('index') index?: number
 	) {
 		const result = await this.orderService.deleteDocuments(id, 'contract');
 
@@ -346,7 +348,8 @@ export default class OrderController
 	})
 	public async deleteReceipt(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Res() response: ex.Response
+		@Res() response: ex.Response,
+		@Query('index') index?: number
 	) {
 		const result = await this.orderService.deleteDocuments(id, 'receipt');
 
