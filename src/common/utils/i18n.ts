@@ -62,7 +62,7 @@ export function formatArgs(str: string, ...args: any[]) {
 			++index < str.length &&
 			str[index] === '}'
 		) {
-			str = str.replace('{}', String(arg));
+			str = str.replace('{}', String(arg ?? ''));
 		}
 	}
 	return str;
