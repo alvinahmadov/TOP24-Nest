@@ -1,13 +1,12 @@
-import { DEFAULT_SORT_ORDER } from '@common/constants';
 import {
 	IGatewayEvent,
 	IGatewayEventFilter,
 	IListFilter,
 	IRepository,
 	IRepositoryOptions
-}                             from '@common/interfaces';
-import { GatewayEvent }       from '@models/index';
-import GenericRepository      from './generic';
+}                        from '@common/interfaces';
+import { GatewayEvent }  from '@models/index';
+import GenericRepository from './generic';
 
 export default class GatewayEventRepository
 	extends GenericRepository<GatewayEvent, IGatewayEvent>
@@ -33,7 +32,7 @@ export default class GatewayEventRepository
 					count: limit
 				} = listFilter;
 				const {
-					sortOrder = DEFAULT_SORT_ORDER,
+					sortOrder = [['created_at', 'ASC'], ['updated_at', 'ASC']],
 					...rest
 				} = filter ?? {};
 

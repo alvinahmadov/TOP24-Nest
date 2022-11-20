@@ -9,6 +9,7 @@ export default class GatewayEventCreateDto
 	implements TCreationAttribute<IGatewayEvent> {
 	eventName?: string;
 	source?: string;
+	hasSeen?: boolean;
 	message?: string;
 	event?: any;
 }

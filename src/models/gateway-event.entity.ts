@@ -3,8 +3,9 @@ import { ObjectType }    from '@nestjs/graphql';
 import { TABLE_OPTIONS } from '@common/constants';
 import {
 	IGatewayEvent,
-	StringColumn,
-	JsonbColumn
+	BooleanColumn,
+	JsonbColumn,
+	StringColumn
 }                        from '@common/interfaces';
 import EntityModel       from './entity-model';
 
@@ -26,6 +27,9 @@ export default class GatewayEvent
 
 	@StringColumn()
 	source?: string;
+
+	@BooleanColumn({ defaultValue: false })
+	hasSeen?: boolean;
 
 	@StringColumn()
 	message?: string;

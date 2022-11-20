@@ -760,6 +760,7 @@ export interface IGatewayEvent
 	extends IModel {
 	eventName?: 'cargo' | 'driver' | 'order' | string;
 	source?: string;
+	hasSeen?: boolean;
 	message?: string;
 	event?: any;
 }
