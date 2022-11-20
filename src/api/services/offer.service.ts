@@ -1,4 +1,3 @@
-// import { Op }              from 'sequelize';
 import { Injectable }      from '@nestjs/common';
 import env,
 { setOrderSent }           from '@config/env';
@@ -130,11 +129,11 @@ export default class OfferService
 						     t.isTrailer
 					);
 					const filter = {
-						weightMax: offer.order.weight,
-						volumeMax: offer.order.volume,
-						heightMax: offer.order.height,
-						lengthMax: offer.order.length,
-						widthMax:  offer.order.width,
+						weightMin: offer.order.weight,
+						volumeMin: offer.order.volume,
+						heightMin: offer.order.height,
+						lengthMin: offer.order.length,
+						widthMin:  offer.order.width,
 						pallets:   offer.order.pallets
 					};
 
