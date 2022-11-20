@@ -60,17 +60,11 @@ export default class ImageFileService
 		if(!bucketId) bucketId = Bucket.COMMON;
 
 		if(files) {
-			files.forEach((file, index) =>
-			              {
-				              if(file.storeName === undefined)
-					              file.storeName = `image_${index}.png`;
-			              });
-
 			return this.objectStorage
 			           .setBucket(bucketId)
 			           .uploadMulti(
 				           files.map(
-					           ({ fileBlob, storeName }) => ({ buffer: fileBlob, name: storeName })
+					           ({ fileBlob: buffer }) => ({ buffer, name: null })
 				           )
 			           );
 		}
