@@ -36,16 +36,12 @@ export class TransportUpdatePipe
 		delete data.updatedAt;
 
 		const value: ITransport = !env.api.compatMode ? data : transformToTransport(data);
+		value.payloadExtra = value.volumeExtra > 0 || value.weightExtra > 0;
 		checkAndConvertBitrix(value, 'payload', 'transportPayload');
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');
 		checkAndConvertBitrix(value, 'type', 'transportType');
 		checkAndConvertArrayBitrix(value, 'fixtures', 'fixtures', Reference.FIXTURES);
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'riskClass', Reference.RISK_CLASSES);
-
-		if(value.volumeExtra > 0 || value.weightExtra > 0) {
-			value.payloadExtra = true;
-		}
-
 		reformatDateString<ITransport>(value, ['diagnosticsDate', 'osagoExpiryDate']);
 
 		return value;
