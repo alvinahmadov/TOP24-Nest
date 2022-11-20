@@ -139,10 +139,7 @@ export default class OfferService
 
 					if(transport) {
 						const messageObj = { message: '' };
-						if(checkTransportRequirements(filter, transport, trailer, messageObj)) {
-							await this.transportService.update(transport.id, { payloadExtra: true });
-						}
-						else {
+						if(!checkTransportRequirements(filter, transport, trailer, messageObj)) {
 							this.gateway.sendDriverEvent(
 								{
 									id:      driverId,
@@ -242,12 +239,23 @@ export default class OfferService
 		filter?: OfferFilter & Omit<OrderFilter, 'status' | 'statuses'>
 	) {
 		const offers = await this.repository.getDriverOrders(driverId, listFilter, filter);
+		const { data: transports } = await this.transportService.getList({}, { driverId });
 		const offerStatusKey = env.api.compatMode ? 'offer_status' : 'offerStatus';
 		let priorityCounter = 0;
 		const inAcceptedRange = (offer: Offer) => OrderStatus.PENDING < offer.orderStatus &&
 		                                          offer.orderStatus <= OrderStatus.PROCESSING;
+		const activeTransport = transports?.find(t => t.status === TransportStatus.ACTIVE && !t.isTrailer);
+
 		const orders =
 			await offers?.filter(offer => offer !== null && offer.order !== null)
+			            ?.filter(({ order }) =>
+			                     {
+				                     if(activeTransport &&
+				                        !activeTransport.payloadExtra)
+					                     return true;
+
+				                     return order?.dedicated === 'Догруз';
+			                     })
 			            ?.sort((offer1, offer2) =>
 			                   {
 				                   const date1 = offer1.order.destinations[0].date,
@@ -255,8 +263,8 @@ export default class OfferService
 				                   // check both offers has same
 				                   // accepted status
 				                   if(inAcceptedRange(offer1) && inAcceptedRange(offer2)) {
-					                   if(date1 > date2) return 1;
-					                   else if(date1 < date2) return -1;
+					                   if(date1 > date2) return -1;
+					                   else if(date1 < date2) return 1;
 				                   }
 				                   return 0;
 			                   })
