@@ -437,7 +437,12 @@ export default class OrderService
 			if(shippingPhotoLinks?.length > 0) {
 				fileUploaded = true;
 				message = formatArgs(ORDER_TRANSLATIONS['SHIPPING'], shippingPhotoLinks.join(','), point);
-				destinations[index].shippingPhotoLinks.push(...shippingPhotoLinks);
+
+				if(destinations[index].shippingPhotoLinks)
+					destinations[index].shippingPhotoLinks.push(...shippingPhotoLinks);
+				else
+					destinations[index].shippingPhotoLinks = shippingPhotoLinks;
+				
 				destinations.forEach((destination, i) =>
 				                     {
 					                     if(i <= index) {
