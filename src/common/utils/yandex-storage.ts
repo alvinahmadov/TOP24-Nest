@@ -17,7 +17,7 @@ import {
  * @param {*} file
  * @ignore
  */
-export function fileExt(file: Partial<IBucketItem>) {
+function fileExt(file: Partial<IBucketItem>) {
 	if(file.mimetype) {
 		switch(file.mimetype) {
 			case 'image/gif':
