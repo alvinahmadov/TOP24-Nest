@@ -1,19 +1,16 @@
 import {
 	Injectable,
 	PipeTransform
-}                     from '@nestjs/common';
-import env            from '@config/env';
-import { Reference }  from '@common/constants';
-import { ITransport } from '@common/interfaces';
+}                               from '@nestjs/common';
+import env                      from '@config/env';
+import { Reference }            from '@common/constants';
+import { ITransport }           from '@common/interfaces';
 import {
 	reformatDateString,
 	checkAndConvertBitrix,
 	checkAndConvertArrayBitrix
-}                     from '@common/utils';
-import {
-	ITransportTransformer,
-	transformToTransport
-}                     from '@common/utils/compat';
+}                               from '@common/utils';
+import { transformToTransport } from '@common/utils/compat';
 
 @Injectable()
 export class TransportCreatePipe
@@ -38,16 +35,18 @@ export class TransportUpdatePipe
 		delete data.createdAt;
 		delete data.updatedAt;
 
-		const value = !env.api.compatMode ? data : transformToTransport(data);
+		const value: ITransport = !env.api.compatMode ? data : transformToTransport(data);
 		checkAndConvertBitrix(value, 'payload', 'transportPayload');
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');
 		checkAndConvertBitrix(value, 'type', 'transportType');
 		checkAndConvertArrayBitrix(value, 'fixtures', 'fixtures', Reference.FIXTURES);
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'riskClass', Reference.RISK_CLASSES);
-		if(env.api.compatMode)
-			reformatDateString<ITransportTransformer>(value, ['diag_date', 'osago_date']);
-		else
-			reformatDateString<ITransport>(value, ['diagnosticsDate', 'osagoExpiryDate']);
+
+		if(value.volumeExtra > 0 || value.weightExtra > 0) {
+			value.payloadExtra = true;
+		}
+
+		reformatDateString<ITransport>(value, ['diagnosticsDate', 'osagoExpiryDate']);
 
 		return value;
 	}
