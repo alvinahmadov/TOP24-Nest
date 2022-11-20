@@ -34,7 +34,8 @@ import { socketAuthExtractor } from '@common/utils';
 import {
 	AdminRepository,
 	CargoCompanyRepository,
-	CargoInnCompanyRepository
+	CargoInnCompanyRepository,
+	GatewayEventRepository
 }                              from '@repos/index';
 import {
 	CargoMessageBodyPipe,
@@ -57,6 +58,7 @@ export default class EventsGateway
 	private readonly adminRepo: AdminRepository = new AdminRepository({ log: false });
 	private readonly cargoRepo: CargoCompanyRepository = new CargoCompanyRepository({ log: false });
 	private readonly cargoInnRepo: CargoInnCompanyRepository = new CargoInnCompanyRepository({ log: false });
+	private readonly eventsRepo: GatewayEventRepository = new GatewayEventRepository({ log: true });
 
 	constructor(
 		protected readonly authService: AuthService
@@ -110,36 +112,58 @@ export default class EventsGateway
 	@UseGuards(guards.AdminGuard, guards.CargoGuard)
 	@SubscribeMessage(CARGO_EVENT)
 	public sendCargoEvent(
-		@MessageBody(CargoMessageBodyPipe) data: ICargoGatewayData
+		@MessageBody(CargoMessageBodyPipe) data: ICargoGatewayData,
+		save: boolean = false
 	) {
 		this.server.to(data.id).emit(CARGO_EVENT, data);
+		if(save)
+			this.eventsRepo
+			    .create({ eventName: CARGO_EVENT, eventData: data })
+			    .catch(e => console.error(e));
 	}
 
 	@UseGuards(guards.AdminGuard, guards.LogistGuard)
 	@SubscribeMessage(DRIVER_EVENT)
 	public sendDriverEvent(
 		@MessageBody(DriverMessageBodyPipe) data: IDriverGatewayData,
-		role: UserRole
+		role: UserRole,
+		save: boolean = true
 	) {
+		let sent: boolean = false;
+
 		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
-			this.server.to(data.id).emit(DRIVER_EVENT, data);
+			sent = this.server.to(data.id).emit(DRIVER_EVENT, data);
+
 		}
 		if(role === UserRole.CARGO) {
-			this.server.to(data.id).emit(DRIVER_EVENT, data);
+			sent = this.server.to(data.id).emit(DRIVER_EVENT, data);
 		}
+
+		if(sent && save)
+			this.eventsRepo
+			    .create({ eventName: DRIVER_EVENT, eventData: data, hasSeen: false })
+			    .catch(e => console.error(e));
 	};
 
 	@UseGuards(guards.AdminGuard, guards.LogistGuard)
 	@SubscribeMessage(ORDER_EVENT)
 	public sendOrderEvent(
 		@MessageBody(OrderMessageBodyPipe) data: IOrderGatewayData,
-		role?: UserRole
+		role?: UserRole,
+		save: boolean = true
 	) {
+		let sent: boolean = false;
+
 		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
-			this.server.to(data.id).emit(ORDER_EVENT, data);
+			sent = this.server.to(data.id).emit(ORDER_EVENT, data);
 		}
 		if(role === UserRole.CARGO) {
-			this.server.to(data.id).emit(ORDER_EVENT, data);
+			sent = this.server.to(data.id).emit(ORDER_EVENT, data);
 		}
+
+		if(sent && save)
+			this.eventsRepo
+			    .create({ eventName: DRIVER_EVENT, eventData: data, hasSeen: false })
+			    .catch(e => console.error(e));
 	}
 }

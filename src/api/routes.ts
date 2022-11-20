@@ -19,6 +19,7 @@ export type TApiRouteList = {
 	bitrix: IApiRouteConfig;
 	company: IApiRouteConfig<mo.CargoCompany | mo.CargoInnCompany>;
 	driver: IApiRouteConfig<mo.Driver>;
+	event: IApiRouteConfig<mo.GatewayEvent>;
 	generator?: IApiRouteConfig;
 	image: IApiRouteConfig<mo.Image>;
 	offer: IApiRouteConfig<mo.Offer>;
@@ -930,6 +931,126 @@ export const routeConfig: TApiRouteList = {
 							status: 200,
 							...getApiResponseContent('application/json', mo.Driver)
 						}
+					}
+				}
+			}
+		}
+	},
+	event:     {
+		path:        'event',
+		description: 'Сargo company driver related operations.',
+		routes:      {
+			list:   {
+				path:   '',
+				method: RequestMethod.GET,
+				api:    {
+					operation: {
+						summary: 'Get list of drivers',
+						security
+					},
+					responses: {
+						200: {
+							status:      200,
+							description: 'List of drivers.',
+							...getApiResponseContent('application/json', mo.Driver, { isArray: true })
+						}
+					}
+				}
+			},
+			filter: {
+				path:   'filter',
+				method: RequestMethod.POST,
+				api:    {
+					operation: {
+						summary:     'Filter events.',
+						description: 'Filter list of data by provided body',
+						security
+					},
+					responses: {
+						200: {
+							status:      200,
+							description: 'List of filtered events.',
+							...getApiResponseContent('application/json', mo.GatewayEvent, { isArray: true })
+						}
+					}
+				}
+			},
+			index:  {
+				path:   ':id',
+				method: RequestMethod.GET,
+				api:    {
+					operation: {
+						summary:     'Get event',
+						description: 'Gets single event specified by `id`',
+						security
+					},
+					responses: {
+						200: {
+							status:      200,
+							description: 'Found event',
+							...getApiResponseContent('application/json', mo.GatewayEvent)
+						},
+						404: {
+							status:      404,
+							description: 'Event entity not found.',
+							...getApiResponseContent('application/json')
+						}
+					}
+				}
+			},
+			create: {
+				path:   '',
+				method: RequestMethod.POST,
+				api:    {
+					operation: {
+						summary: 'Create a new event.',
+						security
+					},
+					responses: {
+						201: {
+							status:      201,
+							description: 'Event entity created!',
+							...getApiResponseContent(
+								'application/json',
+								mo.GatewayEvent,
+								{ description: 'Created event entity' }
+							)
+						},
+						404: {
+							status:      400,
+							description: 'Event was not created.',
+							...getApiResponseContent('application/json')
+						}
+					}
+				}
+			},
+			update: {
+				path:   ':id',
+				method: RequestMethod.PUT,
+				api:    {
+					operation: {
+						summary:     'Update event',
+						description: 'Updates single event specified by `id`',
+						requestBody: { $ref: getSchemaPath(dto.GatewayEventUpdateDto) },
+						security
+					},
+					responses: {
+						200: {
+							status:      200,
+							description: 'Updated event entity',
+							...getApiResponseContent('application/json', mo.GatewayEvent)
+						}
+					}
+				}
+			},
+			delete: {
+				path:   ':id',
+				method: RequestMethod.DELETE,
+				api:    {
+					operation: {
+						summary:     'Delete event',
+						description: 'Deletes event specified by `id`',
+						security
 					}
 				}
 			}

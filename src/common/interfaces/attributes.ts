@@ -758,11 +758,11 @@ export interface IDriver
 
 export interface IGatewayEvent
 	extends IModel {
-	eventName?: 'cargo' | 'driver' | 'order' | string;
-	source?: string;
+	eventName: 'cargo' | 'driver' | 'order' | string;
+	eventData: any;
 	hasSeen?: boolean;
-	message?: string;
-	event?: any;
+	readonly source?: string;
+	readonly message?: string;
 }
 
 /**

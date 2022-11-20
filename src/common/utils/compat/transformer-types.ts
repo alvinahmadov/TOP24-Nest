@@ -375,6 +375,15 @@ export interface IDriverTransformer
 	transports?: ITransportTransformer[];
 }
 
+export interface IGatewayEventTransformer
+	extends IModel {
+	event_name: string;
+	event_data: any;
+	has_seen?: boolean;
+	readonly source?: string;
+	readonly message?: string;
+}
+
 /**
  * @see IImage
  * */

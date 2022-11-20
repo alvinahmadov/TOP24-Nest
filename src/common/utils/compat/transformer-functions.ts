@@ -265,6 +265,37 @@ export function transformToDriver(data: transformers.IDriverTransformer)
 	return null;
 }
 
+function transformGatewayEvent(event: models.GatewayEvent)
+	: transformers.IGatewayEventTransformer {
+	if(event) {
+		return {
+			id:         event.getDataValue('id'),
+			event_name: event.getDataValue('eventName'),
+			event_data: event.getDataValue('eventData'),
+			has_seen:   event.getDataValue('hasSeen'),
+			source:     event.getDataValue('source'),
+			message:    event.getDataValue('message'),
+			createdAt:  event.getDataValue('createdAt'),
+			updatedAt:  event.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+export function transformToGatewayEvent(data: transformers.IGatewayEventTransformer)
+	: attributes.IGatewayEvent {
+	if(data) {
+		return {
+			...helpers.translateGatewayEvent(data),
+			createdAt: data.createdAt,
+			updatedAt: data.updatedAt
+		};
+	}
+
+	return null;
+}
+
 function transformImage(image: models.Image)
 	: transformers.IImageTransformer {
 	if(image) {
@@ -527,6 +558,9 @@ export function transformEntity<T extends IModel, E extends EntityModel<T>>(enti
 	}
 	else if(entity instanceof models.Driver) {
 		return transformDriver(entity);
+	}
+	else if(entity instanceof models.GatewayEvent) {
+		return transformGatewayEvent(entity);
 	}
 	else if(entity instanceof models.Image) {
 		return transformImage(entity);

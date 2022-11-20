@@ -1,6 +1,7 @@
 import {
 	DriverStatus,
-	LoadingType, OfferStatus,
+	LoadingType,
+	OfferStatus,
 	OrderStatus,
 	TransportStatus
 }                                  from '@common/enums';
@@ -67,6 +68,14 @@ export interface IDriverTransformerFilter
 	        Partial<transformers.IDriverTransformer> {
 	order_status?: OrderStatus;
 	statuses?: DriverStatus[];
+}
+
+export interface IGatewayEventTransformerFilter
+	extends IFilter,
+	        IModelSortable,
+	        Partial<transformers.IGatewayEventTransformer> {
+	events?: string[];
+	sources?: string[];
 }
 
 /**
@@ -172,6 +181,18 @@ export function transformToDriverFilter(data: IDriverTransformerFilter)
 			...helpers.translateDriver(data),
 			statuses:    data.statuses,
 			orderStatus: data.order_status
+		};
+	}
+	return null;
+}
+
+export function transformToGatewayEventFilter(data: IGatewayEventTransformerFilter)
+	: filters.IGatewayEventFilter {
+	if(data) {
+		return {
+			...helpers.translateGatewayEvent(data),
+			events:  data.events,
+			sources: data.sources
 		};
 	}
 	return null;

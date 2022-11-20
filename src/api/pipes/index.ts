@@ -8,6 +8,7 @@ import CargoMessageBodyPipe  from './gateways/cargo-message-body.pipe';
 import DriverMessageBodyPipe from './gateways/driver-message-body.pipe';
 import OrderMessageBodyPipe  from './gateways/order-message-body.pipe';
 import DriverPipe            from './driver.pipe';
+import IGatewayEventPipe     from './event.pipe';
 import ImagePipe             from './image.pipe';
 import OfferPipe             from './offer.pipe';
 import OrderPipe             from './order.pipe';
@@ -28,6 +29,7 @@ export {
 	DriverMessageBodyPipe,
 	OrderMessageBodyPipe,
 	DriverPipe,
+	IGatewayEventPipe,
 	ImagePipe,
 	OfferPipe,
 	OrderPipe,

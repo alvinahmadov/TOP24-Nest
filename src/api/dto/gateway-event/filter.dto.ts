@@ -7,6 +7,6 @@ import { IGatewayEventFilter } from '@common/interfaces';
 export default class GatewayEventFilter
 	extends PartialType(GatewayEventCreateDto)
 	implements IGatewayEventFilter {
-	events: ('cargo' | 'driver' | 'order')[];
-	sources: string[];
+	events?: ('cargo' | 'driver' | 'order')[];
+	sources?: string[];
 }

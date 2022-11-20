@@ -30,6 +30,7 @@ const MODELS = [
 	CargoCompany,
 	CargoInnCompany,
 	Driver,
+	GatewayEvent,
 	Image,
 	Offer,
 	Order,

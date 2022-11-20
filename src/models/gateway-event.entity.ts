@@ -3,9 +3,11 @@ import { ObjectType }    from '@nestjs/graphql';
 import { TABLE_OPTIONS } from '@common/constants';
 import {
 	IGatewayEvent,
+	IGatewayData,
 	BooleanColumn,
 	JsonbColumn,
-	StringColumn
+	StringColumn,
+	VirtualColumn
 }                        from '@common/interfaces';
 import EntityModel       from './entity-model';
 
@@ -23,17 +25,21 @@ export default class GatewayEvent
 	extends EntityModel<IGatewayEvent>
 	implements IGatewayEvent {
 	@StringColumn()
-	eventName?: 'cargo' | 'driver' | 'order' | string;
+	eventName: 'cargo' | 'driver' | 'order' | string;
 
-	@StringColumn()
-	source?: string;
+	@JsonbColumn()
+	eventData: IGatewayData;
 
 	@BooleanColumn({ defaultValue: false })
 	hasSeen?: boolean;
 
-	@StringColumn()
-	message?: string;
+	@VirtualColumn()
+	get source(): string {
+		return this.eventData?.source;
+	}
 
-	@JsonbColumn()
-	event?: any;
+	@VirtualColumn()
+	get message(): string {
+		return this.eventData?.message;
+	};
 }

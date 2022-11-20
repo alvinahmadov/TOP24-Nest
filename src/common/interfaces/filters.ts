@@ -114,7 +114,7 @@ export interface IDriverFilter
 export interface IGatewayEventFilter
 	extends IFilter,
 	        TModelFilter<IGatewayEvent> {
-	events?: ('cargo' | 'driver' | 'order')[];
+	events?: ('cargo' | 'driver' | 'order' | string)[];
 	sources?: string[];
 }
 

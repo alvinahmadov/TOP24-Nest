@@ -41,8 +41,7 @@ export default class EventService
 		const events = await this.repository.getList(listFilter, filter);
 		return {
 			statusCode: 200,
-			data:       events,
-			message:    `Got ${events.length} items!`
+			data:       events
 		};
 	}
 

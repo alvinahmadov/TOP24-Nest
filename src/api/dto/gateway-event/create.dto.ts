@@ -1,5 +1,6 @@
 import { InputType } from '@nestjs/graphql';
 import {
+	IGatewayData,
 	IGatewayEvent,
 	TCreationAttribute
 }                    from '@common/interfaces';
@@ -7,9 +8,7 @@ import {
 @InputType()
 export default class GatewayEventCreateDto
 	implements TCreationAttribute<IGatewayEvent> {
-	eventName?: string;
-	source?: string;
+	eventName: string;
+	eventData: IGatewayData;
 	hasSeen?: boolean;
-	message?: string;
-	event?: any;
 }

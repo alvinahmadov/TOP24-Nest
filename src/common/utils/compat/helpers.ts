@@ -138,6 +138,16 @@ export const translateDriver = <T extends transformers.IDriverTransformer>(data:
 		.get();
 };
 
+export const translateGatewayEvent = <T extends transformers.IGatewayEventTransformer>(data: T | Partial<T>)
+	: TOmitTimestamp<attributes.IGatewayEvent> =>
+{
+	return new FieldTransformer<T, attributes.IGatewayEvent>(data)
+		.set('eventName', 'event_name')
+		.set('eventData', 'event_data')
+		.set('hasSeen', 'has_seen')
+		.get();
+};
+
 export const translateImage = <T extends transformers.IImageTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.IImage> =>
 {

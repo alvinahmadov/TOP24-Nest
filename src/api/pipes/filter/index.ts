@@ -1,6 +1,7 @@
 import AdminFilterPipe            from './admin-filter.pipe';
 import CompanyTransportFilterPipe from './company-filter.pipe';
 import DriverFilterPipe           from './driver-filter.pipe';
+import GatewayEventFilterPipe     from './event-filter.pipe';
 import {
 	OfferFilterPipe,
 	OfferDriverFilterPipe,
@@ -13,6 +14,7 @@ export {
 	AdminFilterPipe,
 	CompanyTransportFilterPipe,
 	DriverFilterPipe,
+	GatewayEventFilterPipe,
 	OfferFilterPipe,
 	OfferDriverFilterPipe,
 	OfferOrderFilterPipe,
