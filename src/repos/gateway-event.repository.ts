@@ -28,23 +28,26 @@ export default class GatewayEventRepository
 			{
 				const {
 					from: offset = 0,
-					full = false,
 					count: limit
 				} = listFilter;
 				const {
 					sortOrder = [['created_at', 'ASC'], ['updated_at', 'ASC']],
+					sources,
+					events,
+					message,
+					source,
 					...rest
 				} = filter ?? {};
 
 				return this.model.findAll(
 					{
-						where:   this.whereClause()
-						             .fromFilter(<any>rest)
-							         .query,
+						where: this.whereClause('and')
+						           .in('eventName', events)
+						           .in('source', sources)
+						           .eq('hasSeen', rest.hasSeen)
+							       .query,
 						offset,
-						limit,
-						include: full ? this.include
-						              : undefined
+						limit
 					}
 				);
 			},
