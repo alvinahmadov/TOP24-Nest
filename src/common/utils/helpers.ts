@@ -9,9 +9,8 @@ import {
 import {
 	IApiResponse,
 	TMulterFile
-}                             from '@common/interfaces/api';
+}                             from '@common/interfaces';
 import { transformApiResult } from '@common/utils/compat';
-import { fileExt }            from '@common/utils/yandex-storage';
 import Driver                 from '@models/driver.entity';
 import Transport              from '@models/transport.entity';
 
@@ -30,6 +29,26 @@ export const isNumber = (value: any): boolean => !isNaN(Number(value));
 export const min = (a: number, b: number): number => a > b ? b : a;
 
 export const randomOf = <T>(...args: T[]): T => args[Math.floor(Math.random() * args?.length)];
+
+export function fileExt(file: { mimetype?: string }) {
+	if(file.mimetype) {
+		switch(file.mimetype) {
+			case 'image/gif':
+				return 'gif';
+			case 'image/jpeg':
+				return 'jpeg';
+			case 'image/jpg':
+				return 'jpg';
+			case 'image/png':
+				return 'png';
+			case 'image/svg+xml':
+				return 'svg';
+			case 'image/webp':
+				return 'webp';
+		}
+	}
+	return 'jpeg';
+}
 
 export function renameMulterFiles(files: TMulterFile[], ...args: string[]) {
 	path.join(...args);
