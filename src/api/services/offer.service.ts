@@ -602,6 +602,10 @@ export default class OfferService
 					}
 				);
 
+				if(offer.order.contractPhotoLinks) {
+					await this.imageFileService.deleteImageList(offer.order.contractPhotoLinks);
+				}
+
 				this.orderService.send(offer.orderId)
 				    .then(() => setOrderSent(true))
 				    .catch(() => setOrderSent());
@@ -643,9 +647,6 @@ export default class OfferService
 					status = OrderStatus.CANCELLED_BITRIX;
 
 				if(order) {
-					if(order.contractPhotoLink) {
-						await this.imageFileService.deleteImage(offer.order.contractPhotoLink);
-					}
 					order.destinations.forEach(d => d.fulfilled = false);
 					this.orderService
 					    .update(order.id, {
