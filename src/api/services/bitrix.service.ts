@@ -44,6 +44,7 @@ import ORDER_LST_URL = BitrixUrl.ORDER_LST_URL;
 import ORDER_GET_URL = BitrixUrl.ORDER_GET_URL;
 import COMPANY_GET_URL = BitrixUrl.COMPANY_GET_URL;
 import CONTACT_GET_URL = BitrixUrl.CONTACT_GET_URL;
+import Transport              from '@models/transport.entity';
 
 const COMPANY_EVENT_TRANSLATION = getTranslation('EVENT', 'COMPANY');
 const DRIVER_EVENT_TRANSLATION = getTranslation('EVENT', 'DRIVER');
@@ -308,7 +309,8 @@ export default class BitrixService
 		return this.responses['NOT_FOUND_COMPANY'];
 	}
 
-	public async updateTransport(crmId: number) {
+	public async updateTransport(crmId: number)
+		: TAsyncApiResponse<Transport | null> {
 		const { result } = await this.httpClient.post<TCRMResponse>(`${CONTACT_GET_URL}?ID=${crmId}`);
 		const crmItem = getCrm(result);
 		let message: string = '';
