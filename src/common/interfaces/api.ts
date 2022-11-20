@@ -85,8 +85,10 @@ export type TFormat = 'url' |
 export type TImageMimeType = 'image/gif' |
                              'image/png' |
                              'image/jpeg' |
+                             'image/jpg' |
                              'image/webp' |
-                             'image/svg+xml';
+                             'image/svg+xml' |
+                             string;
 
 export type TLogIdentifier = {
 	id?: string;

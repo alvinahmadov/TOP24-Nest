@@ -171,18 +171,18 @@ export default class OrderCreateDto
 	@IsString()
 	ownerDeferralConditions?: string;
 
-	@ApiProperty(prop.paymentPhotoLink)
+	@ApiProperty(prop.paymentPhotoLinks)
 	@IsUrl()
 	@IsString()
-	paymentPhotoLink?: string = null;
+	paymentPhotoLinks?: string[] = null;
 
-	@ApiProperty(prop.receiptPhotoLink)
+	@ApiProperty(prop.receiptPhotoLinks)
 	@IsUrl()
 	@IsString()
-	receiptPhotoLink?: string = null;
+	receiptPhotoLinks?: string[] = null;
 
-	@ApiProperty(prop.contractPhotoLink)
+	@ApiProperty(prop.contractPhotoLinks)
 	@IsUrl()
 	@IsString()
-	contractPhotoLink?: string = null;
+	contractPhotoLinks?: string[] = null;
 }

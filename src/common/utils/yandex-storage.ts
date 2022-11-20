@@ -17,13 +17,15 @@ import {
  * @param {*} file
  * @ignore
  */
-function fileExt(file: IBucketItem) {
+export function fileExt(file: Partial<IBucketItem>) {
 	if(file.mimetype) {
 		switch(file.mimetype) {
 			case 'image/gif':
 				return 'gif';
 			case 'image/jpeg':
 				return 'jpeg';
+			case 'image/jpg':
+				return 'jpg';
 			case 'image/png':
 				return 'png';
 			case 'image/svg+xml':
@@ -184,8 +186,8 @@ export class YandexStorage {
 		const ContentType = lookup(fileUploadName) || 'image/jpeg';
 		const params = {
 			Bucket: bucket,
-			Key:  fileUploadName,
-			Body: fileBody,
+			Key:    fileUploadName,
+			Body:   fileBody,
 			ContentType
 		};
 

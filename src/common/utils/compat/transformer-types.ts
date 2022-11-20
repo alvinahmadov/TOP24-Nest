@@ -530,17 +530,17 @@ export interface IOrderTransformer
 	 * */
 	dedicated_machine?: string;
 	/**
-	 * @see IOrder.paymentPhotoLink
+	 * @see IOrder.paymentPhotoLinks
 	 * */
-	payment_link?: string;
+	payment_link?: string[];
 	/**
-	 * @see IOrder.receiptPhotoLink
+	 * @see IOrder.receiptPhotoLinks
 	 * */
-	receipt_link?: string;
+	receipt_link?: string[];
 	/**
-	 * @see IOrder.contractPhotoLink
+	 * @see IOrder.contractPhotoLinks
 	 * */
-	contract_link?: string;
+	contract_link?: string[];
 	filter?: object;
 	priority?: boolean;
 

@@ -804,30 +804,30 @@ export const entityConfig: TEntityConfigList = {
 			description: 'Order has higher priority by destination date (close date higher priority)'
 		},
 		driverDeferralConditions:
-		                   {
+			                 {
 			                   description: 'Driver\'s deferral conditions for order execution'
 		                   },
 		ownerDeferralConditions:
-		                   {
+			                  {
 			                   description: 'Cargo owner\'s deferral conditions for order execution'
 		                   },
-		paymentPhotoLink:  {
+		paymentPhotoLinks:  {
 			description: 'Link to the payment document scan sent after order completion.',
 			format:      'url'
 		},
-		receiptPhotoLink:  {
+		receiptPhotoLinks:  {
 			description: 'Link to the receipt scan sent after order completion.',
 			format:      'url'
 		},
-		contractPhotoLink: {
+		contractPhotoLinks: {
 			description: 'Link to the offer agreement scan by driver sent before start of order fulfillment.',
 			format:      'url'
 		},
-		cargo:             {
+		cargo:              {
 			description: 'Cargo company which order is assigned to',
 			readOnly:    true
 		},
-		cargoinn:          {
+		cargoinn:           {
 			description: 'Cargo company (individual/private) which order is assigned to',
 			readOnly:    true
 		},

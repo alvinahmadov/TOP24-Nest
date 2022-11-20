@@ -1046,15 +1046,15 @@ export interface IOrder
 	/**
 	 * Link to the payment document scan sent after order completion.
 	 * */
-	paymentPhotoLink?: string;
+	paymentPhotoLinks?: string[];
 	/**
 	 * Link to the receipt scan sent after order completion.
 	 * */
-	receiptPhotoLink?: string;
+	receiptPhotoLinks?: string[];
 	/**
 	 * Link to the offer agreement scan by driver sent before start of order fulfillment.
 	 * */
-	contractPhotoLink?: string;
+	contractPhotoLinks?: string[];
 }
 
 /**

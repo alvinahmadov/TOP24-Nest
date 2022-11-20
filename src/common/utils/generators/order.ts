@@ -62,7 +62,7 @@ export function generateOrder(): dto.OrderCreateDto {
 	const price: number = generatePrice();
 	return {
 		date:            faker.date.recent(10),
-		dedicated:       faker.helpers.arrayElement(['Да', 'Не важно']),
+		dedicated:       faker.helpers.arrayElement(['Догруз', 'Не важно', 'Выделенная машина']),
 		destinations:    generateDestinations(),
 		isBid,
 		bidPrice:        isBid ? price + 10000 : 0,

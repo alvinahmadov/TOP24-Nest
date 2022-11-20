@@ -213,9 +213,9 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('payloadRiskType', 'payload_type')
 		.set('driverDeferralConditions', 'driver_deferral_conditions')
 		.set('ownerDeferralConditions', 'owner_deferral_conditions')
-		.set('contractPhotoLink', 'contract_link')
-		.set('paymentPhotoLink', 'payment_link')
-		.set('receiptPhotoLink', 'receipt_link')
+		.set('contractPhotoLinks', 'contract_link')
+		.set('paymentPhotoLinks', 'payment_link')
+		.set('receiptPhotoLinks', 'receipt_link')
 		.get();
 };
 

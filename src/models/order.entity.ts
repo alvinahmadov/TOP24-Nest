@@ -37,8 +37,9 @@ import {
 	StringColumn,
 	TCRMData,
 	TGeoCoordinate,
-	UuidColumn, VirtualColumn
-} from '@common/interfaces';
+	UuidColumn,
+	VirtualColumn
+}                                   from '@common/interfaces';
 import entityConfig                 from '@common/properties';
 import { convertBitrix }            from '@common/utils';
 import EntityModel                  from './entity-model';
@@ -299,7 +300,7 @@ export default class Order
 	@Default(true)
 	@BooleanColumn()
 	isOpen?: boolean;
-	
+
 	@ApiProperty(prop.onPayment)
 	@Default(false)
 	@BooleanColumn()
@@ -359,7 +360,7 @@ export default class Order
 	@ApiProperty(prop.filter)
 	@JsonbColumn()
 	filter?: OrderFilter;
-	
+
 	@VirtualColumn()
 	priority?: boolean;
 
@@ -371,23 +372,23 @@ export default class Order
 	@StringColumn()
 	ownerDeferralConditions?: string;
 
-	@ApiProperty(prop.paymentPhotoLink)
+	@ApiProperty(prop.paymentPhotoLinks)
 	@AllowNull(true)
 	@Default(null)
-	@StringColumn()
-	paymentPhotoLink?: string;
+	@StringArrayColumn()
+	paymentPhotoLinks?: string[];
 
-	@ApiProperty(prop.receiptPhotoLink)
+	@ApiProperty(prop.receiptPhotoLinks)
 	@AllowNull(true)
 	@Default(null)
-	@StringColumn()
-	receiptPhotoLink?: string;
+	@StringArrayColumn()
+	receiptPhotoLinks?: string[];
 
-	@ApiProperty(prop.contractPhotoLink)
+	@ApiProperty(prop.contractPhotoLinks)
 	@AllowNull(true)
 	@Default(null)
-	@StringColumn()
-	contractPhotoLink?: string;
+	@StringArrayColumn()
+	contractPhotoLinks?: string[];
 
 	@ApiProperty(prop.cargo)
 	@BelongsTo(() => CargoCompany, 'cargoId')
@@ -427,9 +428,9 @@ export default class Order
 		data.fields[ORDER.IS_OPEN] = this.isOpen ? 'Y' : 'N';
 		data.fields[ORDER.IS_FREE] = this.isFree ? 'Y' : 'N';
 		data.fields[ORDER.CANCEL_CAUSE] = this.cancelCause || '';
-		data.fields[ORDER.LINK.PAYMENT] = this.paymentPhotoLink || '';
-		data.fields[ORDER.LINK.CONTRACT] = this.contractPhotoLink || '';
-		data.fields[ORDER.LINK.RECEIPT] = this.receiptPhotoLink || '';
+		data.fields[ORDER.LINK.PAYMENT] = this.paymentPhotoLinks || '';
+		data.fields[ORDER.LINK.CONTRACT] = this.contractPhotoLinks || '';
+		data.fields[ORDER.LINK.RECEIPT] = this.receiptPhotoLinks || '';
 		if(this.destinations) {
 			for(const destination of this.destinations) {
 				const DESTINATION = ORDER.DESTINATIONS.find(({ NAME }) => NAME === destination.point);

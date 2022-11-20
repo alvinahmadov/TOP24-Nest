@@ -37,15 +37,15 @@ export default class AppService {
 
 	public async reset() {
 		const orderData: TUpdateAttribute<IOrder> = {
-			cargoId:           null,
-			cargoinnId:        null,
-			driverId:          null,
-			isCanceled:        false,
-			isFree:            true,
-			isOpen:            true,
-			contractPhotoLink: null,
-			paymentPhotoLink:  null,
-			receiptPhotoLink:  null
+			cargoId:            null,
+			cargoinnId:         null,
+			driverId:           null,
+			isCanceled:         false,
+			isFree:             true,
+			isOpen:             true,
+			contractPhotoLinks: null,
+			paymentPhotoLinks:  null,
+			receiptPhotoLinks:  null
 		};
 
 		const driverData: TUpdateAttribute<IDriver> = {

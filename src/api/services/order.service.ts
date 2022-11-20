@@ -1,4 +1,3 @@
-import { v4 as uuid }         from 'uuid';
 import {
 	forwardRef, Inject,
 	Injectable
@@ -22,10 +21,12 @@ import {
 	TCRMData,
 	TCRMResponse,
 	TDocumentMode,
-	TMergedEntities
+	TMergedEntities,
+	TMulterFile
 }                             from '@common/interfaces';
 import {
 	buildBitrixRequestUrl,
+	renameMulterFiles,
 	filterOrders,
 	formatArgs,
 	getTranslation,
@@ -398,10 +399,7 @@ export default class OrderService
 	public async sendShippingDocuments(
 		id: string,
 		point: string,
-		files: {
-			file: Buffer,
-			fileName: string
-		}[]
+		files: TMulterFile[]
 	): TAsyncApiResponse<Order> {
 		let order = await this.repository.get(id);
 		let fileUploaded = false;
@@ -414,23 +412,9 @@ export default class OrderService
 		const index = destinations.findIndex(d => d.point === point);
 
 		if(index >= 0) {
-			const renameFile = (fname: string) =>
-			{
-				let ext = 'jpg';
-				if(fname.lastIndexOf('.') >= 0) {
-					ext = fname.split('.')[1];
-				}
-				return `${uuid()}.${ext}`;
-			};
-
 			const { Location: shippingPhotoLinks } = await this.imageFileService
 			                                                   .uploadFiles(
-				                                                   files.map(
-					                                                   f => ({
-						                                                   fileBlob:  f.file,
-						                                                   storeName: `${id}/shipping/${point}/${renameFile(f.fileName)}`
-					                                                   })
-				                                                   ),
+				                                                   renameMulterFiles(files, id, 'shipping', point),
 				                                                   Bucket.COMMON
 			                                                   );
 
@@ -542,14 +526,14 @@ export default class OrderService
 	 * which returns link to the uploaded file.
 	 *
 	 * @param {string!} id Id of cargo company driver which uploads document.
-	 * @param {Buffer!} file File buffer of sent image.
-	 * @param {String!} fileName Name for save in storage.
+	 * @param files
+	 * @param {Buffer!} files.fileBlob File buffer of sent image.
+	 * @param {String!} files.storeName Name for save in storage.
 	 * @param {TDocumentMode!} mode Type of document to upload
 	 * */
 	public async sendDocuments(
 		id: string,
-		file: Buffer,
-		fileName: string,
+		files: TMulterFile[],
 		mode: TDocumentMode
 	): TAsyncApiResponse<Order> {
 		let order = await this.repository.get(id);
@@ -560,59 +544,74 @@ export default class OrderService
 			return this.responses['NOT_FOUND'];
 
 		if(mode === 'payment') {
-			if(order.paymentPhotoLink)
-				await this.imageFileService.deleteImage(order.paymentPhotoLink, Bucket.COMMON);
-			const { Location: paymentPhotoLink } = await this.imageFileService.uploadFile(
-				file, `${id}/${mode}/${fileName}`, Bucket.COMMON
+			const { Location: paymentPhotoLinks } = await this.imageFileService.uploadFiles(
+				renameMulterFiles(files, id, mode),
+				Bucket.COMMON
 			) ?? { Location: null };
-			if(paymentPhotoLink) {
+			if(paymentPhotoLinks) {
 				fileUploaded = true;
-				message = formatArgs(ORDER_TRANSLATIONS['PAYMENT'], paymentPhotoLink);
-				this.gateway.sendOrderEvent({ id, message });
+				message = ORDER_TRANSLATIONS['PAYMENT'];
 
-				order.paymentPhotoLink = paymentPhotoLink;
+				if(order.paymentPhotoLinks)
+					order.paymentPhotoLinks.push(...paymentPhotoLinks);
+				else
+					order.paymentPhotoLinks = paymentPhotoLinks;
+
 				order.onPayment = true;
 				order.stage = OrderStage.PAYMENT_FORMED;
-				await order.save({ fields: ['paymentPhotoLink', 'onPayment', 'stage'] });
+				await order.save({ fields: ['paymentPhotoLinks', 'onPayment', 'stage'] });
 			}
 		}
 		else if(mode === 'receipt') {
-			if(order.receiptPhotoLink)
-				await this.imageFileService.deleteImage(order.receiptPhotoLink, Bucket.COMMON);
-			const { Location: receiptPhotoLink } = await this.imageFileService.uploadFile(
-				file, `${id}/${mode}/${fileName}`, Bucket.COMMON
+			const { Location: receiptPhotoLinks } = await this.imageFileService.uploadFiles(
+				renameMulterFiles(files, id, mode),
+				Bucket.COMMON
 			) ?? { Location: null };
-			if(receiptPhotoLink) {
+			if(receiptPhotoLinks) {
 				fileUploaded = true;
-				message = formatArgs(ORDER_TRANSLATIONS['RECEIPT'], receiptPhotoLink);
-				this.gateway.sendOrderEvent({ id, message });
+				message = ORDER_TRANSLATIONS['RECEIPT'];
 
-				order.receiptPhotoLink = receiptPhotoLink;
-				await order.save({ fields: ['receiptPhotoLink'] });
+				if(order.paymentPhotoLinks)
+					order.receiptPhotoLinks.push(...receiptPhotoLinks);
+				else
+					order.receiptPhotoLinks = receiptPhotoLinks;
+
+				await order.save({ fields: ['receiptPhotoLinks'] });
 			}
 		}
 		else if(mode === 'contract') {
 			order = await this.repository.get(id, true);
-			if(order.contractPhotoLink)
-				await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON);
-			const { Location: contractPhotoLink } = await this.imageFileService.uploadFile(
-				file, `${id}/${mode}/${fileName}`, Bucket.COMMON
-			) ?? { Location: null };
-			if(contractPhotoLink) {
-				fileUploaded = true;
-				message = formatArgs(ORDER_TRANSLATIONS['CONTRACT'], contractPhotoLink);
-				this.gateway.sendOrderEvent({ id, message });
 
-				order.contractPhotoLink = contractPhotoLink;
+			const { Location: contractPhotoLinks } = await this.imageFileService.uploadFiles(
+				renameMulterFiles(files, id, mode),
+				Bucket.COMMON
+			) ?? { Location: null };
+			if(contractPhotoLinks) {
+				fileUploaded = true;
+				message = ORDER_TRANSLATIONS['CONTRACT'];
+
+				if(order.contractPhotoLinks)
+					order.contractPhotoLinks.push(...contractPhotoLinks);
+				else
+					order.contractPhotoLinks = contractPhotoLinks;
+
 				order.stage = OrderStage.SIGNED_DRIVER;
-				await order.save({ fields: ['contractPhotoLink', 'stage'] });
+				await order.save({ fields: ['contractPhotoLinks', 'stage'] });
 			}
 		}
 
 		if(fileUploaded) {
 			this.send(order.id)
-			    .then(() => setOrderSent(true))
-			    .catch(() => setOrderSent());
+			    .then(() =>
+			          {
+				          setOrderSent(true);
+				          this.gateway.sendOrderEvent({ id, message });
+			          })
+			    .catch(e =>
+			           {
+				           console.error(e);
+				           setOrderSent();
+			           });
 
 			return {
 				statusCode: 200,
@@ -635,30 +634,34 @@ export default class OrderService
 			return this.responses['NOT_FOUND'];
 
 		if(mode === 'payment') {
-			if(order.paymentPhotoLink) {
-				isDeleted = await this.imageFileService.deleteImage(order.paymentPhotoLink, Bucket.COMMON);
+			if(order.paymentPhotoLinks) {
+				isDeleted = await this.imageFileService
+				                      .deleteImageList(order.paymentPhotoLinks, Bucket.COMMON) > 0;
+
 				if(isDeleted) {
-					order.paymentPhotoLink = null;
+					order.paymentPhotoLinks = null;
 					order.onPayment = false;
-					await order.save({ fields: ['paymentPhotoLink', 'onPayment'] });
+					await order.save({ fields: ['paymentPhotoLinks', 'onPayment'] });
 				}
 			}
 		}
 		else if(mode === 'receipt') {
-			if(order.receiptPhotoLink) {
-				isDeleted = await this.imageFileService.deleteImage(order.receiptPhotoLink, Bucket.COMMON);
+			if(order.receiptPhotoLinks) {
+				isDeleted = await this.imageFileService
+				                      .deleteImageList(order.receiptPhotoLinks, Bucket.COMMON) > 0;
 				if(isDeleted) {
-					order.receiptPhotoLink = null;
-					await order.save({ fields: ['receiptPhotoLink'] });
+					order.receiptPhotoLinks = null;
+					await order.save({ fields: ['receiptPhotoLinks'] });
 				}
 			}
 		}
 		else if(mode === 'contract') {
-			if(order.contractPhotoLink) {
-				isDeleted = await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON);
+			if(order.contractPhotoLinks) {
+				isDeleted = await this.imageFileService
+				                      .deleteImageList(order.contractPhotoLinks, Bucket.COMMON) > 0;
 				if(isDeleted) {
-					order.contractPhotoLink = null;
-					await order.save({ fields: ['contractPhotoLink'] });
+					order.contractPhotoLinks = null;
+					await order.save({ fields: ['contractPhotoLinks'] });
 				}
 			}
 		}
