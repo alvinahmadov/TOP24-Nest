@@ -297,6 +297,8 @@ export default class OrderService
 				}
 			}
 			result.driver = driver;
+			if(driver.isReady)
+				result.driver.status = 1;
 			const orderResponse = await this.getById(order.id, false);
 			result.order = filterOrders(orderResponse?.data) as Order;
 		}
@@ -677,6 +679,10 @@ export default class OrderService
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
 					                      .deleteImageList(order.contractPhotoLinks, Bucket.COMMON) > 0;
+					if(isDeleted) {
+						order.stage = OrderStage.AGREED_OWNER;
+						await order.save({ fields: ['stage'] });
+					}
 				}
 				else if(order.contractPhotoLinks.length > 0) {
 					const contractPhotoLink = order.contractPhotoLinks[index];
