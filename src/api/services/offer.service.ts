@@ -38,7 +38,6 @@ import {
 }                          from '@models/index';
 import { OfferRepository } from '@repos/index';
 import {
-	DriverFilter,
 	OfferCreateDto,
 	OfferFilter,
 	OfferUpdateDto,
@@ -302,9 +301,16 @@ export default class OfferService
 	public async getTransports(
 		orderId: string,
 		listFilter: IListFilter,
-		filter?: Pick<IOfferFilter, 'transportStatus'> & DriverFilter
+		filter?: Pick<IOfferFilter, 'transportStatus' | 'orderStatuses'> & IDriverFilter
 	): TAsyncApiResponse<any[]> {
 		const transports: any[] = [];
+		//Temporary fix
+		if(filter.orderStatus === 1)
+		{
+			filter.orderStatuses = [1, 2];
+			delete filter.orderStatus;
+		}
+		
 		const offers = await this.repository.getOrderTransports(orderId, listFilter, filter);
 
 		offers.forEach(

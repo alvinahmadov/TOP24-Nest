@@ -137,7 +137,7 @@ export default class OfferController
 		@Param('orderId', ParseUUIDPipe) orderId: string,
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body(OfferDriverFilterPipe) filter?: Pick<IOfferFilter, 'transportStatus'> & dto.DriverFilter
+		@Body(OfferDriverFilterPipe) filter?: Pick<IOfferFilter, 'transportStatus' | 'orderStatuses'> & dto.DriverFilter
 	) {
 		const result = await this.offerService.getTransports(orderId, listFilter, filter);
 
