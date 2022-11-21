@@ -235,7 +235,7 @@ export default class OfferRepository
 	public async getOrderTransports(
 		orderId: string,
 		listFilter: IListFilter = {},
-		filter?: Pick<IOfferFilter, 'transportStatus'> & IDriverFilter
+		filter?: Pick<IOfferFilter, 'transportStatus' | 'orderStatuses'> & IDriverFilter
 	): Promise<Offer[]> {
 		const {
 			from:  offset = 0,
@@ -245,7 +245,8 @@ export default class OfferRepository
 		const {
 			sortOrder: order = DEFAULT_SORT_ORDER,
 			orderStatus,
-			transportStatus
+			transportStatus,
+			orderStatuses
 		} = filter ?? {};
 
 		return this.log(
@@ -254,6 +255,7 @@ export default class OfferRepository
 					where:   this.whereClause('and')
 					             .eq('orderId', orderId)
 					             .eq('orderStatus', orderStatus)
+					             .in('orderStatus', orderStatuses)
 						         .query,
 					offset,
 					limit,
