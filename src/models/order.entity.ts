@@ -218,7 +218,7 @@ export default class Order
 	driverId?: string;
 
 	@ApiProperty(prop.crmId)
-	@IntColumn()
+	@IntColumn({ unique: true })
 	crmId?: number;
 
 	@ApiProperty(prop.title)
