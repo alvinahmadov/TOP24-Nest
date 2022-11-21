@@ -84,11 +84,12 @@ export async function deleteEntityImages(list: any[])
 
 export function sendResponse<T = any>(
 	response: ex.Response,
-	result: IApiResponse<T>
+	result: IApiResponse<T>,
+	transform: boolean = env.api.compatMode
 ) {
 	return response.status(result.statusCode)
 	               .send(
-		               env.api.compatMode ? transformApiResult(result)
-		                                  : result
+		               transform ? transformApiResult(result)
+		                         : result
 	               );
 }
