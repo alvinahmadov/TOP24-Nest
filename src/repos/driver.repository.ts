@@ -79,6 +79,10 @@ export default class DriverRepository
 				if(statuses) {
 					if(!statuses.find(s => s === 1))
 						statuses.push(1);
+					else {
+						rest.isReady = true;
+						statuses.push(0);
+					}
 				}
 
 				if(hasTerm) {
@@ -97,7 +101,7 @@ export default class DriverRepository
 						               .eq('cargoId', rest?.cargoId)
 						               .eq('cargoinnId', rest?.cargoinnId)
 						               .lte('payloadDate', payloadDate)
-						               .inArray('status', statuses)
+						               .in('status', statuses)
 							         .query
 						         : this.whereClause(conjunct)
 						               .in('phone', [rest?.phone, formatPhone(rest?.phone)])
@@ -108,7 +112,7 @@ export default class DriverRepository
 						               .iLike('registrationAddress', registrationAddress)
 						               .iLike('currentAddress', currentAddress)
 						               .lte('payloadDate', payloadDate)
-						               .inArray('status', statuses)
+						               .in('status', statuses)
 						               .fromFilter(rest as IDriverFilter, 'eq')
 							         .query,
 						offset,
