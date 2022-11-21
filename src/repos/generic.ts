@@ -29,7 +29,7 @@ type TResponseKey = 'create' | 'update' | 'delete' | string;
 /**@ignore*/
 function expandModel(model: Model | any) {
 	if(model instanceof Model)
-		return model.get({ plain: true, clone: false });
+		return model.id;
 	return model;
 }
 
