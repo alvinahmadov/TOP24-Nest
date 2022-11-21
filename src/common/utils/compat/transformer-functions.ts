@@ -268,7 +268,7 @@ export function transformToDriver(data: transformers.IDriverTransformer)
 function transformDestinations(destinations: attributes.IOrderDestination[])
 	: transformers.IOrderDestinationTransformer[] {
 	if(destinations) {
-		destinations.map(
+		return destinations.map(
 			d =>
 			{
 				const {
