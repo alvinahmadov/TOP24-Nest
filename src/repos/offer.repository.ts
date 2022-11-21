@@ -252,10 +252,14 @@ export default class OfferRepository
 		return this.log(
 			() => this.model.findAll(
 				{
-					where:   this.whereClause('and')
-					             .eq('orderId', orderId)
-					             .eq('orderStatus', orderStatus)
-					             .in('orderStatus', orderStatuses)
+					where:   orderStatuses
+					         ? this.whereClause('and')
+					               .eq('orderId', orderId)
+					               .in('orderStatus', orderStatuses)
+						         .query
+					         : this.whereClause('and')
+					               .eq('orderId', orderId)
+					               .eq('orderStatus', orderStatus)
 						         .query,
 					offset,
 					limit,

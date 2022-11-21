@@ -305,8 +305,11 @@ export default class OfferService
 	): TAsyncApiResponse<any[]> {
 		const transports: any[] = [];
 		//Temporary fix
-		if(filter.orderStatus === 1) {
-			filter.orderStatuses = [1, 2];
+		if(filter.orderStatus == OrderStatus.ACCEPTED) {
+			filter.orderStatuses = [
+				OrderStatus.ACCEPTED,
+				OrderStatus.PROCESSING
+			];
 			delete filter.orderStatus;
 		}
 
