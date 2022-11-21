@@ -583,21 +583,23 @@ export default class OrderService
 		else if(mode === 'contract') {
 			order = await this.repository.get(id, true);
 
-			const { Location: contractPhotoLinks } = await this.imageFileService.uploadFiles(
-				renameMulterFiles(files, id, mode),
+			const file = renameMulterFiles(files, id, mode)[0];
+			const { Location: contractPhotoLink } = await this.imageFileService.uploadFile(
+				file.buffer,
+				file.originalname,
 				Bucket.COMMON
 			) ?? { Location: null };
-			if(contractPhotoLinks) {
+			if(contractPhotoLink) {
 				fileUploaded = true;
 				message = ORDER_TRANSLATIONS['CONTRACT'];
 
-				if(order.contractPhotoLinks)
-					order.contractPhotoLinks.push(...contractPhotoLinks);
-				else
-					order.contractPhotoLinks = contractPhotoLinks;
+				if(order.contractPhotoLink) {
+					await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON);
+				}
 
+				order.contractPhotoLink = contractPhotoLink;
 				order.stage = OrderStage.SIGNED_DRIVER;
-				await order.save({ fields: ['contractPhotoLinks', 'stage'] });
+				await order.save({ fields: ['contractPhotoLink', 'stage'] });
 			}
 		}
 
@@ -675,24 +677,15 @@ export default class OrderService
 			}
 		}
 		else if(mode === 'contract') {
-			if(order.contractPhotoLinks) {
+			if(order.contractPhotoLink) {
 				if(deleteAll) {
-					isDeleted = await this.imageFileService
-					                      .deleteImageList(order.contractPhotoLinks, Bucket.COMMON) > 0;
-					if(isDeleted) {
-						order.stage = OrderStage.AGREED_OWNER;
-						await order.save({ fields: ['stage'] });
-					}
-				}
-				else if(order.contractPhotoLinks.length > 0) {
-					const contractPhotoLink = order.contractPhotoLinks[index];
-					photoLinks = order.contractPhotoLinks.splice(index, 1);
-					isDeleted = await this.imageFileService.deleteImage(contractPhotoLink, Bucket.COMMON);
+					isDeleted = await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON);
 				}
 
 				if(isDeleted) {
-					order.contractPhotoLinks = photoLinks;
-					await order.save({ fields: ['contractPhotoLinks'] });
+					order.stage = OrderStage.AGREED_OWNER;
+					order.contractPhotoLink = null;
+					await order.save({ fields: ['contractPhotoLink', 'stage'] });
 				}
 			}
 		}

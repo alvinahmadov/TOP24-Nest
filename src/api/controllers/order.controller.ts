@@ -8,11 +8,15 @@ import {
 	ParseUUIDPipe,
 	Query,
 	Res,
+	UploadedFile,
 	UploadedFiles,
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { FilesInterceptor }    from '@nestjs/platform-express';
+import {
+	FileInterceptor,
+	FilesInterceptor
+}                              from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
 import {
 	OfferStatus,
@@ -229,16 +233,16 @@ export default class OrderController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FilesInterceptor('image')],
+			interceptors: [FileInterceptor('image')],
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
 	public async uploadContract(
 		@Param('id', ParseUUIDPipe) id: string,
-		@UploadedFiles() images: Array<TMulterFile>,
+		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const result = await this.orderService.sendDocuments(id, images, 'contract');
+		const result = await this.orderService.sendDocuments(id, [image], 'contract');
 
 		const { data: order } = result;
 
@@ -334,8 +338,7 @@ export default class OrderController
 	})
 	public async deleteContract(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Res() response: ex.Response,
-		@Query('index') index?: number
+		@Res() response: ex.Response
 	) {
 		const result = await this.orderService.deleteDocuments(id, 'contract');
 

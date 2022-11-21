@@ -538,9 +538,9 @@ export interface IOrderTransformer
 	 * */
 	receipt_link?: string[];
 	/**
-	 * @see IOrder.contractPhotoLinks
+	 * @see IOrder.contractPhotoLink
 	 * */
-	contract_link?: string[];
+	contract_link?: string | null;
 	filter?: object;
 	priority?: boolean;
 

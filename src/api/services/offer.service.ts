@@ -608,8 +608,8 @@ export default class OfferService
 					}
 				);
 
-				if(offer.order.contractPhotoLinks) {
-					await this.imageFileService.deleteImageList(offer.order.contractPhotoLinks);
+				if(offer.order.contractPhotoLink) {
+					await this.imageFileService.deleteImageList(offer.order.contractPhotoLink);
 				}
 
 				this.orderService.send(offer.orderId)

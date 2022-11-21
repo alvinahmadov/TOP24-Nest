@@ -51,7 +51,6 @@ export function fileExt(file: { mimetype?: string }) {
 }
 
 export function renameMulterFiles(files: TMulterFile[], ...args: string[]) {
-	path.join(...args);
 	return files.map(({ originalname: name, ...rest }) => ({
 		originalname: path.join(...args, `${md5(rest.buffer)}.${fileExt({ mimetype: rest.mimetype })}`),
 		...rest

@@ -384,11 +384,11 @@ export default class Order
 	@StringArrayColumn()
 	receiptPhotoLinks?: string[];
 
-	@ApiProperty(prop.contractPhotoLinks)
+	@ApiProperty(prop.contractPhotoLink)
 	@AllowNull(true)
 	@Default(null)
-	@StringArrayColumn()
-	contractPhotoLinks?: string[];
+	@StringColumn()
+	contractPhotoLink?: string;
 
 	@ApiProperty(prop.cargo)
 	@BelongsTo(() => CargoCompany, 'cargoId')
@@ -429,7 +429,7 @@ export default class Order
 		data.fields[ORDER.IS_FREE] = this.isFree ? 'Y' : 'N';
 		data.fields[ORDER.CANCEL_CAUSE] = this.cancelCause || '';
 		data.fields[ORDER.LINK.PAYMENT] = this.paymentPhotoLinks || '';
-		data.fields[ORDER.LINK.CONTRACT] = this.contractPhotoLinks || '';
+		data.fields[ORDER.LINK.CONTRACT] = this.contractPhotoLink || '';
 		data.fields[ORDER.LINK.RECEIPT] = this.receiptPhotoLinks || '';
 		if(this.destinations) {
 			for(const destination of this.destinations) {

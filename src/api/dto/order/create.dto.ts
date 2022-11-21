@@ -181,8 +181,8 @@ export default class OrderCreateDto
 	@IsString()
 	receiptPhotoLinks?: string[] = null;
 
-	@ApiProperty(prop.contractPhotoLinks)
+	@ApiProperty(prop.contractPhotoLink)
 	@IsUrl()
 	@IsString()
-	contractPhotoLinks?: string[] = null;
+	contractPhotoLink?: string = null;
 }

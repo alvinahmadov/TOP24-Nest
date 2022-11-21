@@ -213,7 +213,7 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('payloadRiskType', 'payload_type')
 		.set('driverDeferralConditions', 'driver_deferral_conditions')
 		.set('ownerDeferralConditions', 'owner_deferral_conditions')
-		.set('contractPhotoLinks', 'contract_link')
+		.set('contractPhotoLink', 'contract_link')
 		.set('paymentPhotoLinks', 'payment_link')
 		.set('receiptPhotoLinks', 'receipt_link')
 		.get();

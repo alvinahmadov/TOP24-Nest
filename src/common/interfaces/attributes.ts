@@ -1054,7 +1054,7 @@ export interface IOrder
 	/**
 	 * Link to the offer agreement scan by driver sent before start of order fulfillment.
 	 * */
-	contractPhotoLinks?: string[];
+	contractPhotoLink?: string | null;
 }
 
 /**
