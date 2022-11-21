@@ -305,12 +305,11 @@ export default class OfferService
 	): TAsyncApiResponse<any[]> {
 		const transports: any[] = [];
 		//Temporary fix
-		if(filter.orderStatus === 1)
-		{
+		if(filter.orderStatus === 1) {
 			filter.orderStatuses = [1, 2];
 			delete filter.orderStatus;
 		}
-		
+
 		const offers = await this.repository.getOrderTransports(orderId, listFilter, filter);
 
 		offers.forEach(
@@ -322,35 +321,40 @@ export default class OfferService
 					const mainTransports = driverTransports.filter(
 						transport => !transport.isTrailer
 					);
-					const trailers = driverTransports.filter(
+					const trailer = driverTransports.find(
 						transport => transport.isTrailer && transport.status === TransportStatus.ACTIVE
 					);
 
 					if(mainTransports.length > 0) {
-						if(trailers.length > 0) {
-							mainTransports[0].trailer = trailers[0];
+						if(trailer) {
+							const activeIndex = mainTransports.findIndex(t => t.status === TransportStatus.ACTIVE);
+							mainTransports[activeIndex].trailer = trailer;
 						}
+						mainTransports.forEach(t => t.driver = offer.driver);
 					}
 
 					transports.push(
-						...mainTransports.map(
-							t =>
-								(env.api.compatMode
-								 ? {
-										...transformEntity(t),
-										offer_status:  offer.status,
-										bid_price:     offer.bidPrice,
-										bid_price_max: offer.bidPriceVat,
-										comments:      offer.bidComment
-									}
-								 : {
-										...t.get({ plain: true, clone: true }),
-										offerStatus: offer.status,
-										bidPrice:    offer.bidPrice,
-										bidPriceVat: offer.bidPriceVat,
-										bidComment:  offer.bidComment
-									})
-						)
+						...mainTransports
+							.map(
+								t =>
+									(env.api.compatMode
+									 ? {
+											...transformEntity(t),
+											company_name:  offer.driver.companyName,
+											offer_status:  offer.status,
+											bid_price:     offer.bidPrice,
+											bid_price_max: offer.bidPriceVat,
+											comments:      offer.bidComment
+										}
+									 : {
+											...t.get({ plain: true, clone: true }),
+											companyName: offer.driver.companyName,
+											offerStatus: offer.status,
+											bidPrice:    offer.bidPrice,
+											bidPriceVat: offer.bidPriceVat,
+											bidComment:  offer.bidComment
+										})
+							)
 					);
 				}
 			}
