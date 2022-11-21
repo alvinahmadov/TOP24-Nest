@@ -142,7 +142,8 @@ export default class OfferController
 	) {
 		const result = await this.offerService.getTransports(orderId, listFilter, filter);
 
-		return sendResponse(response, result, false);
+		return response.status(result.statusCode)
+		               .send(result.data);
 	}
 
 	@ApiRoute(routes.delete, {
