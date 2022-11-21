@@ -69,7 +69,12 @@ export default class ReferenceController
 	})
 	public async getAddresses(
 		@Res() response: ex.Response,
-		@Query() listFilter?: dto.ListFilter & { search?: string; regions?: string; short?: boolean }
+		@Query() listFilter?: dto.ListFilter & {
+			search?: string;
+			provider?: string;
+			regions?: string;
+			short?: boolean;
+		}
 	) {
 		const { search, regions, ...rest } = listFilter;
 

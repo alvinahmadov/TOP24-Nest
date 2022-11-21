@@ -1,5 +1,4 @@
 import { Injectable }         from '@nestjs/common';
-import { GEO_LOOKUP_SERVICE } from '@common/constants';
 import {
 	IAddressFilter,
 	IApiResponse,
@@ -89,18 +88,22 @@ export default class AddressService
 	public async searchByApi(
 		term: string,
 		minLength: number = 2,
-		listFilter: IListFilter = { from: 0, count: 50 }
+		listFilter: IListFilter & {
+			search?: string;
+			provider?: string;
+		} = { from: 0, count: 50 }
 	): TAsyncApiResponse<any> {
 		if(term === undefined ||
 		   term.length < minLength) {
 			return this.responses['NOT_FOUND'];
 		}
+		const { provider = 'osm' } = listFilter;
 
 		const encoded = encodeURI(term);
 
 		const fullAddresses = await (
-			GEO_LOOKUP_SERVICE === 'osm' ? searchAddressByOSM(encoded, listFilter.from, listFilter.count)
-			                             : searchAddressByKladr(encoded, listFilter.from, listFilter.count)
+			provider === 'osm' ? searchAddressByOSM(encoded, listFilter.from, listFilter.count)
+			                   : searchAddressByKladr(encoded, listFilter.from, listFilter.count)
 		);
 
 		return {
