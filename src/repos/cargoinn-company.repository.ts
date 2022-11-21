@@ -14,6 +14,7 @@ import {
 	formatPhone
 }                             from '@common/utils';
 import {
+	CargoCompany,
 	CargoInnCompany,
 	Driver,
 	Image,
@@ -60,7 +61,7 @@ export default class CargoInnCompanyRepository
 	): Promise<CargoInnCompany[]> {
 		if(filter === null)
 			return [];
-		
+
 		return this.log(
 			() =>
 			{
@@ -191,7 +192,13 @@ export default class CargoInnCompanyRepository
 								required: true,
 								include:  [
 									{ model: Image },
-									{ model: Driver }
+									{
+										model:   Driver,
+										include: [
+											{ model: CargoCompany },
+											{ model: CargoInnCompany }
+										]
+									}
 								]
 							}
 						]

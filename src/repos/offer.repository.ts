@@ -21,7 +21,7 @@ import {
 import {
 	CargoCompany,
 	CargoInnCompany,
-	Driver,
+	Driver, Image,
 	Offer,
 	Order,
 	Transport
@@ -264,13 +264,15 @@ export default class OfferRepository
 							order:    DEFAULT_SORT_ORDER,
 							required: true,
 							include:  [
+								{ model: CargoCompany },
+								{ model: CargoInnCompany },
 								{
 									model:   Transport,
 									where:   this.whereClause<ITransport>()
 									             .eq('status', transportStatus)
 										         .query,
 									order:   DEFAULT_SORT_ORDER,
-									include: [{ all: true }]
+									include: [{ model: Image }]
 								}
 							]
 						},
@@ -313,7 +315,7 @@ export default class OfferRepository
 					hasComment,
 					...rest
 				} = filter;
-				
+
 				return this.model.findAll(
 					{
 						where:   this.whereClause('and')

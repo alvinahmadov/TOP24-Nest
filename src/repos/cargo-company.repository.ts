@@ -15,6 +15,7 @@ import {
 }                             from '@common/utils';
 import {
 	CargoCompany,
+	CargoInnCompany,
 	Driver,
 	Image,
 	Order,
@@ -60,7 +61,7 @@ export default class CargoCompanyRepository
 	): Promise<CargoCompany[]> {
 		if(filter === null)
 			return [];
-		
+
 		return this.log(
 			async() =>
 			{
@@ -186,7 +187,13 @@ export default class CargoCompanyRepository
 								limit,
 								include:  [
 									{ model: Image },
-									{ model: Driver }
+									{
+										model:   Driver,
+										include: [
+											{ model: CargoCompany },
+											{ model: CargoInnCompany }
+										]
+									}
 								]
 							}
 						]
