@@ -78,6 +78,7 @@ export default class DriverRepository
 
 				if(statuses && statuses.includes(1)) {
 					rest.isReady = true;
+					statuses.push(0);
 				}
 
 				if(hasTerm) {
