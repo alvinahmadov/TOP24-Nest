@@ -316,7 +316,8 @@ export default class OfferService
 			offer =>
 			{
 				if(offer.driver) {
-					const { transports: driverTransports = [] } = offer.driver;
+					const { driver } = offer;
+					const { transports: driverTransports = [] } = driver;
 
 					const mainTransports = driverTransports.filter(
 						transport => !transport.isTrailer
@@ -331,7 +332,7 @@ export default class OfferService
 							mainTransports[activeIndex].trailer = trailer;
 						}
 					}
-
+					driver.transports = null;
 					transports.push(
 						...mainTransports
 							.map(
@@ -339,8 +340,8 @@ export default class OfferService
 									(env.api.compatMode
 									 ? {
 											...transformEntity(t),
-											driver:        transformEntity(offer.driver),
-											company_name:  offer.driver.companyName,
+											driver:        transformEntity(driver),
+											company_name:  driver.companyName,
 											offer_status:  offer.status,
 											bid_price:     offer.bidPrice,
 											bid_price_max: offer.bidPriceVat,
@@ -348,8 +349,8 @@ export default class OfferService
 										}
 									 : {
 											...t.get({ plain: true, clone: true }),
-											driver:      offer.driver,
-											companyName: offer.driver.companyName,
+											driver:      driver,
+											companyName: driver.companyName,
 											offerStatus: offer.status,
 											bidPrice:    offer.bidPrice,
 											bidPriceVat: offer.bidPriceVat,
