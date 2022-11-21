@@ -305,12 +305,12 @@ export default class OfferService
 	): TAsyncApiResponse<any[]> {
 		const transports: any[] = [];
 		//Temporary fix
-		if(filter.orderStatus == OrderStatus.ACCEPTED) {
+		if(filter.orderStatus === 1) {
 			filter.orderStatuses = [
 				OrderStatus.ACCEPTED,
 				OrderStatus.PROCESSING
 			];
-			delete filter.orderStatus;
+			filter.orderStatus = undefined;
 		}
 
 		const offers = await this.repository.getOrderTransports(orderId, listFilter, filter);
