@@ -265,6 +265,28 @@ export function transformToDriver(data: transformers.IDriverTransformer)
 	return null;
 }
 
+function transformDestinations(destinations: attributes.IOrderDestination[])
+	: transformers.IOrderDestinationTransformer[] {
+	if(destinations) {
+		destinations.map(
+			d =>
+			{
+				const {
+					shippingPhotoLinks: shipping_link,
+					...                 rest
+				} = d;
+
+				return {
+					...rest,
+					shipping_link
+				};
+			}
+		);
+	}
+
+	return null;
+}
+
 function transformGatewayEvent(event: models.GatewayEvent)
 	: transformers.IGatewayEventTransformer {
 	if(event) {
@@ -413,7 +435,7 @@ function transformOrder(order: models.Order)
 			height:                     order.getDataValue('height'),
 			palets:                     order.getDataValue('pallets'),
 			transport_types:            order.getDataValue('transportTypes'),
-			destinations:               order.getDataValue('destinations'),
+			destinations:               transformDestinations(order.getDataValue('destinations')),
 			driver_deferral_conditions: order.getDataValue('driverDeferralConditions'),
 			owner_deferral_conditions:  order.getDataValue('ownerDeferralConditions'),
 			dedicated_machine:          order.getDataValue('dedicated'),

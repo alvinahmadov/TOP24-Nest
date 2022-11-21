@@ -566,7 +566,7 @@ export interface IOrderDestinationTransformer {
 	/**
 	 * @see IOrderDestination.shippingPhotoLinks
 	 * */
-	shipping_links?: string[];
+	shipping_link?: string[];
 }
 
 /**
