@@ -4,7 +4,6 @@ import { CompanyType }               from '@common/enums';
 import { ICompany }                  from '@common/interfaces';
 import {
 	convertBitrix,
-	formatPhone,
 	isNumber
 }                                    from '@common/utils';
 import {
