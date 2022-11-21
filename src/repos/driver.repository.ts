@@ -49,7 +49,7 @@ export default class DriverRepository
 	): Promise<Driver[]> {
 		if(filter === null)
 			return [];
-		
+
 		return this.log(
 			async() =>
 			{
@@ -76,13 +76,8 @@ export default class DriverRepository
 
 				let hasTerm: boolean = term !== undefined && term !== '';
 
-				if(statuses) {
-					if(!statuses.find(s => s === 1))
-						statuses.push(1);
-					else {
-						rest.isReady = true;
-						statuses.push(0);
-					}
+				if(statuses && statuses.includes(1)) {
+					rest.isReady = true;
 				}
 
 				if(hasTerm) {
@@ -101,6 +96,7 @@ export default class DriverRepository
 						               .eq('cargoId', rest?.cargoId)
 						               .eq('cargoinnId', rest?.cargoinnId)
 						               .lte('payloadDate', payloadDate)
+						               .eq('isReady', rest?.isReady)
 						               .in('status', statuses)
 							         .query
 						         : this.whereClause(conjunct)
