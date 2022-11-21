@@ -240,6 +240,7 @@ function transformDriver(driver: models.Driver)
 			longitude:                     driver.getDataValue('longitude'),
 			current_address:               driver.getDataValue('currentAddress'),
 			fullName:                      driver.getDataValue('fullName'),
+			company_name:                  driver.getDataValue('companyName'),
 			cargo:                         transformCargoCompany(driver.cargo),
 			cargoinn:                      transformCargoInnCompany(driver.cargoinn),
 			order:                         transformOrder(driver.order),

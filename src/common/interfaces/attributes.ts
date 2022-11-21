@@ -754,6 +754,7 @@ export interface IDriver
 	 * @readonly
 	 * */
 	readonly fullName?: string;
+	readonly companyName?: string;
 }
 
 export interface IGatewayEvent

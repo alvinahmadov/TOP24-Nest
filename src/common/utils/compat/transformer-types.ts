@@ -368,6 +368,7 @@ export interface IDriverTransformer
 	 * */
 	current_address?: string;
 	fullName?: string;
+	company_name?: string;
 
 	cargo?: ICargoCompanyTransformer;
 	cargoinn?: ICargoInnCompanyTransformer;

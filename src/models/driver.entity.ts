@@ -202,15 +202,15 @@ export default class Driver
 	@ApiProperty(prop.operation)
 	@JsonbColumn()
 	operation?: DriverOperation;
-	
+
 	@ApiProperty(prop.payloadCity)
 	@StringColumn()
 	payloadCity?: string;
-	
+
 	@ApiProperty(prop.payloadRegion)
 	@StringColumn()
 	payloadRegion?: string;
-	
+
 	@ApiProperty(prop.payloadDate)
 	@DateColumn()
 	payloadDate?: Date;
@@ -265,13 +265,28 @@ export default class Driver
 	@HasMany(() => Transport, 'driverId')
 	transports?: Transport[];
 
-	@ApiProperty(prop.info)
+	@ApiProperty(prop.fullName)
 	@VirtualColumn()
-	public get fullName() {
+	public get fullName(): string {
 		const name = this.name ? ` ${this.name[0]}.` : '';
 		const surname = this.lastName ? `${this.lastName}` : '';
 		const middleName = this.patronymic ? ` ${this.patronymic[0]}.` : '';
 		return `${surname}${middleName}${name}`;
+	}
+
+	@ApiProperty(prop.companyName)
+	@VirtualColumn()
+	public get companyName(): string {
+		if(this.cargo) {
+			return this.cargo.name;
+		}
+		else if(this.cargoinn) {
+			const surname = this.cargoinn.lastName ? `${this.cargoinn.lastName}` : '';
+			const name = this.cargoinn.name ? ` ${this.cargoinn.name[0]}.` : '';
+			const middleName = this.cargoinn.patronymic ? ` ${this.cargoinn.patronymic[0]}.` : '';
+			return `${surname}${middleName}${name}`;
+		}
+		else return this.fullName;
 	}
 
 	public async deleteImages(): Promise<number> {
