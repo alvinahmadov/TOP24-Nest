@@ -77,8 +77,10 @@ export default class DriverRepository
 				let hasTerm: boolean = term !== undefined && term !== '';
 
 				if(statuses && statuses.includes(1)) {
-					rest.isReady = true;
-					statuses.push(0);
+					if(rest.isReady === undefined) {
+						rest.isReady = true;
+						statuses.push(0);
+					}
 				}
 
 				if(hasTerm) {
