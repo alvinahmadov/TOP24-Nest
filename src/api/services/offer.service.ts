@@ -330,7 +330,6 @@ export default class OfferService
 							const activeIndex = mainTransports.findIndex(t => t.status === TransportStatus.ACTIVE);
 							mainTransports[activeIndex].trailer = trailer;
 						}
-						mainTransports.forEach(t => t.driver = offer.driver);
 					}
 
 					transports.push(
@@ -340,6 +339,7 @@ export default class OfferService
 									(env.api.compatMode
 									 ? {
 											...transformEntity(t),
+											driver:        transformEntity(offer.driver),
 											company_name:  offer.driver.companyName,
 											offer_status:  offer.status,
 											bid_price:     offer.bidPrice,
@@ -348,6 +348,7 @@ export default class OfferService
 										}
 									 : {
 											...t.get({ plain: true, clone: true }),
+											driver:      offer.driver,
 											companyName: offer.driver.companyName,
 											offerStatus: offer.status,
 											bidPrice:    offer.bidPrice,
