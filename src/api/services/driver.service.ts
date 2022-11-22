@@ -66,9 +66,17 @@ export default class DriverService
 		const data = await this.repository.getList(listFilter, filter);
 		const message = formatArgs(TRANSLATIONS['LIST'], data?.length);
 
+		//Temporary fix for admin
+		const assignStatuses = (drivers: Driver[]) =>
+		{
+			if(filter?.statuses.some(s => [1, 2, 3, 4].includes(s)))
+				drivers?.forEach(d => d.isReady ? d.status = 1 : d.status = 0);
+			return drivers;
+		};
+
 		return {
 			statusCode: 200,
-			data:       filterDrivers(data, filter, full, 2),
+			data:       filterDrivers(assignStatuses(data), filter, full, 2),
 			message
 		};
 	}
