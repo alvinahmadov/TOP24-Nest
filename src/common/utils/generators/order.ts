@@ -61,7 +61,7 @@ function generateDestinations(count?: number): Array<interfaces.IOrderDestinatio
 	return destinations;
 }
 
-export function generateOrder(): dto.OrderCreateDto {
+export function generateOrder(maxDestination?: number): dto.OrderCreateDto {
 	const paramRange = { min: 0, max: 10, precision: 2 };
 	const isBid = faker.datatype.boolean();
 	const orderNumber = faker.datatype.number({ min: 999, max: 10000 });
@@ -69,7 +69,7 @@ export function generateOrder(): dto.OrderCreateDto {
 	return {
 		date:            faker.date.recent(10),
 		dedicated:       faker.helpers.arrayElement(['Догруз', 'Не важно', 'Выделенная машина']),
-		destinations:    generateDestinations(),
+		destinations:    generateDestinations(maxDestination),
 		isBid,
 		bidPrice:        isBid ? price + 10000 : 0,
 		bidPriceVAT:     isBid ? price + 15000 : 0,
@@ -100,12 +100,12 @@ export function generateOrder(): dto.OrderCreateDto {
 	} as dto.OrderCreateDto;
 }
 
-export async function generateOrders(count?: number): Promise<dto.OrderCreateDto[]> {
+export async function generateOrders(count?: number, maxDestination?: number): Promise<dto.OrderCreateDto[]> {
 	if(!count)
 		count = faker.datatype.number({ min: 3, max: 10 });
 	const createdData: dto.OrderCreateDto[] = [];
 	for(let step = 0; step < count; step++) {
-		createdData.push(generateOrder());
+		createdData.push(generateOrder(maxDestination));
 	}
 	return createdData;
 }

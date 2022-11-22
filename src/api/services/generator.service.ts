@@ -129,8 +129,8 @@ export default class GeneratorService
 		}
 	}
 
-	public async generateOrders(count?: number) {
-		const generatedOrders = await generator.generateOrders(count);
+	public async generateOrders(count?: number, maxDestination: number = 10) {
+		const generatedOrders = await generator.generateOrders(count, maxDestination);
 		const orders = await this.orderService.createAll(generatedOrders);
 		const message = formatArgs(TRANSLATIONS['ORDER'], orders?.length);
 

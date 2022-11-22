@@ -51,10 +51,10 @@ export default class GeneratorController {
 		guards: [AdminGuard]
 	})
 	public async createOrders(
-		@Body() data: { count?: number },
+		@Body() data: { count?: number, maxDestination?: number },
 		@Res() response: ex.Response
 	) {
-		const result = await this.generatorService.generateOrders(data.count);
+		const result = await this.generatorService.generateOrders(data.count, data.maxDestination);
 
 		return sendResponse(response, result);
 	}
