@@ -62,7 +62,7 @@ function generateDestinations(count?: number): Array<interfaces.IOrderDestinatio
 }
 
 export function generateOrder(maxDestination?: number): dto.OrderCreateDto {
-	const paramRange = { min: 0, max: 10, precision: 2 };
+	const paramRange = { min: 1, max: 10, precision: 2 };
 	const isBid = faker.datatype.boolean();
 	const orderNumber = faker.datatype.number({ min: 999, max: 10000 });
 	const price: number = generatePrice();
@@ -96,7 +96,7 @@ export function generateOrder(maxDestination?: number): dto.OrderCreateDto {
 		width:           faker.datatype.float(paramRange),
 		height:          faker.datatype.float(paramRange),
 		loadingTypes:    getFixedFromLoadingType(),
-		pallets:         faker.datatype.number({ min: 0, max: 50 })
+		pallets:         faker.datatype.number({ min: 0, max: 15 })
 	} as dto.OrderCreateDto;
 }
 
