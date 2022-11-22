@@ -30,6 +30,8 @@ function getFixedFromLoadingType() {
 
 function generateDestinations(count?: number): Array<interfaces.IOrderDestination> {
 	const destinations: interfaces.IOrderDestination[] = [];
+	const dateRange = 5;
+	let date: Date = faker.date.soon(dateRange);
 	if(count === undefined) count = faker.datatype.number({ min: 2, max: 10 });
 	if(count > common.LETTERS.length) count = common.LETTERS.length;
 
@@ -38,7 +40,7 @@ function generateDestinations(count?: number): Array<interfaces.IOrderDestinatio
 			{
 				point:       common.LETTERS[i],
 				address:     common.generateAddress(),
-				date:        faker.date.soon(10),
+				date,
 				type:        i !== 0
 				             ? (i !== count - 1
 				                ? faker.helpers.arrayElement(common.DESTINATION_TYPES)
@@ -50,6 +52,7 @@ function generateDestinations(count?: number): Array<interfaces.IOrderDestinatio
 				comment:     faker.lorem.word(4)
 			}
 		);
+		date = faker.date.soon(dateRange, date);
 	}
 
 	return destinations;
