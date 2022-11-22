@@ -37,8 +37,8 @@ function generateDestinations(count?: number): Array<interfaces.IOrderDestinatio
 	if(count > common.LETTERS.length) count = common.LETTERS.length;
 
 	for(let i = 0; i < count; i++) {
-		let latitudeModifier = faker.datatype.number({ min: -5, max: 5 }),
-			longitudeModifier = faker.datatype.number({ min: -5, max: 5 });
+		let latitudeModifier = faker.datatype.number({ min: -2, max: 2 }),
+			longitudeModifier = faker.datatype.number({ min: -2, max: 2 });
 		destinations.push(
 			{
 				point:       common.LETTERS[i],
