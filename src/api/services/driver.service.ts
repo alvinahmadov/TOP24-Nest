@@ -69,7 +69,7 @@ export default class DriverService
 		//Temporary fix for admin
 		const assignStatuses = (drivers: Driver[]) =>
 		{
-			if(filter?.statuses.some(s => [1, 2, 3, 4].includes(s)))
+			if(filter?.statuses?.some(s => [1, 2, 3, 4].includes(s)))
 				drivers?.forEach(d => d.isReady ? d.status = 1 : d.status = 0);
 			return drivers;
 		};
