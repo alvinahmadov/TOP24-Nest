@@ -68,6 +68,12 @@ export function generateOrder(maxDestination?: number): dto.OrderCreateDto {
 	const isBid = faker.datatype.boolean();
 	const orderNumber = faker.datatype.number({ min: 999, max: 10000 });
 	const price: number = generatePrice();
+	let weight = faker.datatype.float(paramRange),
+		volume = faker.datatype.float(paramRange),
+		height = faker.datatype.float(paramRange),
+		length = faker.datatype.float(paramRange),
+		width = faker.datatype.float(paramRange);
+
 	return {
 		date:            faker.date.recent(10),
 		dedicated:       faker.helpers.arrayElement(['Догруз', 'Не важно', 'Выделенная машина']),
@@ -92,11 +98,11 @@ export function generateOrder(maxDestination?: number): dto.OrderCreateDto {
 		),
 		payload:         faker.helpers.arrayElement(common.TRANSPORT_PAYLOADS),
 		payloadRiskType: faker.helpers.arrayElement(common.RISK_CLASSES),
-		weight:          faker.datatype.float(paramRange),
-		volume:          faker.datatype.float(paramRange),
-		length:          faker.datatype.float(paramRange),
-		width:           faker.datatype.float(paramRange),
-		height:          faker.datatype.float(paramRange),
+		weight:          weight > 0 ? weight : 1,
+		volume:          volume > 0 ? volume : 1,
+		length:          length > 0 ? length : 1,
+		width:           width > 0 ? width : 1,
+		height:          height > 0 ? height : 1,
 		loadingTypes:    getFixedFromLoadingType(),
 		pallets:         faker.datatype.number({ min: 0, max: 15 })
 	} as dto.OrderCreateDto;
