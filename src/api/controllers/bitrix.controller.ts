@@ -13,7 +13,7 @@ import {
 	setOrderSent
 }                              from '@config/env';
 import { ApiRoute }            from '@common/decorators';
-import { IWebhookResponse }   from '@common/interfaces';
+import { IWebhookResponse }    from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import {
 	CompanyInnUpdateDto,
@@ -108,6 +108,11 @@ export default class BitrixController
 		@Body() crm: IWebhookResponse,
 		@Res() response: ex.Response
 	) {
+		if(crm.data === undefined ||
+		   crm.data['FIELDS'] === undefined ||
+		   crm.data['FIELDS']['ID'] === undefined)
+			return sendResponse(response, { statusCode: 400, message: 'No data' }, false);
+
 		const crmId = Number(crm.data['FIELDS']['ID']);
 		let result: any = {
 			statusCode: 404,
