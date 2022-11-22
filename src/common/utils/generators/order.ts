@@ -31,6 +31,9 @@ function getFixedFromLoadingType() {
 function generateDestinations(count?: number): Array<interfaces.IOrderDestination> {
 	const destinations: interfaces.IOrderDestination[] = [];
 	const dateRange = 5;
+	const latitude = lat(), longitude = lng();
+	let latitudeModifier = faker.datatype.number({ min: -5, max: 5 }),
+		longitudeModifier = faker.datatype.number({ min: -5, max: 5 });
 	let date: Date = faker.date.soon(dateRange);
 	if(count === undefined) count = faker.datatype.number({ min: 2, max: 10 });
 	if(count > common.LETTERS.length) count = common.LETTERS.length;
@@ -46,7 +49,7 @@ function generateDestinations(count?: number): Array<interfaces.IOrderDestinatio
 				                ? faker.helpers.arrayElement(common.DESTINATION_TYPES)
 				                : enums.DestinationType.UNLOAD)
 				             : enums.DestinationType.LOAD,
-				coordinates: [lat(), lng()],
+				coordinates: [latitude + latitudeModifier, longitude + longitudeModifier],
 				contact:     faker.name.findName(),
 				phone:       faker.phone.phoneNumber('+7 9## ### ## ##'),
 				comment:     faker.lorem.word(4)
