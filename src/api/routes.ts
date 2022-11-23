@@ -1815,63 +1815,63 @@ export const routeConfig: TApiRouteList = {
 		path:        'reference',
 		description: 'Reference operations.',
 		routes:      {
-			address:        {
+			address:         {
 				path:   'address/:id',
 				method: RequestMethod.GET,
 				api:    {
 					operation: { summary: 'Get address specified by `id`' }
 				}
 			},
-			addresses:      {
+			addresses:       {
 				path:   'address',
 				method: RequestMethod.GET,
 				api:    {
 					operation: { summary: 'Get list of addresses.' }
 				}
 			},
-			filter:         {
+			filter:          {
 				path:   'address',
 				method: RequestMethod.POST,
 				api:    {
 					operation: { summary: 'Get list of filtered addresses.' }
 				}
 			},
-			fixtures:       {
+			fixtures:        {
 				path:   'fixtures',
 				method: RequestMethod.GET,
 				api:    {
 					operation: { summary: 'Get list of transport additional fixtures.' }
 				}
 			},
-			loadingTypes:   {
+			loadingTypes:    {
 				path:   'loading_types',
 				method: RequestMethod.GET,
 				api:    {
 					operation: { summary: 'Get list of transport loading types.' }
 				}
 			},
-			payloads:       {
+			payloads:        {
 				path:   'payloads',
 				method: RequestMethod.GET,
 				api:    {
 					operation: { summary: 'Get list of transport payloads.' }
 				}
 			},
-			paymentTypes:   {
+			paymentTypes:    {
 				path:   'payment_types',
 				method: RequestMethod.GET,
 				api:    {
 					operation: { summary: 'Get list of company payment types.' }
 				}
 			},
-			riskClasses:    {
+			riskClasses:     {
 				path:   'risk_classes',
 				method: RequestMethod.GET,
 				api:    {
 					operation: { summary: 'Get list of transport risk classes.' }
 				}
 			},
-			transportTypes: {
+			transportTypes:  {
 				path:   [
 					'transport_types',
 					'auto_types'
@@ -1880,6 +1880,14 @@ export const routeConfig: TApiRouteList = {
 				api:    {
 					operation: { summary: 'Get list of transport types.' }
 				}
+			},
+			transportBrands: {
+				path:   'brands',
+				method: RequestMethod.GET
+			},
+			transportModels: {
+				path:   'models/:brandId',
+				method: RequestMethod.GET
 			}
 		}
 	},
