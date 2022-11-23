@@ -136,7 +136,7 @@ export const translateDriver = <T extends transformers.IDriverTransformer>(data:
 		.set('payloadCity', 'payload_city')
 		.set('payloadRegion', 'payload_region')
 		.set('payloadDate', 'payload_date')
-		.set('fullName', 'fullName')
+		.set('fullName', 'fullname')
 		.get();
 };
 
