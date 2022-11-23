@@ -8,10 +8,6 @@ import {
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import {
-	isOrderSent,
-	setOrderSent
-}                              from '@config/env';
 import { ApiRoute }            from '@common/decorators';
 import { IWebhookResponse }    from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
@@ -122,10 +118,6 @@ export default class BitrixController
 		switch(crm.event) {
 			case 'ONCRMDEALADD':
 			case 'ONCRMDEALUPDATE':
-				if(isOrderSent()) {
-					setOrderSent();
-					break;
-				}
 				result = await this.bitrixService.synchronizeOrder(crmId);
 				break;
 			case 'ONCRMDEALDELETE':

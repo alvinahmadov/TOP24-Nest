@@ -413,7 +413,7 @@ export default class BitrixService
 					}
 
 					return this.orderService
-					           .update(order.id, { ...orderData, hasSent: false }, false)
+					           .update(order.id, { ...orderData }, false)
 					           .then(
 						           async(response) =>
 						           {

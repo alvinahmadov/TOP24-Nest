@@ -10,16 +10,6 @@ const parser: EnvironmentParser = new EnvironmentParser('.env');
 
 const isProd = parser.equal('NODE_ENV', 'production');
 
-export let onOrderSend: boolean = false;
-
-export function setOrderSent(value: boolean = false): void {
-	onOrderSend = value;
-}
-
-export function isOrderSent(): boolean {
-	return onOrderSend;
-}
-
 /**@ignore*/
 const env: IEnvironment = {
 	isProd,
