@@ -397,6 +397,14 @@ export default class BitrixService
 				}
 
 				if(order) {
+					if(order.hasSent) {
+						order.hasSent = false;
+						return {
+							statusCode: 200,
+							data:       await order.save({ fields: ['hasSent'] })
+						};
+					}
+
 					if(orderData.isCanceled) {
 						if(order.driverId) {
 							await this.offerService.decline(order.id, order.driverId);
@@ -405,7 +413,7 @@ export default class BitrixService
 					}
 
 					return this.orderService
-					           .update(order.id, orderData, false)
+					           .update(order.id, { ...orderData, hasSent: false }, false)
 					           .then(
 						           async(response) =>
 						           {

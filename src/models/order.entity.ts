@@ -372,6 +372,11 @@ export default class Order
 	@StringColumn()
 	ownerDeferralConditions?: string;
 
+	@ApiProperty(prop.hasSent)
+	@Default(false)
+	@BooleanColumn()
+	hasSent?: boolean;
+
 	@ApiProperty(prop.paymentPhotoLinks)
 	@AllowNull(true)
 	@Default(null)

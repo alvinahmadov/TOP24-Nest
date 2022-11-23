@@ -1,6 +1,5 @@
 import { Injectable }      from '@nestjs/common';
-import env,
-{ setOrderSent }           from '@config/env';
+import env                 from '@config/env';
 import {
 	DriverStatus,
 	OfferStatus,
@@ -621,9 +620,9 @@ export default class OfferService
 					await this.imageFileService.deleteImageList(offer.order.contractPhotoLink);
 				}
 
-				this.orderService.send(offer.orderId)
-				    .then(() => setOrderSent(true))
-				    .catch(() => setOrderSent());
+				this.orderService
+				    .send(offer.orderId)
+				    .catch(console.error);
 
 				return {
 					statusCode: 200,
@@ -709,9 +708,9 @@ export default class OfferService
 					).catch(r => console.debug(r));
 				}
 
-				this.orderService.send(offer.orderId)
-				    .then(() => setOrderSent(true))
-				    .catch(() => setOrderSent());
+				this.orderService
+				    .send(offer.orderId)
+				    .catch(console.error);
 
 				return {
 					statusCode: 200,

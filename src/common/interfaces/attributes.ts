@@ -964,6 +964,12 @@ export interface IOrder
 	 * */
 	hasProblem?: boolean;
 	/**
+	 * Order data sent to bitrix for update 
+	 * @internal
+	 * @ignore
+	 * */
+	hasSent?: boolean;
+	/**
 	 * Cancel comment/reason.
 	 * */
 	cancelCause?: string;

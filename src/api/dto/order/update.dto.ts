@@ -9,4 +9,6 @@ import OrderCreateDto  from './create.dto';
 @InputType()
 export default class OrderUpdateDto
 	extends PartialType(OrderCreateDto)
-	implements TUpdateAttribute<IOrder> {}
+	implements TUpdateAttribute<IOrder> {
+	hasSent?: boolean;
+}

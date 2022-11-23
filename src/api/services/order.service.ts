@@ -2,7 +2,6 @@ import {
 	forwardRef, Inject,
 	Injectable
 }                             from '@nestjs/common';
-import { setOrderSent }       from '@config/env';
 import {
 	BitrixUrl,
 	Bucket
@@ -108,8 +107,7 @@ export default class OrderService
 	 * */
 	public async getByCrmId(crm_id: number, full?: boolean)
 		: TAsyncApiResponse<Order> {
-		const data = await this.repository.getByCrmId(crm_id, full);
-		const order = filterOrders(data) as Order;
+		const order = await this.repository.getByCrmId(crm_id, full);
 
 		if(!order)
 			return this.responses['NOT_FOUND'];
@@ -382,7 +380,8 @@ export default class OrderService
 					await this.repository.update(id, { crmId: crmOrderId });
 				}
 			}
-			setOrderSent(true);
+			order.hasSent = true;
+			await order.save({ fields: ['hasSent'] });
 		}
 		return { statusCode: 200, data: crmOrderId };
 	}
@@ -445,7 +444,7 @@ export default class OrderService
 
 			if(fileUploaded) {
 				await this.send(order.id)
-				          .catch(() => setOrderSent());
+				          .catch(console.error);
 			}
 
 			if(fileUploaded)
@@ -508,7 +507,7 @@ export default class OrderService
 
 			if(isDeleted) {
 				await this.send(order.id)
-				          .catch(() => setOrderSent());
+				          .catch(console.error);
 			}
 		}
 
@@ -605,16 +604,8 @@ export default class OrderService
 
 		if(fileUploaded) {
 			this.send(order.id)
-			    .then(() =>
-			          {
-				          setOrderSent(true);
-				          this.gateway.sendOrderEvent({ id, message });
-			          })
-			    .catch(e =>
-			           {
-				           console.error(e);
-				           setOrderSent();
-			           });
+			    .then(() => this.gateway.sendOrderEvent({ id, message }))
+			    .catch(console.error);
 
 			return {
 				statusCode: 200,
