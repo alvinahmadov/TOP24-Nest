@@ -100,14 +100,11 @@ export default class BitrixController
 	@ApiRoute(routes.webhook, {
 		statuses: [HttpStatus.OK]
 	})
-	public async webhookListen(
-		@Body() crm: IWebhookResponse,
-		@Res() response: ex.Response
-	) {
+	public async webhookListen(@Body() crm: IWebhookResponse) {
 		if(crm.data === undefined ||
 		   crm.data['FIELDS'] === undefined ||
 		   crm.data['FIELDS']['ID'] === undefined)
-			return response.status(400).send(null);
+			return;
 
 		const crmId = Number(crm.data['FIELDS']['ID']);
 
@@ -125,11 +122,6 @@ export default class BitrixController
 			case 'ONCRMCONTACTUPDATE':
 				await this.bitrixService.updateTransport(crmId);
 				break;
-			default:
-				break;
 		}
-
-		return response.status(200)
-		               .send(crm);
 	}
 }
