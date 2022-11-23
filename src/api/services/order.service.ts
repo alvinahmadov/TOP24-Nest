@@ -325,64 +325,69 @@ export default class OrderService
 
 		if(!crmOrderId) return this.responses['NO_CRM_ORDER'];
 
-		let cargoCrmId = null;
-		let driverCrmId = null;
-		let driverCoordinates: [number, number] = null;
-		if(order.cargo) {
-			const cargo = order.cargo;
-			if(cargo.crmId) {
-				cargoCrmId = cargo.crmId;
-			}
-			else {
-				const { data: crmId } = await this.cargoService.send(cargo.id);
-				if(crmId)
-					cargoCrmId = crmId;
-			}
-		}
-		if(order.cargoinn) {
-			const cargoinn = order.cargoinn;
-			if(cargoinn.crmId) {
-				cargoCrmId = cargoinn.crmId;
-			}
-			else {
-				const { data: crmId } = await this.cargoInnService.send(cargoinn.id);
-				if(crmId) {
-					cargoCrmId = crmId;
-				}
-			}
-		}
-		if(order.driver) {
-			const driverResponse = await this.driverService.getById(order.driverId, true);
-
-			if(driverResponse.data) {
-				const { data: driver } = driverResponse;
-				if(driver.crmId) {
-					driverCrmId = driver.crmId;
-					driverCoordinates = [driver.latitude, driver.longitude];
+		try {
+			let companyCrmId = null,
+				driverCrmId = null;
+			let driverCoordinates: [number, number] = null;
+			if(order.cargo) {
+				const cargo = order.cargo;
+				if(cargo.crmId) {
+					companyCrmId = cargo.crmId;
 				}
 				else {
-					const { data: crm_id } = await this.driverService.send(driver.id);
-					driverCrmId = crm_id;
+					const { data: crmId } = await this.cargoService.send(cargo.id);
+					if(crmId)
+						companyCrmId = crmId;
 				}
 			}
-		}
-		const data: TCRMData = order.toCrm(cargoCrmId, driverCrmId, driverCoordinates);
-		const client = await this.httpClient
-		                         .post<TCRMResponse>(
-			                         buildBitrixRequestUrl(BitrixUrl.ORDER_UPD_URL, data, crmOrderId)
-		                         );
+			if(order.cargoinn) {
+				const cargoinn = order.cargoinn;
+				if(cargoinn.crmId) {
+					companyCrmId = cargoinn.crmId;
+				}
+				else {
+					const { data: crmId } = await this.cargoInnService.send(cargoinn.id);
+					if(crmId) {
+						companyCrmId = crmId;
+					}
+				}
+			}
+			if(order.driver) {
+				const driverResponse = await this.driverService.getById(order.driverId, true);
 
-		if(client !== undefined) {
-			const { result } = client;
-			if(!crmOrderId && result && result !== '') {
-				if(typeof result !== 'boolean' && typeof result === 'string') {
-					crmOrderId = Number(result);
-					await this.repository.update(id, { crmId: crmOrderId });
+				if(driverResponse.data) {
+					const { data: driver } = driverResponse;
+					if(driver.crmId) {
+						driverCrmId = driver.crmId;
+						driverCoordinates = [driver.latitude, driver.longitude];
+					}
+					else {
+						const { data: crm_id } = await this.driverService.send(driver.id);
+						driverCrmId = crm_id;
+					}
 				}
 			}
-			order.hasSent = true;
-			await order.save({ fields: ['hasSent'] });
+			const data: TCRMData = order.toCrm(companyCrmId, driverCrmId, driverCoordinates);
+			const client = await this.httpClient
+			                         .post<TCRMResponse>(
+				                         buildBitrixRequestUrl(BitrixUrl.ORDER_UPD_URL, data, crmOrderId)
+			                         );
+
+			if(client !== undefined) {
+				const { result } = client;
+				if(!crmOrderId && result && result !== '') {
+					if(typeof result !== 'boolean' && typeof result === 'string') {
+						crmOrderId = Number(result);
+						await this.repository.update(id, { crmId: crmOrderId });
+					}
+				}
+				order.hasSent = true;
+				await order.save({ fields: ['hasSent'] });
+			}
+		} catch(e) {
+			console.error(e);
 		}
+
 		return { statusCode: 200, data: crmOrderId };
 	}
 
