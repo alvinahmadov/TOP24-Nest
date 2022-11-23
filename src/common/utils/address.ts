@@ -27,9 +27,16 @@ export async function addressFromCoordinates(
 
 	const { address } = await AxiosStatic.get<IOSMData>(url, config);
 
-	return `${address?.road ? address.road + ', ' : ''}${address?.town ? address.town + ', ' : ''}` +
-	       `${address?.county ? address.county + ', ' : ''}${address?.state ? address.state + ', ' : ''}` +
-	       `${address?.region ? address.region + ', ' : ''}${address?.country ? address.country : ''}`;
+	return [
+		address?.road,
+		address?.town,
+		address?.county,
+		address?.state,
+		address?.region,
+		address?.country,
+		address?.postcode
+	].filter(a => !!a)
+	 .join(',');
 }
 
 export function calculateDistance(
