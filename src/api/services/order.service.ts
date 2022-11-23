@@ -295,6 +295,9 @@ export default class OrderService
 				}
 			}
 			result.driver = driver;
+			
+			if(!driver.currentPoint)
+				result.driver.currentPoint = 'A';
 			if(driver.isReady)
 				result.driver.status = 1;
 			const orderResponse = await this.getById(order.id, false);
