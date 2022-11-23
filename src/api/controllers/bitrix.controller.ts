@@ -107,32 +107,29 @@ export default class BitrixController
 		if(crm.data === undefined ||
 		   crm.data['FIELDS'] === undefined ||
 		   crm.data['FIELDS']['ID'] === undefined)
-			return sendResponse(response, { statusCode: 400, message: 'No data' }, false);
+			return response.status(400).send(null);
 
 		const crmId = Number(crm.data['FIELDS']['ID']);
-		let result: any = {
-			statusCode: 404,
-			message:    'Event not found!'
-		};
 
 		switch(crm.event) {
 			case 'ONCRMDEALADD':
 			case 'ONCRMDEALUPDATE':
-				result = await this.bitrixService.synchronizeOrder(crmId);
+				await this.bitrixService.synchronizeOrder(crmId);
 				break;
 			case 'ONCRMDEALDELETE':
-				result = await this.bitrixService.deleteOrder(crmId);
+				await this.bitrixService.deleteOrder(crmId);
 				break;
 			case 'ONCRMCOMPANYUPDATE':
-				result = await this.bitrixService.updateCargo(crmId);
+				await this.bitrixService.updateCargo(crmId);
 				break;
 			case 'ONCRMCONTACTUPDATE':
-				result = await this.bitrixService.updateTransport(crmId);
+				await this.bitrixService.updateTransport(crmId);
 				break;
 			default:
 				break;
 		}
 
-		return sendResponse(response, result);
+		return response.status(200)
+		               .send(crm);
 	}
 }
