@@ -367,7 +367,7 @@ export interface IDriverTransformer
 	 * @see IDriver.currentAddress
 	 * */
 	current_address?: string;
-	fullName?: string;
+	fullname?: string;
 	company_name?: string;
 
 	cargo?: ICargoCompanyTransformer;
