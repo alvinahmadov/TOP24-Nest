@@ -77,6 +77,7 @@ export default class ReferenceController
 		}
 	) {
 		const { search, regions, ...rest } = listFilter;
+		rest.provider = 'osm';
 
 		const result = (search?.length > 0)
 		               ? await (listFilter.full
@@ -242,7 +243,7 @@ export default class ReferenceController
 		const transportModels = Reference.TRANSPORT_MODELS
 		                                 .filter(a => a.BRAND_ID === id)
 		                                 .map(lowerCaseFn);
-		
+
 		const result: IApiResponse<any> = {
 			statusCode: 200,
 			data:       { transportModels }
