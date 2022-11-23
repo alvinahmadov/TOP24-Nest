@@ -1,4 +1,4 @@
-import { Injectable }         from '@nestjs/common';
+import { Injectable }        from '@nestjs/common';
 import {
 	IAddressFilter,
 	IApiResponse,
@@ -6,17 +6,17 @@ import {
 	IListFilter,
 	IService,
 	TAsyncApiResponse
-}                             from '@common/interfaces';
+}                            from '@common/interfaces';
 import {
 	formatArgs,
 	getTranslation,
 	searchAddressByKladr,
 	searchAddressByOSM
-}                             from '@common/utils';
-import { Address }            from '@models/index';
-import { AddressRepository }  from '@repos/index';
-import { ListFilter }         from '@api/dto';
-import Service                from './service';
+}                            from '@common/utils';
+import { Address }           from '@models/index';
+import { AddressRepository } from '@repos/index';
+import { ListFilter }        from '@api/dto';
+import Service               from './service';
 
 const TRANSLATIONS = getTranslation('REST', 'ADDRESS');
 
