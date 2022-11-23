@@ -127,25 +127,31 @@ export function checkTransportRequirements(
 		matchesLength = paramFilter.lengthMin <= length && length <= paramFilter.lengthMax,
 		matchesPallet = paramFilter.pallets <= pallets;
 
-	if(messageObj) {
-		if(!matchesWeight) {
-			messageObj.message = setMessage('веса', { min: paramFilter.weightMin, max: paramFilter.weightMax }, weight);
-		}
-		if(!matchesVolume) {
-			messageObj.message = setMessage('объема', { min: paramFilter.volumeMin, max: paramFilter.volumeMax }, volume);
-		}
-		if(!matchesHeight) {
-			messageObj.message = setMessage('высоты', { min: paramFilter.heightMin, max: paramFilter.heightMax }, height);
-		}
-		if(!matchesWidth) {
-			messageObj.message = setMessage('ширины', { min: paramFilter.widthMin, max: paramFilter.widthMax }, width);
-		}
-		if(!matchesLength) {
-			messageObj.message = setMessage('длины', { min: paramFilter.lengthMin, max: paramFilter.lengthMax }, length);
-		}
-		if(!matchesPallet) {
-			messageObj.message = setMessage('паллетов', { max: paramFilter.pallets }, pallets);
-		}
+	if(!messageObj) messageObj = { message: '' };
+
+	if(!matchesWeight) {
+		messageObj.message = setMessage('веса', { min: paramFilter.weightMin, max: paramFilter.weightMax }, weight);
+		console.info(messageObj);
+	}
+	if(!matchesVolume) {
+		messageObj.message = setMessage('объема', { min: paramFilter.volumeMin, max: paramFilter.volumeMax }, volume);
+		console.info(messageObj);
+	}
+	if(!matchesHeight) {
+		messageObj.message = setMessage('высоты', { min: paramFilter.heightMin, max: paramFilter.heightMax }, height);
+		console.info(messageObj);
+	}
+	if(!matchesWidth) {
+		messageObj.message = setMessage('ширины', { min: paramFilter.widthMin, max: paramFilter.widthMax }, width);
+		console.info(messageObj);
+	}
+	if(!matchesLength) {
+		messageObj.message = setMessage('длины', { min: paramFilter.lengthMin, max: paramFilter.lengthMax }, length);
+		console.info(messageObj);
+	}
+	if(!matchesPallet) {
+		messageObj.message = setMessage('паллетов', { max: paramFilter.pallets }, pallets);
+		console.info(messageObj);
 	}
 
 	return (
