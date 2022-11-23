@@ -214,4 +214,40 @@ export default class ReferenceController
 
 		return sendResponse(response, result);
 	}
+
+	@ApiRoute(routes.transportBrands, {
+		statuses: [HttpStatus.OK]
+	})
+	public getTransportBrands(@Res() response: ex.Response) {
+		const transportBrands = Reference.TRANSPORT_BRANDS
+		                                 .sort(compareByValFn)
+		                                 .map(lowerCaseFn);
+
+		const result: IApiResponse<any> = {
+			statusCode: 200,
+			data:       { transportBrands },
+			message:    formatArgs(TRANSLATIONS['TRANSPORT_TYPES'], transportBrands?.length)
+		};
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.transportModels, {
+		statuses: [HttpStatus.OK]
+	})
+	public getTransportModels(
+		@Res() response: ex.Response,
+		@Param('brandId') id: string
+	) {
+		const transportModels = Reference.TRANSPORT_MODELS
+		                                 .filter(a => a.BRAND_ID === id)
+		                                 .map(lowerCaseFn);
+		
+		const result: IApiResponse<any> = {
+			statusCode: 200,
+			data:       { transportModels }
+		};
+
+		return sendResponse(response, result);
+	}
 }
