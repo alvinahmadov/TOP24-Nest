@@ -335,6 +335,8 @@ export default class OfferService
 						}
 					}
 					driver.transports = null;
+					if(!driver.currentPoint) driver.currentPoint = 'A';
+					
 					transports.push(
 						...mainTransports
 							.map(
