@@ -140,6 +140,19 @@ export default class TransportController
 		return sendResponse(response, result);
 	}
 
+	@ApiRoute(routes.activate, {
+		guards:   [AccessGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async activateTransport(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.transportService.activateTransport(id);
+
+		return sendResponse(response, result);
+	}
+
 	@ApiRoute(routes.image, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],

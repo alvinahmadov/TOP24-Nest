@@ -1888,19 +1888,23 @@ export const routeConfig: TApiRouteList = {
 		description: 'Сargo company transport related operations',
 		routes:      {
 			...commonRoutes(mo.Transport),
-			driver: {
+			activate: {
+				path:   'activate/:id',
+				method: RequestMethod.POST
+			},
+			driver:   {
 				path:   'driver/:driverId',
 				method: RequestMethod.POST
 			},
-			image:  {
+			image:    {
 				path:   'image/:id',
 				method: RequestMethod.POST
 			},
-			diag:   {
+			diag:     {
 				path:   'diag/:id',
 				method: RequestMethod.POST
 			},
-			osago:  {
+			osago:    {
 				path:   'osago/:id',
 				method: RequestMethod.POST
 			}

@@ -1,5 +1,7 @@
+import { Op }                  from 'sequelize';
 import { Injectable }          from '@nestjs/common';
 import { BitrixUrl, Bucket }   from '@common/constants';
+import { TransportStatus }     from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -116,8 +118,8 @@ export default class TransportService
 	 * */
 	public async getByDriverId(
 		driverId: string,
-		listFilter: ListFilter,
-		filter: TransportFilter
+		listFilter: ListFilter = {},
+		filter?: TransportFilter
 	): TAsyncApiResponse<Transport[]> {
 		const transports = await this.repository.getByDriverId(driverId, listFilter, filter);
 
@@ -207,6 +209,38 @@ export default class TransportService
 		}>;
 	}
 
+	public async activateTransport(id: string)
+		: TAsyncApiResponse<Transport | null> {
+		const transport = await this.repository.get(id);
+		if(!transport)
+			return this.responses['NOT_FOUND'];
+
+		if(transport.status === TransportStatus.ACTIVE) {
+			return {
+				statusCode: 200,
+				data:       transport
+			};
+		}
+		
+		transport.status = TransportStatus.ACTIVE;
+		await transport.save({ fields: ['status'] });
+		
+		await this.repository.bulkUpdate(
+			{ status: TransportStatus.NONE },
+			{
+				[Op.and]: [
+					{ id: { [Op.ne]: id } },
+					{ isTrailer: transport.isTrailer }
+				]
+			}
+		);
+
+		return {
+			statusCode: 200,
+			data:       transport
+		};
+	}
+
 	/**
 	 * @summary Upload/update document scans.
 	 *
@@ -234,7 +268,7 @@ export default class TransportService
 				{
 					cargoId:     transport.cargoId,
 					cargoinnId:  transport.cargoinnId,
-					transportId: id,
+					transportId: transport.id,
 					url
 				}
 			);
