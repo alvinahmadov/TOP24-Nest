@@ -1,11 +1,11 @@
-import { Order as SortOrder } from 'sequelize';
-import { TableOptions }       from 'sequelize-typescript';
-import { JwtModuleOptions }   from '@nestjs/jwt';
-import { CorsOptions }        from '@nestjs/common/interfaces/external/cors-options.interface';
-import { GatewayMetadata }    from '@nestjs/websockets';
-import env                    from '@config/env';
-import { CRM }                from '@config/index';
-import { TBitrixEnum }        from './interfaces';
+import { Order as SortOrder }       from 'sequelize';
+import { TableOptions }             from 'sequelize-typescript';
+import { JwtModuleOptions }         from '@nestjs/jwt';
+import { CorsOptions }              from '@nestjs/common/interfaces/external/cors-options.interface';
+import { GatewayMetadata }          from '@nestjs/websockets';
+import env                          from '@config/env';
+import { CRM }                      from '@config/index';
+import { TBitrixData, TBitrixEnum } from './interfaces';
 
 export const MAX_FLOAT: number = 16000000.0;
 export const MIN_FLOAT: number = 0.0;
@@ -128,6 +128,8 @@ export namespace Reference {
 	export const RISK_CLASSES: TBitrixEnum = CRM.COMPANY.RISK_TYPES;
 	/**@ignore*/
 	export const TRANSPORT_BRANDS: TBitrixEnum = CRM.TRANSPORT.BRANDS;
+	/**@ignore*/
+	export const TRANSPORT_MODELS: Array<TBitrixData & { BRAND_ID: string }> = CRM.TRANSPORT.MODELS;
 	/**@ignore*/
 	export const TRANSPORT_TYPES: TBitrixEnum = CRM.TRANSPORT.TYPES;
 }
