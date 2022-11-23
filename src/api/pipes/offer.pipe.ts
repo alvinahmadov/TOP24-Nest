@@ -12,7 +12,6 @@ export default class OfferPipe
 	transform(data: any): IOffer {
 		if(Array.isArray(data) && env.api.compatMode) {
 			data = data.map(transformToOfferDriver);
-			console.debug(data);
 			return data;
 		}
 
