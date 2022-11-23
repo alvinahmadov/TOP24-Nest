@@ -347,7 +347,7 @@ export default class OfferService
 											offer_status:  offer.status,
 											bid_price:     offer.bidPrice,
 											bid_price_max: offer.bidPriceVat,
-											comments:      offer.bidComment
+											bid_comments:  offer.bidComment
 										}
 									 : {
 											...t.get({ plain: true, clone: true }),
