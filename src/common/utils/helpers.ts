@@ -87,7 +87,7 @@ export function sendResponse<T = any>(
 	result: IApiResponse<T>,
 	transform: boolean = env.api.compatMode
 ) {
-	return response.status(result.statusCode)
+	return response.status(result?.statusCode ?? 400)
 	               .send(
 		               transform ? transformApiResult(result)
 		                         : result
