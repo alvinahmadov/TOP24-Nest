@@ -221,15 +221,16 @@ export default class TransportService
 				data:       transport
 			};
 		}
-		
+
 		transport.status = TransportStatus.ACTIVE;
 		await transport.save({ fields: ['status'] });
-		
+
 		await this.repository.bulkUpdate(
 			{ status: TransportStatus.NONE },
 			{
 				[Op.and]: [
 					{ id: { [Op.ne]: id } },
+					{ driverId: { [Op.eq]: transport.driverId } },
 					{ isTrailer: transport.isTrailer }
 				]
 			}
