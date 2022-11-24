@@ -221,7 +221,6 @@ export default class ReferenceController
 	})
 	public getTransportBrands(@Res() response: ex.Response) {
 		const transportBrands = Reference.TRANSPORT_BRANDS
-		                                 .sort(compareByIdFn)
 		                                 .map(lowerCaseFn);
 
 		const result: IApiResponse<any> = {
