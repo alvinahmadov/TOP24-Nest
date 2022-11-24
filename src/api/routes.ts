@@ -1908,6 +1908,11 @@ export const routeConfig: TApiRouteList = {
 				path:   'image/:id',
 				method: RequestMethod.POST
 			},
+			imageDel:
+			          {
+				          path:   'image/:id',
+				          method: RequestMethod.DELETE
+			          },
 			diag:     {
 				path:   'diag/:id',
 				method: RequestMethod.POST

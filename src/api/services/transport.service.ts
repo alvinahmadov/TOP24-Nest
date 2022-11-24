@@ -281,6 +281,10 @@ export default class TransportService
 		} as IApiResponse<null>;
 	}
 
+	public async deleteImage(id: string) {
+		return this.imageService.delete(id);
+	}
+
 	/**
 	 * @summary Upload/update transport OSAGO document scans.
 	 *

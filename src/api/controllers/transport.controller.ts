@@ -209,4 +209,16 @@ export default class TransportController
 
 		return sendResponse(response, result);
 	}
+
+	@ApiRoute(routes.imageDel, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async deleteImage(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.transportService.deleteImage(id);
+		return sendResponse(response, result);
+	}
 }
