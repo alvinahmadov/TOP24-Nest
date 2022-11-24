@@ -33,6 +33,20 @@ export default class TransportRepository
 		super(TransportRepository.name);
 	}
 
+	public override async get(id: string, full?: boolean) {
+		return this.log(
+			() => this.model.findByPk(
+				id,
+				{
+					include: !!full ? this.include
+					                : [{ model: Image }]
+				}
+			),
+			{ id: 'get' },
+			{ id, full }
+		);
+	}
+
 	/**
 	 * @link GenericRepository.getList
 	 * */
@@ -42,7 +56,7 @@ export default class TransportRepository
 	): Promise<Transport[]> {
 		if(filter === null)
 			return [];
-		
+
 		return this.log(
 			() =>
 			{
