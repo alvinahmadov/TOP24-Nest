@@ -166,7 +166,8 @@ export function checkTransportRequirements(
 
 export function filterTransports(
 	transports: Transport[],
-	filter: ICompanyTransportFilter = {}
+	filter: ICompanyTransportFilter = {},
+	onlyActive: boolean = true
 ): Transport[] {
 	let {
 		loadingTypes = [],
@@ -177,7 +178,7 @@ export function filterTransports(
 	} = filter;
 
 	const hasValues = (arr?: Array<any>) => arr && arr.length > 0;
-	const isActive = (transport: Transport) => transport.status === TransportStatus.ACTIVE;
+	const isActive = (transport: Transport) => !!onlyActive ? transport.status === TransportStatus.ACTIVE : true;
 	const isTrailer = (transport: Transport) => transport.isTrailer;
 
 	const getSummedParams = (transport: Transport, trailer?: Transport): Transport =>

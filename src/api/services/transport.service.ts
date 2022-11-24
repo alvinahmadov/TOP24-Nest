@@ -69,7 +69,7 @@ export default class TransportService
 
 		return {
 			statusCode: 200,
-			data:       filterTransports(data, filter),
+			data:       filterTransports(data, filter, false),
 			message:    message
 		} as IApiResponse<Transport[]>;
 	}
