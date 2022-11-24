@@ -216,9 +216,10 @@ export default class TransportController
 	})
 	public async deleteImage(
 		@Param('id', ParseUUIDPipe) id: string,
+		@Param('transportId', ParseUUIDPipe) transportId: string,
 		@Res() response: ex.Response
 	) {
-		const result = await this.transportService.deleteImage(id);
+		const result = await this.transportService.deleteImage(transportId, id);
 		return sendResponse(response, result);
 	}
 }

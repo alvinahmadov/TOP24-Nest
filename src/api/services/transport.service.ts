@@ -281,8 +281,20 @@ export default class TransportService
 		} as IApiResponse<null>;
 	}
 
-	public async deleteImage(id: string) {
-		return this.imageService.delete(id);
+	public async deleteImage(id: string, imageId: string) {
+		const transport = await this.repository.get(id);
+
+		if(transport) {
+			if(transport.images.find(i => i.id === imageId)) {
+				return this.imageService.delete(imageId);
+			}
+		}
+		else return this.responses['NOT_FOUND'];
+
+		return {
+			statusCode: 404,
+			message:    `Image '${imageId}' not found!`
+		};
 	}
 
 	/**

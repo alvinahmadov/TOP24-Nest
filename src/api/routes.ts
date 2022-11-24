@@ -1910,7 +1910,7 @@ export const routeConfig: TApiRouteList = {
 			},
 			imageDel:
 			          {
-				          path:   'image/:id',
+				          path:   'image/:transportId/:id',
 				          method: RequestMethod.DELETE
 			          },
 			diag:     {
