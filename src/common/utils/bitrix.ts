@@ -35,6 +35,7 @@ import TRANSPORT_PAYLOADS = Reference.TRANSPORT_PAYLOADS;
 import PAYMENT_TYPES = Reference.PAYMENT_TYPES;
 import RISK_CLASSES = Reference.RISK_CLASSES;
 import TRANSPORT_BRANDS = Reference.TRANSPORT_BRANDS;
+import TRANSPORT_MODELS = Reference.TRANSPORT_MODELS;
 import TRANSPORT_TYPES = Reference.TRANSPORT_TYPES;
 
 const DESTINATIONS: { [k: string]: TBitrixEnum } = CRM.ORDER.DESTINATION_TYPES;
@@ -47,6 +48,7 @@ export type TBitrixKey = 'fixtures' |
                          'paymentType' |
                          'riskClass' |
                          'transportBrand' |
+                         'transportModel' |
                          'transportDedicated' |
                          'transportPayload' |
                          'transportType';
@@ -139,6 +141,8 @@ function selectBitrixEnum<R>(
 			return callback(RISK_CLASSES);
 		case 'transportBrand':
 			return callback(TRANSPORT_BRANDS);
+		case 'transportModel':
+			return callback(TRANSPORT_MODELS);
 		case 'transportDedicated':
 			return callback(DEDICATED_MACHINE);
 		case 'transportPayload':

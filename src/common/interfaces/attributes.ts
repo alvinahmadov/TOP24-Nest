@@ -964,7 +964,7 @@ export interface IOrder
 	 * */
 	hasProblem?: boolean;
 	/**
-	 * Order data sent to bitrix for update 
+	 * Order data sent to bitrix for update
 	 * @internal
 	 * @ignore
 	 * */
