@@ -259,6 +259,8 @@ export const translateTransport = <T extends transformers.ITransportTransformer>
 		.set('volumeExtra', 'volume_extra')
 		.set('payload')
 		.set('payloadExtra', 'payload_extra')
+		.set('isTrailer', 'is_trailer')
+		.set('isDedicated', 'is_dedicated')
 		.set('registrationNumber', 'registr_num')
 		.set('prodYear', 'prod_year')
 		.set('certificateNumber', 'sts')
