@@ -252,7 +252,8 @@ export default class OfferService
 				                       !activeTransport.payloadExtra)
 					                    return true;
 
-				                    return order?.dedicated === 'Догруз';
+				                    return order?.dedicated === 'Догруз' ||
+				                           order?.dedicated === 'Не важно';
 			                    })
 			            .sort((offer1, offer2) =>
 			                  {
@@ -336,7 +337,7 @@ export default class OfferService
 					}
 					driver.transports = null;
 					if(!driver.currentPoint) driver.currentPoint = 'A';
-					
+
 					transports.push(
 						...mainTransports
 							.map(
