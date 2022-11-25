@@ -3,7 +3,6 @@ import { Injectable }                from '@nestjs/common';
 import { BitrixUrl }                 from '@common/constants';
 import { AxiosStatic }               from '@common/classes';
 import {
-	IApiResponse,
 	IApiResponses,
 	IService,
 	TAsyncApiResponse
@@ -78,7 +77,7 @@ export default class CargoCompanyInnService
 			statusCode: 200,
 			data,
 			message:    formatArgs(TRANSLATIONS['LIST'], data?.length)
-		} as IApiResponse<CargoInnCompany[]>;
+		};
 	}
 
 	/**
@@ -98,7 +97,7 @@ export default class CargoCompanyInnService
 			statusCode: 200,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['GET'], company.name)
-		} as IApiResponse<CargoInnCompany>;
+		};
 	}
 
 	/**
@@ -118,7 +117,7 @@ export default class CargoCompanyInnService
 			statusCode: 200,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['GET'], company.name)
-		} as IApiResponse<CargoInnCompany>;
+		};
 	}
 
 	/**
@@ -139,7 +138,7 @@ export default class CargoCompanyInnService
 			statusCode: 201,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['CREATE'], company.name)
-		} as IApiResponse<CargoInnCompany>;
+		};
 	}
 
 	/**
@@ -161,7 +160,7 @@ export default class CargoCompanyInnService
 			statusCode: 200,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['UPDATE'], company.name)
-		} as IApiResponse<CargoInnCompany>;
+		};
 	}
 
 	/**
@@ -171,7 +170,8 @@ export default class CargoCompanyInnService
 	 *
 	 * @param {String!} id Id of cargo company to delete
 	 * */
-	public async delete(id: string): TAsyncApiResponse<{ [k: string]: number }> {
+	public async delete(id: string)
+		: TAsyncApiResponse<{ [k: string]: number }> {
 		const company = await this.repository.get(id, true);
 
 		if(!company)
@@ -198,7 +198,7 @@ export default class CargoCompanyInnService
 				driverImages
 			},
 			message:    formatArgs(TRANSLATIONS['DELETE'], company.name)
-		} as IApiResponse<{ [k: string]: number }>;
+		};
 
 	}
 
@@ -271,7 +271,7 @@ export default class CargoCompanyInnService
 			statusCode: 200,
 			data,
 			message
-		} as IApiResponse<Transport[]>;
+		};
 	}
 
 	/**

@@ -3,7 +3,6 @@ import { Injectable }             from '@nestjs/common';
 import { BitrixUrl }              from '@common/constants';
 import { AxiosStatic }            from '@common/classes';
 import {
-	IApiResponse,
 	IApiResponses,
 	IService,
 	TAsyncApiResponse
@@ -79,7 +78,7 @@ export default class CargoCompanyService
 			statusCode: 200,
 			data,
 			message
-		} as IApiResponse<CargoCompany[]>;
+		};
 	}
 
 	/**
@@ -99,7 +98,7 @@ export default class CargoCompanyService
 			statusCode: 200,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['GET'], company.name)
-		} as IApiResponse<CargoCompany>;
+		};
 	}
 
 	/**
@@ -119,7 +118,7 @@ export default class CargoCompanyService
 			statusCode: 200,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['GET'], company.name)
-		} as IApiResponse<CargoCompany>;
+		};
 	}
 
 	/**
@@ -140,7 +139,7 @@ export default class CargoCompanyService
 			statusCode: 201,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['CREATE'], company.name)
-		} as IApiResponse<CargoCompany>;
+		};
 	}
 
 	/**
@@ -162,7 +161,7 @@ export default class CargoCompanyService
 			statusCode: 200,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['UPDATE'], company.name)
-		} as IApiResponse<CargoCompany>;
+		};
 	}
 
 	/**
@@ -201,7 +200,7 @@ export default class CargoCompanyService
 				driverImages
 			},
 			message:    formatArgs(TRANSLATIONS['DELETE'], company.name)
-		} as IApiResponse<{ [k: string]: number }>;
+		};
 	}
 
 	/**
@@ -273,7 +272,7 @@ export default class CargoCompanyService
 			statusCode: 200,
 			data,
 			message
-		} as IApiResponse<Transport[]>;
+		};
 	}
 
 	/**
