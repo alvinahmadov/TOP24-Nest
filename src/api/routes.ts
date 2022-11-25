@@ -1886,7 +1886,10 @@ export const routeConfig: TApiRouteList = {
 				method: RequestMethod.GET
 			},
 			transportModels: {
-				path:   'models/:brandId',
+				path:   [
+					'models',
+					'models/:brandId'
+				],
 				method: RequestMethod.GET
 			}
 		}

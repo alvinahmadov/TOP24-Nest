@@ -2,6 +2,7 @@ import * as ex                 from 'express';
 import {
 	Body,
 	Controller,
+	DefaultValuePipe,
 	HttpStatus,
 	Param,
 	ParseUUIDPipe,
@@ -237,10 +238,10 @@ export default class ReferenceController
 	})
 	public getTransportModels(
 		@Res() response: ex.Response,
-		@Param('brandId') id: string
+		@Param('brandId', new DefaultValuePipe(null)) id?: string
 	) {
 		const transportModels = Reference.TRANSPORT_MODELS
-		                                 .filter(a => a.BRAND_ID === id)
+		                                 .filter(a => id ? a.BRAND_ID === id : true)
 		                                 .map(lowerCaseFn);
 
 		const result: IApiResponse<any> = {
