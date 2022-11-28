@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 const { addressSeed } = require('./seeds/addressSeed');
 
 module.exports = {
