@@ -98,7 +98,11 @@ export function removeCurrentRevisionMigrations(
 	);
 }
 
-export function getMigrationCommands(actions: IAction[]) {
+export function getMigrationCommands(actions: IAction[]): {
+	commandsUp: any[],
+	commandsDown: any[],
+	consoleOut: string[]
+} {
 	const commandsUp: any[] = [];
 	const commandsDown: any[] = [];
 	const consoleOut: string[] = [];
@@ -107,9 +111,7 @@ export function getMigrationCommands(actions: IAction[]) {
 		const action = actions[_i];
 		switch(action.actionType) {
 			case 'createTable':
-
-				const resUp = `
-{ fn: "createTable", params: [
+				const resUp = `{ fn: "createTable", params: [
 "${action.tableName}",
 ${getAttributes(action.attributes)},
 ${JSON.stringify(action.options)}
@@ -189,7 +191,7 @@ ${JSON.stringify(action.options)}
 				break;
 
 			default:
-			// code
+				break;
 		}
 	}
 
