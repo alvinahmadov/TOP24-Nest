@@ -19,16 +19,16 @@ function addNew(df: df.DiffNew<ITable>, actions: IAction[], currentStateTables: 
 
 		const tableName = df.rhs.tableName;
 		if(df.rhs.schema)
-		Object.values(df.rhs.schema)
-		      .forEach((v) =>
-		               {
-			               if(v.references) {
-				               if(typeof v.references !== 'string')
-					               depends.push(v.references.model as string);
-				               else
-					               depends.push(v.references);
-			               }
-		               });
+			Object.values(df.rhs.schema)
+			      .forEach((v) =>
+			               {
+				               if(v.references) {
+					               if(typeof v.references !== 'string')
+						               depends.push(v.references.model as string);
+					               else
+						               depends.push(v.references);
+				               }
+			               });
 
 		actions.push({
 			             actionType: 'createTable',
@@ -61,7 +61,6 @@ function addNew(df: df.DiffNew<ITable>, actions: IAction[], currentStateTables: 
 	const depends: string[] = [tableName];
 
 	if(df.path[1] === 'schema') {
-		// if (df.path.length === 3) - new field
 		if(df.path.length === 3) {
 			// new field
 			if(df.rhs && df.rhs.references) {
@@ -76,8 +75,7 @@ function addNew(df: df.DiffNew<ITable>, actions: IAction[], currentStateTables: 
 			             });
 			return;
 		}
-
-		// if (df.path.length > 3) - add new attribute to column (change col)
+		// add new attribute to column (change col)
 		if(df.path.length > 3) {
 			if(df.path[1] === 'schema') {
 				// new field attributes
@@ -196,7 +194,7 @@ function edit(df: df.DiffEdit<ITable>, actions: IAction[], currentStateTables: a
 		}
 
 		actions.push({
-			             actionType: 'changeColumn',
+			             actionType:    'changeColumn',
 			             tableName,
 			             attributeName: df.path[2],
 			             options,
