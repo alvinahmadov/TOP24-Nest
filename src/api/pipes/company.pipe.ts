@@ -44,7 +44,7 @@ export class CompanyCreatePipe
 	implements PipeTransform<ICompany> {
 	async transform(data: any) {
 		if(data) {
-			let value: ICompany;
+			let value: ICompany & { user?: string };
 			const companyType = data[env.api.compatMode ? 'company_type' : 'type'];
 			if(companyType === CompanyType.ORG) {
 				value = !env.api.compatMode ? data : transformToCargoCompany(data);
@@ -52,9 +52,17 @@ export class CompanyCreatePipe
 			else {
 				value = !env.api.compatMode ? data : transformToCargoInnCompany(data);
 			}
+			if(!value)
+				throw new Error('DTO data is null');
+
 			this.checkPaymentType(value);
-			delete value.confirmed;
+			value.user = data.user;
+			
+			delete value.id;
 			delete value.userId;
+			delete value.confirmed;
+			delete value.createdAt;
+			delete value.updatedAt;
 
 			return value;
 		}
