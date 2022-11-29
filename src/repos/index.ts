@@ -10,18 +10,20 @@ import OfferRepository           from './offer.repository';
 import OrderRepository           from './order.repository';
 import PaymentsRepository        from './payment.repository';
 import TransportRepository       from './transport.repository';
+import UserRepository            from './user.repository';
 
 export {
-  GenericRepository,
-  AdminRepository,
-  AddressRepository,
-  CargoCompanyRepository,
-  CargoInnCompanyRepository,
-  DriverRepository,
-  GatewayEventRepository,
-  ImageRepository,
-  OrderRepository,
-  OfferRepository,
-  PaymentsRepository,
-  TransportRepository
+	GenericRepository,
+	AdminRepository,
+	AddressRepository,
+	CargoCompanyRepository,
+	CargoInnCompanyRepository,
+	DriverRepository,
+	GatewayEventRepository,
+	ImageRepository,
+	OrderRepository,
+	OfferRepository,
+	PaymentsRepository,
+	TransportRepository,
+	UserRepository
 };
