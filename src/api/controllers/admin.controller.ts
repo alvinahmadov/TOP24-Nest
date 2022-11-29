@@ -12,7 +12,6 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { ApiRoute, UserParam } from '@common/decorators';
-import { UserRole }            from '@common/enums';
 import {
 	IAdminLoginResponse,
 	IApiResponse,
@@ -147,11 +146,6 @@ export default class AdminController
 			message:    'Access Denied'
 		};
 		if(user.id === id) {
-			if(user.role != UserRole.ADMIN) {
-				delete dto.role;
-				delete dto.privilege;
-				delete dto.confirmed;
-			}
 			result = await this.adminService.update(id, dto);
 		}
 
