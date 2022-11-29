@@ -3,18 +3,20 @@ import {
 	IAdmin,
 	ICargoCompany,
 	ICargoInnCompany,
-	IDriver,
+	IDriver, IGatewayEvent,
 	IImage,
 	IModel,
 	IOffer,
 	IOrder,
 	IPayment,
 	ITransport,
+	IUser,
 	TApiProperty
 } from '@common/interfaces';
 
 /**@ignore*/
 type TCompanyAssociates = {
+	user?: any;
 	payment?: any;
 	drivers?: any[];
 	images?: any[];
@@ -73,11 +75,13 @@ type TEntityConfigList = {
 	company: TApiProperty<ICargoCompany & TCompanyAssociates>;
 	companyinn: TApiProperty<ICargoInnCompany & TCompanyAssociates>;
 	driver: TApiProperty<IDriver & TDriverAssociates>;
+	gatewayEvent: TApiProperty<IGatewayEvent>;
 	image: TApiProperty<IImage & TImageAssociates>;
 	offer: TApiProperty<IOffer & TOfferAssociates>;
 	order: TApiProperty<IOrder & TOrderAssociates>;
 	payment: TApiProperty<IPayment & TPaymentAssociates>;
 	transport: TApiProperty<ITransport & TTransportAssociates>;
+	user: TApiProperty<IUser>;
 };
 
 /**@ignore*/
@@ -208,6 +212,10 @@ export const entityConfig: TEntityConfigList = {
 	},
 	company:    {
 		...base,
+		userId:         {
+			description: 'Id of user that owns the company',
+			format:      'uuid'
+		},
 		crmId:          {
 			description: 'CRM id of company from bitrix server.'
 		},
@@ -242,6 +250,7 @@ export const entityConfig: TEntityConfigList = {
 			description: 'Phone number of cargo company.',
 			examples:    ['+7 000 000 00 00', '+70000000000']
 		},
+		isDefault:      { description: 'Default selected company' },
 		taxReasonCode:  {
 			description: 'Tax Registration Reason Code for the cargo company.',
 			example:     '773601001'
@@ -313,10 +322,6 @@ export const entityConfig: TEntityConfigList = {
 		confirmed:      {
 			description: 'Cargo company completed registration.'
 		},
-		verify:         {
-			description: 'Registration verification code.',
-			example:     '1234'
-		},
 		info:           {
 			description: 'Additional information about cargo company'
 		},
@@ -342,6 +347,7 @@ export const entityConfig: TEntityConfigList = {
 		                {
 			                description: 'Link to photo of attorney sign'
 		                },
+		user:           { description: 'User that owns company' },
 		payment:        {
 			description: 'List of associated payment data of the cargo company.',
 			readOnly:    true
@@ -365,22 +371,31 @@ export const entityConfig: TEntityConfigList = {
 	},
 	companyinn: {
 		...base,
-		name:               {
+		userId:     {
+			description: 'Id of user that owns the company',
+			format:      'uuid'
+		},
+		name:       {
 			description: 'Full name of the cargo company.',
 			example:     'ООО "Борис и КО"'
 		},
-		patronymic:         {
+		patronymic: {
 			description: 'Middlename of individual cargo company owner.',
 			example:     ['Vladimirovych', 'Осипович']
 		},
-		lastName:           {
+		lastName:   {
 			description: 'Lastname of individual cargo company owner.',
 			examples:    ['Boshirov', 'Иванов']
 		},
-		type:               {
+		type:       {
 			description: 'Type of company',
 			enum:        { ORG: 0, IE: 1, PI: 2 },
 			enumName:    'CompanyType'
+		},
+
+		taxpayerNumber:     {
+			description: 'Taxpayer Identification Number for the cargo company (ИНН).',
+			example:     '7707083893'
 		},
 		role:               {
 			description: 'User role.',
@@ -388,14 +403,11 @@ export const entityConfig: TEntityConfigList = {
 			readOnly:    true,
 			enum:        { 'LOGIST': 0, 'CARGO': 1, 'ADMIN': 2 }
 		},
-		taxpayerNumber:     {
-			description: 'Taxpayer Identification Number for the cargo company (ИНН).',
-			example:     '7707083893'
-		},
 		phone:              {
 			description: 'Phone number of cargo company.',
 			example:     ['+7 000 000 00 00', '+70000000000']
 		},
+		isDefault:          { description: 'Default selected company' },
 		email:              {
 			description: 'Official email of cargo company.',
 			example:     'amadeus.cargo@mail.com'
@@ -448,11 +460,6 @@ export const entityConfig: TEntityConfigList = {
 		confirmed:          {
 			description: 'Cargo company completed registration.'
 		},
-		verify:             {
-			description: 'Verificaton code to complete registration.',
-			default:     '',
-			readOnly:    true
-		},
 		address:            {
 			description: 'Main address of the cargo company.',
 			example:     'Россия, Москва, 117312, ул. Вавилова, д. 19'
@@ -483,6 +490,7 @@ export const entityConfig: TEntityConfigList = {
 		passportSelfieLink: {
 			description: 'Selfie with passport image link.'
 		},
+		user:               { description: 'User that owns company' },
 		payment:            {
 			description: 'List of associated payment data of the cargo company.',
 			readOnly:    true
@@ -640,6 +648,15 @@ export const entityConfig: TEntityConfigList = {
 			readOnly:    true
 		}
 	},
+	gatewayEvent:
+	            {
+		            ...base,
+		            eventData: {},
+		            eventName: {},
+		            source:    {},
+		            hasSeen:   {},
+		            message:   {}
+	            },
 	image:      {
 		...base,
 		cargoId:     {
@@ -804,11 +821,11 @@ export const entityConfig: TEntityConfigList = {
 			description: 'Order has higher priority by destination date (close date higher priority)'
 		},
 		driverDeferralConditions:
-			                 {
+		                   {
 			                   description: 'Driver\'s deferral conditions for order execution'
 		                   },
 		ownerDeferralConditions:
-                       {
+		                   {
 			                   description: 'Cargo owner\'s deferral conditions for order execution'
 		                   },
 		paymentPhotoLinks: {
@@ -885,122 +902,136 @@ export const entityConfig: TEntityConfigList = {
 	},
 	transport:  {
 		...base,
-		crmId:              { description: 'CRM id of transport from bitrix server.' },
-		cargoId:            {
+		crmId:                 { description: 'CRM id of transport from bitrix server.' },
+		cargoId:               {
 			description: 'Id of cargo company transport belongs to.',
 			format:      'uuid'
 		},
-		cargoinnId:         {
+		cargoinnId:            {
 			description: 'Id of cargo company (individual) transport belongs to.',
 			format:      'uuid'
 		},
-		driverId:           {
+		driverId:              {
 			description: 'Id of driver transport belongs to.',
 			format:      'uuid'
 		},
-		status:             { description: 'Status of the transport.' },
-		comments:           { description: 'Additional comments about the transport.' },
-		diagnosticsNumber:  { description: 'Transport diagnostics certificate number.' },
-		diagnosticsDate:    { description: 'Transport diagnostics certificate given date.' },
+		status:                { description: 'Status of the transport.' },
+		comments:              { description: 'Additional comments about the transport.' },
+		diagnosticsNumber:     { description: 'Transport diagnostics certificate number.' },
+		diagnosticsExpiryDate: { description: 'Transport diagnostics certificate given date.' },
 		diagnosticsPhotoLink:
-		                    { description: 'Link to the transport diagnostics certificate photo.' },
-		info:               { description: 'Additional information about the transport.' },
-		volumeExtra:        {
+		                       { description: 'Link to the transport diagnostics certificate photo.' },
+		info:                  { description: 'Additional information about the transport.' },
+		volumeExtra:           {
 			description: 'Additional volume for cargo that transport can take for another order when has ongoing order.',
 			format:      'float'
 		},
-		weightExtra:        {
+		weightExtra:           {
 			description: 'Additional weight for cargo that transport can take for another order when has ongoing order.',
 			format:      'float'
 		},
-		volume:             {
+		volume:                {
 			description: 'Volume of cargo that transport can carry.',
 			format:      'float'
 		},
-		weight:             {
+		weight:                {
 			description: 'Weight of cargo that transport can carry.',
 			format:      'float'
 		},
-		length:             {
+		length:                {
 			description: 'Length of cargo that transport can carry.',
 			format:      'float'
 		},
-		width:              {
+		width:                 {
 			description: 'Width of cargo that transport can carry.',
 			format:      'float'
 		},
-		height:             {
+		height:                {
 			description: 'Height of cargo that transport can carry.',
 			format:      'float'
 		},
-		loadingTypes:       { description: 'Cargo loading modes for transport.' },
-		brand:              {
+		loadingTypes:          { description: 'Cargo loading modes for transport.' },
+		brand:                 {
 			description: 'Brand of the transport producer.',
 			examples:    ['Scania', 'Dasan', 'Dogan Yildiz', 'Daewoo']
 		},
-		model:              {
+		model:                 {
 			description: 'Model of the transport.',
 			example:     'R 730 V8 6x2'
 		},
-		osagoNumber:        {
+		osagoNumber:           {
 			description: 'Certificate number of Compulsory insurance '
 			             + 'of civil liability of vehicle owners (ОСАГО).'
 		},
-		osagoExpiryDate:    {
+		osagoExpiryDate:       {
 			description: 'Compulsory insurance of civil liability '
 			             + 'of vehicle owners (ОСАГО) certificate given date.'
 		},
-		osagoPhotoLink:     {
+		osagoPhotoLink:        {
 			description: 'Link to the photo of OSAGO certificate.',
 			format:      'url'
 		},
-		payload:            { description: 'Payload that transport may carry.' },
-		payloadExtra:       { description: 'Transport can carry additional cargo.\nOpposite of isDedicated.' },
-		isTrailer:          { description: 'Transport is trailer.' },
-		isDedicated:        {
+		payload:               { description: 'Payload that transport may carry.' },
+		payloadExtra:          { description: 'Transport can carry additional cargo.\nOpposite of isDedicated.' },
+		isTrailer:             { description: 'Transport is trailer.' },
+		isDedicated:           {
 			description: 'Transport is dedicated for execution of only one order.\nOpposite of payloadExtra'
 		},
-		pallets:            {
+		pallets:               {
 			description: 'Number of cargo pallets that transport is available to carry.',
 			format:      'integer'
 		},
-		prodYear:           {
+		prodYear:              {
 			description: 'Year of production of transport.',
 			format:      'integer',
 			examples:    [2012, 2015]
 		},
-		registrationNumber: {
+		registrationNumber:    {
 			description: 'Transport registration number.',
 			example:     'но 181 к 881'
 		},
-		certificateNumber:  {
+		certificateNumber:     {
 			description: 'Transport registration certificate number.',
 			example:     '8 181 81 881'
 		},
-		riskClasses:        { description: 'Transport risk class for cargo.' },
-		type:               {
+		riskClasses:           { description: 'Transport risk class for cargo.' },
+		type:                  {
 			description: 'Type of the transport.',
 			examples:    ['Тентованный', 'Контейнер 40фт']
 		},
-		fixtures:           {
+		fixtures:              {
 			description: 'Extra fixtures of transport.',
 			examples:    ['Аппарели', 'Без ворот', 'Со снятием стоек']
 		},
-		cargo:              {
+		cargo:                 {
 			description: 'Cargo company that transport belongs to.',
 			readOnly:    true
 		},
-		cargoinn:           {
+		cargoinn:              {
 			description: 'Cargo company (INN) that transport belongs to.',
 			readOnly:    true
 		},
-		driver:             {
+		driver:                {
 			description: 'Driver of the transport',
 			readOnly:    true
 		},
-		images:             {
+		images:                {
 			description: 'List of transport images.',
 			readOnly:    true
+		}
+	},
+	user:       {
+		...base,
+		phone:  { description: 'Unique phone number for user to login.' },
+		role:   {
+			description: 'User role.',
+			nullable:    false,
+			readOnly:    true,
+			enum:        { 'LOGIST': 0, 'CARGO': 1, 'ADMIN': 2 }
+		},
+		verify: {
+			description: 'Registration verification code.',
+			example:     '1234'
 		}
 	}
 };
