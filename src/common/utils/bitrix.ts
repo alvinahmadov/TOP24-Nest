@@ -22,7 +22,6 @@ import {
 	TBitrixData
 }                                  from '@common/interfaces';
 import { dateValidator, isNumber } from '@common/utils';
-import Driver                      from '@models/driver.entity';
 import { OrderCreateDto }          from '@api/dto';
 import { splitAddress }            from './address';
 
@@ -412,11 +411,8 @@ export async function cargoToBitrix(company: any): Promise<IApiResponse<number>>
 			const contactCrmIds: number[] = [];
 			let contactResult: boolean;
 
-			// @ts-ignore
 			if(company.drivers) {
-				// @ts-ignore
 				for(const driver of company.drivers) {
-					// @ts-ignore
 					const driverData = driver.toCrm(crmCargoId, company.directions);
 					for(const transport of driver.transports) {
 						let contactCrmId = transport.crm_id;
