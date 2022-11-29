@@ -10,6 +10,7 @@ import {
 	UserRole
 } from '@common/enums';
 import {
+	ICRMEntity,
 	IOrderFilter,
 	TGeoCoordinate,
 	URL
@@ -38,7 +39,8 @@ export interface IModel {
 	updatedAt: Date;
 }
 
-export interface IUser {
+export interface IUser
+	extends IModel {
 	/**
 	 * Role of the user.
 	 *
@@ -46,55 +48,14 @@ export interface IUser {
 	 * @enum UserRole
 	 * */
 	role: UserRole;
-}
-
-/**
- * User entity.
- * */
-export interface IAdmin
-	extends IModel,
-	        IUser {
-	/**
-	 * Admin email.
-	 *
-	 * @example
-	 * logist.cargo@mail.com
-	 * */
-	email: string;
-	/**
-	 * Admin name.
-	 *
-	 * @example
-	 * Иван
-	 * */
-	name: string;
-	/**
-	 * Admin phone number.
-	 *
-	 * @example
-	 * +7 000 000 00 00
-	 * */
 	phone: string;
 	/**
-	 * Verificaton code to complete registration.
+	 * Registration verification code.
 	 *
 	 * @example
 	 * 1234
 	 * */
 	verify?: string;
-	/**
-	 * Admin has privilege as super admin.
-	 *
-	 * @default false
-	 * @readonly true
-	 * */
-	privilege?: boolean;
-	/**
-	 * Admin confirmed registration.
-	 *
-	 * @default false
-	 * @readonly true
-	 * */
 	confirmed?: boolean;
 }
 
@@ -207,11 +168,60 @@ export interface IAddress
 }
 
 /**
+ * User entity.
+ * */
+export interface IAdmin
+	extends IUser {
+	/**
+	 * Admin email.
+	 *
+	 * @example
+	 * logist.cargo@mail.com
+	 * */
+	email: string;
+	/**
+	 * Admin name.
+	 *
+	 * @example
+	 * Иван
+	 * */
+	name: string;
+	/**
+	 * Admin phone number.
+	 *
+	 * @example
+	 * +7 000 000 00 00
+	 * */
+	phone: string;
+	/**
+	 * Verificaton code to complete registration.
+	 *
+	 * @example
+	 * 1234
+	 * */
+	verify?: string;
+	/**
+	 * Admin has privilege as super admin.
+	 *
+	 * @default false
+	 * @readonly true
+	 * */
+	privilege?: boolean;
+	/**
+	 * Admin confirmed registration.
+	 *
+	 * @default false
+	 * @readonly true
+	 * */
+	confirmed?: boolean;
+}
+
+/**
  * Base company entity.
  * */
 export interface ICompany
-	extends IModel,
-	        IUser {
+	extends IModel, ICRMEntity {
+	userId: string;
 	/**
 	 * Full name of the cargo company or first name of the individual company owner.
 	 *
@@ -232,9 +242,15 @@ export interface ICompany
 	 * */
 	type: CompanyType;
 	/**
-	 * Role of the company user.
+	 * Phone number of cargo company.
+	 *
+	 * Stored in database in form of XXXXXXXXXXX where X - number.
+	 *
+	 * @example
+	 * +7 000 000 00 00
+	 * 70000000000
 	 * */
-	role: UserRole;
+	phone: string;
 	/**
 	 * Taxpayer Identification Number for the cargo company (ИНН).
 	 *
@@ -279,16 +295,6 @@ export interface ICompany
 	 * */
 	crmId?: number;
 	/**
-	 * Phone number of cargo company.
-	 *
-	 * Stored in database in form of XXXXXXXXXXX where X - number.
-	 *
-	 * @example
-	 * +7 000 000 00 00
-	 * 70000000000
-	 * */
-	phone: string;
-	/**
 	 * Contact phone number.
 	 *
 	 * @example
@@ -305,13 +311,6 @@ export interface ICompany
 	 * */
 	directions?: string[];
 	/**
-	 * Registration verification code.
-	 *
-	 * @example
-	 * 1234
-	 * */
-	verify?: string;
-	/**
 	 * Payment type that company accepts.
 	 *
 	 * @example
@@ -324,6 +323,7 @@ export interface ICompany
 	 * Cargo company completed registration.
 	 * */
 	confirmed?: boolean;
+	isDefault?: boolean;
 	/**
 	 * Avatar image link.
 	 * */
@@ -336,6 +336,12 @@ export interface ICompany
 	info?: string;
 	/**@deprecated*/
 	status?: string;
+	/**
+	 * Role of the company user.
+	 * @deprecated
+	 * */
+	readonly role?: UserRole;
+	readonly userPhone?: string;
 }
 
 /**
@@ -496,8 +502,7 @@ export interface IDriverOperation {
  * Driver of the company.
  * */
 export interface IDriver
-	extends IModel,
-	        Partial<IUser> {
+	extends IModel, ICRMEntity {
 	/**
 	 * Id of cargo company which driver is assigned.
 	 * */
@@ -506,10 +511,6 @@ export interface IDriver
 	 * Id of cargo company (individual) which driver is assigned.
 	 * */
 	cargoinnId?: string;
-	/**
-	 * CRM id of driver in bitrix service.
-	 * */
-	crmId?: number;
 	/**
 	 * Name of the driver.
 	 *
@@ -845,7 +846,7 @@ export interface IOffer
  * Cargo transportation order.
  * */
 export interface IOrder
-	extends IModel {
+	extends IModel, ICRMEntity {
 	/**
 	 * Id of cargo company.
 	 * */
@@ -858,10 +859,6 @@ export interface IOrder
 	 * Id of driver assigned to the order.
 	 * */
 	driverId?: string;
-	/**
-	 * CRM id of order from bitrix.
-	 * */
-	crmId?: number;
 	/**
 	 * Title of the order.
 	 *
@@ -1201,7 +1198,7 @@ export interface IPayment
  * Company transport assigned to the driver.
  * */
 export interface ITransport
-	extends IModel {
+	extends IModel, ICRMEntity {
 	/**
 	 * Id of cargo company transport belongs to.
 	 * */
@@ -1217,7 +1214,6 @@ export interface ITransport
 	/**
 	 * CRM id of transport from bitrix.
 	 * */
-	crmId?: number;
 	confirmed?: boolean;
 	/**
 	 * Status of the transport.
@@ -1374,7 +1370,7 @@ export interface ITransport
 	/**
 	 * Transport diagnostics certificate given\expiry date.
 	 * */
-	diagnosticsDate: Date;
+	diagnosticsExpiryDate: Date;
 	/**
 	 * Link to the transport diagnostics certificate photo.
 	 * */
