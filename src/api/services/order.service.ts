@@ -295,7 +295,7 @@ export default class OrderService
 				}
 			}
 			result.driver = driver;
-			
+
 			if(!driver.currentPoint)
 				result.driver.currentPoint = 'A';
 			if(driver.isReady)
@@ -381,11 +381,9 @@ export default class OrderService
 				if(!crmOrderId && result && result !== '') {
 					if(typeof result !== 'boolean' && typeof result === 'string') {
 						crmOrderId = Number(result);
-						await this.repository.update(id, { crmId: crmOrderId });
+						await this.repository.update(id, { crmId: crmOrderId, hasSent: true });
 					}
 				}
-				order.hasSent = true;
-				await order.save({ fields: ['hasSent'] });
 			}
 		} catch(e) {
 			console.error(e);
