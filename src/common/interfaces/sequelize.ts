@@ -84,8 +84,7 @@ export const StringArrayColumn = (options: TColumnOptions = {}): Function =>
 	MergeColumnOptions({ type: DataType.ARRAY(DataType.STRING) }, options);
 
 export const UrlColumn = (options: TColumnOptions = {}): Function =>
-	(target: Object, propertyKey: string) =>
-		MergeColumnOptions({ type: DataType.STRING, defaultValue: null, validate: { isUrl: { msg: propertyKey } } }, options);
+	MergeColumnOptions({ type: DataType.STRING, defaultValue: null, validate: { isUrl: true } }, options);
 
 export function Index(name: string): AnnotationFunction;
 export function Index(indexOptions: IndexOptions): AnnotationFunction;
