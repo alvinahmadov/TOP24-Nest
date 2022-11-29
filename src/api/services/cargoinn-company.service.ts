@@ -137,7 +137,7 @@ export default class CargoCompanyInnService
 		const { data: user } = await this.userService.getByPhone(dto.user);
 
 		if(!user) {
-			const { data: user } = await this.userService.create({ phone: dto.user, role: UserRole.CARGO });
+			const { data: user } = await this.userService.create({ phone: dto.user ?? dto.phone, role: UserRole.CARGO });
 			userId = user.id;
 			dto.isDefault = true;
 		}

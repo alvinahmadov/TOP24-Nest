@@ -4,7 +4,6 @@ import {
 	IsEmail,
 	IsInt,
 	IsString,
-	IsNotEmpty
 }                      from 'class-validator';
 import { InputType }   from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
@@ -140,6 +139,5 @@ export default class CompanyCreateDto
 	attorneySignLink?: string;
 
 	@IsString()
-	@IsNotEmpty()
 	user: string;
 }
