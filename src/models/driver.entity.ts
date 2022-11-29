@@ -293,12 +293,11 @@ export default class Driver
 		);
 	}
 
-	public readonly toCrm = (
+	public toCrm(
 		companyCrmId: number,
 		directions: string[]
-	): TCRMData =>
-	{
-		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
+	): TCRMData {
+		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'N' } };
 		data.fields[DRIVER.COMPANY_ID] = companyCrmId;
 		data.fields[DRIVER.USER_TYPE] = CRM.CONTACT_TYPES[1].ID;
 		data.fields[DRIVER.NAME.FIRST] = this.name;
