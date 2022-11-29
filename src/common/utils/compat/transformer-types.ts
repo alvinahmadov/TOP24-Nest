@@ -114,6 +114,7 @@ export interface ICompanyTransformer
 	 * @see ICompany.crmId
 	 * */
 	crm_id?: number;
+	is_default?: boolean;
 	confirmed?: boolean;
 	/**
 	 * @see ICompany.contactPhone
