@@ -3,14 +3,12 @@ import {
 	IsDate,
 	IsEmail,
 	IsInt,
+	IsNotEmpty,
 	IsString
 }                      from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 import { InputType }   from '@nestjs/graphql';
-import {
-	CompanyType,
-	UserRole
-}                      from '@common/enums';
+import { ApiProperty } from '@nestjs/swagger';
+import { CompanyType } from '@common/enums';
 import {
 	ICargoInnCompany,
 	TCreationAttribute
@@ -21,7 +19,7 @@ const { companyinn: prop } = entityConfig;
 
 @InputType()
 export default class CompanyInnCreateDto
-	implements TCreationAttribute<ICargoInnCompany> {
+	implements TCreationAttribute<Omit<ICargoInnCompany, 'userId' | 'userPhone'>> {
 	@ApiProperty(prop.name)
 	@IsString()
 	name: string;
@@ -38,10 +36,6 @@ export default class CompanyInnCreateDto
 	@IsInt()
 	type: CompanyType;
 
-	@ApiProperty(prop.role)
-	@IsInt()
-	role: UserRole = UserRole.CARGO;
-
 	@ApiProperty(prop.taxpayerNumber)
 	@IsString()
 	taxpayerNumber: string;
@@ -55,9 +49,8 @@ export default class CompanyInnCreateDto
 	@IsEmail()
 	email: string;
 
-	@ApiProperty(prop.crmId)
-	@IsString()
-	crmId?: number;
+	@ApiProperty(prop.isDefault)
+	isDefault: boolean = false;
 
 	@ApiProperty(prop.birthDate)
 	@IsDate()
@@ -115,10 +108,6 @@ export default class CompanyInnCreateDto
 	@IsString()
 	confirmed?: boolean;
 
-	@ApiProperty(prop.verify)
-	@IsString()
-	verify?: string;
-
 	@ApiProperty(prop.address)
 	@IsString()
 	address?: string;
@@ -139,7 +128,7 @@ export default class CompanyInnCreateDto
 	@IsString()
 	personalPhone?: string;
 
-	@ApiProperty(prop.avatarLink)
 	@IsString()
-	avatarLink?: string;
+	@IsNotEmpty()
+	user: string;
 }

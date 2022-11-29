@@ -2,11 +2,11 @@ import {
 	IsString,
 	IsUUID
 }                      from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 import {
 	Field,
 	InputType
 }                      from '@nestjs/graphql';
+import { ApiProperty } from '@nestjs/swagger';
 import {
 	IPayment,
 	TCreationAttribute
@@ -48,10 +48,6 @@ export default class PaymentCreateDto
 	@ApiProperty(prop.bankBic)
 	@IsString()
 	bankBic: string;
-
-	@ApiProperty(prop.ogrnipPhotoLink)
-	@IsString()
-	ogrnipPhotoLink?: string;
 
 	@ApiProperty(prop.info)
 	@IsString()

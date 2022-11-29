@@ -8,8 +8,8 @@ import {
 	IsUrl,
 	IsUUID
 }                      from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 import { InputType }   from '@nestjs/graphql';
+import { ApiProperty } from '@nestjs/swagger';
 import {
 	LoadingType,
 	OrderStage,
@@ -122,7 +122,7 @@ export default class OrderCreateDto
 	@ApiProperty(prop.isBid)
 	@IsBoolean()
 	isBid?: boolean = false;
-	
+
 	@ApiProperty(prop.onPayment)
 	@IsBoolean()
 	onPayment?: boolean = false;

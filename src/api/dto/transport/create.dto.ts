@@ -4,20 +4,18 @@ import {
 	IsDate,
 	IsInt,
 	IsString,
-	IsUrl,
 	IsUUID
 }                      from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 import {
 	Field,
 	InputType
 }                      from '@nestjs/graphql';
+import { ApiProperty } from '@nestjs/swagger';
 import {
 	LoadingType,
 	TransportStatus
 }                      from '@common/enums';
 import {
-	decimal,
 	ITransport,
 	TCreationAttribute
 }                      from '@common/interfaces';
@@ -44,12 +42,6 @@ export default class TransportCreateDto
 	@IsUUID()
 	driverId?: string;
 
-	@ApiProperty(prop.crmId)
-	crmId?: number;
-
-	@ApiProperty(prop.confirmed)
-	confirmed?: boolean = false;
-
 	@ApiProperty(prop.status)
 	@IsInt()
 	status: TransportStatus = TransportStatus.NONE;
@@ -62,13 +54,9 @@ export default class TransportCreateDto
 	@IsString()
 	diagnosticsNumber: string;
 
-	@ApiProperty(prop.diagnosticsDate)
+	@ApiProperty(prop.diagnosticsExpiryDate)
 	@IsDate()
-	diagnosticsDate: Date;
-
-	@ApiProperty(prop.diagnosticsPhotoLink)
-	@IsString()
-	diagnosticsPhotoLink?: string;
+	diagnosticsExpiryDate: Date;
 
 	@ApiProperty(prop.weightExtra)
 	weightExtra: number = 0.0;
@@ -77,19 +65,19 @@ export default class TransportCreateDto
 	volumeExtra: number = 0.0;
 
 	@ApiProperty(prop.weight)
-	weight: decimal;
+	weight: number;
 
 	@ApiProperty(prop.volume)
-	volume: decimal;
+	volume: number;
 
 	@ApiProperty(prop.length)
-	length: decimal;
+	length: number;
 
 	@ApiProperty(prop.width)
-	width: decimal;
+	width: number;
 
 	@ApiProperty(prop.height)
-	height: decimal;
+	height: number;
 
 	@ApiProperty(prop.loadingTypes)
 	@IsArray()
@@ -110,10 +98,6 @@ export default class TransportCreateDto
 	@ApiProperty(prop.osagoExpiryDate)
 	@IsDate()
 	osagoExpiryDate: Date;
-
-	@ApiProperty(prop.osagoPhotoLink)
-	@IsUrl()
-	osagoPhotoLink: string;
 
 	@ApiProperty(prop.payload)
 	@IsString()

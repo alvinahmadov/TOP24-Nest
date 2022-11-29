@@ -8,6 +8,6 @@ export default class DriverOfferDto
 	driverId: string;
 	orderStatus: OrderStatus;
 	bidPrice?: number;
-	bidPriceVAT?: number;
+	bidPriceVat?: number;
 	bidComment?: string;
 }

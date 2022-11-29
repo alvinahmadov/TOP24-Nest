@@ -6,15 +6,13 @@ import {
 	IsLatitude,
 	IsLongitude,
 	IsString,
-	IsUrl,
 	IsUUID
 }                       from 'class-validator';
 import faker            from '@faker-js/faker';
-import { ApiProperty }  from '@nestjs/swagger';
 import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import { DriverStatus } from '@common/enums';
 import {
-	integer,
 	IDriver,
 	TCreationAttribute
 }                       from '@common/interfaces';
@@ -32,10 +30,6 @@ export default class DriverCreateDto
 	@ApiProperty(prop.cargoinnId)
 	@IsUUID()
 	cargoinnId?: string;
-
-	@ApiProperty(prop.crmId)
-	@IsInt()
-	crmId?: integer;
 
 	@ApiProperty(prop.name)
 	@IsString()
@@ -129,39 +123,15 @@ export default class DriverCreateDto
 	@ApiProperty(prop.currentAddress)
 	@IsString()
 	currentAddress?: string = '';
-	
+
 	@ApiProperty(prop.payloadCity)
 	payloadCity?: string = null;
-	
+
 	@ApiProperty(prop.payloadRegion)
 	payloadRegion?: string = null;
-	
+
 	@ApiProperty(prop.payloadDate)
 	payloadDate?: Date = null;
-
-	@ApiProperty(prop.avatarLink)
-	@IsUrl()
-	avatarLink?: string = null;
-
-	@ApiProperty(prop.passportPhotoLink)
-	@IsUrl()
-	passportPhotoLink: string = null;
-
-	@ApiProperty(prop.passportSignLink)
-	@IsUrl()
-	passportSignLink?: string = null;
-
-	@ApiProperty(prop.passportSelfieLink)
-	@IsUrl()
-	passportSelfieLink?: string = null;
-
-	@ApiProperty(prop.licenseFrontLink)
-	@IsUrl()
-	licenseFrontLink?: string = null;
-
-	@ApiProperty(prop.licenseBackLink)
-	@IsUrl()
-	licenseBackLink?: string = null;
 
 	@ApiProperty(prop.info)
 	@IsString()
