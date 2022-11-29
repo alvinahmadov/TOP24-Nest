@@ -23,7 +23,8 @@ import {
 import {
 	DriverStatus,
 	OrderStage,
-	OrderStatus
+	OrderStatus,
+	UserRole
 }                  from '../enums';
 
 //////////////
@@ -222,9 +223,21 @@ export interface ICompanyLoginResponse
 }
 
 export interface ICRMEntity {
+	/**
+	 * CRM id of company from bitrix service.
+	 * */
 	crmId?: number;
 
-	toCrm(...args: any[]): void | TCRMData;
+	/**
+	 * Indicate that data has been sent to the bitrix service for remote update
+	 * and prevent repeat of update actions from webhooks.
+	 * */
+	hasSent?: boolean;
+
+	/**
+	 * Convert entity data to bitrix data for sending.
+	 * */
+	readonly toCrm?: (...args: any[]) => void | TCRMData;
 }
 
 export interface IGatewayData {
@@ -447,7 +460,7 @@ export interface IUserLoginData {
 
 export interface IUserPayload {
 	id: string;
-	role: number;
+	role: UserRole;
 	reff?: number;
 }
 
