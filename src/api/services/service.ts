@@ -84,11 +84,15 @@ export default abstract class Service<M extends Model,
 			const { Location } = await imageFileService.uploadFile(buffer, name, bucketId);
 			if(Location) {
 				const result = await this.repository.update(id, { [linkName]: Location });
-				return {
-					statusCode: 200,
-					data:       result,
-					message:    SUCC_TRANSLATION['WRITE_FILE']
-				};
+
+				if(result) {
+					return {
+						statusCode: 200,
+						data:       result,
+						message:    SUCC_TRANSLATION['WRITE_FILE']
+					};
+				}
+				else return this.repository.getRecord('update');
 			}
 			return this.responses['WRITE_ERR'];
 		}
