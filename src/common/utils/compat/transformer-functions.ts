@@ -53,8 +53,6 @@ function transformAdmin(admin: models.Admin)
 			phone:     admin.getDataValue('phone'),
 			type:      admin.getDataValue('role'),
 			confirmed: admin.getDataValue('confirmed'),
-			privilege: admin.getDataValue('privilege'),
-			verify:    admin.getDataValue('verify'),
 			createdAt: admin.getDataValue('createdAt'),
 			updatedAt: admin.getDataValue('updatedAt')
 		};
@@ -81,10 +79,10 @@ function transformCargoCompany(company: models.CargoCompany)
 	if(company) {
 		return {
 			id:                            company.getDataValue('id'),
+			userId:                        company.userId,
 			name:                          company.getDataValue('name'),
 			email:                         company.getDataValue('email'),
 			company_type:                  company.getDataValue('type'),
-			type:                          company.getDataValue('role'),
 			inn:                           company.getDataValue('taxpayerNumber'),
 			shortname:                     company.getDataValue('shortName'),
 			passport_serial_number:        company.getDataValue('passportSerialNumber'),
@@ -95,8 +93,8 @@ function transformCargoCompany(company: models.CargoCompany)
 			crm_id:                        company.getDataValue('crmId'),
 			phone:                         company.getDataValue('phone'),
 			phone_second:                  company.getDataValue('contactPhone'),
+			user_phone:                    company.getDataValue('userPhone'),
 			directions:                    company.getDataValue('directions'),
-			verify:                        company.getDataValue('verify'),
 			nds:                           company.getDataValue('paymentType'),
 			confirmed:                     company.getDataValue('confirmed'),
 			avatar_link:                   company.getDataValue('avatarLink'),
@@ -113,10 +111,10 @@ function transformCargoCompany(company: models.CargoCompany)
 			director_order_photo_link:     company.getDataValue('directorOrderPhotoLink'),
 			attorney_sign_link:            company.getDataValue('attorneySignLink'),
 			certificate_photo_link:        company.getDataValue('certificatePhotoLink'),
-			images:                        company.images?.map(transformImage),
 			drivers:                       company.drivers?.map(transformDriver),
 			orders:                        company.orders?.map(transformOrder),
 			payment:                       transformPayment(company.payment),
+			user:                          transformUser(company.user),
 			transports:                    company.transports?.map(transformTransport),
 			createdAt:                     company.getDataValue('createdAt'),
 			updatedAt:                     company.getDataValue('updatedAt')
@@ -143,10 +141,10 @@ function transformCargoInnCompany(company: models.CargoInnCompany)
 	if(company) {
 		return {
 			id:                            company.getDataValue('id'),
+			userId:                        company.getDataValue('userId'),
 			name:                          company.getDataValue('name'),
 			email:                         company.getDataValue('email'),
 			company_type:                  company.getDataValue('type'),
-			type:                          company.getDataValue('role'),
 			inn:                           company.getDataValue('taxpayerNumber'),
 			middle_name:                   company.getDataValue('patronymic'),
 			surname:                       company.getDataValue('lastName'),
@@ -159,8 +157,8 @@ function transformCargoInnCompany(company: models.CargoInnCompany)
 			crm_id:                        company.getDataValue('crmId'),
 			phone:                         company.getDataValue('phone'),
 			phone_second:                  company.getDataValue('contactPhone'),
+			user_phone:                    company.getDataValue('userPhone'),
 			directions:                    company.getDataValue('directions'),
-			verify:                        company.getDataValue('verify'),
 			nds:                           company.getDataValue('paymentType'),
 			confirmed:                     company.getDataValue('confirmed'),
 			address_first:                 company.getDataValue('address'),
@@ -170,11 +168,11 @@ function transformCargoInnCompany(company: models.CargoInnCompany)
 			passport_link:                 company.getDataValue('passportPhotoLink'),
 			passport_selfie_link:          company.getDataValue('passportSelfieLink'),
 			passport_sign_link:            company.getDataValue('passportSignLink'),
-			images:                        company.images?.map(transformImage),
 			drivers:                       company.drivers?.map(transformDriver),
 			orders:                        company.orders?.map(transformOrder),
 			payment:                       transformPayment(company.payment),
 			transports:                    company.transports?.map(transformTransport),
+			user:                          transformUser(company.user),
 			createdAt:                     company.getDataValue('createdAt'),
 			updatedAt:                     company.getDataValue('updatedAt')
 		};
@@ -537,7 +535,7 @@ function transformTransport(transport: models.Transport)
 			osago_date:     transport.getDataValue('osagoExpiryDate'),
 			osago_link:     transport.getDataValue('osagoPhotoLink'),
 			diag_num:       transport.getDataValue('diagnosticsNumber'),
-			diag_date:      transport.getDataValue('diagnosticsDate'),
+			diag_date:      transport.getDataValue('diagnosticsExpiryDate'),
 			diag_link:      transport.getDataValue('diagnosticsPhotoLink'),
 			info:           transport.getDataValue('info'),
 			comments:       transport.getDataValue('comments'),
@@ -560,6 +558,28 @@ export function transformToTransport(data: transformers.ITransportTransformer)
 			...helpers.translateTransport(data),
 			createdAt: data.createdAt,
 			updatedAt: data.updatedAt
+		};
+	}
+
+	return null;
+}
+
+function transformUser(user: models.User, deep?: boolean)
+	: transformers.IUserTransformer {
+	if(user) {
+		return {
+			id:        user.getDataValue('id'),
+			phone:     user.getDataValue('phone'),
+			type:      user.getDataValue('role'),
+			confirmed: user.getDataValue('confirmed'),
+			cargo_companies:
+			           !!deep ? user.cargoCompanies.map(transformCargoCompany)
+			                  : undefined,
+			cargoinn_companies:
+			           !!deep ? user.cargoInnCompanies.map(transformCargoInnCompany)
+			                  : undefined,
+			createdAt: user.getDataValue('createdAt'),
+			updatedAt: user.getDataValue('updatedAt')
 		};
 	}
 
@@ -599,6 +619,9 @@ export function transformEntity<T extends IModel, E extends EntityModel<T>>(enti
 	}
 	else if(entity instanceof models.Transport) {
 		return transformTransport(entity);
+	}
+	else if(entity instanceof models.User) {
+		return transformUser(entity);
 	}
 	return entity;
 }
