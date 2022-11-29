@@ -13,6 +13,7 @@ import OfferService           from './offer.service';
 import OrderService           from './order.service';
 import PaymentService         from './payment.service';
 import TransportService       from './transport.service';
+import UserService            from './user.service';
 
 const SERVICES = [
 	AddressService,
@@ -28,7 +29,8 @@ const SERVICES = [
 	OfferService,
 	OrderService,
 	PaymentService,
-	TransportService
+	TransportService,
+	UserService
 ];
 
 export {
@@ -46,7 +48,8 @@ export {
 	OfferService,
 	OrderService,
 	PaymentService,
-	TransportService
+	TransportService,
+	UserService
 };
 
 export default SERVICES;

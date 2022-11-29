@@ -1,7 +1,9 @@
 import * as uuid                     from 'uuid';
+import { Op }                        from 'sequelize';
 import { Injectable }                from '@nestjs/common';
 import { BitrixUrl }                 from '@common/constants';
 import { AxiosStatic }               from '@common/classes';
+import { UserRole }                  from '@common/enums';
 import {
 	IApiResponses,
 	IService,
@@ -31,6 +33,7 @@ import { EventsGateway }             from '@api/events';
 import Service                       from './service';
 import AddressService                from './address.service';
 import PaymentService                from './payment.service';
+import UserService                   from './user.service';
 
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
 
@@ -52,6 +55,7 @@ export default class CargoCompanyInnService
 	constructor(
 		protected readonly addressService: AddressService,
 		protected readonly paymentsService: PaymentService,
+		protected readonly userService: UserService,
 		protected readonly gateway: EventsGateway
 	) {
 		super();
@@ -129,10 +133,23 @@ export default class CargoCompanyInnService
 	 * */
 	public async create(dto: CompanyInnCreateDto)
 		: TAsyncApiResponse<CargoInnCompany> {
-		const company = await this.createModel(dto);
+		let userId: string;
+		const { data: user } = await this.userService.getByPhone(dto.user);
+
+		if(!user) {
+			const { data: user } = await this.userService.create({ phone: dto.user, role: UserRole.CARGO });
+			userId = user.id;
+		}
+		else userId = user.id;
+
+		const company = await this.createModel({ ...dto, userId });
 
 		if(!company)
 			return this.repository.getRecord('create');
+
+		if(dto.isDefault) {
+			await this.activate(company.id);
+		}
 
 		return {
 			statusCode: 201,
@@ -200,6 +217,43 @@ export default class CargoCompanyInnService
 			message:    formatArgs(TRANSLATIONS['DELETE'], company.name)
 		};
 
+	}
+
+	public async activate(id: string) {
+		let company = await this.repository.get(id, true);
+
+		if(company) {
+			const { user } = company;
+
+			if(user) {
+				company = await this.repository.update(id, { isDefault: true });
+				if(company && company.isDefault) {
+					await this.repository.bulkUpdate(
+						{ isDefault: false },
+						{
+							id:     { [Op.ne]: company.id },
+							userId: user.id
+						}
+					);
+
+					return {
+						statusCode: 200,
+						data:       company
+					};
+				}
+				else return this.repository.getRecord('update');
+			}
+			else {
+				return {
+					statusCode: 404,
+					message:    'User not found!'
+				};
+			}
+		}
+		else return {
+			statusCode: 404,
+			message:    `Company with phone ${id} not found!`
+		};
 	}
 
 	/**
@@ -288,6 +342,11 @@ export default class CargoCompanyInnService
 		if(!company) {
 			return this.responses['NOT_FOUND'];
 		}
-		return cargoToBitrix(company);
+		const result = await cargoToBitrix(company);
+
+		if(result.statusCode === 200)
+			await this.repository.update(id, { hasSent: true });
+
+		return result;
 	}
 }
