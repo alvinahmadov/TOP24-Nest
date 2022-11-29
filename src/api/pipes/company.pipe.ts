@@ -12,16 +12,19 @@ import {
 }                                    from '@common/utils/compat/transformer-functions';
 import {
 	CargoCompanyRepository,
-	CargoInnCompanyRepository
+	CargoInnCompanyRepository,
+	UserRepository
 }                                    from '@repos/index';
 
 class CompanyValidator {
 	protected cargoCompanyRepo: CargoCompanyRepository;
 	protected cargoCompanyInnRepo: CargoInnCompanyRepository;
+	protected userRepo: UserRepository;
 
 	constructor() {
 		this.cargoCompanyRepo = new CargoCompanyRepository();
 		this.cargoCompanyInnRepo = new CargoInnCompanyRepository();
+		this.userRepo = new UserRepository();
 	}
 
 	protected checkPaymentType(company: ICompany) {
@@ -33,20 +36,6 @@ class CompanyValidator {
 		}
 		else throw Error('Не указан тип оплаты!');
 	}
-
-	protected async checkPhoneNumber(phone: string, name: string) {
-		if(phone !== undefined) {
-			const company = await this.cargoCompanyRepo.getByPhone(phone) ||
-			                await this.cargoCompanyInnRepo.getByPhone(phone);
-
-			if(company && company.name !== name) {
-				throw Error('This Phone is already taken.');
-			}
-		}
-		else {
-			throw Error('No Phone number!');
-		}
-	}
 }
 
 @Injectable()
@@ -56,37 +45,20 @@ export class CompanyCreatePipe
 	async transform(data: any) {
 		if(data) {
 			let value: ICompany;
-			const companyType = env.api.compatMode ? data['company_type'] : data['type'];
+			const companyType = data[env.api.compatMode ? 'company_type' : 'type'];
 			if(companyType === CompanyType.ORG) {
 				value = !env.api.compatMode ? data : transformToCargoCompany(data);
 			}
 			else {
 				value = !env.api.compatMode ? data : transformToCargoInnCompany(data);
 			}
-			const { phone, name } = value;
-			await this.checkPhoneNumber(phone, name);
 			this.checkPaymentType(value);
+			delete value.confirmed;
+			delete value.userId;
+
 			return value;
 		}
 
-		return data;
-	}
-}
-
-@Injectable()
-export class CompanyUpdatePipe
-	extends CompanyValidator
-	implements PipeTransform {
-	async transform(data: any) {
-		const { phone } = data;
-		if(phone !== undefined) {
-			const company = await this.cargoCompanyRepo.getByPhone(phone) ||
-			                await this.cargoCompanyInnRepo.getByPhone(phone);
-
-			if(company !== null) {
-				throw Error('Указанный номер занят другим пользователем!');
-			}
-		}
 		return data;
 	}
 }
