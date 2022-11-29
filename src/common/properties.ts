@@ -1480,13 +1480,13 @@ export const entityConfig: TEntityConfigList = {
 			volumeExtra:
 				{
 					description: 'Свободный объем в транспорте для взятия догруза.'
-					             + '\nсм. `weight_extra`',
+					             + '\nсм. `volume_extra`',
 					format:      'float'
 				},
 			weightExtra:
 				{
 					description: 'Свободный вес в транспорте для взятия догруза.'
-					             + '\nсм. `volume_extra`',
+					             + '\nсм. `weight_extra`',
 					format:      'float'
 				},
 			volume:
@@ -1536,8 +1536,7 @@ export const entityConfig: TEntityConfigList = {
 				},
 			osagoExpiryDate:
 				{
-					description: 'Compulsory insurance of civil liability '
-					             + 'of vehicle owners (ОСАГО) certificate given date.'
+					description: 'ОСАГО транспорта.\nсм. `osago_date`'
 				},
 			osagoPhotoLink:
 				{
@@ -1592,7 +1591,7 @@ export const entityConfig: TEntityConfigList = {
 			riskClasses:
 				{
 					description: 'Классы опасности груза который транспорт может работать.'
-					             + '\nсм.',
+					             + '\nсм. `risk_classes`',
 					isArray:     true
 				},
 			type:
