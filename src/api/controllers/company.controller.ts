@@ -358,7 +358,16 @@ export default class CompanyController
 		@Param('id') id: string,
 		@Res() response: ex.Response
 	) {
-		const result = await this.cargoService.send(id);
+		const apiResponse = await this.getCompany(id);
+		let result: IApiResponse<number>;
+
+		if(apiResponse && apiResponse.data) {
+			const { data: company } = apiResponse;
+			result = company.type === CompanyType.ORG
+			         ? await this.cargoService.send(id)
+			         : await this.cargoInnService.send(id);
+		}
+		else return sendResponse(response, apiResponse ?? { statusCode: 400 });
 
 		return sendResponse(response, result);
 	}
