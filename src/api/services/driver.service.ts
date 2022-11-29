@@ -1,5 +1,9 @@
-import { forwardRef, Inject, Injectable }                                                                              from '@nestjs/common';
-import { BitrixUrl, Bucket }                                                                                           from '@common/constants';
+import {
+	forwardRef, Inject,
+	Injectable
+}                            from '@nestjs/common';
+import { BitrixUrl, Bucket } from '@common/constants';
+import { UserRole }          from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -12,17 +16,29 @@ import {
 	TGeoCoordinate,
 	TMergedEntities,
 	TUpdateAttribute
-}                                                                                                                      from '@common/interfaces';
-import { addressFromCoordinates, buildBitrixRequestUrl, calculateDistance, filterDrivers, formatArgs, getTranslation } from '@common/utils';
-import { Driver, Order }                                                                                               from '@models/index';
-import { DriverRepository }                                                                                            from '@repos/index';
-import { DriverCreateDto, DriverFilter, DriverUpdateDto, ListFilter, TransportFilter }                                 from '@api/dto';
-import { EventsGateway }                                                                                               from '@api/events';
-import Service                                                                                                         from './service';
-import ImageFileService                                                                                                from './image-file.service';
-import OrderService                                                                                                    from './order.service';
-import TransportService                                                                                                from './transport.service';
-import { UserRole }                                                                                                    from '@common/enums';
+}                            from '@common/interfaces';
+import {
+	addressFromCoordinates,
+	buildBitrixRequestUrl,
+	calculateDistance,
+	filterDrivers,
+	formatArgs,
+	getTranslation
+}                            from '@common/utils';
+import { Driver, Order }     from '@models/index';
+import { DriverRepository }  from '@repos/index';
+import {
+	DriverCreateDto,
+	DriverFilter,
+	DriverUpdateDto,
+	ListFilter,
+	TransportFilter
+}                            from '@api/dto';
+import { EventsGateway }     from '@api/events';
+import Service               from './service';
+import ImageFileService      from './image-file.service';
+import OrderService          from './order.service';
+import TransportService      from './transport.service';
 import CONTACT_DEL_URL = BitrixUrl.CONTACT_DEL_URL;
 import CONTACT_UPD_URL = BitrixUrl.CONTACT_UPD_URL;
 import CONTACT_ADD_URL = BitrixUrl.CONTACT_ADD_URL;
@@ -329,7 +345,6 @@ export default class DriverService
 		file: Buffer,
 		name: string
 	): TAsyncApiResponse<Driver> {
-		const fileName = `${id}/front/${name}`;
 		const linkName: keyof IDriver = 'licenseFrontLink';
 		const driver = await this.repository.get(id);
 
@@ -340,7 +355,7 @@ export default class DriverService
 			await this.imageFileService.deleteImage(driver[linkName], Bucket.DRIVER);
 
 		return this.uploadPhoto(
-			{ id, buffer: file, name: fileName, linkName, bucketId: Bucket.DRIVER }
+			{ id, buffer: file, name, linkName, bucketId: Bucket.DRIVER }
 		);
 	}
 
@@ -359,7 +374,6 @@ export default class DriverService
 		file: Buffer,
 		name: string
 	): TAsyncApiResponse<Driver> {
-		const fileName = `${id}/avatar/${name}`;
 		const linkName: keyof IDriver = 'avatarLink';
 		const driver = await this.repository.get(id);
 
@@ -370,7 +384,7 @@ export default class DriverService
 			await this.imageFileService.deleteImage(driver[linkName], Bucket.DRIVER);
 
 		return this.uploadPhoto(
-			{ id, buffer: file, name: fileName, linkName, bucketId: Bucket.DRIVER }
+			{ id, buffer: file, name, linkName, bucketId: Bucket.DRIVER }
 		);
 	}
 
@@ -389,7 +403,6 @@ export default class DriverService
 		file: Buffer,
 		name: string
 	): TAsyncApiResponse<Driver> {
-		const fileName = `${id}/back/${name}`;
 		const linkName: keyof IDriver = 'licenseBackLink';
 		const driver = await this.repository.get(id);
 
@@ -400,7 +413,7 @@ export default class DriverService
 			await this.imageFileService.deleteImage(driver[linkName], Bucket.DRIVER);
 
 		return this.uploadPhoto(
-			{ id, buffer: file, name: fileName, linkName, bucketId: Bucket.DRIVER }
+			{ id, buffer: file, name, linkName, bucketId: Bucket.DRIVER }
 		);
 	}
 }

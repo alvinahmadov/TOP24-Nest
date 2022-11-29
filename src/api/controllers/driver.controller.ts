@@ -15,7 +15,10 @@ import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
-import { sendResponse }        from '@common/utils';
+import {
+	renameMulterFile,
+	sendResponse
+}                              from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
@@ -127,7 +130,7 @@ export default class DriverController
 			const { data: { region = dto.payloadRegion } } = await this.addressService.getById(dto.payloadRegion);
 			dto.payloadRegion = region;
 		}
-		
+
 		const result = await this.driverService.update(id, dto);
 
 		return sendResponse(response, result);
@@ -159,7 +162,7 @@ export default class DriverController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
+		const { originalname: name, buffer } = renameMulterFile(image, id, 'avatar');
 		const result = await this.driverService.uploadAvatarPhoto(id, buffer, name);
 
 		return sendResponse(response, result);
@@ -178,7 +181,7 @@ export default class DriverController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
+		const { originalname: name, buffer } = renameMulterFile(image, id, 'license', 'front');
 		const result = await this.driverService.uploadLicenseFront(id, buffer, name);
 
 		return sendResponse(response, result);
@@ -197,7 +200,7 @@ export default class DriverController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
+		const { originalname: name, buffer } = renameMulterFile(image, id, 'license', 'back');
 		const result = await this.driverService.uploadLicenseBack(id, buffer, name);
 
 		return sendResponse(response, result);

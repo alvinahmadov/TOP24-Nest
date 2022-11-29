@@ -14,7 +14,10 @@ import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
-import { sendResponse }        from '@common/utils';
+import {
+	renameMulterFile,
+	sendResponse
+}                              from '@common/utils';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
@@ -166,7 +169,7 @@ export default class TransportController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
+		const { originalname: name, buffer } = renameMulterFile(image, id);
 		const result = await this.transportService.uploadImage(id, buffer, name);
 
 		return sendResponse(response, result);
@@ -185,7 +188,7 @@ export default class TransportController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
+		const { originalname: name, buffer } = renameMulterFile(image, id, 'diagnostic');
 		const result = await this.transportService.uploadDiagnosticsPhoto(id, name, buffer);
 
 		return sendResponse(response, result);
@@ -204,7 +207,7 @@ export default class TransportController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
+		const { originalname: name, buffer } = renameMulterFile(image, id, 'osago');
 		const result = await this.transportService.uploadOsagoPhoto(id, name, buffer);
 
 		return sendResponse(response, result);
