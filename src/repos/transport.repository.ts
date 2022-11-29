@@ -5,7 +5,8 @@ import {
 	IRepository,
 	IRepositoryOptions,
 	ITransport,
-	ITransportFilter
+	ITransportFilter,
+	TAffectedRows
 }                             from '@common/interfaces';
 import {
 	CargoCompany,
@@ -33,7 +34,8 @@ export default class TransportRepository
 		super(TransportRepository.name);
 	}
 
-	public override async get(id: string, full?: boolean) {
+	public override async get(id: string, full?: boolean)
+		: Promise<Transport | null> {
 		return this.log(
 			() => this.model.findByPk(
 				id,
@@ -142,7 +144,7 @@ export default class TransportRepository
 		);
 	}
 
-	public override async delete(id: string) {
+	public override async delete(id: string): Promise<TAffectedRows> {
 		return this.log(
 			async() => ({ affectedCount: await this.model.destroy({ where: { id } }) }),
 			{ id: 'delete' },
