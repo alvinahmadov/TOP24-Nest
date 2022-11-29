@@ -106,6 +106,9 @@ function addNew(df: df.DiffNew<ITable>, actions: IAction[], currentStateTables: 
 		const index = df.rhs
 		              ? JSON.parse(JSON.stringify(df.rhs))
 		              : undefined;
+		
+		if(index === undefined)
+			return;
 
 		index.actionType = 'addIndex';
 		index.tableName = tableName;
