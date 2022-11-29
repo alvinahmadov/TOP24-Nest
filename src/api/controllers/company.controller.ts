@@ -350,6 +350,19 @@ export default class CompanyController
 		return sendResponse(response, result);
 	}
 
+	@ApiRoute(routes.send, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async sendToBitrix(
+		@Param('id') id: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.cargoService.send(id);
+
+		return sendResponse(response, result);
+	}
+
 	@ApiRoute(routes.transports, {
 		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
