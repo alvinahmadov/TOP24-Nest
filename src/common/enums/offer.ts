@@ -1,5 +1,3 @@
-import { getTranslation } from '@common/utils';
-
 export enum OfferStatus {
 	/**
 	 * @summary None status, default.
@@ -31,7 +29,3 @@ export enum OfferStatus {
 	 * */
 	NO_MATCH = 6
 }
-
-/**@ignore*/
-export const offerStatusToStr = (status: OfferStatus) =>
-	getTranslation('ENUM', 'OFFER', 'STATUS', OfferStatus[status]);
