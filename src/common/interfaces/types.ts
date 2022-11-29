@@ -8,8 +8,6 @@ type latitude = number;
 type longitude = number;
 
 export type URL = string;
-export type integer = number;
-export type decimal = number;
 
 export type TBitrixData = {
 	ID: string;
