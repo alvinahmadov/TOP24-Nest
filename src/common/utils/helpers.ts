@@ -50,11 +50,17 @@ export function fileExt(file: { mimetype?: string }) {
 	return 'jpeg';
 }
 
-export function renameMulterFiles(files: TMulterFile[], ...args: string[]) {
-	return files.map(({ originalname: name, ...rest }) => ({
+export function renameMulterFile(file: TMulterFile, ...args: string[]): TMulterFile {
+	const { originalname: name, ...rest } = file;
+
+	return {
 		originalname: path.join(...args, `${md5(rest.buffer)}.${fileExt({ mimetype: rest.mimetype })}`),
 		...rest
-	})) as TMulterFile[];
+	};
+}
+
+export function renameMulterFiles(files: TMulterFile[], ...args: string[]): TMulterFile[] {
+	return files.map(f => renameMulterFile(f, ...args));
 }
 
 export function transformTransportParameters(transport: Transport): Transport {
