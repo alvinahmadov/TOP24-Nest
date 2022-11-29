@@ -181,7 +181,7 @@ export default class PaymentService
 		const payment = await this.repository.getByCompany(options);
 
 		if(!payment)
-			return this.responses['NOT_FOUND'];
+			return Object.assign(this.responses['NOT_FOUND'], { data: { affectedCount: 0 } });
 
 		const result = await this.repository.deleteCompanyPayments(options);
 
