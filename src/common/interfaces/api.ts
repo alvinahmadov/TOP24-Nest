@@ -80,6 +80,7 @@ export type TFormat = 'url' |
                       'date' |
                       'float' |
                       'integer' |
+                      'string' |
                       string;
 
 /**@ignore*/
