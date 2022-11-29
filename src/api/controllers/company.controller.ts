@@ -44,13 +44,13 @@ import {
 import {
 	CargoCompany,
 	CargoInnCompany,
-	Transport
+	Transport,
+	User
 }                              from '@models/index';
 import * as dto                from '@api/dto';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	CompanyCreatePipe,
-	CompanyUpdatePipe,
 	CompanyTransportFilterPipe,
 	DefaultBoolPipe
 }                              from '@api/pipes';
@@ -155,12 +155,7 @@ export default class CompanyController
 		@Res() response: ex.Response
 	) {
 		let result: IApiResponse<ICompanyLoginResponse>;
-
-		const {
-			statusCode,
-			data: company,
-			message
-		} = await (
+		const { statusCode, data: company, message } = await (
 			dto.type === CompanyType.ORG
 			? this.cargoService.create(<dto.CompanyCreateDto>dto)
 			: this.cargoInnService.create(<dto.CompanyInnCreateDto>dto)
@@ -197,7 +192,7 @@ export default class CompanyController
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body(CompanyUpdatePipe) dto: any,
+		@Body() dto: any,
 		@Res() response: ex.Response
 	) {
 		let result = await this.getCompany(id, false);
@@ -303,6 +298,54 @@ export default class CompanyController
 			result = { statusCode, data, message };
 		}
 		else result = { statusCode, message };
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.activate, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async activate(
+		@Param('id') companyId: string,
+		@Res() response: ex.Response
+	) {
+		let result: any = await this.cargoService.activate(companyId);
+		if(result?.statusCode !== 200)
+			result = await this.cargoInnService.activate(companyId);
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.user, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async getUser(
+		@Param('id') companyId: string,
+		@Res() response: ex.Response
+	) {
+		let result: { statusCode: number, data?: User };
+		const fun = async(id: string, service: CargoCompanyService | CargoCompanyInnService) =>
+		{
+			const { data: company } = await service.getById(id);
+			if(company) {
+				const { user } = company;
+				if(user) {
+					return {
+						statusCode: 200,
+						data:       user
+					};
+				}
+			}
+			return null;
+		};
+
+		result = await fun(companyId, this.cargoService);
+
+		if(!result) {
+			result = await fun(companyId, this.cargoInnService);
+		}
 
 		return sendResponse(response, result);
 	}
