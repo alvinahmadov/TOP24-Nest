@@ -668,6 +668,14 @@ export const routeConfig: TApiRouteList = {
 					}
 				}
 			},
+			activate:       {
+				path:   'activate/:id',
+				method: RequestMethod.POST
+			},
+			user:           {
+				path:   'user/:id',
+				method: RequestMethod.POST
+			},
 			avatar:         {
 				path:   'avatar/:id',
 				method: RequestMethod.POST,
