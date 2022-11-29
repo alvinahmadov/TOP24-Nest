@@ -102,4 +102,22 @@ export default class DriverUpdateDto
 
 	@ApiProperty(prop.taxpayerNumber)
 	public taxpayerNumber?: string;
+
+	@ApiProperty(prop.avatarLink)
+	public avatarLink?: string;
+
+	@ApiProperty(prop.passportPhotoLink)
+	public passportPhotoLink?: string;
+
+	@ApiProperty(prop.passportSignLink)
+	public passportSignLink?: string;
+
+	@ApiProperty(prop.passportSelfieLink)
+	public passportSelfieLink?: string;
+
+	@ApiProperty(prop.licenseFrontLink)
+	public licenseFrontLink?: string;
+
+	@ApiProperty(prop.licenseBackLink)
+	public licenseBackLink?: string;
 }
