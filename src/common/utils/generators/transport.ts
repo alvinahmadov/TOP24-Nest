@@ -27,40 +27,37 @@ const generateRegistrationNumber = (): string =>
 
 const generateTransport = async(driver?: dto.DriverCreateDto): Promise<dto.TransportCreateDto> =>
 	({
-		crmId:                null,
-		status:               getFixedFromTransportStatus(),
-		type:                 faker.helpers.arrayElement(common.TRANSPORT_TYPES),
-		brand:                faker.helpers.arrayElement(common.BRANDS),
-		model:                faker.vehicle.model(),
-		registrationNumber:   generateRegistrationNumber(),
-		prodYear:             faker.datatype.number({ min: 2010, max: 2021 }),
-		payload:              faker.helpers.arrayElement(common.TRANSPORT_PAYLOADS),
-		payloadExtra:         faker.datatype.boolean(),
-		fixtures:             faker.helpers.arrayElements(common.FIXTURES, 3),
-		riskClasses:          faker.helpers.arrayElements(
+		status:                getFixedFromTransportStatus(),
+		type:                  faker.helpers.arrayElement(common.TRANSPORT_TYPES),
+		brand:                 faker.helpers.arrayElement(common.BRANDS),
+		model:                 faker.vehicle.model(),
+		registrationNumber:    generateRegistrationNumber(),
+		prodYear:              faker.datatype.number({ min: 2010, max: 2021 }),
+		payload:               faker.helpers.arrayElement(common.TRANSPORT_PAYLOADS),
+		payloadExtra:          faker.datatype.boolean(),
+		fixtures:              faker.helpers.arrayElements(common.FIXTURES, 3),
+		riskClasses:           faker.helpers.arrayElements(
 			common.RISK_CLASSES,
 			faker.datatype.number({ min: 1, max: 4 })
 		),
-		isTrailer:            false,
-		certificateNumber:    common.generateSerialNumber([2, 2, 6]),
-		weightExtra:          faker.datatype.float(transportParameterRange),
-		volumeExtra:          faker.datatype.float(transportParameterRange),
-		weight:               faker.datatype.float(transportParameterRange),
-		volume:               faker.datatype.float(transportParameterRange),
-		length:               faker.datatype.float(transportParameterRange),
-		width:                faker.datatype.float(transportParameterRange),
-		height:               faker.datatype.float(transportParameterRange),
-		loadingTypes:         getFixedFromLoadingType(),
-		pallets:              faker.datatype.number({ min: 0, max: 50 }),
-		osagoNumber:          common.generateSerialNumber([3, 3, 4]),
-		osagoExpiryDate:      faker.date.past(5),
-		osagoPhotoLink:       faker.internet.avatar(),
-		diagnosticsNumber:    faker.random.alphaNumeric(10)
-		                           .toLocaleUpperCase(),
-		diagnosticsDate:      faker.date.past(5),
-		diagnosticsPhotoLink: faker.internet.avatar(),
-		info:                 `Сгенерированный транспорт водителя${driver ? ' ' + driver.name : ''}.`,
-		comments:             faker.lorem.sentence()
+		isTrailer:             false,
+		certificateNumber:     common.generateSerialNumber([2, 2, 6]),
+		weightExtra:           faker.datatype.float(transportParameterRange),
+		volumeExtra:           faker.datatype.float(transportParameterRange),
+		weight:                faker.datatype.float(transportParameterRange),
+		volume:                faker.datatype.float(transportParameterRange),
+		length:                faker.datatype.float(transportParameterRange),
+		width:                 faker.datatype.float(transportParameterRange),
+		height:                faker.datatype.float(transportParameterRange),
+		loadingTypes:          getFixedFromLoadingType(),
+		pallets:               faker.datatype.number({ min: 0, max: 50 }),
+		osagoNumber:           common.generateSerialNumber([3, 3, 4]),
+		osagoExpiryDate:       faker.date.future(5),
+		diagnosticsNumber:     faker.random.alphaNumeric(10)
+		                            .toLocaleUpperCase(),
+		diagnosticsExpiryDate: faker.date.future(5),
+		info:                  `Сгенерированный транспорт водителя${driver ? ' ' + driver.name : ''}.`,
+		comments:              faker.lorem.sentence()
 	});
 
 export async function generateTransports(

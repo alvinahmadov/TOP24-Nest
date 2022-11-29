@@ -11,5 +11,4 @@ export const generatePayment = async(
 	correspondentAccount: faker.finance.account(15),
 	currentAccount:       faker.finance.account(15),
 	ogrnip:               faker.finance.account(10),
-	ogrnipPhotoLink:      faker.image.business()
 });
