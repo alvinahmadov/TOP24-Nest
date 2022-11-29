@@ -398,10 +398,13 @@ export default class BitrixService
 
 				if(order) {
 					if(order.hasSent) {
-						order.hasSent = false;
+						const { data } = await this.orderService.update(order.id, { hasSent: false });
+						if(data) {
+							order = data;
+						}
 						return {
 							statusCode: 200,
-							data:       await order.save({ fields: ['hasSent'] })
+							data:       order
 						};
 					}
 
