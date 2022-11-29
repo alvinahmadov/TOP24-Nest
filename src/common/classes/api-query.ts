@@ -12,7 +12,7 @@ export default class ApiQuery {
 		value: string | number
 	): this {
 		if(!(key in this._config)) {
-			this._config[key] = value;
+			this._config[key] = encodeURIComponent(value);
 		}
 
 		return this;
@@ -32,6 +32,6 @@ export default class ApiQuery {
 			}
 		}
 
-		return urlQuery;
+		return encodeURI(urlQuery);
 	}
 }
