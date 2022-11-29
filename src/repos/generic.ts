@@ -154,11 +154,12 @@ export class GenericRepository<M extends Model, Attribute extends IModel>
 	 * Creates a new item.
 	 *
 	 * @param dto {TCreationAttribute} DTO to save to database.
+	 * @param full {Boolean} Include child entites when creating.
 	 * */
-	public async create(dto: TCreationAttribute<Attribute>)
+	public async create(dto: TCreationAttribute<Attribute>, full?: boolean)
 		: Promise<M | null> {
 		return this.log(
-			() => this.model.create<any>(dto, { returning: true }),
+			() => this.model.create<any>(dto, { returning: true, include: !!full ? this.include : [] }),
 			{ id: 'create' },
 			{ dto }
 		);
