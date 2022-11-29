@@ -157,7 +157,6 @@ export default class CargoCompanyRepository
 							           .lte('payloadDate', payloadDate)
 								       .query
 						},
-						{ model: Image },
 						{ model: Payment },
 						{ model: Order },
 						{
