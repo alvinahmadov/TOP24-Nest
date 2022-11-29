@@ -139,8 +139,12 @@ export default class CargoCompanyService
 		if(!user) {
 			const { data: user } = await this.userService.create({ phone: dto.user, role: UserRole.CARGO });
 			userId = user.id;
+			dto.isDefault = true
 		}
-		else userId = user.id;
+		else {
+			userId = user.id;
+			dto.isDefault = false;
+		}
 
 		const company = await this.createModel({ ...dto, userId });
 
