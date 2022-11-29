@@ -50,6 +50,13 @@ export interface IUser
 	role: UserRole;
 	phone: string;
 	/**
+	 * User email.
+	 *
+	 * @example
+	 * logist.cargo@mail.com
+	 * */
+	email?: string;
+	/**
 	 * Registration verification code.
 	 *
 	 * @example
@@ -167,6 +174,45 @@ export interface IAddress
 	longitude?: number;
 }
 
+export interface IPassportData {
+	/**
+	 * Passport Serial Number.
+	 *
+	 * @example
+	 * 4218 555555
+	 * */
+	passportSerialNumber: string;
+	/**
+	 * Code of subdivision of passport given place.
+	 * */
+	passportSubdivisionCode: string;
+	/**
+	 * Passport given date.
+	 *
+	 * @example
+	 * 22.09.2015
+	 * */
+	passportGivenDate: Date;
+	/**
+	 * Passport issued place.
+	 *
+	 * @example
+	 * УМВД России по Липецкой области
+	 * */
+	passportIssuedBy: string;
+	/**
+	 * Given address in the passport.
+	 *
+	 * @example
+	 * Москва, 117312, ул. Вавилова, д. 19
+	 * */
+	passportRegistrationAddress: string;
+	/**
+	 * URL of passport scan image
+	 * */
+	passportPhotoLink?: string;
+}
+
 /**
  * User entity.
  * */
@@ -220,7 +266,9 @@ export interface IAdmin
  * Base company entity.
  * */
 export interface ICompany
-	extends IModel, ICRMEntity {
+	extends IModel,
+	        ICRMEntity,
+	        IPassportData {
 	userId: string;
 	/**
 	 * Full name of the cargo company or first name of the individual company owner.
@@ -259,42 +307,6 @@ export interface ICompany
 	 * */
 	taxpayerNumber: string;
 	/**
-	 * Passport Serial Number.
-	 *
-	 * @example
-	 * 4218 555555
-	 * */
-	passportSerialNumber: string;
-	/**
-	 * Passport given date.
-	 *
-	 * @example
-	 * 22.09.2015
-	 * */
-	passportGivenDate: Date;
-	/**
-	 * Code of subdivision of passport given place.
-	 * */
-	passportSubdivisionCode: string;
-	/**
-	 * Passport issued place.
-	 *
-	 * @example
-	 * УМВД России по Липецкой области
-	 * */
-	passportIssuedBy: string;
-	/**
-	 * Given address in the passport.
-	 *
-	 * @example
-	 * Москва, 117312, ул. Вавилова, д. 19
-	 * */
-	passportRegistrationAddress: string;
-	/**
-	 * CRM id of company from bitrix service.
-	 * */
-	crmId?: number;
-	/**
 	 * Contact phone number.
 	 *
 	 * @example
@@ -328,10 +340,6 @@ export interface ICompany
 	 * Avatar image link.
 	 * */
 	avatarLink?: string;
-	/**
-	 * Link to photo of CEO's passport.
-	 * */
-	passportPhotoLink?: string;
 	/**@deprecated*/
 	info?: string;
 	/**@deprecated*/
@@ -502,7 +510,9 @@ export interface IDriverOperation {
  * Driver of the company.
  * */
 export interface IDriver
-	extends IModel, ICRMEntity {
+	extends IModel,
+	        ICRMEntity,
+	        IPassportData {
 	/**
 	 * Id of cargo company which driver is assigned.
 	 * */
@@ -586,49 +596,9 @@ export interface IDriver
 	 * */
 	taxpayerNumber?: string;
 	/**
-	 * Passport given date.
-	 *
-	 * @example
-	 * 22.09.2019
-	 * */
-	passportDate: Date;
-	/**
-	 * Passport given place.
-	 *
-	 * @example
-	 * УМВД России по Липецкой области
-	 * */
-	passportIssuedBy: string;
-	/**
-	 * Passport Serial Number.
-	 *
-	 * @example
-	 * 4218 555555
-	 * */
-	passportSerialNumber: string;
-	/**
-	 * Passport given place's subdivision code.
-	 *
-	 * @example
-	 * УМВД России по Липецкой области
-	 * */
-	passportSubdivisionCode: string;
-	/**
-	 * Given address in the passport.
-	 *
-	 * @example
-	 * Москва, 117312, ул. Вавилова, д. 19
-	 * */
-	passportRegistrationAddress: string;
-	/**
 	 * Avatar image link.
-	 *
 	 * */
 	avatarLink?: string;
-	/**
-	 * Passport image link.
-	 * */
-	passportPhotoLink?: string;
 	/**
 	 * Passport sign image link.
 	 * */
