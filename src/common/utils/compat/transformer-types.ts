@@ -86,6 +86,7 @@ export interface ICompanyTransformer
 	 * @see ICompany.type
 	 * */
 	company_type: CompanyType;
+	type?: UserRole;
 	/**
 	 * @see ICompany.taxpayerNumber
 	 * */
