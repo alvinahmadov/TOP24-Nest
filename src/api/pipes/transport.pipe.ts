@@ -23,7 +23,7 @@ export class TransportCreatePipe
 		checkAndConvertBitrix(value, 'type', 'transportType');
 		checkAndConvertArrayBitrix(value, 'fixtures', 'fixtures', Reference.FIXTURES);
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'riskClass', Reference.RISK_CLASSES);
-		reformatDateString<ITransport>(value, ['diagnosticsDate', 'osagoExpiryDate']);
+		reformatDateString<ITransport>(value, ['diagnosticsExpiryDate', 'osagoExpiryDate']);
 
 		return value;
 	}
@@ -41,7 +41,7 @@ export class TransportUpdatePipe
 		checkAndConvertBitrix(value, 'type', 'transportType');
 		checkAndConvertArrayBitrix(value, 'fixtures', 'fixtures', Reference.FIXTURES);
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'riskClass', Reference.RISK_CLASSES);
-		reformatDateString<ITransport>(value, ['diagnosticsDate', 'osagoExpiryDate']);
+		reformatDateString<ITransport>(value, ['diagnosticsExpiryDate', 'osagoExpiryDate']);
 		delete value.id;
 		delete value.confirmed;
 		delete value.createdAt;
