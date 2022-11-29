@@ -16,12 +16,14 @@ import {
 	IRepository,
 	IRepositoryOptions,
 	ITransport,
+	TAffectedRows,
 	TUpdateAttribute
 }                             from '@common/interfaces';
 import {
 	CargoCompany,
 	CargoInnCompany,
-	Driver, Image,
+	Driver, 
+	Image,
 	Offer,
 	Order,
 	Transport
@@ -364,7 +366,7 @@ export default class OfferRepository
 
 	public async updateDrivers(
 		offers: TUpdateAttribute<IOffer>[]
-	): Promise<{ affectedCount: number }> {
+	): Promise<TAffectedRows> {
 		return this.log(
 			async() =>
 			{
