@@ -224,6 +224,8 @@ export const translatePayment = <T extends transformers.IPaymentTransformer>(dat
 {
 	return new FieldTransformer<T, attributes.IPayment>(data)
 		.set('id')
+		.set('cargoId')
+		.set('cargoinnId')
 		.set('bankBic', 'bankbik')
 		.set('bankName', 'bank')
 		.set('correspondentAccount', 'ks')
