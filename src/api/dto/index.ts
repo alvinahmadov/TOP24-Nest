@@ -12,6 +12,7 @@ export * from './offer';
 export * from './order';
 export * from './payment';
 export * from './transport';
+export * from './user';
 export {
 	ListFilter,
 	FileUploadDto
