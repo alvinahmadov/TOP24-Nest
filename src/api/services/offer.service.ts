@@ -594,7 +594,7 @@ export default class OfferService
 						isCanceled:  false,
 						hasProblem:  false,
 						bidPrice:    offer.bidPrice,
-						bidPriceVAT: offer.bidPriceVat,
+						bidPriceVat: offer.bidPriceVat,
 						bidInfo:     offer.bidComment,
 						cargoId:     offer.driver.cargoId,
 						cargoinnId:  offer.driver.cargoinnId,
