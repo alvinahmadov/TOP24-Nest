@@ -68,7 +68,6 @@ export default class JwtStrategy
 	private static readonly adminRepo = new AdminRepository({ log: false });
 	private static readonly cargoCompanyRepo = new CargoCompanyRepository({ log: false });
 	private static readonly cargoInnCompanyRepo = new CargoInnCompanyRepository({ log: false });
-	protected token: string;
 
 	constructor(protected readonly jwtService: JwtService) {
 		super(
