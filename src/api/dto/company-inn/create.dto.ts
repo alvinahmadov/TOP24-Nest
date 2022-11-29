@@ -3,6 +3,7 @@ import {
 	IsDate,
 	IsEmail,
 	IsInt,
+	IsNotEmpty,
 	IsString
 }                      from 'class-validator';
 import { InputType }   from '@nestjs/graphql';
@@ -127,6 +128,8 @@ export default class CompanyInnCreateDto
 	@IsString()
 	personalPhone?: string;
 
+	@ApiProperty(prop.userPhone)
 	@IsString()
+	@IsNotEmpty()
 	user: string;
 }

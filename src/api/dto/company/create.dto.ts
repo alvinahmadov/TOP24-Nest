@@ -3,7 +3,8 @@ import {
 	IsDate,
 	IsEmail,
 	IsInt,
-	IsString,
+	IsNotEmpty,
+	IsString
 }                      from 'class-validator';
 import { InputType }   from '@nestjs/graphql';
 import { ApiProperty } from '@nestjs/swagger';
@@ -138,6 +139,8 @@ export default class CompanyCreateDto
 	@ApiProperty(prop.attorneySignLink)
 	attorneySignLink?: string;
 
+	@ApiProperty(prop.userPhone)
 	@IsString()
+	@IsNotEmpty()
 	user: string;
 }
