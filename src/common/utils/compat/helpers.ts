@@ -23,6 +23,7 @@ export const translateCargoCompany = <T extends transformers.ICargoCompanyTransf
 {
 	return new FieldTransformer<T, attributes.ICargoCompany>(data)
 		.set('id')
+		.set('userId')
 		.set('name')
 		.set('email')
 		.set('director')
@@ -60,6 +61,7 @@ export const translateCargoInnCompany = <T extends transformers.ICargoInnCompany
 {
 	return new FieldTransformer<T, attributes.ICargoInnCompany>(data)
 		.set('id')
+		.set('userId')
 		.set('name')
 		.set('email')
 		.set('phone')
@@ -268,7 +270,7 @@ export const translateTransport = <T extends transformers.ITransportTransformer>
 		.set('osagoExpiryDate', 'osago_date')
 		.set('osagoPhotoLink', 'osago_link')
 		.set('diagnosticsNumber', 'diag_num')
-		.set('diagnosticsDate', 'diag_date')
+		.set('diagnosticsExpiryDate', 'diag_date')
 		.set('diagnosticsPhotoLink', 'diag_link')
 		.set('comments')
 		.set('info')
