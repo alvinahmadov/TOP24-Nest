@@ -109,7 +109,7 @@ export const translateDriver = <T extends transformers.IDriverTransformer>(data:
 		.set('birthDate', 'date_of_birth')
 		.set('isReady', 'is_ready')
 		.set('taxpayerNumber', 'taxpayer_number')
-		.set('passportDate', 'passport_date')
+		.set('passportGivenDate', 'passport_date')
 		.set('passportIssuedBy', 'passport_issued_by')
 		.set('passportSerialNumber', 'passport_serial_number')
 		.set('passportSubdivisionCode', 'passport_subdivision_code')

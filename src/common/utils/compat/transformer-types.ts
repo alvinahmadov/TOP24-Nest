@@ -287,7 +287,7 @@ export interface IDriverTransformer
 	 * */
 	passport_serial_number: string;
 	/**
-	 * @see IDriver.passportDate
+	 * @see IDriver.passportGivenDate
 	 * */
 	passport_date: Date;
 	/**

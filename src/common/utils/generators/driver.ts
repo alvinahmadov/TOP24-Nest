@@ -36,7 +36,7 @@ export async function generateDriver(companies: interfaces.ICompany[])
 		birthDate:                   faker.date.past(30),
 		licenseNumber:               common.generateSerialNumber([2, 2, 7]),
 		licenseDate:                 faker.date.future(5),
-		passportDate:                faker.date.future(10),
+		passportGivenDate:           faker.date.past(10),
 		passportIssuedBy:            common.generateAddress(),
 		passportRegistrationAddress: common.generateAddress(),
 		passportSerialNumber:        common.generateSerialNumber([3, 4]),

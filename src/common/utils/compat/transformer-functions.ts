@@ -217,7 +217,7 @@ function transformDriver(driver: models.Driver)
 			phone_second:                  driver.getDataValue('phoneSecond'),
 			taxpayer_number:               driver.getDataValue('taxpayerNumber'),
 			passport_serial_number:        driver.getDataValue('passportSerialNumber'),
-			passport_date:                 driver.getDataValue('passportDate'),
+			passport_date:                 driver.getDataValue('passportGivenDate'),
 			passport_subdivision_code:     driver.getDataValue('passportSubdivisionCode'),
 			passport_issued_by:            driver.getDataValue('passportIssuedBy'),
 			passport_registration_address: driver.getDataValue('passportRegistrationAddress'),

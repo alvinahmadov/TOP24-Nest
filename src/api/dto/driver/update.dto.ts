@@ -61,8 +61,8 @@ export default class DriverUpdateDto
 	@ApiProperty(prop.operation)
 	public operation?: IDriverOperation;
 
-	@ApiProperty(prop.passportDate)
-	public passportDate?: Date;
+	@ApiProperty(prop.passportGivenDate)
+	public passportGivenDate?: Date;
 
 	@ApiProperty(prop.passportIssuedBy)
 	public passportIssuedBy?: string;

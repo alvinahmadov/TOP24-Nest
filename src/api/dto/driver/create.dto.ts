@@ -56,9 +56,9 @@ export default class DriverCreateDto
 	@IsString()
 	passportSerialNumber: string;
 
-	@ApiProperty(prop.passportDate)
+	@ApiProperty(prop.passportGivenDate)
 	@IsDate()
-	passportDate: Date;
+	passportGivenDate: Date;
 
 	@ApiProperty(prop.passportSubdivisionCode)
 	@IsString()

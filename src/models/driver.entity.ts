@@ -127,9 +127,9 @@ export default class Driver
 	@StringColumn()
 	passportSerialNumber: string;
 
-	@ApiProperty(prop.passportDate)
+	@ApiProperty(prop.passportGivenDate)
 	@DateColumn()
-	passportDate: Date;
+	passportGivenDate: Date;
 
 	@ApiProperty(prop.passportSubdivisionCode)
 	@StringColumn()
@@ -309,7 +309,7 @@ export default class Driver
 		data.fields[DRIVER.INN] = this.taxpayerNumber;
 		data.fields[DRIVER.DIRECTIONS] = directions.join(', ');
 		data.fields[DRIVER.ADDRESS] = this.address;
-		data.fields[DRIVER.PASSPORT.GIVEN_DATE] = this.passportDate;
+		data.fields[DRIVER.PASSPORT.GIVEN_DATE] = this.passportGivenDate;
 		data.fields[DRIVER.PASSPORT.ISSUED_BY] = this.passportIssuedBy;
 		data.fields[DRIVER.PASSPORT.SERIAL_NUMBER] = this.passportSerialNumber;
 		data.fields[DRIVER.PASSPORT.SUBDIVISION_CODE] = this.passportSubdivisionCode;
