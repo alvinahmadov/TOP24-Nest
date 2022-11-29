@@ -11,14 +11,16 @@ import {
 	IOffer,
 	IOrder,
 	IPayment,
-	ITransport
+	ITransport,
+	IUser
 }                             from './attributes';
 import {
 	DriverStatus,
-	LoadingType, OfferStatus,
+	LoadingType,
+	OfferStatus,
 	OrderStatus,
 	TransportStatus
-} from '../enums';
+}                             from '../enums';
 
 export interface IFilter {
 	term?: string;
@@ -232,3 +234,7 @@ export interface ICompanyTransportFilter
 	fromDate?: Date | string;
 	toDate?: Date | string;
 }
+
+export interface IUserFilter
+	extends IFilter,
+	        TModelFilter<IUser> {}
