@@ -252,9 +252,8 @@ export default class Transport
 	@VirtualColumn()
 	trailer?: Transport;
 
-	public readonly toCrm = (): TCRMData =>
-	{
-		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
+	public toCrm(): TCRMData {
+		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'N' } };
 		if(this.crmId)
 			data.fields[TRANSPORT.ID] = this.crmId;
 		data.fields[TRANSPORT.TYPE] = [convertBitrix('paymentType', this.type, false)];
