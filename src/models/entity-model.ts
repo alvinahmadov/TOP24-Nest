@@ -1,8 +1,7 @@
 import {
 	CreatedAt,
-	Default,
+	IsUUID,
 	Model,
-	Sequelize,
 	UpdatedAt
 }                      from 'sequelize-typescript';
 import { ApiProperty } from '@nestjs/swagger';
@@ -28,7 +27,7 @@ export default abstract class EntityModel<TModelAttributes extends IModel,
 	implements IModel {
 	@ApiProperty(prop.id)
 	@Field(() => UuidScalar)
-	@Default(() => Sequelize.literal('gen_random_uuid()'))
+	@IsUUID('all')
 	@IdColumn()
 	override id: string;
 

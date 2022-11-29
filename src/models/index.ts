@@ -9,6 +9,7 @@ import Offer           from './offer.entity';
 import Order           from './order.entity';
 import Payment         from './payment.entity';
 import Transport       from './transport.entity';
+import User            from './user.entity';
 
 export {
 	Admin,
@@ -21,7 +22,8 @@ export {
 	Offer,
 	Order,
 	Payment,
-	Transport
+	Transport,
+	User
 };
 
 const MODELS = [
@@ -35,7 +37,8 @@ const MODELS = [
 	Offer,
 	Order,
 	Payment,
-	Transport
+	Transport,
+	User
 ].sort((a: any, b: any) => a.name.localeCompare(b.name));
 
 export default MODELS;

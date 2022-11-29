@@ -1,19 +1,15 @@
 import {
-	AllowNull,
 	BelongsTo,
 	ForeignKey,
-	IsUrl,
 	Table
 }                            from 'sequelize-typescript';
 import { ApiProperty }       from '@nestjs/swagger';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { PAYMENT }           from '@config/json';
 import { TABLE_OPTIONS }     from '@common/constants';
 import {
-	ICRMEntity,
+	Index,
 	IPayment,
 	StringColumn,
-	TCRMData,
 	UrlColumn,
 	UuidColumn
 }                            from '@common/interfaces';
@@ -36,46 +32,42 @@ const { payment: prop } = entityConfig;
 @Table(TABLE_OPTIONS)
 export default class Payment
 	extends EntityModel<IPayment>
-	implements IPayment, Pick<ICRMEntity, 'toCrm'> {
+	implements IPayment {
 	@ApiProperty(prop.cargoId)
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoCompany)
+	@Index
 	@UuidColumn({ onDelete: 'CASCADE' })
 	cargoId?: string;
 
 	@ApiProperty(prop.cargoinnId)
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoInnCompany)
+	@Index
 	@UuidColumn({ onDelete: 'CASCADE' })
 	cargoinnId?: string;
 
 	@ApiProperty(prop.correspondentAccount)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	correspondentAccount: string;
 
 	@ApiProperty(prop.currentAccount)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	currentAccount: string;
 
 	@ApiProperty(prop.ogrnip)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	ogrnip: string;
 
 	@ApiProperty(prop.bankName)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	bankName: string;
 
 	@ApiProperty(prop.bankBic)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	bankBic: string;
 
 	@ApiProperty(prop.ogrnipPhotoLink)
-	@IsUrl
 	@UrlColumn()
 	ogrnipPhotoLink?: string;
 
@@ -90,13 +82,4 @@ export default class Payment
 	@ApiProperty(prop.cargoinn)
 	@BelongsTo(() => CargoInnCompany, 'cargoinnId')
 	cargoinn?: CargoInnCompany;
-
-	public toCrm(data: TCRMData): void {
-		data.fields[PAYMENT.BANK_NAME] = this.bankName ?? '';
-		data.fields[PAYMENT.BANK_ID_CODE] = this.bankBic ?? '';
-		data.fields[PAYMENT.CORRESPONDENT_ACCOUNT] = this.correspondentAccount ?? '';
-		data.fields[PAYMENT.CURRENT_ACCOUNT] = this.currentAccount ?? '';
-		data.fields[PAYMENT.OGRNIP] = this.ogrnip;
-		data.fields[PAYMENT.OGRNIP_LINK] = this.ogrnipPhotoLink ?? '';
-	}
 }

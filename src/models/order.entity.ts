@@ -1,18 +1,15 @@
 import {
-	AllowNull,
 	BelongsTo,
-	Default,
 	ForeignKey,
-	IsDate,
 	IsUUID,
 	Table
 }                                   from 'sequelize-typescript';
-import { ApiProperty }              from '@nestjs/swagger';
 import {
 	Field,
 	InterfaceType,
 	ObjectType
 }                                   from '@nestjs/graphql';
+import { ApiProperty }              from '@nestjs/swagger';
 import { ORDER }                    from '@config/json';
 import {
 	DestinationType,
@@ -24,6 +21,7 @@ import { TupleScalar, UuidScalar }  from '@common/scalars';
 import { Reference, TABLE_OPTIONS } from '@common/constants';
 import {
 	ICRMEntity,
+	Index,
 	IOrder,
 	IOrderFilter,
 	IOrderDestination,
@@ -200,6 +198,7 @@ export default class Order
 	@IsUUID('all')
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoCompany)
+	@Index
 	@UuidColumn({ onDelete: 'SET NULL' })
 	cargoId?: string;
 
@@ -207,6 +206,7 @@ export default class Order
 	@IsUUID('all')
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoInnCompany)
+	@Index
 	@UuidColumn({ onDelete: 'SET NULL' })
 	cargoinnId?: string;
 
@@ -214,11 +214,16 @@ export default class Order
 	@IsUUID('all')
 	@Field(() => UuidScalar)
 	@ForeignKey(() => Driver)
+	@Index
 	@UuidColumn({ onDelete: 'SET NULL' })
 	driverId?: string;
 
 	@ApiProperty(prop.crmId)
-	@IntColumn({ unique: true })
+	@Index
+	@IntColumn({
+		           unique:       true,
+		           defaultValue: null
+	           })
 	crmId?: number;
 
 	@ApiProperty(prop.title)
@@ -230,48 +235,39 @@ export default class Order
 	price: string;
 
 	@ApiProperty(prop.date)
-	@IsDate
 	@DateColumn()
 	date: Date;
 
 	@ApiProperty(prop.status)
-	@Default(OrderStatus.PENDING)
-	@IntColumn()
+	@IntColumn({ defaultValue: OrderStatus.PENDING })
 	status: OrderStatus;
 
 	@ApiProperty(prop.stage)
-	@Default(OrderStage.NEW)
-	@IntColumn()
+	@IntColumn({ defaultValue: OrderStage.NEW })
 	stage: OrderStage;
 
 	@ApiProperty(prop.dedicated)
-	@Default('Не важно')
-	@StringColumn()
+	@StringColumn({ defaultValue: 'Не важно' })
 	dedicated: string;
 
 	@ApiProperty(prop.weight)
-	@AllowNull(false)
-	@FloatColumn()
+	@FloatColumn({ allowNull: false })
 	weight: number;
 
 	@ApiProperty(prop.volume)
-	@AllowNull(false)
-	@FloatColumn()
+	@FloatColumn({ allowNull: false })
 	volume: number;
 
 	@ApiProperty(prop.length)
-	@AllowNull(false)
-	@FloatColumn()
+	@FloatColumn({ allowNull: false })
 	length: number;
 
 	@ApiProperty(prop.height)
-	@AllowNull(false)
-	@FloatColumn()
+	@FloatColumn({ allowNull: false })
 	height: number;
 
 	@ApiProperty(prop.width)
-	@AllowNull(false)
-	@FloatColumn()
+	@FloatColumn({ allowNull: false })
 	width: number;
 
 	@ApiProperty(prop.number)
@@ -283,13 +279,11 @@ export default class Order
 	mileage?: number;
 
 	@ApiProperty(prop.pallets)
-	@Default(0)
-	@IntColumn()
+	@IntColumn({ defaultValue: 0 })
 	pallets?: number;
 
 	@ApiProperty(prop.loadingTypes)
-	@Default([])
-	@IntArrayColumn()
+	@IntArrayColumn({ defaultValue: [] })
 	loadingTypes?: LoadingType[];
 
 	@ApiProperty(prop.transportTypes)
@@ -297,23 +291,19 @@ export default class Order
 	transportTypes?: string[];
 
 	@ApiProperty(prop.isOpen)
-	@Default(true)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: true })
 	isOpen?: boolean;
 
-	@ApiProperty(prop.onPayment)
-	@Default(false)
-	@BooleanColumn()
-	onPayment?: boolean;
-
 	@ApiProperty(prop.isFree)
-	@Default(true)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: true })
 	isFree?: boolean;
 
+	@ApiProperty(prop.onPayment)
+	@BooleanColumn({ defaultValue: false })
+	onPayment?: boolean;
+
 	@ApiProperty(prop.isCanceled)
-	@Default(false)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: false })
 	isCanceled?: boolean;
 
 	@ApiProperty(prop.isBid)
@@ -321,8 +311,7 @@ export default class Order
 	isBid?: boolean;
 
 	@ApiProperty(prop.hasProblem)
-	@Default(false)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: false })
 	hasProblem?: boolean;
 
 	@ApiProperty(prop.cancelCause)
@@ -361,8 +350,8 @@ export default class Order
 	@JsonbColumn()
 	filter?: OrderFilter;
 
-	@VirtualColumn()
-	priority?: boolean;
+	@BooleanColumn({ defaultValue: false })
+	hasSent: boolean;
 
 	@ApiProperty(prop.driverDeferralConditions)
 	@StringColumn()
@@ -372,27 +361,16 @@ export default class Order
 	@StringColumn()
 	ownerDeferralConditions?: string;
 
-	@ApiProperty(prop.hasSent)
-	@Default(false)
-	@BooleanColumn()
-	hasSent?: boolean;
-
 	@ApiProperty(prop.paymentPhotoLinks)
-	@AllowNull(true)
-	@Default(null)
-	@StringArrayColumn()
+	@StringArrayColumn({ defaultValue: null })
 	paymentPhotoLinks?: string[];
 
 	@ApiProperty(prop.receiptPhotoLinks)
-	@AllowNull(true)
-	@Default(null)
-	@StringArrayColumn()
+	@StringArrayColumn({ defaultValue: null })
 	receiptPhotoLinks?: string[];
 
 	@ApiProperty(prop.contractPhotoLink)
-	@AllowNull(true)
-	@Default(null)
-	@StringColumn()
+	@StringColumn({ defaultValue: null })
 	contractPhotoLink?: string;
 
 	@ApiProperty(prop.cargo)
@@ -407,11 +385,15 @@ export default class Order
 	@BelongsTo(() => Driver, 'driverId')
 	driver?: Driver;
 
-	public toCrm(
+	@VirtualColumn()
+	priority?: boolean;
+
+	public readonly toCrm = (
 		cargoCrmId: number,
 		driverCrmId: number,
 		coordinates?: TGeoCoordinate
-	): TCRMData {
+	): TCRMData =>
+	{
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
 		data.fields[ORDER.CRM_CARGO_ID] = this.status < OrderStatus.PROCESSING
 		                                  ? null
@@ -447,5 +429,5 @@ export default class Order
 		}
 		data.fields[ORDER.HAS_PROBLEM] = this.hasProblem ? 'Y' : 'N';
 		return data;
-	}
+	};
 }

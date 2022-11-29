@@ -1,28 +1,24 @@
 import {
-	AllowNull,
 	BelongsTo,
-	Default,
 	HasMany,
-	IsDate,
-	IsUrl,
 	IsUUID,
 	Table
 }                                from 'sequelize-typescript';
-import { ApiProperty }           from '@nestjs/swagger';
 import { Field, ObjectType }     from '@nestjs/graphql';
 import { CRM, TRANSPORT }        from '@config/json';
+import { Bucket, TABLE_OPTIONS } from '@common/constants';
+import { ApiProperty }           from '@nestjs/swagger';
 import {
 	loadingTypeToStr,
 	LoadingType,
 	TransportStatus
 }                                from '@common/enums';
-import { convertBitrix }         from '@common/utils';
-import { Bucket, TABLE_OPTIONS } from '@common/constants';
 import {
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
 	ICRMEntity,
+	Index,
 	IntArrayColumn,
 	IntColumn,
 	ITransport,
@@ -35,6 +31,7 @@ import {
 }                                from '@common/interfaces';
 import entityConfig              from '@common/properties';
 import { UuidScalar }            from '@common/scalars';
+import { convertBitrix }         from '@common/utils';
 import { ImageFileService }      from '@api/services';
 import EntityModel               from './entity-model';
 import CargoCompany              from './cargo.entity';
@@ -63,39 +60,50 @@ export default class Transport
 	@ApiProperty(prop.cargoId)
 	@IsUUID('all')
 	@Field(() => UuidScalar)
-	@AllowNull(true)
-	@UuidColumn({ onDelete: 'SET NULL' })
+	@Index
+	@UuidColumn({
+		            allowNull: true,
+		            onDelete:  'CASCADE'
+	            })
 	cargoId?: string;
 
 	@ApiProperty(prop.cargoinnId)
 	@IsUUID('all')
 	@Field(() => UuidScalar)
-	@AllowNull(true)
-	@UuidColumn({ onDelete: 'SET NULL' })
+	@Index
+	@UuidColumn({
+		            allowNull: true,
+		            onDelete:  'CASCADE'
+	            })
 	cargoinnId?: string;
 
 	@ApiProperty(prop.driverId)
 	@IsUUID('all')
 	@Field(() => UuidScalar)
-	@AllowNull(true)
-	@UuidColumn()
-	@UuidColumn({ onDelete: 'SET NULL' })
+	@Index
+	@UuidColumn({
+		            allowNull: true,
+		            onDelete:  'CASCADE'
+	            })
 	driverId?: string;
 
 	@ApiProperty(prop.crmId)
-	@AllowNull(true)
-	@IntColumn()
+	@Index
+	@IntColumn({
+		           unique:       true,
+		           defaultValue: null
+	           })
 	crmId?: number;
 
 	@ApiProperty(prop.confirmed)
-	@AllowNull(true)
-	@Default(false)
-	@BooleanColumn({ defaultValue: false })
+	@BooleanColumn({
+		               allowNull:    true,
+		               defaultValue: false
+	               })
 	confirmed?: boolean;
 
 	@ApiProperty(prop.status)
-	@Default(TransportStatus.NONE)
-	@IntColumn()
+	@IntColumn({ allowNull: false })
 	status: TransportStatus;
 
 	@ApiProperty(prop.comments)
@@ -103,84 +111,69 @@ export default class Transport
 	comments?: string;
 
 	@ApiProperty(prop.diagnosticsNumber)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	diagnosticsNumber: string;
 
-	@ApiProperty(prop.diagnosticsDate)
-	@IsDate
+	@ApiProperty(prop.diagnosticsExpiryDate)
 	@DateColumn()
-	diagnosticsDate: Date;
+	diagnosticsExpiryDate: Date;
 
 	@ApiProperty(prop.diagnosticsPhotoLink)
-	@IsUrl
 	@UrlColumn()
 	diagnosticsPhotoLink?: string;
 
 	@ApiProperty(prop.weightExtra)
-	@Default(0.0)
-	@FloatColumn()
+	@FloatColumn({ defaultValue: 0.0 })
 	weightExtra: number;
 
 	@ApiProperty(prop.volumeExtra)
-	@Default(0.0)
-	@FloatColumn()
+	@FloatColumn({ defaultValue: 0.0 })
 	volumeExtra: number;
 
 	@ApiProperty(prop.weight)
-	@AllowNull(false)
-	@FloatColumn()
+	@FloatColumn({ allowNull: false })
 	weight: number;
 
 	@ApiProperty(prop.volume)
-	@AllowNull(false)
-	@FloatColumn()
+	@FloatColumn({ allowNull: false })
 	volume: number;
 
 	@ApiProperty(prop.length)
-	@AllowNull(false)
-	@FloatColumn()
+	@FloatColumn({ allowNull: false })
 	length: number;
 
 	@ApiProperty(prop.width)
-	@AllowNull(false)
-	@FloatColumn()
+	@FloatColumn({ allowNull: false })
 	width: number;
 
 	@ApiProperty(prop.height)
-	@AllowNull(false)
-	@FloatColumn()
+	@FloatColumn({ allowNull: false })
 	height: number;
 
 	@ApiProperty(prop.loadingTypes)
-	@Default([])
-	@AllowNull(false)
-	@IntArrayColumn()
+	@IntArrayColumn({
+		                allowNull:    false,
+		                defaultValue: []
+	                })
 	loadingTypes?: LoadingType[];
 
 	@ApiProperty(prop.brand)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	brand: string;
 
 	@ApiProperty(prop.model)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	model: string;
 
 	@ApiProperty(prop.osagoNumber)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	osagoNumber: string;
 
 	@ApiProperty(prop.osagoExpiryDate)
-	@IsDate
-	@AllowNull(false)
-	@DateColumn()
+	@DateColumn({ allowNull: false })
 	osagoExpiryDate: Date;
 
 	@ApiProperty(prop.osagoPhotoLink)
-	@IsUrl
 	@UrlColumn()
 	osagoPhotoLink: string;
 
@@ -189,23 +182,19 @@ export default class Transport
 	payload: string;
 
 	@ApiProperty(prop.payloadExtra)
-	@Default(false)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: false })
 	payloadExtra?: boolean;
 
 	@ApiProperty(prop.isTrailer)
-	@Default(false)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: false })
 	isTrailer?: boolean;
 
 	@ApiProperty(prop.isDedicated)
-	@Default(false)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: false })
 	isDedicated?: boolean;
 
 	@ApiProperty(prop.pallets)
-	@Default(0)
-	@IntColumn()
+	@IntColumn({ defaultValue: 0 })
 	pallets?: number;
 
 	@ApiProperty(prop.prodYear)
@@ -213,19 +202,18 @@ export default class Transport
 	prodYear: number;
 
 	@ApiProperty(prop.registrationNumber)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	registrationNumber: string;
 
 	@ApiProperty(prop.certificateNumber)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	certificateNumber: string;
 
 	@ApiProperty(prop.riskClasses)
-	@AllowNull(false)
-	@Default([])
-	@StringArrayColumn()
+	@StringArrayColumn({
+		                   allowNull:    false,
+		                   defaultValue: []
+	                   })
 	riskClasses: string[];
 
 	@ApiProperty(prop.type)
@@ -233,8 +221,7 @@ export default class Transport
 	type: string;
 
 	@ApiProperty(prop.fixtures)
-	@Default([])
-	@StringArrayColumn()
+	@StringArrayColumn({ defaultValue: [] })
 	fixtures?: string[];
 
 	@ApiProperty(prop.info)
@@ -257,31 +244,16 @@ export default class Transport
 	@BelongsTo(() => Driver, 'driverId')
 	driver?: Driver;
 
-	@ApiProperty(prop.trailer)
-	@VirtualColumn()
-	trailer?: Transport;
-
 	@ApiProperty(prop.images)
 	@HasMany(() => Image, 'transportId')
 	images: Image[];
 
-	public async deleteImages(): Promise<number> {
-		if(this.images) {
-			const imageFileService = new ImageFileService();
-			const imageList = this.images.map(i => i.url);
+	@ApiProperty(prop.trailer)
+	@VirtualColumn()
+	trailer?: Transport;
 
-			if(this.osagoPhotoLink)
-				imageList.push(this.osagoPhotoLink);
-
-			if(this.diagnosticsPhotoLink)
-				imageList.push(this.diagnosticsPhotoLink);
-
-			return imageFileService.deleteImageList(imageList, Bucket.DRIVER);
-		}
-		return 0;
-	}
-
-	public toCrm(): TCRMData {
+	public readonly toCrm = (): TCRMData =>
+	{
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
 		if(this.crmId)
 			data.fields[TRANSPORT.ID] = this.crmId;
@@ -319,5 +291,21 @@ export default class Transport
 			data.fields[TRANSPORT.IMAGE] = this.images.map(image => image.url);
 
 		return data;
+	};
+
+	public async deleteImages(): Promise<number> {
+		if(this.images) {
+			const imageFileService = new ImageFileService();
+			const imageList = this.images.map(i => i.url);
+
+			if(this.osagoPhotoLink)
+				imageList.push(this.osagoPhotoLink);
+
+			if(this.diagnosticsPhotoLink)
+				imageList.push(this.diagnosticsPhotoLink);
+
+			return imageFileService.deleteImageList(imageList, Bucket.DRIVER);
+		}
+		return 0;
 	}
 }

@@ -1,8 +1,6 @@
 import {
-	AllowNull,
 	BelongsTo,
 	ForeignKey,
-	IsUrl,
 	IsUUID,
 	Table
 }                        from 'sequelize-typescript';
@@ -14,6 +12,7 @@ import { ApiProperty }   from '@nestjs/swagger';
 import { TABLE_OPTIONS } from '@common/constants';
 import {
 	IImage,
+	Index,
 	UrlColumn,
 	URL,
 	UuidColumn
@@ -41,30 +40,31 @@ export default class Image
 	extends EntityModel<IImage>
 	implements IImage {
 	@ApiProperty(prop.cargoId)
-	@IsUUID("all")
+	@IsUUID('all')
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoCompany)
+	@Index
 	@UuidColumn({ onDelete: 'SET NULL' })
 	cargoId?: string;
 
 	@ApiProperty(prop.cargoinnId)
-	@IsUUID("all")
+	@IsUUID('all')
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoInnCompany)
+	@Index
 	@UuidColumn({ onDelete: 'SET NULL' })
 	cargoinnId?: string;
 
 	@ApiProperty(prop.transportId)
-	@IsUUID("all")
+	@IsUUID('all')
 	@Field(() => UuidScalar)
 	@ForeignKey(() => Transport)
+	@Index
 	@UuidColumn({ onDelete: 'CASCADE' })
 	transportId?: string;
 
 	@ApiProperty(prop.url)
-	@IsUrl
-	@AllowNull(false)
-	@UrlColumn()
+	@UrlColumn({ defaultValue: null })
 	url: URL;
 
 	@ApiProperty(prop.cargo)

@@ -1,15 +1,9 @@
 import {
-	AllowNull,
 	BelongsTo,
-	Default,
 	ForeignKey,
 	HasMany,
 	HasOne,
-	IsDate,
-	IsEmail,
-	IsUrl,
-	Table,
-	Unique
+	Table
 }                           from 'sequelize-typescript';
 import {
 	Field,
@@ -32,6 +26,7 @@ import {
 	ICRMEntity,
 	IDriver,
 	IDriverOperation,
+	Index,
 	IntColumn,
 	JsonbColumn,
 	StringColumn,
@@ -75,24 +70,26 @@ export default class Driver
 	@ApiProperty(prop.cargoId)
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoCompany)
-	@AllowNull(true)
+	@Index
 	@UuidColumn()
 	cargoId?: string;
 
 	@ApiProperty(prop.cargoinnId)
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoInnCompany)
-	@AllowNull(true)
+	@Index
 	@UuidColumn()
 	cargoinnId?: string;
 
 	@ApiProperty(prop.crmId)
-	@AllowNull(true)
-	@IntColumn()
+	@Index
+	@IntColumn({
+		           unique:       true,
+		           defaultValue: null
+	           })
 	crmId?: number;
 
 	@ApiProperty(prop.name)
-	@AllowNull(false)
 	@StringColumn()
 	name: string;
 
@@ -105,25 +102,25 @@ export default class Driver
 	lastName?: string;
 
 	@ApiProperty(prop.email)
-	@IsEmail
-	@Unique
-	@StringColumn()
+	@StringColumn({
+		              unique:   true,
+		              validate: { isEmail: true }
+	              })
 	email: string;
 
 	@ApiProperty(prop.birthDate)
-	@IsDate
 	@DateColumn()
 	birthDate: Date;
 
 	@ApiProperty(prop.isReady)
-	@Default(false)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: false })
 	isReady: boolean;
 
 	@ApiProperty(prop.status)
-	@Default(DriverStatus.NONE)
-	@AllowNull(false)
-	@IntColumn()
+	@IntColumn({
+		           allowNull:    false,
+		           defaultValue: DriverStatus.NONE
+	           })
 	status: DriverStatus;
 
 	@ApiProperty(prop.passportSerialNumber)
@@ -131,7 +128,6 @@ export default class Driver
 	passportSerialNumber: string;
 
 	@ApiProperty(prop.passportDate)
-	@IsDate
 	@DateColumn()
 	passportDate: Date;
 
@@ -148,8 +144,7 @@ export default class Driver
 	passportRegistrationAddress: string;
 
 	@ApiProperty(prop.role)
-	@Default(UserRole.NONE)
-	@IntColumn()
+	@IntColumn({ defaultValue: UserRole.NONE })
 	role?: UserRole;
 
 	@ApiProperty(prop.phone)
@@ -169,7 +164,6 @@ export default class Driver
 	licenseNumber: string;
 
 	@ApiProperty(prop.licenseDate)
-	@IsDate
 	@DateColumn()
 	licenseDate: Date;
 
@@ -182,12 +176,10 @@ export default class Driver
 	phoneSecond?: string;
 
 	@ApiProperty(prop.latitude)
-	@AllowNull
 	@FloatColumn()
 	latitude?: number;
 
 	@ApiProperty(prop.longitude)
-	@AllowNull
 	@FloatColumn()
 	longitude?: number;
 
@@ -216,32 +208,26 @@ export default class Driver
 	payloadDate?: Date;
 
 	@ApiProperty(prop.avatarLink)
-	@IsUrl
 	@UrlColumn()
 	avatarLink?: string;
 
 	@ApiProperty(prop.passportPhotoLink)
-	@IsUrl
 	@UrlColumn()
 	passportPhotoLink: string;
 
 	@ApiProperty(prop.passportSignLink)
-	@IsUrl
 	@UrlColumn()
 	passportSignLink?: string;
 
 	@ApiProperty(prop.passportSelfieLink)
-	@IsUrl
 	@UrlColumn()
 	passportSelfieLink?: string;
 
 	@ApiProperty(prop.licenseFrontLink)
-	@IsUrl
 	@UrlColumn()
 	licenseFrontLink?: string;
 
 	@ApiProperty(prop.licenseBackLink)
-	@IsUrl
 	@UrlColumn()
 	licenseBackLink?: string;
 
@@ -264,6 +250,10 @@ export default class Driver
 	@ApiProperty(prop.transports)
 	@HasMany(() => Transport, 'driverId')
 	transports?: Transport[];
+
+	@ApiProperty(prop.hasSent)
+	@BooleanColumn({ defaultValue: false })
+	hasSent?: boolean;
 
 	@ApiProperty(prop.fullName)
 	@VirtualColumn()
@@ -303,7 +293,11 @@ export default class Driver
 		);
 	}
 
-	public toCrm(companyCrmId: number, directions: string[]): TCRMData {
+	public readonly toCrm = (
+		companyCrmId: number,
+		directions: string[]
+	): TCRMData =>
+	{
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
 		data.fields[DRIVER.COMPANY_ID] = companyCrmId;
 		data.fields[DRIVER.USER_TYPE] = CRM.CONTACT_TYPES[1].ID;
@@ -331,5 +325,5 @@ export default class Driver
 		data.fields[DRIVER.DATE_CREATE] = this.createdAt;
 		data.fields[DRIVER.DATE_UPDATE] = this.updatedAt;
 		return data;
-	}
+	};
 }
