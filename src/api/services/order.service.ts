@@ -371,6 +371,7 @@ export default class OrderService
 				}
 			}
 			const data: TCRMData = order.toCrm(companyCrmId, driverCrmId, driverCoordinates);
+			data.params['REGISTER_SONET_EVENT'] = 'N';
 			const client = await this.httpClient
 			                         .post<TCRMResponse>(
 				                         buildBitrixRequestUrl(BitrixUrl.ORDER_UPD_URL, data, crmOrderId)
