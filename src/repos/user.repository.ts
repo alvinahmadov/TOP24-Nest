@@ -28,7 +28,7 @@ export default class UserRepository
 			() => this.model.findOne(
 				{
 					where:         this.whereClause()
-					                   .in('phone', [phone, formatPhone(phone)])
+					                   .eq('phone', phone)
 						               .query,
 					include:       !!full ? this.include : [],
 					rejectOnEmpty: false
