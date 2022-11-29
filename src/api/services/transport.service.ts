@@ -3,7 +3,6 @@ import { Injectable }          from '@nestjs/common';
 import { BitrixUrl, Bucket }   from '@common/constants';
 import { TransportStatus }     from '@common/enums';
 import {
-	IApiResponse,
 	IApiResponses,
 	IService,
 	ITransport,
@@ -71,7 +70,7 @@ export default class TransportService
 			statusCode: 200,
 			data:       filterTransports(data, filter, false),
 			message:    message
-		} as IApiResponse<Transport[]>;
+		};
 	}
 
 	/**
@@ -91,7 +90,7 @@ export default class TransportService
 			statusCode: 200,
 			data:       transport,
 			message:    formatArgs(TRANSLATIONS['GET'], transport.brand)
-		} as IApiResponse<Transport>;
+		};
 	}
 
 	public async getByCrmId(crmId: number, full?: boolean)
@@ -127,7 +126,7 @@ export default class TransportService
 			statusCode: 200,
 			data:       transports,
 			message:    formatArgs(TRANSLATIONS['LIST'], transports.length)
-		} as IApiResponse<Transport[]>;
+		};
 	}
 
 	/**
@@ -148,7 +147,7 @@ export default class TransportService
 			statusCode: 201,
 			data:       transport,
 			message:    formatArgs(TRANSLATIONS['CREATE'], transport.id)
-		} as IApiResponse<Transport>;
+		};
 	}
 
 	/**
@@ -172,7 +171,7 @@ export default class TransportService
 			statusCode: 200,
 			data:       transport,
 			message:    formatArgs(TRANSLATIONS['UPDATE'], transport.id)
-		} as IApiResponse<Transport>;
+		};
 	}
 
 	/**
@@ -203,10 +202,7 @@ export default class TransportService
 			statusCode: 200,
 			data:       { affectedCount, images },
 			message:    formatArgs(TRANSLATIONS['DELETE'], transport.id)
-		} as IApiResponse<{
-			affectedCount: number,
-			images: number
-		}>;
+		};
 	}
 
 	public async activateTransport(id: string)
@@ -278,7 +274,7 @@ export default class TransportService
 		return {
 			statusCode: 500,
 			message:    getTranslation('FAIL', 'WRITE_FILE')
-		} as IApiResponse<null>;
+		};
 	}
 
 	public async deleteImage(id: string, imageId: string) {
