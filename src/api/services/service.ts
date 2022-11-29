@@ -42,8 +42,9 @@ export default abstract class Service<M extends Model,
 	 * in creation or update.
 	 *
 	 * @param data New entity data
+	 * @param full Include child items
 	 * */
-	public async createModel(data: TCreationAttribute<R['attributes']>): Promise<M | null> {
+	public async createModel(data: TCreationAttribute<R['attributes']>, full?: boolean): Promise<M | null> {
 		if(!this.repository)
 			throw Error('Main repository must be set. Use setMainRepo()');
 		return this.repository.create(data);
@@ -56,12 +57,12 @@ export default abstract class Service<M extends Model,
 
 	public async updateAll<T extends IModel>(
 		data: TUpdateAttribute<T>,
-		conditions?: WhereOptions<M>
+		conditions?: WhereOptions<A>
 	): Promise<[affectedCount: number, affectedRows: M[]]> {
 		return this.repository.bulkUpdate(data, conditions);
 	}
 
-	public async deleteAll(conditions?: WhereOptions<M>) {
+	public async deleteAll(conditions?: WhereOptions<A>) {
 		return this.repository.bulkDelete(conditions);
 	}
 
