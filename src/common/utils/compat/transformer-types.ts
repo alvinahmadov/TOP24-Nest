@@ -23,25 +23,28 @@ export type TTransformerApiResponse = {
 /**
  * @see IUser
  * */
-export interface IUserTransformer {
+export interface IUserTransformer
+	extends IModel {
 	/**
 	 * @see IUser.role
 	 * */
 	type: UserRole;
+	phone: string;
+	verify?: string;
+	confirmed?: boolean;
+	
+	cargo_companies?: ICargoCompanyTransformer[];
+	cargoinn_companies?: ICargoInnCompanyTransformer[];
 }
 
 /**
  * @see IAdmin
  * */
 export interface IAdminTransformer
-	extends IModel,
-	        IUserTransformer {
+	extends IUserTransformer {
 	email: string;
 	name: string;
-	phone: string;
-	verify?: string;
 	privilege?: boolean;
-	confirmed?: boolean;
 }
 
 export interface IAddressTransformer
@@ -74,18 +77,15 @@ export interface IAddressTransformer
  * @see ICompany
  * */
 export interface ICompanyTransformer
-	extends IModel,
-	        IUserTransformer {
+	extends IModel {
+	userId: string;
 	name: string;
 	email: string;
+	phone: string;
 	/**
 	 * @see ICompany.type
 	 * */
 	company_type: CompanyType;
-	/**
-	 * @see ICompany.role
-	 * */
-	type: UserRole;
 	/**
 	 * @see ICompany.taxpayerNumber
 	 * */
@@ -114,18 +114,17 @@ export interface ICompanyTransformer
 	 * @see ICompany.crmId
 	 * */
 	crm_id?: number;
-	phone: string;
+	confirmed?: boolean;
 	/**
 	 * @see ICompany.contactPhone
 	 * */
 	phone_second?: string;
+	user_phone: string;
 	directions?: string[];
-	verify?: string;
 	/**
 	 * @see ICompany.paymentType
 	 * */
 	nds?: string;
-	confirmed?: boolean;
 	address_first?: string;
 	address_second?: string;
 	address_third?: string;
@@ -140,11 +139,11 @@ export interface ICompanyTransformer
 	info?: string;
 	status?: string;
 
-	images?: IImageTransformer[];
 	drivers?: IDriverTransformer[];
 	orders?: IOrderTransformer[];
 	payment?: IPaymentTransformer;
 	transports?: ITransportTransformer[];
+	user: IUserTransformer;
 }
 
 /**
@@ -689,7 +688,7 @@ export interface ITransportTransformer
 	 * */
 	diag_num: string;
 	/**
-	 * @see ITransport.diagnosticsDate
+	 * @see ITransport.diagnosticsExpiryDate
 	 * */
 	diag_date: Date;
 	/**
