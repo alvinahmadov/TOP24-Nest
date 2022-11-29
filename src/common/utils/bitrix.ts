@@ -16,12 +16,13 @@ import {
 import {
 	IApiResponse,
 	IOrderDestination,
-	ICRMEntity,
 	TBitrixEnum,
 	TCRMData,
-	TCRMFields, TBitrixData
+	TCRMFields,
+	TBitrixData
 }                                  from '@common/interfaces';
 import { dateValidator, isNumber } from '@common/utils';
+import Driver                      from '@models/driver.entity';
 import { OrderCreateDto }          from '@api/dto';
 import { splitAddress }            from './address';
 
@@ -385,8 +386,7 @@ export function orderFromBitrix(crmFields: TCRMFields): OrderCreateDto {
 	} as OrderCreateDto;
 }
 
-export async function cargoToBitrix<C extends ICRMEntity = any>(company: C)
-	: Promise<IApiResponse<number>> {
+export async function cargoToBitrix(company: any): Promise<IApiResponse<number>> {
 	let crmCargoId = company.crmId;
 	const data: TCRMData = company.toCrm() as TCRMData;
 	const url = crmCargoId ? BitrixUrl.COMPANY_UPD_URL
@@ -417,10 +417,10 @@ export async function cargoToBitrix<C extends ICRMEntity = any>(company: C)
 				// @ts-ignore
 				for(const driver of company.drivers) {
 					// @ts-ignore
-					const driverData = driver.toCRM(crmCargoId, company.directions);
+					const driverData = driver.toCrm(crmCargoId, company.directions);
 					for(const transport of driver.transports) {
 						let contactCrmId = transport.crm_id;
-						const transportData: TCRMData = transport.toCRM();
+						const transportData: TCRMData = transport.toCrm();
 						const data: TCRMData = {
 							fields: {
 								...driverData.fields,
