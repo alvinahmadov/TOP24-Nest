@@ -6,7 +6,7 @@ type ModelResult = { MODELS: ({ ID?: string, VALUE?: string, BRAND_ID?: string }
 
 const crmBrands = crmEnums.CRM.TRANSPORT.BRANDS;
 const crmModels = crmEnums.CRM.TRANSPORT.MODELS;
-const models: { [key: string]: string[] } = modelsJson;
+const models: { [key: string]: any } = modelsJson;
 
 let result: ModelResult = { MODELS: [] };
 crmBrands.map(({ ID: brandId, VALUE: brandName }) =>
