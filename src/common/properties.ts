@@ -1296,6 +1296,10 @@ export const entityConfig: TEntityConfigList = {
 				example:     '18000',
 				format:      'float'
 			},
+			onPayment:         {
+				description: 'Статус заказа на оплате.\nсм. `on_payment`',
+				default:     false
+			},
 			destinations:      {
 				description: 'Массив точек назначения для исполнения заказа.'
 				             + ''
