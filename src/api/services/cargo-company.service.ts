@@ -139,7 +139,7 @@ export default class CargoCompanyService
 		if(!user) {
 			const { data: user } = await this.userService.create({ phone: dto.user ?? dto.phone, role: UserRole.CARGO });
 			userId = user.id;
-			dto.isDefault = true
+			dto.isDefault = true;
 		}
 		else {
 			userId = user.id;
@@ -235,8 +235,10 @@ export default class CargoCompanyService
 					await this.repository.bulkUpdate(
 						{ isDefault: false },
 						{
-							id:     { [Op.ne]: company.id },
-							userId: user.id
+							[Op.and]: [
+								{ id: { [Op.ne]: id } },
+								{ userId: { [Op.eq]: user.id } }
+							]
 						}
 					);
 

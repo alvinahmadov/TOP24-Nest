@@ -235,8 +235,10 @@ export default class CargoCompanyInnService
 					await this.repository.bulkUpdate(
 						{ isDefault: false },
 						{
-							id:     { [Op.ne]: company.id },
-							userId: user.id
+							[Op.and]: [
+								{ id: { [Op.ne]: id } },
+								{ userId: { [Op.eq]: user.id } }
+							]
 						}
 					);
 
