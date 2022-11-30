@@ -34,7 +34,11 @@ class CompanyValidator {
 
 			company.paymentType = convertBitrix('paymentType', company.paymentType, true);
 		}
-		else throw Error('Не указан тип оплаты!');
+		else {
+			if(company.type !== CompanyType.PI) {
+				throw new Error('Не указан тип оплаты!');
+			}
+		}
 	}
 }
 
@@ -57,7 +61,7 @@ export class CompanyCreatePipe
 
 			this.checkPaymentType(value);
 			value.user = data.user;
-			
+
 			delete value.id;
 			delete value.userId;
 			delete value.confirmed;
