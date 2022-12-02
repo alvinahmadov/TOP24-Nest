@@ -25,13 +25,13 @@ COPY --chown=$APP_USER:$APP_USER . .
 
 RUN rm -rf $APP_HOME/docs || echo "Directory '$APP_HOME/docs' doesn't exist"
 RUN mkdir $APP_HOME/docs && chown $APP_USER:$APP_USER $APP_HOME/docs
-RUN install-pgcrypto.sh
 
 USER $APP_USER
 
 ENV GENERATE_SOURCEMAP false
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 
+RUN install-pgcrypto.sh
 RUN npm run build && npm run doc
 
 ## ---- Development ---- ##
