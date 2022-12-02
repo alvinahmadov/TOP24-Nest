@@ -31,7 +31,7 @@ USER $APP_USER
 ENV GENERATE_SOURCEMAP false
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 
-RUN sudo $APP_HOME/install-pgcrypto.sh
+RUN chmod +x $APP_HOME/install-pgcrypto.sh && $APP_HOME/install-pgcrypto.sh
 RUN npm run build && npm run doc
 
 ## ---- Development ---- ##
