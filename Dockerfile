@@ -1,6 +1,8 @@
 ## ---- Base ---- ##
 FROM node:lts-buster AS base
 
+RUN mkdir /var/log/redis && touch /var/log/redis/redis-server.log
+
 RUN apt-get update && apt-get install -y apt-utils postgresql redis redis-server net-tools nano
 
 RUN npm install sequelize-cli -g
@@ -23,14 +25,10 @@ RUN npm set progress=false && npm config set depth 0
 RUN npm ci --loglevel=error
 COPY --chown=$APP_USER:$APP_USER . .
 
+RUN redis-server /etc/redis/redis.conf
+
 RUN rm -rf $APP_HOME/docs || echo "Directory '$APP_HOME/docs' doesn't exist"
 RUN mkdir $APP_HOME/docs && chown $APP_USER:$APP_USER $APP_HOME/docs
-
-#RUN chmod +x $APP_HOME/install-pgcrypto.sh
-
-#USER postgres
-
-#RUN $APP_HOME/install-pgcrypto.sh
 
 USER $APP_USER
 
