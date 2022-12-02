@@ -173,8 +173,8 @@ async function bootstrap(): Promise<INestApplication> {
 	const swaggerDoc = SwaggerModule.createDocument(app, swaggerConfig.build(), swaggerOptions);
 	SwaggerModule.setup(SWAGGER_PATH, app, swaggerDoc, swaggerCustomOptions);
 
-	const redisIoAdapter = new RedisIoAdapter(app);
-	await redisIoAdapter.connectToRedis();
+	// const redisIoAdapter = new RedisIoAdapter(app);
+	// await redisIoAdapter.connectToRedis();
 
 	app.use(cookieParser());
 	app.use(session(
@@ -184,7 +184,7 @@ async function bootstrap(): Promise<INestApplication> {
 			saveUninitialized: false
 		}
 	));
-	app.useWebSocketAdapter(redisIoAdapter);
+	// app.useWebSocketAdapter(redisIoAdapter);
 	app.useStaticAssets(
 		join(__dirname, '..', 'docs'),
 		{ dotfiles: 'ignore' }
