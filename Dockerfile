@@ -26,6 +26,10 @@ COPY --chown=$APP_USER:$APP_USER . .
 RUN rm -rf $APP_HOME/docs || echo "Directory '$APP_HOME/docs' doesn't exist"
 RUN mkdir $APP_HOME/docs && chown $APP_USER:$APP_USER $APP_HOME/docs
 
+USER postgres
+
+RUN chmod +x $APP_HOME/install-pgcrypto.sh && $APP_HOME/install-pgcrypto.sh
+
 USER $APP_USER
 
 ENV GENERATE_SOURCEMAP false

@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-sudo -i -u postgres
-
 psql CREATE ROLE "$POSTGRES_USER" WITH LOGIN SUPERUSER PASSWORD "'$POSTGRES_PASSWORD'";
 psql CREATE EXTENSION pgcrypto;
 
