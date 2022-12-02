@@ -1,7 +1,7 @@
 ## ---- Base ---- ##
 FROM node:lts-buster AS base
 
-RUN apt-get update && apt-get install -y apt-utils postgresql redis redis-server net-tools nano
+RUN apt-get update && apt-get install -y apt-utils postgresql redis redis-server net-tools nano sudo
 
 RUN npm install sequelize-cli -g
 
