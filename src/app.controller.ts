@@ -1,11 +1,13 @@
 import { join }                from 'path';
 import * as ex                 from 'express';
+import { exec }                from 'shelljs';
 import { IMigrationOptions }   from 'sequelize-migrate/index';
 import {
 	Body,
 	Controller,
 	Get,
 	Post,
+	Patch,
 	Res,
 	UseFilters
 }                              from '@nestjs/common';
@@ -45,6 +47,16 @@ export default class AppController {
 
 		return response.status(result.statusCode)
 		               .send(result);
+	}
+
+	@Patch('migrate')
+	public async runMigrations(
+		@Res() response: ex.Response
+	) {
+		const cmd = exec('npm run migrate');
+		const success = cmd.code === 0;
+		return response.status(success ? 200 : 400)
+		               .send(success ? cmd.stdout : cmd.stderr);
 	}
 
 	@Get('agreement')
