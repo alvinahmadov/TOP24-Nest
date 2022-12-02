@@ -14,7 +14,7 @@ USER $APP_USER
 
 WORKDIR $APP_HOME
 
-COPY --chown=$APP_USER:$APP_USER package.json package-lock.json ./deploy/install-pgcrypto.sh ./
+COPY --chown=$APP_USER:$APP_USER package.json package-lock.json install-pgcrypto.sh ./
 
 ## ---- Build ---- ##
 FROM base AS build
