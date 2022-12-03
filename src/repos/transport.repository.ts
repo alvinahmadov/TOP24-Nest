@@ -10,7 +10,7 @@ import {
 }                             from '@common/interfaces';
 import {
 	CargoCompany,
-	CargoInnCompany,
+	CargoCompanyInn,
 	Driver,
 	Image,
 	Transport
@@ -23,7 +23,7 @@ export default class TransportRepository
 	protected override readonly model = Transport;
 	protected override readonly include: Includeable[] = [
 		{ model: CargoCompany },
-		{ model: CargoInnCompany },
+		{ model: CargoCompanyInn },
 		{ model: Driver },
 		{ model: Image }
 	];

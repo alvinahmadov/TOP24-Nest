@@ -1,12 +1,15 @@
+import { Includeable }   from 'sequelize';
 import {
 	IUser,
 	IRepository,
 	IRepositoryOptions
-}                                              from '@common/interfaces';
-import { formatPhone }                         from '@common/utils';
-import { CargoCompany, CargoInnCompany, User } from '@models/index';
-import GenericRepository                       from './generic';
-import { Includeable }                         from 'sequelize';
+}                        from '@common/interfaces';
+import {
+	CargoCompany,
+	CargoCompanyInn,
+	User
+}                        from '@models/index';
+import GenericRepository from './generic';
 
 export default class UserRepository
 	extends GenericRepository<User, IUser>
@@ -14,7 +17,7 @@ export default class UserRepository
 	protected override readonly model = User;
 	protected override readonly include: Includeable[] = [
 		{ model: CargoCompany },
-		{ model: CargoInnCompany }
+		{ model: CargoCompanyInn }
 	];
 
 	constructor(
