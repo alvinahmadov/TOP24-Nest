@@ -1,5 +1,5 @@
-import md5                    from 'md5';
 import path                   from 'path';
+import { v4 as uuid }         from 'uuid';
 import * as ex                from 'express';
 import env                    from '@config/env';
 import {
@@ -52,9 +52,9 @@ export function fileExt(file: { mimetype?: string }) {
 
 export function renameMulterFile(file: TMulterFile, ...args: string[]): TMulterFile {
 	const { originalname: name, ...rest } = file;
-
+	const fileName = uuid({ random: rest.buffer });
 	return {
-		originalname: path.join(...args, `${md5(rest.buffer)}.${fileExt({ mimetype: rest.mimetype })}`),
+		originalname: path.join(...args, `${fileName.toUpperCase()}.${fileExt({ mimetype: rest.mimetype })}`),
 		...rest
 	};
 }
@@ -74,18 +74,6 @@ export function transformDriverTransports(driver: Driver): Driver {
 		driver.transports = driver.transports.map(transformTransportParameters);
 
 	return driver;
-}
-
-export async function deleteEntityImages(list: any[])
-	: Promise<number> {
-	if(!list)
-		return 0;
-
-	return Promise.all(
-		list.map(async(e) => await e.deleteImages())
-	).then(
-		res => res.reduce((p, c) => p + c, 0)
-	);
 }
 
 export function sendResponse<T = any>(
