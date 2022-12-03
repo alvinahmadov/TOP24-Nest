@@ -96,10 +96,10 @@ export namespace BitrixUrl {
 }
 
 export namespace Bucket {
-	export const COMMON: string = 'commons';
-	export const COMPANY: string = 'company';
-	export const DRIVER: string = 'driver';
-	export const TRANSPORT: string = 'transport';
+	export const COMMON: string = 'top24-commons';
+	export const COMPANY: string = 'top24-company';
+	export const DRIVER: string = 'top24-driver';
+	export const TRANSPORT: string = 'top24-transport';
 }
 
 export namespace Reference {
