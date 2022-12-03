@@ -32,7 +32,7 @@ export interface IUserTransformer
 	phone: string;
 	verify?: string;
 	confirmed?: boolean;
-	
+
 	cargo_companies?: ICargoCompanyTransformer[];
 	cargoinn_companies?: ICargoInnCompanyTransformer[];
 }
@@ -154,7 +154,7 @@ export interface ICompanyTransformer
 export interface ICargoCompanyTransformer
 	extends ICompanyTransformer {
 	/**
-	 * @see ICargoCompany.shortName
+	 * @see ICargoCompany.legalName
 	 * */
 	shortname: string;
 	/**
@@ -199,6 +199,11 @@ export interface ICargoCompanyTransformer
 	 * @see ICargoCompany.contactThird
 	 * */
 	contact_third?: string;
+	/**
+	 * @see ICompany.contactPhone
+	 * @deprecated Replaced by phone
+	 * */
+	phone_second?: string;
 }
 
 /**
@@ -305,7 +310,7 @@ export interface IDriverTransformer
 	/**
 	 * @see IDriver.passportPhotoLink
 	 * */
-	passport_link: string;
+	passport_photo_link: string;
 	/**
 	 * @see IDriver.passportSignLink
 	 * */
