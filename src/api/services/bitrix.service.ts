@@ -72,7 +72,7 @@ export default class BitrixService
 		protected readonly orderService: OrderService,
 		protected readonly offerService: OfferService,
 		protected readonly transportService: TransportService,
-		protected readonly gateway: EventsGateway
+		// protected readonly gateway: EventsGateway
 	) {
 		super();
 	}
@@ -262,7 +262,8 @@ export default class BitrixService
 					cargo.confirmed = Number(crmItem[CARGO.CONFIRMED]) === 1;
 					if(cargo.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
 
-					cargo.save({ fields: ['confirmed'] })
+					await cargo.save({ fields: ['confirmed'] })
+					 /*
 					     .then((res) =>
 					           {
 						           this.gateway.sendCargoEvent(
@@ -274,6 +275,7 @@ export default class BitrixService
 							           }
 						           );
 					           });
+					*/
 
 					return {
 						statusCode: 200,
@@ -285,18 +287,18 @@ export default class BitrixService
 					cargoinn.confirmed = Number(crmItem[CARGOINN.CONFIRMED]) === 1;
 					if(cargoinn.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
 
-					cargoinn.save({ fields: ['confirmed'] })
-					        .then((res) =>
-					              {
-						              this.gateway.sendCargoEvent(
-							              {
-								              id:     res.id,
-								              event:  'cargo',
-								              source: 'bitrix',
-								              message
-							              }
-						              );
-					              });
+					await cargoinn.save({ fields: ['confirmed'] })
+					        // .then((res) =>
+					        //       {
+						      //         this.gateway.sendCargoEvent(
+							    //           {
+								  //             id:     res.id,
+								  //             event:  'cargo',
+								  //             source: 'bitrix',
+								  //             message
+							    //           }
+						      //         );
+					        //       });
 
 					return {
 						statusCode: 200,
@@ -321,18 +323,18 @@ export default class BitrixService
 
 			if(transport) {
 				transport.confirmed = Number(crmItem[TRANSPORT.CONFIRMED]) === 1;
-				transport.save({ fields: ['confirmed'] })
-				         .then(() =>
-				               {
-					               this.gateway.sendDriverEvent(
-						               {
-							               id:     transport.driverId,
-							               source: 'bitrix',
-							               message
-						               },
-						               UserRole.CARGO
-					               );
-				               });
+				await transport.save({ fields: ['confirmed'] })
+				         // .then(() =>
+				         //       {
+					       //         this.gateway.sendDriverEvent(
+						     //           {
+							   //             id:     transport.driverId,
+							   //             source: 'bitrix',
+							   //             message
+						     //           },
+						     //           UserRole.CARGO
+					       //         );
+				         //       });
 
 				return {
 					statusCode: 200,
@@ -421,16 +423,16 @@ export default class BitrixService
 						           async(response) =>
 						           {
 							           if(response.data) {
-								           const order = response.data;
-								           this.gateway.sendOrderEvent(
-									           {
-										           id:      order.id,
-										           source:  'bitrix',
-										           status:  order.status,
-										           stage:   order.stage,
-										           message: `Обновлены данные заказа ${order.title}!`
-									           }
-								           );
+								           // const order = response.data;
+								           // this.gateway.sendOrderEvent(
+									         //   {
+										       //     id:      order.id,
+										       //     source:  'bitrix',
+										       //     status:  order.status,
+										       //     stage:   order.stage,
+										       //     message: `Обновлены данные заказа ${order.title}!`
+									         //   }
+								           // );
 							           }
 							           return response;
 						           }
@@ -439,24 +441,24 @@ export default class BitrixService
 				else {
 					return this.orderService
 					           .create(orderData, false)
-					           .then(
-						           (res) =>
-						           {
-							           if(res.data) {
-								           const order = res.data;
-								           this.gateway.sendOrderEvent(
-									           {
-										           id:      order.id,
-										           source:  'bitrix',
-										           status:  order.status,
-										           stage:   order.stage,
-										           message: `Появился новый заказ '${order.title}'!`
-									           }
-								           );
-							           }
-							           return res;
-						           }
-					           );
+					           // .then(
+						         //   (res) =>
+						         //   {
+							       //     if(res.data) {
+								     //       const order = res.data;
+								     //       this.gateway.sendOrderEvent(
+									   //         {
+										 //           id:      order.id,
+										 //           source:  'bitrix',
+										 //           status:  order.status,
+										 //           stage:   order.stage,
+										 //           message: `Появился новый заказ '${order.title}'!`
+									   //         }
+								     //       );
+							       //     }
+							       //     return res;
+						         //   }
+					           // );
 				}
 			}
 			return this.responses['bitrixErr'];
@@ -475,7 +477,7 @@ export default class BitrixService
 		const { data: order } = await this.orderService.getByCrmId(crmId);
 		if(order) {
 			const { data: { affectedCount } } = await this.orderService.delete(order.id);
-			if(affectedCount > 0) this.gateway.sendOrderEvent({ id: order.id, status: -1 });
+			// if(affectedCount > 0) this.gateway.sendOrderEvent({ id: order.id, status: -1 });
 			return {
 				statusCode: 200,
 				data:       { affectedCount },
