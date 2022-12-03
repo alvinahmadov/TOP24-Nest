@@ -1,11 +1,11 @@
-import { InputType }   from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	IGatewayData,
 	IGatewayEvent,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { gatewayEvent: prop } = entityConfig;
 

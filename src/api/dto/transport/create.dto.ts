@@ -5,22 +5,22 @@ import {
 	IsInt,
 	IsString,
 	IsUUID
-}                      from 'class-validator';
+}                       from 'class-validator';
 import {
 	Field,
 	InputType
-}                      from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
+}                       from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	LoadingType,
 	TransportStatus
-}                      from '@common/enums';
+}                       from '@common/enums';
 import {
 	ITransport,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
-import { UuidScalar }  from '@common/scalars';
+}                       from '@common/interfaces';
+import { UuidScalar }   from '@common/scalars';
+import { entityConfig } from '@api/swagger/properties';
 
 const { transport: prop } = entityConfig;
 

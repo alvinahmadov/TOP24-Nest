@@ -1,7 +1,7 @@
 import { ApiProperty }       from '@nestjs/swagger';
 import { InputType }         from '@nestjs/graphql';
 import { IAdminCredentials } from '@common/interfaces';
-import entityConfig          from '@common/properties';
+import { entityConfig }      from '@api/swagger/properties';
 
 const { admin: prop } = entityConfig;
 

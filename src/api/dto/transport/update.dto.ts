@@ -1,15 +1,15 @@
-import { IsDate }      from 'class-validator';
-import { InputType }   from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsDate }       from 'class-validator';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	LoadingType,
 	TransportStatus
-}                      from '@common/enums';
+}                       from '@common/enums';
 import {
 	ITransport,
 	TUpdateAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { transport: prop } = entityConfig;
 

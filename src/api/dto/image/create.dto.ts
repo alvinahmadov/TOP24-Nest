@@ -6,7 +6,7 @@ import {
 	TCreationAttribute,
 	URL
 }                        from '@common/interfaces';
-import entityConfig      from '@common/properties';
+import { entityConfig }  from '@api/swagger/properties';
 
 const { image: prop } = entityConfig;
 

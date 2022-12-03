@@ -1,14 +1,14 @@
-import { InputType }   from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	OfferStatus,
 	OrderStatus
-}                      from '@common/enums';
+}                       from '@common/enums';
 import {
 	IOffer,
 	TUpdateAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { offer: prop } = entityConfig;
 

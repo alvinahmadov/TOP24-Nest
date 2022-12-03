@@ -7,23 +7,23 @@ import {
 	IsString,
 	IsUrl,
 	IsUUID
-}                      from 'class-validator';
-import { InputType }   from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
+}                       from 'class-validator';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	LoadingType,
 	OrderStage,
 	OrderStatus
-}                      from '@common/enums';
+}                       from '@common/enums';
 import {
 	IOrder,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
 import {
 	OrderDestination,
 	OrderFilter
-}                      from '@models/order.entity';
+}                       from '@models/order.entity';
+import { entityConfig } from '@api/swagger/properties';
 
 const { order: prop } = entityConfig;
 

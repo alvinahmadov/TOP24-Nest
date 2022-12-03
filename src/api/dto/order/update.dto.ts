@@ -1,17 +1,17 @@
-import { InputType }   from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	LoadingType,
 	OrderStage,
 	OrderStatus
-}                      from '@common/enums';
+}                       from '@common/enums';
 import {
 	IOrder,
 	IOrderDestination,
 	IOrderFilter,
 	TUpdateAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { order: prop } = entityConfig;
 

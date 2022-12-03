@@ -2,18 +2,18 @@ import {
 	IsInt,
 	IsString,
 	IsUUID
-}                      from 'class-validator';
-import { InputType }   from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
+}                       from 'class-validator';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	OfferStatus,
 	OrderStatus
-}                      from '@common/enums';
+}                       from '@common/enums';
 import {
 	IOffer,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { offer: prop } = entityConfig;
 

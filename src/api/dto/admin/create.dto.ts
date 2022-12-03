@@ -1,12 +1,12 @@
-import { IsEmail }     from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { InputType }   from '@nestjs/graphql';
-import entityConfig    from '@common/properties';
+import { IsEmail }      from 'class-validator';
+import { ApiProperty }  from '@nestjs/swagger';
+import { InputType }    from '@nestjs/graphql';
 import {
 	IAdmin,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import { UserRole }    from '@common/enums';
+}                       from '@common/interfaces';
+import { UserRole }     from '@common/enums';
+import { entityConfig } from '@api/swagger/properties';
 
 const { admin: prop } = entityConfig;
 

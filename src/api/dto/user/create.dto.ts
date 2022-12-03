@@ -1,11 +1,11 @@
-import { InputType }   from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
-import entityConfig    from '@common/properties';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	IUser,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import { UserRole }    from '@common/enums';
+}                       from '@common/interfaces';
+import { UserRole }     from '@common/enums';
+import { entityConfig } from '@api/swagger/properties';
 
 const { user: prop } = entityConfig;
 

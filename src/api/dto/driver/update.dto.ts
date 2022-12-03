@@ -6,7 +6,7 @@ import {
 	IDriverOperation,
 	TUpdateAttribute
 }                       from '@common/interfaces';
-import entityConfig     from '@common/properties';
+import { entityConfig } from '@api/swagger/properties';
 
 const { driver: prop } = entityConfig;
 
