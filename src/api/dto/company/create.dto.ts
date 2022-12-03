@@ -5,15 +5,15 @@ import {
 	IsInt,
 	IsNotEmpty,
 	IsString
-}                      from 'class-validator';
-import { InputType }   from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
-import { CompanyType } from '@common/enums';
+}                       from 'class-validator';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
+import { CompanyType }  from '@common/enums';
 import {
 	ICargoCompany,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { company: prop } = entityConfig;
 
@@ -28,9 +28,9 @@ export default class CompanyCreateDto
 	@IsString()
 	taxpayerNumber: string;
 
-	@ApiProperty(prop.shortName)
+	@ApiProperty(prop.legalName)
 	@IsString()
-	shortName: string;
+	legalName: string;
 
 	@ApiProperty(prop.email)
 	@IsString()

@@ -1,11 +1,11 @@
-import { IsEmail }     from 'class-validator';
-import { InputType }   from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail }      from 'class-validator';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	ICargoCompany,
 	TUpdateAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { company: prop } = entityConfig;
 
@@ -73,7 +73,7 @@ export default class CompanyUpdateDto
 	@ApiProperty(prop.registrationNumber)
 	public registrationNumber?: string;
 
-	@ApiProperty(prop.shortName)
+	@ApiProperty(prop.legalName)
 	public shortName?: string;
 
 	@ApiProperty(prop.status)
