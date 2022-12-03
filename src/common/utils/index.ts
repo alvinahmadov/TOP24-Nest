@@ -7,4 +7,3 @@ export * from './i18n';
 export * from './helpers';
 export * from './log';
 export * from './swagger';
-export * from './yandex-storage';
