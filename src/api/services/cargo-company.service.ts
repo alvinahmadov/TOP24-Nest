@@ -1,17 +1,17 @@
 import * as uuid                  from 'uuid';
 import { Op }                     from 'sequelize';
-import { Injectable }             from '@nestjs/common';
-import { BitrixUrl }              from '@common/constants';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { BitrixUrl, Bucket }      from '@common/constants';
 import { AxiosStatic }            from '@common/classes';
 import { UserRole }               from '@common/enums';
 import {
 	IApiResponses,
+	ICompanyDeleteResponse,
 	IService,
 	TAsyncApiResponse
 }                                 from '@common/interfaces';
 import {
 	cargoToBitrix,
-	deleteEntityImages,
 	filterDirections,
 	filterTransports,
 	formatArgs,
@@ -29,9 +29,9 @@ import {
 	CompanyUpdateDto,
 	ListFilter
 }                                 from '@api/dto';
-import { EventsGateway }          from '@api/events';
 import Service                    from './service';
 import AddressService             from './address.service';
+import ImageFileService           from './image-file.service';
 import PaymentService             from './payment.service';
 import UserService                from './user.service';
 
@@ -55,8 +55,8 @@ export default class CargoCompanyService
 	constructor(
 		protected readonly addressService: AddressService,
 		protected readonly paymentsService: PaymentService,
-		protected readonly userService: UserService,
-		protected readonly gateway: EventsGateway
+		protected readonly imageFileService: ImageFileService,
+		protected readonly userService: UserService
 	) {
 		super();
 		this.repository = new CargoCompanyRepository();
@@ -134,19 +134,28 @@ export default class CargoCompanyService
 	public async create(dto: CompanyCreateDto)
 		: TAsyncApiResponse<CargoCompany> {
 		let userId: string;
-		const { data: user } = await this.userService.getByPhone(dto.user);
+		let company: CargoCompany;
+
+		let { data: user } = await this.userService.getByPhone(dto.user);
 
 		if(!user) {
-			const { data: user } = await this.userService.create({ phone: dto.user ?? dto.phone, role: UserRole.CARGO });
-			userId = user.id;
-			dto.isDefault = true;
+			const { data } = await this.userService.create({ phone: dto.user, role: UserRole.CARGO });
+
+			if(data) {
+				user = data;
+				userId = user.id;
+				dto.isDefault = true;
+			}
+			else
+				return this.repository.getRecord('create');
 		}
 		else {
 			userId = user.id;
-			dto.isDefault = false;
+			company = user.cargoCompanies.find(c => c.email === dto.email);
 		}
 
-		const company = await this.createModel({ ...dto, userId });
+		if(!company)
+			company = await this.createModel({ ...dto, userId });
 
 		if(!company)
 			return this.repository.getRecord('create');
@@ -154,9 +163,10 @@ export default class CargoCompanyService
 		if(dto.isDefault) {
 			await this.activate(company.id);
 		}
+		company.user = user;
 
 		return {
-			statusCode: 201,
+			statusCode: HttpStatus.CREATED,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['CREATE'], company.name)
 		};
@@ -192,38 +202,81 @@ export default class CargoCompanyService
 	 * @param {String!} id Id of cargo company to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<{ [k: string]: number }> {
+		: TAsyncApiResponse<ICompanyDeleteResponse> {
 		const company = await this.repository.get(id, true);
 
 		if(!company)
 			return this.responses['NOT_FOUND'];
 
 		if(company.crmId) {
-			await AxiosStatic.get(`${BitrixUrl.COMPANY_DEL_URL}?ID=${company.crmId}`);
+			await AxiosStatic.get(`${BitrixUrl.COMPANY_DEL_URL}?id=${company.crmId}`);
 		}
+		const driversCount = company.drivers.length;
+		const transportsCount = company.transports.length;
 
-		const companyImages = await company.deleteImages();
-		const transportImages = await deleteEntityImages(company.transports);
-		const driverImages = await deleteEntityImages(company.drivers);
-		const { data: { affectedCount: pays = 0 } } = await this.paymentsService.deleteByCompany(
-			{ cargoId: id }
+		const companyImages = await super.imageFileService.deleteImageList(
+			[
+				company.avatarLink,
+				company.attorneySignLink,
+				company.passportPhotoLink,
+				company.certificatePhotoLink,
+				company.directorOrderPhotoLink
+			],
+			Bucket.COMPANY
+		);
+
+		const transportImages = await super.imageFileService.deleteImageList(
+			company.transports
+			       .flatMap(t => t.images)
+			       .map(image => image.url),
+			Bucket.TRANSPORT
+		);
+
+		const driverImages = await super.imageFileService.deleteImageList(
+			company.drivers
+			       .flatMap(d => [
+				       d.avatarLink,
+				       d.licenseBackLink,
+				       d.licenseFrontLink,
+				       d.passportPhotoLink,
+				       d.passportSelfieLink,
+				       d.passportSignLink
+			       ]),
+			Bucket.DRIVER
+		);
+
+		const paymentImages = await this.imageFileService.deleteImage(company.payment.ogrnipPhotoLink);
+		const { data: { affectedCount: paymentItem = 0 } } = await this.paymentsService.deleteByCompany(
+			{ cargoinnId: id }
 		);
 		const { affectedCount = 0 } = await this.repository.delete(id);
 
 		return {
 			statusCode: 200,
 			data:       {
-				affectedCount,
-				pays,
-				companyImages,
-				transportImages,
-				driverImages
+				company:   {
+					affectedCount,
+					images: companyImages
+				},
+				payment:   {
+					affectedCount: paymentItem,
+					images:        paymentImages
+				},
+				driver:    {
+					affectedCount: driversCount,
+					images:        driverImages
+				},
+				transport: {
+					affectedCount: transportsCount,
+					images:        transportImages
+				}
 			},
 			message:    formatArgs(TRANSLATIONS['DELETE'], company.name)
 		};
 	}
 
-	public async activate(id: string) {
+	public async activate(id: string)
+		: TAsyncApiResponse<CargoCompany | null> {
 		let company = await this.repository.get(id, true);
 
 		if(company) {
@@ -273,17 +326,7 @@ export default class CargoCompanyService
 	): TAsyncApiResponse<Transport[]> {
 		const transports: Transport[] = [];
 		let { riskClass, fromDate, toDate, ...rest } = filter;
-		let companies: CargoCompany[] = [];
-
-		try {
-			companies = await this.repository.getTransports(listFilter, rest);
-		} catch(e) {
-			this.logger.error(e);
-			return {
-				statusCode: 500,
-				message:    e.message
-			};
-		}
+		let companies: CargoCompany[] = await this.repository.getTransports(listFilter, rest);
 
 		if(rest && rest.directions) {
 			if(rest.directions.every(d => uuid.validate(d))) {
