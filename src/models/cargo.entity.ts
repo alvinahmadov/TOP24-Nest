@@ -5,19 +5,20 @@ import {
 	HasOne,
 	IsUUID,
 	Table
-}                           from 'sequelize-typescript';
-import { ApiProperty }      from '@nestjs/swagger';
-import { ObjectType }       from '@nestjs/graphql';
+}                        from 'sequelize-typescript';
+import { ApiProperty }   from '@nestjs/swagger';
+import { ObjectType }    from '@nestjs/graphql';
 import {
 	CARGO,
-	CRM
-}                           from '@config/json';
-import { convertBitrix }    from '@common/utils';
+	CRM,
+	PAYMENT
+}                        from '@config/json';
+import { convertBitrix } from '@common/utils';
 import {
 	CompanyType,
 	UserRole
-}                           from '@common/enums';
-import { TABLE_OPTIONS }    from '@common/constants';
+}                        from '@common/enums';
+import { TABLE_OPTIONS } from '@common/constants';
 import {
 	BooleanColumn,
 	DateColumn,
@@ -30,24 +31,22 @@ import {
 	TCRMData,
 	UrlColumn,
 	UuidColumn, VirtualColumn
-}                           from '@common/interfaces';
-import entityConfig         from '@common/properties';
-import { ImageFileService } from '@api/services';
-import EntityModel          from './entity-model';
-import Driver               from './driver.entity';
-import Order                from './order.entity';
-import Payment              from './payment.entity';
-import Transport            from './transport.entity';
-import User                 from './user.entity';
-import { PAYMENT }          from '@config/json/bitrix.json';
+}                        from '@common/interfaces';
+import { entityConfig }  from '@api/swagger/properties';
+import EntityModel       from './entity-model';
+import Driver            from './driver.entity';
+import Order             from './order.entity';
+import Payment           from './payment.entity';
+import Transport         from './transport.entity';
+import User              from './user.entity';
 
 const { company: prop } = entityConfig;
 
 /**
  * Cargo company model.
  *
- * @class CargoInnCompany
- * @interface ICargoInnCompany
+ * @class CargoCompany
+ * @interface ICargoCompany
  * @extends EntityModel
  * */
 @ObjectType()
@@ -81,9 +80,9 @@ export default class CargoCompany
 	@StringColumn({ allowNull: false })
 	taxpayerNumber: string;
 
-	@ApiProperty(prop.shortName)
+	@ApiProperty(prop.legalName)
 	@StringColumn()
-	shortName: string;
+	legalName: string;
 
 	@ApiProperty(prop.type)
 	@IntColumn({ allowNull: false })
@@ -236,7 +235,7 @@ export default class CargoCompany
 	public readonly toCrm = (): TCRMData =>
 	{
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
-		data.fields[CARGO.SHORTNAME] = this.shortName ?? 'Company';
+		data.fields[CARGO.SHORTNAME] = this.legalName ?? 'Company';
 		data.fields[CARGO.DIRECTIONS] = this.directions?.join() ?? '';
 		data.fields[CARGO.INN] = this.taxpayerNumber ?? '';
 		data.fields[CARGO.NAME] = this.name ?? '';
@@ -269,17 +268,4 @@ export default class CargoCompany
 		}
 		return data;
 	};
-
-	public async deleteImages(): Promise<number> {
-		const imageFileService = new ImageFileService();
-		return imageFileService.deleteImageList(
-			[
-				this.avatarLink,
-				this.attorneySignLink,
-				this.passportPhotoLink,
-				this.certificatePhotoLink,
-				this.directorOrderPhotoLink
-			]
-		);
-	}
 }
