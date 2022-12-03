@@ -36,6 +36,7 @@ import {
 	Order,
 	Transport
 }                             from '@models/index';
+// import { EventsGateway }      from '@api/events';
 import { OrderRepository }    from '@repos/index';
 import {
 	ListFilter,
@@ -43,7 +44,6 @@ import {
 	OrderFilter,
 	OrderUpdateDto
 }                             from '@api/dto';
-import { EventsGateway }      from '@api/events';
 import Service                from './service';
 import CargoCompanyService    from './cargo-company.service';
 import CargoCompanyInnService from './cargoinn-company.service';
@@ -51,7 +51,7 @@ import DriverService          from './driver.service';
 import ImageFileService       from './image-file.service';
 
 const ORDER_TRANSLATIONS = getTranslation('REST', 'ORDER');
-const EVENT_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
+// const EVENT_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
 
 @Injectable()
 export default class OrderService
@@ -71,8 +71,9 @@ export default class OrderService
 		private readonly cargoInnService: CargoCompanyInnService,
 		@Inject(forwardRef(() => DriverService))
 		private readonly driverService: DriverService,
-		private readonly imageFileService: ImageFileService,
-		protected readonly gateway: EventsGateway
+		protected readonly imageFileService: ImageFileService,
+		// TODO: Inspect dependency resolve error
+		// protected readonly gateway: EventsGateway
 	) {
 		super();
 		this.repository = new OrderRepository();
@@ -180,16 +181,16 @@ export default class OrderService
 		if(!order)
 			return this.repository.getRecord('create');
 
-		if(sendEvent) {
-			this.gateway.sendOrderEvent(
-				{
-					id:      order.id,
-					status:  order.status,
-					stage:   order.stage,
-					message: formatArgs(EVENT_TRANSLATIONS['CREATE'], order.title)
-				}
-			);
-		}
+		// if(sendEvent) {
+		// 	this.gateway.sendOrderEvent(
+		// 		{
+		// 			id:      order.id,
+		// 			status:  order.status,
+		// 			stage:   order.stage,
+		// 			message: formatArgs(EVENT_TRANSLATIONS['CREATE'], order.title)
+		// 		}
+		// 	);
+		// }
 
 		return {
 			statusCode: 201,
@@ -217,15 +218,15 @@ export default class OrderService
 			return this.repository.getRecord('update');
 
 		if(sendInfo) {
-			this.gateway.sendOrderEvent(
-				{
-					id:      order.id,
-					source:  'update',
-					status:  order.status,
-					stage:   order.stage,
-					message: formatArgs(EVENT_TRANSLATIONS['UPDATE'], order.title)
-				}
-			);
+			// this.gateway.sendOrderEvent(
+			// 	{
+			// 		id:      order.id,
+			// 		source:  'update',
+			// 		status:  order.status,
+			// 		stage:   order.stage,
+			// 		message: formatArgs(EVENT_TRANSLATIONS['UPDATE'], order.title)
+			// 	}
+			// );
 		}
 
 		return {
@@ -251,10 +252,10 @@ export default class OrderService
 
 		const result = await this.repository.delete(id);
 
-		if(result.affectedCount > 0)
-			this.gateway.sendOrderEvent(
-				{ id, message: 'Deleted' }
-			);
+		// if(result.affectedCount > 0)
+		// 	this.gateway.sendOrderEvent(
+		// 		{ id, message: 'Deleted' }
+		// 	);
 
 		return {
 			statusCode: 200,
@@ -497,7 +498,7 @@ export default class OrderService
 					if(shippingLength > index) {
 						const photoLink = destinations[dstIndex].shippingPhotoLinks[index];
 						destinations[dstIndex].shippingPhotoLinks.splice(index, 1);
-						isDeleted = await this.imageFileService.deleteImage(photoLink);
+						isDeleted = await this.imageFileService.deleteImage(photoLink) > 0;
 					}
 				}
 
@@ -564,9 +565,11 @@ export default class OrderService
 				else
 					order.paymentPhotoLinks = paymentPhotoLinks;
 
-				order.onPayment = true;
-				order.stage = OrderStage.PAYMENT_FORMED;
-				await order.save({ fields: ['paymentPhotoLinks', 'onPayment', 'stage'] });
+				await this.repository.update(id, {
+					onPayment:         true,
+					paymentPhotoLinks: order.paymentPhotoLinks,
+					stage:             OrderStage.PAYMENT_FORMED
+				});
 			}
 		}
 		else if(mode === 'receipt') {
@@ -583,7 +586,7 @@ export default class OrderService
 				else
 					order.receiptPhotoLinks = receiptPhotoLinks;
 
-				await order.save({ fields: ['receiptPhotoLinks'] });
+				await this.repository.update(id, { receiptPhotoLinks: order.receiptPhotoLinks });
 			}
 		}
 		else if(mode === 'contract') {
@@ -602,16 +605,13 @@ export default class OrderService
 				if(order.contractPhotoLink) {
 					await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON);
 				}
-
-				order.contractPhotoLink = contractPhotoLink;
-				order.stage = OrderStage.SIGNED_DRIVER;
-				await order.save({ fields: ['contractPhotoLink', 'stage'] });
+				await this.repository.update(id, { contractPhotoLink, stage: OrderStage.SIGNED_DRIVER });
 			}
 		}
 
 		if(fileUploaded) {
 			this.send(order.id)
-			    .then(() => this.gateway.sendOrderEvent({ id, message }))
+			    // .then(() => this.gateway.sendOrderEvent({ id, message }))
 			    .catch(console.error);
 
 			return {
@@ -646,7 +646,7 @@ export default class OrderService
 				else if(order.paymentPhotoLinks.length > 0) {
 					const paymentPhotoLink = order.paymentPhotoLinks[index];
 					photoLinks = order.paymentPhotoLinks.splice(index, 1);
-					isDeleted = await this.imageFileService.deleteImage(paymentPhotoLink, Bucket.COMMON);
+					isDeleted = await this.imageFileService.deleteImage(paymentPhotoLink, Bucket.COMMON) > 0;
 				}
 
 				if(isDeleted) {
@@ -665,7 +665,7 @@ export default class OrderService
 				else if(order.receiptPhotoLinks.length > 0) {
 					const receiptPhotoLink = order.receiptPhotoLinks[index];
 					photoLinks = order.receiptPhotoLinks.splice(index, 1);
-					isDeleted = await this.imageFileService.deleteImage(receiptPhotoLink, Bucket.COMMON);
+					isDeleted = await this.imageFileService.deleteImage(receiptPhotoLink, Bucket.COMMON) > 0;
 				}
 
 				if(isDeleted) {
@@ -677,7 +677,7 @@ export default class OrderService
 		else if(mode === 'contract') {
 			if(order.contractPhotoLink) {
 				if(deleteAll) {
-					isDeleted = await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON);
+					isDeleted = await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON) > 0;
 				}
 
 				if(isDeleted) {
