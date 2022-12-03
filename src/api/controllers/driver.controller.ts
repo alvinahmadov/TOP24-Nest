@@ -13,13 +13,13 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
-import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
 import {
 	renameMulterFile,
 	sendResponse
 }                              from '@common/utils';
 import * as dto                from '@api/dto';
+import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
