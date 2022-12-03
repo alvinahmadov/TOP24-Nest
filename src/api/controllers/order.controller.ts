@@ -17,7 +17,6 @@ import {
 	FileInterceptor,
 	FilesInterceptor
 }                              from '@nestjs/platform-express';
-import { ApiRoute }            from '@common/decorators';
 import {
 	OfferStatus,
 	OrderStatus,
@@ -30,6 +29,7 @@ import {
 	sendResponse
 }                              from '@common/utils';
 import * as dto                from '@api/dto';
+import { ApiRoute }            from '@api/decorators';
 import { EventsGateway }       from '@api/events';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
@@ -197,7 +197,8 @@ export default class OrderController
 		statuses: [HttpStatus.OK],
 		fileOpts: {
 			interceptors: [FilesInterceptor('image')],
-			mimeTypes:    ['multipart/form-data']
+			mimeTypes:    ['multipart/form-data'],
+			multi:        true
 		}
 	})
 	public async uploadShipping(
@@ -216,7 +217,8 @@ export default class OrderController
 		statuses: [HttpStatus.OK],
 		fileOpts: {
 			interceptors: [FilesInterceptor('image')],
-			mimeTypes:    ['multipart/form-data']
+			mimeTypes:    ['multipart/form-data'],
+			multi:        true
 		}
 	})
 	public async uploadPayment(
@@ -290,7 +292,8 @@ export default class OrderController
 		statuses: [HttpStatus.OK],
 		fileOpts: {
 			interceptors: [FilesInterceptor('image')],
-			mimeTypes:    ['multipart/form-data']
+			mimeTypes:    ['multipart/form-data'],
+			multi:        true
 		}
 	})
 	public async uploadReceipt(
