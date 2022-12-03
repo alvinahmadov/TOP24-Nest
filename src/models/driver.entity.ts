@@ -4,21 +4,21 @@ import {
 	HasMany,
 	HasOne,
 	Table
-}                           from 'sequelize-typescript';
+}                        from 'sequelize-typescript';
 import {
 	Field,
 	InterfaceType,
 	ObjectType
-}                           from '@nestjs/graphql';
-import { ApiProperty }      from '@nestjs/swagger';
-import { CRM, DRIVER }      from '@config/json';
+}                        from '@nestjs/graphql';
+import { ApiProperty }   from '@nestjs/swagger';
+import { CRM, DRIVER }   from '@config/json';
 import {
 	DestinationType,
 	DriverStatus,
 	UserRole
-}                           from '@common/enums';
-import { UuidScalar }       from '@common/scalars';
-import { TABLE_OPTIONS }    from '@common/constants';
+}                        from '@common/enums';
+import { UuidScalar }    from '@common/scalars';
+import { TABLE_OPTIONS } from '@common/constants';
 import {
 	BooleanColumn,
 	DateColumn,
@@ -34,14 +34,13 @@ import {
 	UrlColumn,
 	UuidColumn,
 	VirtualColumn
-}                           from '@common/interfaces';
-import entityConfig         from '@common/properties';
-import { ImageFileService } from '@api/services';
-import EntityModel          from './entity-model';
-import CargoCompany         from './cargo.entity';
-import CargoInnCompany      from './cargo-inn.entity';
-import Order                from './order.entity';
-import Transport            from './transport.entity';
+}                        from '@common/interfaces';
+import { entityConfig }  from '@api/swagger/properties';
+import EntityModel       from './entity-model';
+import CargoCompany      from './cargo.entity';
+import CargoCompanyInn   from './cargo-inn.entity';
+import Order             from './order.entity';
+import Transport         from './transport.entity';
 
 const { driver: prop } = entityConfig;
 
@@ -76,7 +75,7 @@ export default class Driver
 
 	@ApiProperty(prop.cargoinnId)
 	@Field(() => UuidScalar)
-	@ForeignKey(() => CargoInnCompany)
+	@ForeignKey(() => CargoCompanyInn)
 	@Index
 	@UuidColumn()
 	cargoinnId?: string;
@@ -235,13 +234,17 @@ export default class Driver
 	@StringColumn()
 	info?: string;
 
+	@ApiProperty(prop.hasSent)
+	@BooleanColumn({ defaultValue: false })
+	hasSent?: boolean;
+
 	@ApiProperty(prop.cargo)
 	@BelongsTo(() => CargoCompany, 'cargoId')
 	cargo?: CargoCompany;
 
 	@ApiProperty(prop.cargoinn)
-	@BelongsTo(() => CargoInnCompany, 'cargoinnId')
-	cargoinn?: CargoInnCompany;
+	@BelongsTo(() => CargoCompanyInn, 'cargoinnId')
+	cargoinn?: CargoCompanyInn;
 
 	@ApiProperty(prop.order)
 	@HasOne(() => Order, 'driverId')
@@ -250,10 +253,6 @@ export default class Driver
 	@ApiProperty(prop.transports)
 	@HasMany(() => Transport, 'driverId')
 	transports?: Transport[];
-
-	@ApiProperty(prop.hasSent)
-	@BooleanColumn({ defaultValue: false })
-	hasSent?: boolean;
 
 	@ApiProperty(prop.fullName)
 	@VirtualColumn()
@@ -277,20 +276,6 @@ export default class Driver
 			return `${surname}${middleName}${name}`;
 		}
 		else return this.fullName;
-	}
-
-	public async deleteImages(): Promise<number> {
-		const imageFileService = new ImageFileService();
-		return imageFileService.deleteImageList(
-			[
-				this.avatarLink,
-				this.passportPhotoLink,
-				this.passportSignLink,
-				this.passportSelfieLink,
-				this.licenseBackLink,
-				this.licenseFrontLink
-			]
-		);
 	}
 
 	public toCrm(
