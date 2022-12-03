@@ -29,6 +29,7 @@ export default abstract class Service<M extends Model,
 	protected repository: R;
 	protected httpClient: Axios;
 	protected readonly logger: Logger;
+	protected readonly imageFileService: ImageFileService = new ImageFileService();
 
 	protected constructor() {
 		this.logger = new Logger(Service.name, { timestamp: true });
@@ -74,25 +75,29 @@ export default abstract class Service<M extends Model,
 	 * */
 	public async uploadPhoto(options: IUploadOptions<M>): TAsyncApiResponse<M> {
 		const { id, bucketId, buffer, linkName, name } = options;
-		const imageFileService = new ImageFileService();
 		const model = await this.repository.get(id);
 		if(model) {
 			if(model[linkName]) {
 				const locationUrl = model.getDataValue(linkName);
-				await imageFileService.deleteImage(locationUrl, bucketId);
+				await this.imageFileService.deleteImage(locationUrl, bucketId);
 			}
-			const { Location } = await imageFileService.uploadFile(buffer, name, bucketId);
-			if(Location) {
-				const result = await this.repository.update(id, { [linkName]: Location });
+			const uploadResponse = await this.imageFileService.uploadFile(buffer, name, bucketId);
 
-				if(result) {
-					return {
-						statusCode: 200,
-						data:       result,
-						message:    SUCC_TRANSLATION['WRITE_FILE']
-					};
+			if(uploadResponse) {
+				if(uploadResponse.Location) {
+					const { Location } = uploadResponse;
+
+					const result = await this.repository.update(id, { [linkName]: Location });
+
+					if(result) {
+						return {
+							statusCode: 200,
+							data:       result,
+							message:    SUCC_TRANSLATION['WRITE_FILE']
+						};
+					}
+					else return this.repository.getRecord('update');
 				}
-				else return this.repository.getRecord('update');
 			}
 			return this.responses['WRITE_ERR'];
 		}
