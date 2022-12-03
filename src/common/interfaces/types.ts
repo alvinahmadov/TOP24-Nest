@@ -17,6 +17,8 @@ export type TBitrixData = {
 
 export type TBitrixEnum = Array<TBitrixData>;
 
+export type TObjectStorageType = 'yandex' | 'local';
+
 /**@ignore*/
 export type TLanguageConfig = { [langCode: string]: any };
 
@@ -52,6 +54,7 @@ export interface IEnvironment {
 		randomCode: boolean;
 		enableGraphql?: boolean;
 		enableEvents?: boolean;
+		fileSavePath?: string;
 	};
 	api: {
 		prefix: string;
@@ -80,16 +83,17 @@ export interface IEnvironment {
 		key: string;
 		token: string;
 	};
+	objectStorage?: {
+		readonly type?: TObjectStorageType
+		accessKeyId: string;
+		secretKey: string;
+		url: string;
+		debug?: boolean;
+	};
 	yandex: {
 		cloud?: {
 			token?: string;
 			region?: string;
-		};
-		storage?: {
-			accessKeyId: string;
-			secretKey: string;
-			url: string;
-			debug: boolean;
 		};
 	};
 	osm?: {
@@ -146,6 +150,10 @@ export interface IEnvParseOutput
 	COMPAT_MODE: string;
 	ENABLE_GRAPHQL?: string;
 	ENABLE_EVENTS?: string;
+	OBJECT_STORAGE?: string;
+	OBJECT_STORAGE_PATH?: string;
+	OBJECT_STORAGE_DEBUG?: string;
+	OBJECT_STORAGE_URL?: string;
 	NEST_DEBUG?: string;
 	SOCKET_PORT?: string;
 	RANDOM_CODE?: string;
@@ -221,13 +229,4 @@ export interface ISignInEmailData
 export interface ISignInPhoneData
 	extends ISignInData {
 	phone: string;
-}
-
-/**@ignore*/
-export interface IUploadResponse {
-	ETag: string;
-	VersionId: any;
-	Location: string;
-	Key: string;
-	Bucket: string;
 }
