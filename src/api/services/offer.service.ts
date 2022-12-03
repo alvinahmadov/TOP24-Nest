@@ -43,7 +43,7 @@ import {
 	OfferUpdateDto,
 	OrderFilter
 }                          from '@api/dto';
-import { EventsGateway }   from '@api/events';
+// import { EventsGateway }   from '@api/events';
 import Service             from './service';
 import DriverService       from './driver.service';
 import ImageFileService    from './image-file.service';
@@ -51,8 +51,8 @@ import OrderService        from './order.service';
 import TransportService    from './transport.service';
 
 const OFFER_TRANSLATIONS = getTranslation('REST', 'OFFER');
-const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
-const EVENT_ORDER_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
+// const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
+// const EVENT_ORDER_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
 
 @Injectable()
 export default class OfferService
@@ -68,7 +68,7 @@ export default class OfferService
 		protected readonly driverService: DriverService,
 		protected readonly imageFileService: ImageFileService,
 		protected readonly orderService: OrderService,
-		protected readonly transportService: TransportService,
+		protected readonly transportService: TransportService
 		// protected readonly gateway: EventsGateway
 	) {
 		super();
@@ -496,7 +496,8 @@ export default class OfferService
 		}
 
 		if(createCount > 0) {
-			const offers = await this.repository.bulkCreate(offersToCreate);
+			await this.repository.bulkCreate(offersToCreate);
+			// const offers = await this.repository.bulkCreate(offersToCreate);
 			// offers.forEach(
 			// 	offer => this.gateway.sendDriverEvent(
 			// 		{
@@ -539,10 +540,10 @@ export default class OfferService
 		role?: UserRole
 	): TAsyncApiResponse<Offer> {
 		const offer = await this.repository.getByAssociation(orderId, driverId);
-		let orderTitle: string;
+		// let orderTitle: string;
 
 		if(offer) {
-			orderTitle = offer?.order.crmId?.toString() ?? '';
+			// orderTitle = offer?.order.crmId?.toString() ?? '';
 
 			if(
 				offer.orderStatus === OrderStatus.CANCELLED &&
@@ -602,7 +603,7 @@ export default class OfferService
 						status:      OrderStatus.PROCESSING
 					},
 					false
-				)
+				);
 				//     .then(
 				// 	({ data: order }) =>
 				// 	{
@@ -683,20 +684,20 @@ export default class OfferService
 						    isFree:      true,
 						    cancelCause: reason ?? ''
 					    }, false)
-					    // .then(({ data: order }) =>
-					    //       {
-						  //         if(order) {
-							//           this.gateway.sendOrderEvent(
-							// 	          {
-							// 		          id:      order.id,
-							// 		          status:  order.status,
-							// 		          stage:   order.stage,
-							// 		          message: `Водитель '${driver?.fullName}' отказался от сделки '№${order.number}'.`
-							// 	          }
-							//           );
-						  //         }
-					    //       })
-					    .catch(r => console.error(r));
+						// .then(({ data: order }) =>
+						//       {
+						//         if(order) {
+						//           this.gateway.sendOrderEvent(
+						// 	          {
+						// 		          id:      order.id,
+						// 		          status:  order.status,
+						// 		          stage:   order.stage,
+						// 		          message: `Водитель '${driver?.fullName}' отказался от сделки '№${order.number}'.`
+						// 	          }
+						//           );
+						//         }
+						//       })
+						  .catch(r => console.error(r));
 				}
 
 				if(driver) {
@@ -707,21 +708,21 @@ export default class OfferService
 							currentAddress: ''
 						}
 					)
-					//     .then(
-					// 	({ data: driver }) =>
-					// 	{
-					// 		if(driver)
-					// 			this.gateway.sendDriverEvent(
-					// 				{
-					// 					id:      driver.id,
-					// 					status:  driver.status,
-					// 					message: formatArgs(EVENT_DRIVER_TRANSLATIONS['DECLINE'], order.crmId?.toString() ?? 0)
-					// 				},
-					// 				UserRole.CARGO
-					// 			);
-					// 	}
-					// )
-					    .catch(r => console.debug(r));
+						//     .then(
+						// 	({ data: driver }) =>
+						// 	{
+						// 		if(driver)
+						// 			this.gateway.sendDriverEvent(
+						// 				{
+						// 					id:      driver.id,
+						// 					status:  driver.status,
+						// 					message: formatArgs(EVENT_DRIVER_TRANSLATIONS['DECLINE'], order.crmId?.toString() ?? 0)
+						// 				},
+						// 				UserRole.CARGO
+						// 			);
+						// 	}
+						// )
+						  .catch(r => console.debug(r));
 				}
 
 				this.orderService
@@ -749,8 +750,8 @@ export default class OfferService
 	}
 
 	public async cancel(
-		orderId: string,
-		crmId: number
+		orderId: string
+		// crmId: number
 	): TAsyncApiResponse<Offer[]> {
 		const offers = await this.repository.getOrderDrivers(orderId);
 		// offers.forEach(
