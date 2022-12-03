@@ -1,10 +1,12 @@
 import { Injectable }         from '@nestjs/common';
+import { Bucket }             from '@common/constants';
 import {
 	IApiResponse,
 	IApiResponses,
 	IPayment,
 	IService,
 	TAffectedRows,
+	TAffectedEntity,
 	TAsyncApiResponse,
 	TCompanyIdOptions,
 	TCreationAttribute,
@@ -150,19 +152,27 @@ export default class PaymentService
 	 * @param {String!} id Id of cargo company payment record to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<TAffectedRows> {
+		: TAsyncApiResponse<TAffectedEntity> {
 		const payment = await this.repository.get(id);
 
 		if(!payment)
 			return this.responses['NOT_FOUND'];
 
-		const result = await this.repository.delete(id);
+		const images = await this.imageFileService.deleteImageList([
+			                                                           payment.ogrnipPhotoLink,
+			                                                           Bucket.COMPANY
+		                                                           ]);
+
+		const { affectedCount } = await this.repository.delete(id);
 
 		return {
 			statusCode: 200,
-			data:       result,
+			data:       {
+				affectedCount,
+				images
+			},
 			message:    formatArgs(TRANSLATIONS['DELETE'], id)
-		} as IApiResponse<TAffectedRows>;
+		};
 	}
 
 	/**
