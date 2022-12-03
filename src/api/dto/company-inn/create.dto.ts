@@ -5,21 +5,21 @@ import {
 	IsInt,
 	IsNotEmpty,
 	IsString
-}                      from 'class-validator';
-import { InputType }   from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
-import { CompanyType } from '@common/enums';
+}                       from 'class-validator';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
+import { CompanyType }  from '@common/enums';
 import {
-	ICargoInnCompany,
+	ICargoCompanyInn,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { companyinn: prop } = entityConfig;
 
 @InputType()
 export default class CompanyInnCreateDto
-	implements TCreationAttribute<Omit<ICargoInnCompany, 'userId' | 'userPhone'>> {
+	implements TCreationAttribute<Omit<ICargoCompanyInn, 'userId' | 'userPhone'>> {
 	@ApiProperty(prop.name)
 	@IsString()
 	name: string;

@@ -1,16 +1,16 @@
-import { InputType }   from '@nestjs/graphql';
-import { ApiProperty } from '@nestjs/swagger';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
-	ICargoInnCompany,
+	ICargoCompanyInn,
 	TUpdateAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { companyinn: prop } = entityConfig;
 
 @InputType()
 export default class CompanyInnUpdateDto
-	implements TUpdateAttribute<ICargoInnCompany> {
+	implements TUpdateAttribute<ICargoCompanyInn> {
 	@ApiProperty(prop.actualAddress)
 	public actualAddress?: string;
 
