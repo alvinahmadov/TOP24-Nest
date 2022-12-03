@@ -39,10 +39,11 @@ export const translateCargoCompany = <T extends transformers.ICargoCompanyTransf
 		.set('crmId', 'crm_id')
 		.set('contactPhone', 'phone_second')
 		.set('taxReasonCode', 'kpp')
-		.set('shortName', 'shortname')
+		.set('legalName', 'shortname')
 		.set('registrationNumber', 'ogpn')
 		.set('paymentType', 'nds')
 		.set('confirmed')
+		.set('isDefault', 'is_default')
 		.set('avatarLink', 'avatar_link')
 		.set('passportPhotoLink', 'passport_photo_link')
 		.set('attorneySignLink', 'attorney_sign_link')
@@ -57,9 +58,9 @@ export const translateCargoCompany = <T extends transformers.ICargoCompanyTransf
 };
 
 export const translateCargoInnCompany = <T extends transformers.ICargoInnCompanyTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.ICargoInnCompany> =>
+	: TOmitTimestamp<attributes.ICargoCompanyInn> =>
 {
-	return new FieldTransformer<T, attributes.ICargoInnCompany>(data)
+	return new FieldTransformer<T, attributes.ICargoCompanyInn>(data)
 		.set('id')
 		.set('userId')
 		.set('name')
@@ -68,6 +69,7 @@ export const translateCargoInnCompany = <T extends transformers.ICargoInnCompany
 		.set('crmId', 'crm_id')
 		.set('type', 'company_type')
 		.set('confirmed')
+		.set('isDefault', 'is_default')
 		.set('info')
 		.set('status')
 		.set('birthDate', 'birth_date')
@@ -115,7 +117,7 @@ export const translateDriver = <T extends transformers.IDriverTransformer>(data:
 		.set('passportSubdivisionCode', 'passport_subdivision_code')
 		.set('passportRegistrationAddress', 'passport_registration_address')
 		.set('avatarLink', 'avatar_link')
-		.set('passportPhotoLink', 'passport_link')
+		.set('passportPhotoLink', 'passport_photo_link')
 		.set('passportSignLink', 'passport_sign_link')
 		.set('passportSelfieLink', 'passport_selfie_link')
 		.set('registrationAddress', 'registration_address')
