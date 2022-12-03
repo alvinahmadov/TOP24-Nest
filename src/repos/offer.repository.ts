@@ -21,7 +21,7 @@ import {
 }                             from '@common/interfaces';
 import {
 	CargoCompany,
-	CargoInnCompany,
+	CargoCompanyInn,
 	Driver, 
 	Image,
 	Offer,
@@ -166,7 +166,7 @@ export default class OfferRepository
 											       .query
 									},
 									{ model: CargoCompany },
-									{ model: CargoInnCompany }
+									{ model: CargoCompanyInn }
 								]
 							},
 							{
@@ -269,7 +269,7 @@ export default class OfferRepository
 							required: true,
 							include:  [
 								{ model: CargoCompany },
-								{ model: CargoInnCompany },
+								{ model: CargoCompanyInn },
 								{
 									model:   Transport,
 									where:   this.whereClause<ITransport>()
