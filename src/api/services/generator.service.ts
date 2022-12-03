@@ -13,7 +13,6 @@ import {
 import { formatArgs, getTranslation } from '@common/utils';
 import * as generator                 from '@common/utils/generators';
 import * as dto                       from '@api/dto';
-import EventsGateway                  from '@api/events/events.gateway';
 import CargoCompanyService            from './cargo-company.service';
 import CargoCompanyInnService         from './cargoinn-company.service';
 import DriverService                  from './driver.service';
@@ -34,8 +33,7 @@ export default class GeneratorService
 		protected readonly orderService: OrderService,
 		protected readonly paymentService: PaymentService,
 		protected readonly transportService: TransportService,
-		protected readonly imageService: ImageService,
-		protected readonly gateway: EventsGateway
+		protected readonly imageService: ImageService
 	) {}
 
 	/**
@@ -133,9 +131,6 @@ export default class GeneratorService
 		const generatedOrders = await generator.generateOrders(count, maxDestination);
 		const orders = await this.orderService.createAll(generatedOrders);
 		const message = formatArgs(TRANSLATIONS['ORDER'], orders?.length);
-
-		await this.gateway.sendOrderEvent({ id: null, message });
-
 		return {
 			statusCode: 201,
 			data:       orders,
