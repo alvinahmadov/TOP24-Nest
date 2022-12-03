@@ -81,13 +81,18 @@ const DTOS = [
 	dto.TransportUpdateDto,
 	dto.TransportFilter,
 	dto.ListFilter,
-	dto.FileUploadDto
+	dto.FileUploadDto,
+	dto.FilesUploadDto,
+	// User
+	dto.UserCreateDto,
+	dto.UserFilter,
+	dto.UserUpdateDto
 ];
 const ENTITIES = [
 	mo.Address,
 	mo.Admin,
 	mo.CargoCompany,
-	mo.CargoInnCompany,
+	mo.CargoCompanyInn,
 	mo.Driver,
 	mo.Image,
 	mo.Offer,
@@ -173,8 +178,8 @@ async function bootstrap(): Promise<INestApplication> {
 	const swaggerDoc = SwaggerModule.createDocument(app, swaggerConfig.build(), swaggerOptions);
 	SwaggerModule.setup(SWAGGER_PATH, app, swaggerDoc, swaggerCustomOptions);
 
-	// const redisIoAdapter = new RedisIoAdapter(app);
-	// await redisIoAdapter.connectToRedis();
+	const redisIoAdapter = new RedisIoAdapter(app);
+	await redisIoAdapter.connectToRedis();
 
 	app.use(cookieParser());
 	app.use(session(
@@ -184,11 +189,8 @@ async function bootstrap(): Promise<INestApplication> {
 			saveUninitialized: false
 		}
 	));
-	// app.useWebSocketAdapter(redisIoAdapter);
-	app.useStaticAssets(
-		join(__dirname, '..', 'docs'),
-		{ dotfiles: 'ignore' }
-	);
+	app.useWebSocketAdapter(redisIoAdapter);
+	app.useStaticAssets(join(__dirname, '..', 'resources'), { index: false, prefix: '/resources' });
 	app.enableCors(CORS_OPTIONS);
 	await app.listen(PORT);
 
