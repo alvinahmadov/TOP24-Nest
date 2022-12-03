@@ -2,7 +2,7 @@ import {
 	IAddress,
 	IAdmin,
 	ICargoCompany,
-	ICargoInnCompany,
+	ICargoCompanyInn,
 	IDriver, IGatewayEvent,
 	IImage,
 	IModel,
@@ -73,7 +73,7 @@ type TEntityConfigList = {
 	address: TApiProperty<IAddress>;
 	admin: TApiProperty<IAdmin>;
 	company: TApiProperty<ICargoCompany & TCompanyAssociates>;
-	companyinn: TApiProperty<ICargoInnCompany & TCompanyAssociates>;
+	companyinn: TApiProperty<ICargoCompanyInn & TCompanyAssociates>;
 	driver: TApiProperty<IDriver & TDriverAssociates>;
 	gatewayEvent: TApiProperty<IGatewayEvent>;
 	image: TApiProperty<IImage & TImageAssociates>;
@@ -245,28 +245,25 @@ export const entityConfig: TEntityConfigList = {
 			name:
 				{
 					description: 'Полное наименование компании',
-					example:     'ООО "Борис и КО"',
+					example:     'Борис и КО',
 					required:    true
 				},
 			taxpayerNumber:
 				{
 					description: 'Идентификационный номер налогоплательщика (ИНН) компании.' +
 					             '\nсм. `inn`.',
-					example:     '7707083893',
-					required:    true
+					example:     '7707083893'
 				},
-			shortName:
+			legalName:
 				{
-					description: 'Короткое название компании.' +
+					description: 'Юридическое название компании.' +
 					             '\nсм. `shortname`.',
-					example:     '"Борис и КО"',
-					required:    true
+					example:     'ООО "Борис и КО"'
 				},
 			email:
 				{
 					description: 'Почтовый электронный адрес компании.',
 					example:     'amadeus.cargo@mail.com',
-					required:    true,
 					uniqueItems: true
 				},
 			type:
@@ -336,8 +333,7 @@ export const entityConfig: TEntityConfigList = {
 			passportRegistrationAddress:
 				{
 					description: 'Адрес регистрации в паспорте.' +
-					             '\nсм. `passport_registration_address` ' +
-					             'в режиме совместимости.',
+					             '\nсм. `passport_registration_address`.',
 					example:     'Москва, 117312, ул. Вавилова, д. 19',
 					required:    true
 				},
@@ -386,19 +382,22 @@ export const entityConfig: TEntityConfigList = {
 				{
 					description: 'Контактное лицо компании.' +
 					             '\nсм. `contact_first`.',
-					example:     'Константинопольский К. К.'
+					example:     'Константинопольский К. К.',
+					deprecated:  true
 				},
 			contactSecond:
 				{
 					description: 'Второе контактное лицо компании' +
 					             '\nсм. `contact_second`.',
-					example:     'Иванов И. И.'
+					example:     'Иванов И. И.',
+					deprecated:  true
 				},
 			contactThird:
 				{
 					description: 'Третье контактное лицо компании.' +
 					             '\nсм. `contact_third`.',
-					example:     'Иванов И. И.'
+					example:     'Иванов И. И.',
+					deprecated:  true
 				},
 			confirmed:
 				{
@@ -641,27 +640,32 @@ export const entityConfig: TEntityConfigList = {
 				},
 			address:
 				{
-					description: 'Main address of the cargo company.',
+					description: 'Адрес компании.' +
+					             '\nсм. `address_first`',
 					example:     'Россия, Москва, 117312, ул. Вавилова, д. 19'
 				},
 			postalAddress:
 				{
-					description: 'Postal address of the cargo company.',
+					description: 'Почтовый адрес компании ИП (1). ' +
+					             '\nсм. `address_second`',
 					example:     'Россия, Москва, 117312, ул. Вавилова, д. 19'
 				},
 			actualAddress:
 				{
-					description: 'Actual address of the cargo company (Физлицо).',
+					description: 'Фактический адрес компании физлица (2). ' +
+					             '\nсм. `address_second`',
 					example:     'Россия, Москва, 117312, ул. Вавилова, д. 19'
 				},
 			contactPhone:
 				{
-					description: 'Contact phone number.',
+					description: 'Дополнительный телефонный номер компании (ИП). ' +
+					             '\nсм. `phone_second`',
 					examples:    ['+7 000 000 00 00', '+70000000000']
 				},
 			personalPhone:
 				{
 					description: 'Personal phone number of company owner.',
+					deprecated:  true,
 					examples:    ['+7 000 000 00 00', '+70000000000']
 				},
 			passportPhotoLink:
@@ -690,9 +694,7 @@ export const entityConfig: TEntityConfigList = {
 				},
 			userPhone:
 				{
-					description: 'Мобильный номер телефона указанный при регистрации. ' +
-					             'Используется при авторизации' +
-					             'По нему пользователь может добавить несколько компаний в одну группу.'
+					description: 'Мобильный номер телефона указанный при регистрации. '
 				},
 			user:
 				{
@@ -702,26 +704,22 @@ export const entityConfig: TEntityConfigList = {
 				},
 			payment:
 				{
-					description: 'Банковские реквизиты компании '
-					             + '(ИП/Физлицо).',
+					description: 'Банковские реквизиты компании.',
 					readOnly:    true
 				},
 			drivers:
 				{
-					description: 'Список водителей компании '
-					             + '(ИП/Физлицо).',
+					description: 'Список водителей компании.',
 					readOnly:    true
 				},
 			orders:
 				{
-					description: 'Заказы выполненные или выполняемые водителями компании '
-					             + '(ИП/Физлицо).',
+					description: 'Заказы выполненные или выполняемые водителями компании.',
 					readOnly:    true
 				},
 			transports:
 				{
-					description: 'Список транспортов которые принадлежат к компании '
-					             + '(ИП/Физлицо).',
+					description: 'Список транспортов которые принадлежат к компании.',
 					readOnly:    true
 				}
 		},
@@ -1650,6 +1648,3 @@ export const entityConfig: TEntityConfigList = {
 			}
 		}
 };
-
-/**@ignore*/
-export default entityConfig;
