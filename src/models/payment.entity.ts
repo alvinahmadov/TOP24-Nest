@@ -13,11 +13,11 @@ import {
 	UrlColumn,
 	UuidColumn
 }                            from '@common/interfaces';
-import entityConfig          from '@common/properties';
 import { UuidScalar }        from '@common/scalars';
+import { entityConfig }      from '@api/swagger/properties';
 import EntityModel           from './entity-model';
 import CargoCompany          from './cargo.entity';
-import CargoInnCompany       from './cargo-inn.entity';
+import CargoCompanyInn       from './cargo-inn.entity';
 
 const { payment: prop } = entityConfig;
 
@@ -42,7 +42,7 @@ export default class Payment
 
 	@ApiProperty(prop.cargoinnId)
 	@Field(() => UuidScalar)
-	@ForeignKey(() => CargoInnCompany)
+	@ForeignKey(() => CargoCompanyInn)
 	@Index
 	@UuidColumn({ onDelete: 'CASCADE' })
 	cargoinnId?: string;
@@ -56,8 +56,8 @@ export default class Payment
 	currentAccount: string;
 
 	@ApiProperty(prop.ogrnip)
-	@StringColumn({ allowNull: false })
-	ogrnip: string;
+	@StringColumn()
+	ogrnip?: string;
 
 	@ApiProperty(prop.bankName)
 	@StringColumn({ allowNull: false })
@@ -80,6 +80,6 @@ export default class Payment
 	cargo?: CargoCompany;
 
 	@ApiProperty(prop.cargoinn)
-	@BelongsTo(() => CargoInnCompany, 'cargoinnId')
-	cargoinn?: CargoInnCompany;
+	@BelongsTo(() => CargoCompanyInn, 'cargoinnId')
+	cargoinn?: CargoCompanyInn;
 }
