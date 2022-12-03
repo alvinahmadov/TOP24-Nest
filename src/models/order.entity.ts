@@ -38,11 +38,11 @@ import {
 	UuidColumn,
 	VirtualColumn
 }                                   from '@common/interfaces';
-import entityConfig                 from '@common/properties';
+import { entityConfig }             from '@api/swagger/properties';
 import { convertBitrix }            from '@common/utils';
 import EntityModel                  from './entity-model';
 import CargoCompany                 from './cargo.entity';
-import CargoInnCompany              from './cargo-inn.entity';
+import CargoCompanyInn              from './cargo-inn.entity';
 import Driver                       from './driver.entity';
 
 const { order: prop } = entityConfig;
@@ -205,7 +205,7 @@ export default class Order
 	@ApiProperty(prop.cargoinnId)
 	@IsUUID('all')
 	@Field(() => UuidScalar)
-	@ForeignKey(() => CargoInnCompany)
+	@ForeignKey(() => CargoCompanyInn)
 	@Index
 	@UuidColumn({ onDelete: 'SET NULL' })
 	cargoinnId?: string;
@@ -378,8 +378,8 @@ export default class Order
 	cargo?: CargoCompany;
 
 	@ApiProperty(prop.cargoinn)
-	@BelongsTo(() => CargoInnCompany, 'cargoinnId')
-	cargoinn?: CargoInnCompany;
+	@BelongsTo(() => CargoCompanyInn, 'cargoinnId')
+	cargoinn?: CargoCompanyInn;
 
 	@ApiProperty(prop.driver)
 	@BelongsTo(() => Driver, 'driverId')
