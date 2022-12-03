@@ -11,8 +11,8 @@ import { BitrixUrl }          from '@common/constants';
 import {
 	CompanyType,
 	OrderStage,
-	OrderStatus,
-	UserRole
+	OrderStatus
+	// UserRole
 }                             from '@common/enums';
 import {
 	IApiResponses,
@@ -31,9 +31,9 @@ import {
 	getTranslation,
 	orderFromBitrix
 }                             from '@common/utils';
-import { Order }              from '@models/index';
+import { Order, Transport }   from '@models/index';
 import { OrderCreateDto }     from '@api/dto';
-import { EventsGateway }      from '@api/events';
+// import { EventsGateway }      from '@api/events';
 import Service                from './service';
 import CargoCompanyService    from './cargo-company.service';
 import CargoCompanyInnService from './cargoinn-company.service';
@@ -44,7 +44,6 @@ import ORDER_LST_URL = BitrixUrl.ORDER_LST_URL;
 import ORDER_GET_URL = BitrixUrl.ORDER_GET_URL;
 import COMPANY_GET_URL = BitrixUrl.COMPANY_GET_URL;
 import CONTACT_GET_URL = BitrixUrl.CONTACT_GET_URL;
-import Transport              from '@models/transport.entity';
 
 const COMPANY_EVENT_TRANSLATION = getTranslation('EVENT', 'COMPANY');
 const DRIVER_EVENT_TRANSLATION = getTranslation('EVENT', 'DRIVER');
@@ -279,7 +278,8 @@ export default class BitrixService
 
 					return {
 						statusCode: 200,
-						data:       cargo
+						data:       cargo,
+						message
 					};
 				}
 				else {
@@ -302,7 +302,8 @@ export default class BitrixService
 
 					return {
 						statusCode: 200,
-						data:       cargoinn
+						data:       cargoinn,
+						message
 					};
 				}
 			}
@@ -338,7 +339,8 @@ export default class BitrixService
 
 				return {
 					statusCode: 200,
-					data:       transport
+					data:       transport,
+					message
 				};
 			}
 		}
