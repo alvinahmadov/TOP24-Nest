@@ -12,7 +12,6 @@ import {
 import { convertBitrix }      from '@common/utils';
 import {
 	CargoCompany,
-	CargoInnCompany,
 	Driver,
 	Image,
 	Order,
@@ -142,6 +141,7 @@ export default class CargoCompanyRepository
 				{
 					where:   this.whereClause('and')
 					             .eq('id', rest?.cargoId)
+					             .eq('isDefault', true)
 					             .inArray('paymentType', paymentTypes, true)
 						         .query,
 					offset,
@@ -149,37 +149,28 @@ export default class CargoCompanyRepository
 					order,
 					include: [
 						{
-							model: Driver,
-							where: this.whereClause<IDriver>()
-							           .eq('isReady', true)
-							           .eq('payloadCity', payloadCity)
-							           .eq('payloadRegion', payloadRegion)
-							           .lte('payloadDate', payloadDate)
-								       .query
-						},
-						{ model: Payment },
-						{ model: Order },
-						{
-							model:    Transport,
-							where:    this.whereClause<ITransport>('and')
-							              .notNull('driverId', !!hasDriver)
-							              .iLike('payload', rest?.payload)
-							              .inArray('type', types, true)
-							              .contains('riskClasses', rest?.riskClass)
-							              .eq('isDedicated', isDedicated)
-							              .eq('payloadExtra', rest?.payloadExtra)
-								          .query,
-							order:    DEFAULT_SORT_ORDER,
-							required: true,
-							include:  [
-								{ model: Image },
+							model:   Transport,
+							where:   this.whereClause<ITransport>('and')
+							             .notNull('driverId', !!hasDriver)
+							             .iLike('payload', rest?.payload)
+							             .inArray('type', types, true)
+							             .contains('riskClasses', rest?.riskClass)
+							             .eq('isDedicated', isDedicated)
+							             .eq('payloadExtra', rest?.payloadExtra)
+								         .query,
+							order:   DEFAULT_SORT_ORDER,
+							include: [
 								{
 									model:   Driver,
-									include: [
-										{ model: CargoCompany },
-										{ model: CargoInnCompany }
-									]
-								}
+									where:   this.whereClause<IDriver>()
+									             .eq('isReady', true)
+									             .eq('payloadCity', payloadCity)
+									             .eq('payloadRegion', payloadRegion)
+									             .lte('payloadDate', payloadDate)
+										         .query,
+									include: [{ model: Order }]
+								},
+								{ model: Image }
 							]
 						},
 						{ model: User }

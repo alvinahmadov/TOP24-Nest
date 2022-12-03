@@ -1,7 +1,7 @@
 import { Includeable }        from 'sequelize';
 import { DEFAULT_SORT_ORDER } from '@common/constants';
 import {
-	ICargoInnCompany,
+	ICargoCompanyInn,
 	ICargoCompanyInnFilter,
 	ICompanyTransportFilter,
 	IDriver,
@@ -11,8 +11,7 @@ import {
 }                             from '@common/interfaces';
 import { convertBitrix }      from '@common/utils';
 import {
-	CargoCompany,
-	CargoInnCompany,
+	CargoCompanyInn,
 	Driver,
 	Image,
 	Order,
@@ -23,8 +22,8 @@ import {
 import GenericRepository      from './generic';
 
 export default class CargoInnCompanyRepository
-	extends GenericRepository<CargoInnCompany, ICargoInnCompany> {
-	protected override readonly model = CargoInnCompany;
+	extends GenericRepository<CargoCompanyInn, ICargoCompanyInn> {
+	protected override readonly model = CargoCompanyInn;
 	protected override readonly include: Includeable[] = [
 		{
 			model:   Driver,
@@ -51,7 +50,7 @@ export default class CargoInnCompanyRepository
 	public override async getList(
 		listFilter: IListFilter,
 		filter?: ICargoCompanyInnFilter
-	): Promise<CargoInnCompany[]> {
+	): Promise<CargoCompanyInn[]> {
 		if(filter === null)
 			return [];
 
@@ -81,7 +80,7 @@ export default class CargoInnCompanyRepository
 	public override async get(
 		id: string,
 		full?: boolean
-	): Promise<CargoInnCompany | null> {
+	): Promise<CargoCompanyInn | null> {
 		return this.log(
 			() => this.model.findByPk(
 				id,
@@ -95,7 +94,7 @@ export default class CargoInnCompanyRepository
 	public async getTransports(
 		listFilter: IListFilter,
 		filter?: ICompanyTransportFilter
-	): Promise<CargoInnCompany[]> {
+	): Promise<CargoCompanyInn[]> {
 		const {
 			from:  offset = 0,
 			count: limit
@@ -142,6 +141,7 @@ export default class CargoInnCompanyRepository
 				{
 					where:   this.whereClause('and')
 					             .eq('id', rest?.cargoinnId)
+					             .eq('isDefault', true)
 					             .inArray('paymentType', paymentTypes, true)
 						         .query,
 					offset,
@@ -149,37 +149,28 @@ export default class CargoInnCompanyRepository
 					order,
 					include: [
 						{
-							model: Driver,
-							where: this.whereClause<IDriver>()
-							           .eq('isReady', true)
-							           .eq('payloadCity', payloadCity)
-							           .eq('payloadRegion', payloadRegion)
-							           .lte('payloadDate', payloadDate)
-								       .query
-						},
-						{ model: Payment },
-						{ model: Order },
-						{
-							model:    Transport,
-							where:    this.whereClause<ITransport>('and')
-							              .notNull('driverId', !!hasDriver)
-							              .iLike('payload', rest?.payload)
-							              .inArray('type', types, true)
-							              .contains('riskClasses', rest?.riskClass)
-							              .eq('isDedicated', isDedicated)
-							              .eq('payloadExtra', rest?.payloadExtra)
-								          .query,
-							order:    DEFAULT_SORT_ORDER,
-							required: true,
-							include:  [
-								{ model: Image },
+							model:   Transport,
+							where:   this.whereClause<ITransport>('and')
+							             .notNull('driverId', !!hasDriver)
+							             .iLike('payload', rest?.payload)
+							             .inArray('type', types, true)
+							             .contains('riskClasses', rest?.riskClass)
+							             .eq('isDedicated', isDedicated)
+							             .eq('payloadExtra', rest?.payloadExtra)
+								         .query,
+							order:   DEFAULT_SORT_ORDER,
+							include: [
 								{
 									model:   Driver,
-									include: [
-										{ model: CargoCompany },
-										{ model: CargoInnCompany }
-									]
-								}
+									where:   this.whereClause<IDriver>()
+									             .eq('isReady', true)
+									             .eq('payloadCity', payloadCity)
+									             .eq('payloadRegion', payloadRegion)
+									             .lte('payloadDate', payloadDate)
+										         .query,
+									include: [{ model: Order }]
+								},
+								{ model: Image }
 							]
 						},
 						{ model: User }
