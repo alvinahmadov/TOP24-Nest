@@ -1,24 +1,27 @@
 import * as uuid                     from 'uuid';
 import { Op }                        from 'sequelize';
 import { Injectable }                from '@nestjs/common';
-import { BitrixUrl }                 from '@common/constants';
+import {
+	BitrixUrl,
+	Bucket
+}                                    from '@common/constants';
 import { AxiosStatic }               from '@common/classes';
 import { UserRole }                  from '@common/enums';
 import {
 	IApiResponses,
+	ICompanyDeleteResponse,
 	IService,
 	TAsyncApiResponse
 }                                    from '@common/interfaces';
 import {
 	cargoToBitrix,
-	deleteEntityImages,
 	filterDirections,
 	filterTransports,
 	formatArgs,
 	getTranslation
 }                                    from '@common/utils';
 import {
-	CargoInnCompany,
+	CargoCompanyInn,
 	Transport
 }                                    from '@models/index';
 import { CargoInnCompanyRepository } from '@repos/index';
@@ -29,9 +32,9 @@ import {
 	CompanyTransportFilter,
 	ListFilter
 }                                    from '@api/dto';
-import { EventsGateway }             from '@api/events';
 import Service                       from './service';
 import AddressService                from './address.service';
+import ImageFileService              from './image-file.service';
 import PaymentService                from './payment.service';
 import UserService                   from './user.service';
 
@@ -39,7 +42,7 @@ const TRANSLATIONS = getTranslation('REST', 'COMPANY');
 
 @Injectable()
 export default class CargoCompanyInnService
-	extends Service<CargoInnCompany, CargoInnCompanyRepository>
+	extends Service<CargoCompanyInn, CargoInnCompanyRepository>
 	implements IService {
 	public override readonly responses: IApiResponses<null> = {
 		NOT_FOUND:       { statusCode: 404, message: TRANSLATIONS['NOT_FOUND'] },
@@ -54,9 +57,9 @@ export default class CargoCompanyInnService
 
 	constructor(
 		protected readonly addressService: AddressService,
+		protected readonly imageFileService: ImageFileService,
 		protected readonly paymentsService: PaymentService,
-		protected readonly userService: UserService,
-		protected readonly gateway: EventsGateway
+		protected readonly userService: UserService
 	) {
 		super();
 		this.repository = new CargoInnCompanyRepository();
@@ -74,7 +77,7 @@ export default class CargoCompanyInnService
 	public async getList(
 		listFilter: ListFilter = {},
 		filter: CompanyInnFilter = {}
-	): TAsyncApiResponse<CargoInnCompany[]> {
+	): TAsyncApiResponse<CargoCompanyInn[]> {
 		const data = await this.repository.getList(listFilter, filter);
 
 		return {
@@ -91,7 +94,7 @@ export default class CargoCompanyInnService
 	 * @param {Boolean!} full Get full properties
 	 * */
 	public async getById(id: string, full?: boolean)
-		: TAsyncApiResponse<CargoInnCompany | null> {
+		: TAsyncApiResponse<CargoCompanyInn | null> {
 		const company = await this.repository.get(id, full);
 
 		if(!company)
@@ -111,7 +114,7 @@ export default class CargoCompanyInnService
 	 * @param {Boolean!} full Get full properties
 	 * */
 	public async getByCrmId(crmId: number, full?: boolean)
-		: TAsyncApiResponse<CargoInnCompany | null> {
+		: TAsyncApiResponse<CargoCompanyInn | null> {
 		const company = await this.repository.getByCrmId(crmId, full);
 
 		if(!company)
@@ -132,21 +135,30 @@ export default class CargoCompanyInnService
 	 * @param {ICargoCompany!} dto New data of cargo company.
 	 * */
 	public async create(dto: CompanyInnCreateDto)
-		: TAsyncApiResponse<CargoInnCompany> {
+		: TAsyncApiResponse<CargoCompanyInn> {
 		let userId: string;
-		const { data: user } = await this.userService.getByPhone(dto.user);
+		let company: CargoCompanyInn;
+
+		let { data: user } = await this.userService.getByPhone(dto.user);
 
 		if(!user) {
-			const { data: user } = await this.userService.create({ phone: dto.user ?? dto.phone, role: UserRole.CARGO });
-			userId = user.id;
-			dto.isDefault = true;
+			const { data } = await this.userService.create({ phone: dto.user, role: UserRole.CARGO });
+
+			if(data) {
+				user = data;
+				userId = user.id;
+				dto.isDefault = true;
+			}
+			else
+				return this.repository.getRecord('create');
 		}
 		else {
 			userId = user.id;
-			dto.isDefault = false;
+			company = user.cargoInnCompanies.find(c => c.email === dto.email);
 		}
 
-		const company = await this.createModel({ ...dto, userId });
+		if(!company)
+			company = await this.createModel({ ...dto, userId });
 
 		if(!company)
 			return this.repository.getRecord('create');
@@ -154,6 +166,7 @@ export default class CargoCompanyInnService
 		if(dto.isDefault) {
 			await this.activate(company.id);
 		}
+		company.user = user;
 
 		return {
 			statusCode: 201,
@@ -171,7 +184,7 @@ export default class CargoCompanyInnService
 	 * @param {Partial<ICargoCompany>!} dto Partial new data about cargo company.
 	 * */
 	public async update(id: string, dto: CompanyInnUpdateDto)
-		: TAsyncApiResponse<CargoInnCompany | null> {
+		: TAsyncApiResponse<CargoCompanyInn | null> {
 		const company = await this.repository.update(id, dto);
 
 		if(!company)
@@ -192,7 +205,7 @@ export default class CargoCompanyInnService
 	 * @param {String!} id Id of cargo company to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<{ [k: string]: number }> {
+		: TAsyncApiResponse<ICompanyDeleteResponse> {
 		const company = await this.repository.get(id, true);
 
 		if(!company)
@@ -201,10 +214,41 @@ export default class CargoCompanyInnService
 		if(company.crmId) {
 			await AxiosStatic.get(`${BitrixUrl.COMPANY_DEL_URL}?id=${company.crmId}`);
 		}
-		const companyImages = await company.deleteImages();
-		const transportImages = await deleteEntityImages(company.transports);
-		const driverImages = await deleteEntityImages(company.drivers);
-		const { data: { affectedCount: pays = 0 } } = await this.paymentsService.deleteByCompany(
+		const driversCount = company.drivers.length;
+		const transportsCount = company.transports.length;
+
+		const companyImages = await super.imageFileService.deleteImageList(
+			[
+				company.avatarLink,
+				company.passportPhotoLink,
+				company.passportSelfieLink,
+				company.passportSignLink
+			],
+			Bucket.COMPANY
+		);
+
+		const transportImages = await super.imageFileService.deleteImageList(
+			company.transports
+			       .flatMap(t => t.images)
+			       .map(image => image.url),
+			Bucket.TRANSPORT
+		);
+
+		const driverImages = await super.imageFileService.deleteImageList(
+			company.drivers
+			       .flatMap(d => [
+				       d.avatarLink,
+				       d.licenseBackLink,
+				       d.licenseFrontLink,
+				       d.passportPhotoLink,
+				       d.passportSelfieLink,
+				       d.passportSignLink
+			       ]),
+			Bucket.DRIVER
+		);
+
+		const paymentImages = await this.imageFileService.deleteImage(company.payment.ogrnipPhotoLink);
+		const { data: { affectedCount: paymentItem = 0 } } = await this.paymentsService.deleteByCompany(
 			{ cargoinnId: id }
 		);
 		const { affectedCount = 0 } = await this.repository.delete(id);
@@ -212,18 +256,29 @@ export default class CargoCompanyInnService
 		return {
 			statusCode: 200,
 			data:       {
-				affectedCount,
-				pays,
-				companyImages,
-				transportImages,
-				driverImages
+				company:   {
+					affectedCount,
+					images: companyImages
+				},
+				payment:   {
+					affectedCount: paymentItem,
+					images:        paymentImages
+				},
+				driver:    {
+					affectedCount: driversCount,
+					images:        driverImages
+				},
+				transport: {
+					affectedCount: transportsCount,
+					images:        transportImages
+				}
 			},
 			message:    formatArgs(TRANSLATIONS['DELETE'], company.name)
 		};
-
 	}
 
-	public async activate(id: string) {
+	public async activate(id: string)
+		: TAsyncApiResponse<CargoCompanyInn | null> {
 		let company = await this.repository.get(id, true);
 
 		if(company) {
@@ -273,17 +328,7 @@ export default class CargoCompanyInnService
 	): TAsyncApiResponse<Transport[]> {
 		const transports: Transport[] = [];
 		let { riskClass, fromDate, toDate, ...rest } = filter;
-		let companies: CargoInnCompany[] = [];
-
-		try {
-			companies = await this.repository.getTransports(listFilter, rest);
-		} catch(e) {
-			this.logger.error(e);
-			return {
-				statusCode: 500,
-				message:    e.message
-			};
-		}
+		let companies: CargoCompanyInn[] = await this.repository.getTransports(listFilter, rest);
 
 		if(rest && rest.directions) {
 			if(rest.directions.every(d => uuid.validate(d))) {
@@ -301,19 +346,21 @@ export default class CargoCompanyInnService
 			companies = companies.filter(cargo => filterDirections(cargo, rest.directions));
 		}
 
-		companies.forEach(
-			c => transports.push(
-				...c.transports?.filter(
-					t =>
+		companies?.forEach(
+			company => transports.push(
+				...company.transports?.filter(
+					(companyTransport: Transport) =>
 					{
-						if(t.driver !== null) {
-							if(t.driver.order === null) {
+						if(companyTransport.driver !== null) {
+							// driver doesn't have any order
+							if(companyTransport.driver.order === null) {
 								return true;
 							}
 							else {
 								if(!fromDate || !toDate)
 									return true;
-								const order = t.driver.order;
+								// driver have order and check against dates from filter
+								const order = companyTransport.driver.order;
 								return (
 									(order.date >= fromDate) && (order.date <= toDate)
 								);
