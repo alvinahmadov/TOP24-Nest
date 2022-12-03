@@ -750,8 +750,8 @@ export default class OfferService
 	}
 
 	public async cancel(
-		orderId: string
-		// crmId: number
+		orderId: string,
+		crmId: number
 	): TAsyncApiResponse<Offer[]> {
 		const offers = await this.repository.getOrderDrivers(orderId);
 		// offers.forEach(
@@ -767,7 +767,8 @@ export default class OfferService
 
 		return {
 			statusCode: 200,
-			data:       offers
+			data:       offers,
+			message:    crmId ? crmId.toString() : ''
 		};
 	}
 }
