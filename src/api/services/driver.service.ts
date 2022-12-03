@@ -209,17 +209,17 @@ export default class DriverService
 
 		const message = formatArgs(TRANSLATIONS['DELETE'], driver.fullName);
 
-		driverImagesCount = await this.imageFileService.deleteImageList(
-			[
-				driver.avatarLink,
-				driver.passportPhotoLink,
-				driver.passportSignLink,
-				driver.passportSelfieLink,
-				driver.licenseBackLink,
-				driver.licenseFrontLink
-			],
-			Bucket.DRIVER
-		);
+		driverImagesCount = await this.imageFileService
+		                              .deleteImageList(
+			                              [
+				                              driver.avatarLink,
+				                              driver.passportPhotoLink,
+				                              driver.passportSignLink,
+				                              driver.passportSelfieLink,
+				                              driver.licenseBackLink,
+				                              driver.licenseFrontLink
+			                              ]
+		                              );
 
 		if(driver.transports) {
 			transportsAffected = driver.transports.length;
@@ -371,10 +371,10 @@ export default class DriverService
 			return this.responses['NOT_FOUND'];
 
 		if(driver[linkName])
-			await this.imageFileService.deleteImage(driver[linkName], Bucket.DRIVER);
+			await this.imageFileService.deleteImage(driver[linkName]);
 
 		return this.uploadPhoto(
-			{ id, buffer: file, name, linkName, bucketId: Bucket.DRIVER }
+			{ id, buffer: file, name, linkName, folderId: Bucket.DRIVER_FOLDER }
 		);
 	}
 
@@ -400,10 +400,10 @@ export default class DriverService
 			return this.responses['NOT_FOUND'];
 
 		if(driver[linkName])
-			await this.imageFileService.deleteImage(driver[linkName], Bucket.DRIVER);
+			await this.imageFileService.deleteImage(driver[linkName]);
 
 		return this.uploadPhoto(
-			{ id, buffer: file, name, linkName, bucketId: Bucket.DRIVER }
+			{ id, buffer: file, name, linkName, folderId: Bucket.DRIVER_FOLDER }
 		);
 	}
 
@@ -429,10 +429,10 @@ export default class DriverService
 			return this.responses['NOT_FOUND'];
 
 		if(driver[linkName])
-			await this.imageFileService.deleteImage(driver[linkName], Bucket.DRIVER);
+			await this.imageFileService.deleteImage(driver[linkName]);
 
 		return this.uploadPhoto(
-			{ id, buffer: file, name, linkName, bucketId: Bucket.DRIVER }
+			{ id, buffer: file, name, linkName, folderId: Bucket.DRIVER_FOLDER }
 		);
 	}
 }

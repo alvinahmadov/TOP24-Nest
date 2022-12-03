@@ -74,14 +74,14 @@ export default abstract class Service<M extends Model,
 	 * returns link to the updated file in Yandex Storage
 	 * */
 	public async uploadPhoto(options: IUploadOptions<M>): TAsyncApiResponse<M> {
-		const { id, bucketId, buffer, linkName, name } = options;
+		const { id, folderId, buffer, linkName, name: fileName } = options;
 		const model = await this.repository.get(id);
 		if(model) {
 			if(model[linkName]) {
 				const locationUrl = model.getDataValue(linkName);
-				await this.imageFileService.deleteImage(locationUrl, bucketId);
+				await this.imageFileService.deleteImage(locationUrl);
 			}
-			const uploadResponse = await this.imageFileService.uploadFile(buffer, name, bucketId);
+			const uploadResponse = await this.imageFileService.uploadFile(buffer, { folderId, fileName });
 
 			if(uploadResponse) {
 				if(uploadResponse.Location) {

@@ -71,7 +71,7 @@ export default class OrderService
 		private readonly cargoInnService: CargoCompanyInnService,
 		@Inject(forwardRef(() => DriverService))
 		private readonly driverService: DriverService,
-		protected readonly imageFileService: ImageFileService,
+		protected readonly imageFileService: ImageFileService
 		// TODO: Inspect dependency resolve error
 		// protected readonly gateway: EventsGateway
 	) {
@@ -424,7 +424,7 @@ export default class OrderService
 			const { Location: shippingPhotoLinks } = await this.imageFileService
 			                                                   .uploadFiles(
 				                                                   renameMulterFiles(files, id, 'shipping', point),
-				                                                   Bucket.COMMON
+				                                                   Bucket.COMMON_FOLDER
 			                                                   );
 
 			if(shippingPhotoLinks?.length > 0) {
@@ -489,7 +489,7 @@ export default class OrderService
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
 					                      .deleteImageList(
-						                      destinations[dstIndex].shippingPhotoLinks, Bucket.COMMON
+						                      destinations[dstIndex].shippingPhotoLinks
 					                      ) > 0;
 					if(isDeleted)
 						destinations[dstIndex].shippingPhotoLinks = [];
@@ -554,7 +554,7 @@ export default class OrderService
 		if(mode === 'payment') {
 			const { Location: paymentPhotoLinks } = await this.imageFileService.uploadFiles(
 				renameMulterFiles(files, id, mode),
-				Bucket.COMMON
+				Bucket.COMMON_FOLDER
 			) ?? { Location: null };
 			if(paymentPhotoLinks) {
 				fileUploaded = true;
@@ -575,7 +575,7 @@ export default class OrderService
 		else if(mode === 'receipt') {
 			const { Location: receiptPhotoLinks } = await this.imageFileService.uploadFiles(
 				renameMulterFiles(files, id, mode),
-				Bucket.COMMON
+				Bucket.COMMON_FOLDER
 			) ?? { Location: null };
 			if(receiptPhotoLinks) {
 				fileUploaded = true;
@@ -595,15 +595,17 @@ export default class OrderService
 			const file = renameMulterFiles(files, id, mode)[0];
 			const { Location: contractPhotoLink } = await this.imageFileService.uploadFile(
 				file.buffer,
-				file.originalname,
-				Bucket.COMMON
+				{
+					fileName: file.originalname,
+					folderId: Bucket.COMMON_FOLDER
+				}
 			) ?? { Location: null };
 			if(contractPhotoLink) {
 				fileUploaded = true;
 				message = ORDER_TRANSLATIONS['CONTRACT'];
 
 				if(order.contractPhotoLink) {
-					await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON);
+					await this.imageFileService.deleteImage(order.contractPhotoLink);
 				}
 				await this.repository.update(id, { contractPhotoLink, stage: OrderStage.SIGNED_DRIVER });
 			}
@@ -611,8 +613,8 @@ export default class OrderService
 
 		if(fileUploaded) {
 			this.send(order.id)
-			    // .then(() => this.gateway.sendOrderEvent({ id, message }))
-			    .catch(console.error);
+				// .then(() => this.gateway.sendOrderEvent({ id, message }))
+				  .catch(console.error);
 
 			return {
 				statusCode: 200,
@@ -641,12 +643,12 @@ export default class OrderService
 			if(order.paymentPhotoLinks) {
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
-					                      .deleteImageList(order.paymentPhotoLinks, Bucket.COMMON) > 0;
+					                      .deleteImageList(order.paymentPhotoLinks) > 0;
 				}
 				else if(order.paymentPhotoLinks.length > 0) {
 					const paymentPhotoLink = order.paymentPhotoLinks[index];
 					photoLinks = order.paymentPhotoLinks.splice(index, 1);
-					isDeleted = await this.imageFileService.deleteImage(paymentPhotoLink, Bucket.COMMON) > 0;
+					isDeleted = await this.imageFileService.deleteImage(paymentPhotoLink) > 0;
 				}
 
 				if(isDeleted) {
@@ -660,12 +662,12 @@ export default class OrderService
 			if(order.receiptPhotoLinks) {
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
-					                      .deleteImageList(order.receiptPhotoLinks, Bucket.COMMON) > 0;
+					                      .deleteImageList(order.receiptPhotoLinks) > 0;
 				}
 				else if(order.receiptPhotoLinks.length > 0) {
 					const receiptPhotoLink = order.receiptPhotoLinks[index];
 					photoLinks = order.receiptPhotoLinks.splice(index, 1);
-					isDeleted = await this.imageFileService.deleteImage(receiptPhotoLink, Bucket.COMMON) > 0;
+					isDeleted = await this.imageFileService.deleteImage(receiptPhotoLink) > 0;
 				}
 
 				if(isDeleted) {
@@ -677,7 +679,7 @@ export default class OrderService
 		else if(mode === 'contract') {
 			if(order.contractPhotoLink) {
 				if(deleteAll) {
-					isDeleted = await this.imageFileService.deleteImage(order.contractPhotoLink, Bucket.COMMON) > 0;
+					isDeleted = await this.imageFileService.deleteImage(order.contractPhotoLink) > 0;
 				}
 
 				if(isDeleted) {

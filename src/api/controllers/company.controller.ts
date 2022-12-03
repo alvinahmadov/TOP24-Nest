@@ -431,13 +431,13 @@ export default class CompanyController
 				id, name, buffer,
 				'avatarLink',
 				CompanyType.ORG,
-				Bucket.COMPANY
+				Bucket.COMPANY_FOLDER
 			)
 			: this.uploadPhoto<CargoCompanyInn>(
 				id, name, buffer,
 				'avatarLink',
 				CompanyType.IE,
-				Bucket.COMPANY
+				Bucket.COMPANY_FOLDER
 			)
 		) : { statusCode: 400, message: 'Not found!' };
 
@@ -468,13 +468,13 @@ export default class CompanyController
 						id, name, buffer,
 						'passportPhotoLink',
 						CompanyType.ORG,
-						Bucket.COMPANY
+						Bucket.COMPANY_FOLDER
 					)
 					: this.uploadPhoto<CargoCompanyInn>(
 						id, name, buffer,
 						'passportPhotoLink',
 						CompanyType.IE,
-						Bucket.COMPANY
+						Bucket.COMPANY_FOLDER
 					)
 				);
 				return response.status(result.statusCode)
@@ -503,7 +503,7 @@ export default class CompanyController
 			id, name, buffer,
 			'certificatePhotoLink',
 			CompanyType.ORG,
-			Bucket.COMPANY
+			Bucket.COMPANY_FOLDER
 		);
 
 		return sendResponse(response, result);
@@ -527,7 +527,7 @@ export default class CompanyController
 			id, name, buffer,
 			'directorOrderPhotoLink',
 			CompanyType.ORG,
-			Bucket.COMPANY
+			Bucket.COMPANY_FOLDER
 		);
 
 		return sendResponse(response, result);
@@ -549,7 +549,7 @@ export default class CompanyController
 		const { originalname: name, buffer } = renameMulterFile(image, id, 'attorney');
 		const result = await this.uploadPhoto<CargoCompany>(
 			id, name, buffer, 'attorneySignLink',
-			CompanyType.ORG, Bucket.COMPANY
+			CompanyType.ORG, Bucket.COMPANY_FOLDER
 		);
 
 		return sendResponse(response, result);
@@ -573,7 +573,7 @@ export default class CompanyController
 			id, name, buffer,
 			'passportSignLink',
 			CompanyType.ORG,
-			Bucket.COMPANY
+			Bucket.COMPANY_FOLDER
 		);
 
 		return sendResponse(response, result);
@@ -596,7 +596,7 @@ export default class CompanyController
 		const result = await this.uploadPhoto<CargoCompanyInn>(
 			id, name, buffer, 'passportSelfieLink',
 			CompanyType.IE,
-			Bucket.COMPANY
+			Bucket.COMPANY_FOLDER
 		);
 
 		return sendResponse(response, result);
@@ -628,7 +628,7 @@ export default class CompanyController
 						name:     destination,
 						buffer,
 						linkName: 'ogrnipPhotoLink',
-						bucketId: Bucket.COMPANY
+						folderId: Bucket.COMPANY_FOLDER
 					}
 				);
 			}
@@ -656,12 +656,12 @@ export default class CompanyController
 		buffer: Buffer,
 		key: keyof M,
 		type: CompanyType = CompanyType.ORG,
-		bucketId: string = ''
+		folderId: string = Bucket.COMPANY_FOLDER
 	): Promise<IApiResponse<ICompany>> {
 		return (
 			type === CompanyType.ORG
-			? this.cargoService.uploadPhoto({ id, buffer, linkName: <any>key, name, bucketId })
-			: this.cargoInnService.uploadPhoto({ id, buffer, linkName: <any>key, name, bucketId })
+			? this.cargoService.uploadPhoto({ id, buffer, linkName: <any>key, name, folderId })
+			: this.cargoInnService.uploadPhoto({ id, buffer, linkName: <any>key, name, folderId })
 		);
 	}
 }

@@ -1,9 +1,12 @@
+import { join }              from 'path';
+import { v4 as uuid }        from 'uuid';
 import { Injectable, Scope } from '@nestjs/common';
 import { Bucket }            from '@common/constants';
 import {
 	IAWSUploadResponse,
 	IImageFileService,
-	IObjectStorageParams
+	IObjectStorageParams,
+	IObjectStorageUploadOptions
 }                            from '@common/interfaces';
 import {
 	ObjectStorage,
@@ -23,12 +26,9 @@ export default class ImageFileService
 	constructor() {
 		let storageParams: IObjectStorageParams = {
 			endpoint_url: env.objectStorage.url,
-			auth:         {
-				accessKeyId:     env.objectStorage.accessKeyId,
-				secretAccessKey: env.objectStorage.secretKey
-			},
-			bucketId:     Bucket.COMMON,
-			region:       env.yandex.cloud.region,
+			auth:         env.objectStorage.auth,
+			bucketId:     Bucket.IMAGES_BUCKET,
+			region:       env.objectStorage.region,
 			debug:        env.objectStorage.debug
 		};
 
@@ -42,24 +42,28 @@ export default class ImageFileService
 	 * @summary Upload image buffer to storage
 	 *
 	 * @param {Buffer!} fileBlob File buffer to send to storage
-	 * @param {String} storeName Name of file on storage
-	 * @param {String} bucketId Bucket identifier on storage
+	 * @param {IObjectStorageUploadOptions} options upload options
+	 * @param {String} options.fileName Name of file on storage
+	 * @param {String} options.folderId Folder identifier on storage bucket
 	 * */
 	public async uploadFile(
 		fileBlob: Buffer,
-		storeName?: string,
-		bucketId?: string
+		options?: IObjectStorageUploadOptions
 	): Promise<IAWSUploadResponse> {
-		if(
-			storeName === undefined ||
-			storeName === null
-		)
-			storeName = 'image.jpg';
+		if(!options) {
+			options = {
+				fileName: uuid({ random: fileBlob }).toUpperCase(),
+				folderId: Bucket.COMMON_FOLDER
+			};
+		}
+		else if(!options.fileName) {
+			options.fileName = uuid({ random: fileBlob }).toUpperCase();
+		}
 
-		if(!bucketId) bucketId = Bucket.COMMON;
+		const storeName = join(options.folderId ?? Bucket.COMMON_FOLDER, options.fileName);
 
 		return this.objectStorage
-		           .setBucket(bucketId)
+		           .setBucket(Bucket.IMAGES_BUCKET)
 		           .upload({ buffer: fileBlob, name: storeName });
 	}
 
@@ -67,7 +71,7 @@ export default class ImageFileService
 		files: any[],
 		bucketId?: string
 	): Promise<{ Location: string[] }> {
-		if(!bucketId) bucketId = Bucket.COMMON;
+		if(!bucketId) bucketId = Bucket.COMMON_FOLDER;
 
 		if(files) {
 			return this.objectStorage
@@ -82,10 +86,7 @@ export default class ImageFileService
 		return { Location: [] };
 	}
 
-	public async deleteImageList(
-		fileList: string | string[],
-		bucketId?: string
-	): Promise<number> {
+	public async deleteImageList(fileList: string | string[]): Promise<number> {
 		let imageList: string[] = [];
 		let affectedCount: number = 0;
 
@@ -96,7 +97,7 @@ export default class ImageFileService
 				imageList
 					.filter(image => !!image)
 					.map(
-						async image => this.deleteImage(image, bucketId)
+						async image => this.deleteImage(image)
 					)
 			).then(
 				res => res.reduce((p: Awaited<number>, c: Awaited<number>) => p + c, 0)
@@ -106,12 +107,12 @@ export default class ImageFileService
 		return affectedCount;
 	}
 
-	public async deleteImage(location: string, bucketId?: string): Promise<number> {
+	public async deleteImage(location: string): Promise<number> {
 		let isDeleted: boolean = false;
 
 		if(location) {
 			isDeleted = await this.objectStorage
-			                      .setBucket(bucketId ?? Bucket.COMMON)
+			                      .setBucket(Bucket.IMAGES_BUCKET)
 			                      .remove(location);
 		}
 		return isDeleted ? 1 : 0;

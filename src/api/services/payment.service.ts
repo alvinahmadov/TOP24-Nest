@@ -160,7 +160,7 @@ export default class PaymentService
 
 		const images = await this.imageFileService.deleteImageList([
 			                                                           payment.ogrnipPhotoLink,
-			                                                           Bucket.COMPANY
+			                                                           Bucket.COMPANY_FOLDER
 		                                                           ]);
 
 		const { affectedCount } = await this.repository.delete(id);

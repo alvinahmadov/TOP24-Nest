@@ -1,7 +1,7 @@
 import * as uuid                  from 'uuid';
 import { Op }                     from 'sequelize';
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { BitrixUrl, Bucket }      from '@common/constants';
+import { BitrixUrl }              from '@common/constants';
 import { AxiosStatic }            from '@common/classes';
 import { UserRole }               from '@common/enums';
 import {
@@ -221,15 +221,13 @@ export default class CargoCompanyService
 				company.passportPhotoLink,
 				company.certificatePhotoLink,
 				company.directorOrderPhotoLink
-			],
-			Bucket.COMPANY
+			]
 		);
 
 		const transportImages = await super.imageFileService.deleteImageList(
 			company.transports
 			       .flatMap(t => t.images)
-			       .map(image => image.url),
-			Bucket.TRANSPORT
+			       .map(image => image.url)
 		);
 
 		const driverImages = await super.imageFileService.deleteImageList(
@@ -241,8 +239,7 @@ export default class CargoCompanyService
 				       d.passportPhotoLink,
 				       d.passportSelfieLink,
 				       d.passportSignLink
-			       ]),
-			Bucket.DRIVER
+			       ])
 		);
 
 		const paymentImages = await this.imageFileService.deleteImage(company.payment.ogrnipPhotoLink);

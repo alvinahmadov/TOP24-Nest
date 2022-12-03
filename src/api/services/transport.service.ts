@@ -196,7 +196,7 @@ export default class TransportService
 			transport.diagnosticsPhotoLink
 		);
 
-		const images = await this.imageFileService.deleteImageList(transportImages, Bucket.TRANSPORT);
+		const images = await this.imageFileService.deleteImageList(transportImages);
 
 		if(transport.crmId) {
 			try {
@@ -273,7 +273,13 @@ export default class TransportService
 		if(!transport)
 			return this.responses['NOT_FOUND'];
 
-		const { Location: url } = await this.imageFileService.uploadFile(file, name, Bucket.TRANSPORT);
+		const { Location: url } = await this.imageFileService.uploadFile(
+			file,
+			{
+				fileName: name,
+				folderId: Bucket.TRANSPORT_FOLDER
+			}
+		);
 
 		if(url) {
 			return this.imageService.create(
@@ -324,7 +330,7 @@ export default class TransportService
 		file: Buffer
 	): TAsyncApiResponse<Transport> {
 		return this.uploadPhoto(
-			{ id, name, buffer: file, linkName: 'osagoPhotoLink', bucketId: Bucket.TRANSPORT }
+			{ id, name, buffer: file, linkName: 'osagoPhotoLink', folderId: Bucket.TRANSPORT_FOLDER }
 		);
 	}
 
@@ -344,7 +350,7 @@ export default class TransportService
 		file: Buffer
 	): TAsyncApiResponse<Transport> {
 		return this.uploadPhoto(
-			{ id, buffer: file, name, linkName: 'diagnosticsPhotoLink', bucketId: Bucket.TRANSPORT }
+			{ id, buffer: file, name, linkName: 'diagnosticsPhotoLink', folderId: Bucket.TRANSPORT_FOLDER }
 		);
 	}
 }

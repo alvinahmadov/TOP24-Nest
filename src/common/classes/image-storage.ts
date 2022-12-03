@@ -67,6 +67,7 @@ export class LocalObjectStorage
 				timeout:        10000,
 				connectTimeout: 10000
 			},
+			region:       env.objectStorage.region,
 			debug:        env.objectStorage.debug
 		};
 
@@ -74,7 +75,7 @@ export class LocalObjectStorage
 	}
 
 	public async upload(file: IBucketItem): Promise<IAWSUploadResponse> {
-		let bucket: string = this.params.bucketId || BucketId.COMMON,
+		let bucket: string = this.params.bucketId || BucketId.COMMON_FOLDER,
 			fileBody: Buffer,
 			extension: string,
 			file_md5: string,
@@ -93,6 +94,9 @@ export class LocalObjectStorage
 			extension = `.${fileExt(file)}`;
 			if(file.name)
 				fileUploadName = file.name;
+			if(fileUploadName.startsWith('/')) {
+				fileUploadName = fileUploadName.slice(1);
+			}
 		}
 		else
 			throw new Error('file.path or file.buffer must be provided!');
@@ -203,7 +207,7 @@ export class ExternalObjectStorage
 		this.s3 = new aws.S3({
 			                     endpoint:        new aws.Endpoint(this.params.endpoint_url),
 			                     accessKeyId:     this.params.auth.accessKeyId,
-			                     secretAccessKey: this.params.auth.secretAccessKey,
+			                     secretAccessKey: this.params.auth.secretKey,
 			                     region:          this.params.region,
 			                     httpOptions:     this.params.httpOptions
 		                     });
@@ -273,7 +277,7 @@ export class ExternalObjectStorage
 	 * @returns {Promise<Object>} upload result
 	 */
 	public async upload(file: IBucketItem): Promise<IAWSUploadResponse> {
-		let bucket: string = this.params.bucketId || BucketId.COMMON,
+		let bucket: string = this.params.bucketId || BucketId.COMMON_FOLDER,
 			fileBody: Buffer,
 			extension: string,
 			file_md5: string,

@@ -133,9 +133,9 @@ export type TStatusCode = 200 |
                           500 |
                           number;
 
-export type TYandexStorageAuth = {
+export type TObjectStorageAuth = {
 	accessKeyId: string;
-	secretAccessKey: string;
+	secretKey: string;
 }
 
 export type TWebHookEvent = 'ONCRMDEALADD' |
@@ -395,7 +395,7 @@ export interface ILoginResponse {
 
 /**@ignore*/
 export interface IObjectStorageParams {
-	auth: TYandexStorageAuth;
+	auth: TObjectStorageAuth;
 	bucketId: string;
 	endpoint_url?: string;
 	region?: string;
@@ -404,6 +404,11 @@ export interface IObjectStorageParams {
 		connectTimeout?: number;
 	};
 	debug?: boolean;
+}
+
+export interface IObjectStorageUploadOptions {
+	folderId?: string;
+	fileName?: string;
 }
 
 /**@ignore*/
@@ -447,8 +452,7 @@ export interface IImageFileService
 	extends IService {
 	uploadFile(
 		fileBlob: Buffer,
-		storeName?: string,
-		bucketId?: string
+		options?: IObjectStorageUploadOptions
 	): Promise<IAWSUploadResponse | Error>;
 
 	uploadFiles(
@@ -498,8 +502,8 @@ export interface IUploadOptions<M extends Model> {
 	buffer: Buffer;
 	// Key for link model field.
 	linkName: keyof M['_attributes'];
-	// Name/id of bucket in Yandex Storage.
-	bucketId?: string;
+	// Name/id of folder in Object Storage.
+	folderId?: string;
 }
 
 /**@ignore*/

@@ -1,4 +1,5 @@
-import { DotenvParseOutput } from 'dotenv';
+import { DotenvParseOutput }  from 'dotenv';
+import { TObjectStorageAuth } from './api';
 
 //////////////
 //  Types  //
@@ -85,9 +86,9 @@ export interface IEnvironment {
 	};
 	objectStorage?: {
 		readonly type?: TObjectStorageType
-		accessKeyId: string;
-		secretKey: string;
+		auth: TObjectStorageAuth,
 		url: string;
+		region?: string;
 		debug?: boolean;
 	};
 	yandex: {
@@ -156,6 +157,7 @@ export interface IEnvParseOutput
 	OBJECT_STORAGE_API_KEY?: string;
 	OBJECT_STORAGE_SECRET?: string;
 	OBJECT_STORAGE_URL?: string;
+	OBJECT_STORAGE_REGION?: string;
 	NEST_DEBUG?: string;
 	SOCKET_PORT?: string;
 	RANDOM_CODE?: string;
