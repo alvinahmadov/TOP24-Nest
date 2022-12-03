@@ -14,7 +14,7 @@ import {
 }                             from '@common/interfaces';
 import {
 	CargoCompany,
-	CargoInnCompany,
+	CargoCompanyInn,
 	Driver,
 	Image,
 	Order,
@@ -41,7 +41,7 @@ export default class OrderRepository
 			]
 		},
 		{
-			model:   CargoInnCompany,
+			model:   CargoCompanyInn,
 			include: [
 				{
 					model:   Transport,
