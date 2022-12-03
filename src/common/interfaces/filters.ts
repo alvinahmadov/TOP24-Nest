@@ -3,7 +3,7 @@ import {
 	IAddress,
 	IAdmin,
 	ICargoCompany,
-	ICargoInnCompany,
+	ICargoCompanyInn,
 	IDriver,
 	IGatewayEvent,
 	IImage,
@@ -95,11 +95,11 @@ export interface ICargoCompanyFilter
 /**
  * CargoInn model filters
  *
- * @see ICargoInnCompany
+ * @see ICargoCompanyInn
  * */
 export interface ICargoCompanyInnFilter
 	extends IFilter,
-	        TModelFilter<ICargoInnCompany> {}
+	        TModelFilter<ICargoCompanyInn> {}
 
 /**
  * Driver model filters
