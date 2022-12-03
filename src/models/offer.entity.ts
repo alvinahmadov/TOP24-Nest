@@ -24,11 +24,11 @@ import {
 	UuidColumn,
 	VirtualColumn
 }                        from '@common/interfaces';
-import entityConfig      from '@common/properties';
 import {
 	filterTransports,
 	getTransportFilterFromOrder
 }                        from '@common/utils';
+import { entityConfig }  from '@api/swagger/properties';
 import EntityModel       from './entity-model';
 import Driver            from './driver.entity';
 import Order             from './order.entity';
