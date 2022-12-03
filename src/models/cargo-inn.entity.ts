@@ -5,23 +5,23 @@ import {
 	HasOne,
 	IsUUID,
 	Table
-}                           from 'sequelize-typescript';
-import { ApiProperty }      from '@nestjs/swagger';
-import { ObjectType }       from '@nestjs/graphql';
+}                        from 'sequelize-typescript';
+import { ApiProperty }   from '@nestjs/swagger';
+import { ObjectType }    from '@nestjs/graphql';
 import {
 	CARGOINN,
 	CRM,
 	PAYMENT
-}                           from '@config/json';
+}                        from '@config/json';
 import {
 	CompanyType,
 	UserRole
-}                           from '@common/enums';
-import { TABLE_OPTIONS }    from '@common/constants';
+}                        from '@common/enums';
+import { TABLE_OPTIONS } from '@common/constants';
 import {
 	BooleanColumn,
 	DateColumn,
-	ICargoInnCompany,
+	ICargoCompanyInn,
 	Index,
 	IntColumn,
 	StringArrayColumn,
@@ -30,16 +30,15 @@ import {
 	UrlColumn,
 	UuidColumn,
 	VirtualColumn
-}                           from '@common/interfaces';
-import entityConfig         from '@common/properties';
-import { convertBitrix }    from '@common/utils';
-import { ImageFileService } from '@api/services';
-import EntityModel          from './entity-model';
-import Driver               from './driver.entity';
-import Order                from './order.entity';
-import Payment              from './payment.entity';
-import Transport            from './transport.entity';
-import User                 from './user.entity';
+}                        from '@common/interfaces';
+import { convertBitrix } from '@common/utils';
+import { entityConfig }  from '@api/swagger/properties';
+import EntityModel       from './entity-model';
+import Driver            from './driver.entity';
+import Order             from './order.entity';
+import Payment           from './payment.entity';
+import Transport         from './transport.entity';
+import User              from './user.entity';
 
 const { companyinn: prop } = entityConfig;
 
@@ -48,15 +47,15 @@ const { companyinn: prop } = entityConfig;
  *
  * @description Cargo company by individual entrepreneur
  *
- * @class CargoInnCompany
- * @interface ICargoInnCompany
+ * @class CargoCompanyInn
+ * @interface ICargoCompanyInn
  * @extends EntityModel
  * */
 @ObjectType()
 @Table({ tableName: 'companies_inn', ...TABLE_OPTIONS })
-export default class CargoInnCompany
-	extends EntityModel<ICargoInnCompany>
-	implements ICargoInnCompany {
+export default class CargoCompanyInn
+	extends EntityModel<ICargoCompanyInn>
+	implements ICargoCompanyInn {
 	@ApiProperty(prop.userId)
 	@IsUUID('all')
 	@ForeignKey(() => User)
@@ -258,16 +257,4 @@ export default class CargoInnCompany
 		}
 		return data;
 	};
-
-	public async deleteImages(): Promise<number> {
-		const imageFileService = new ImageFileService();
-		return imageFileService.deleteImageList(
-			[
-				this.avatarLink,
-				this.passportSignLink,
-				this.passportPhotoLink,
-				this.passportSelfieLink
-			]
-		);
-	}
 }
