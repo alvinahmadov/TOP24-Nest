@@ -9,7 +9,7 @@ import { Bucket as BucketId } from '@common/constants';
 import {
 	IBucketItem,
 	IObjectStorageParams,
-	IUploadResponse
+	IAWSUploadResponse
 }                             from '@common/interfaces';
 
 /**
@@ -37,14 +37,139 @@ function fileExt(file: Partial<IBucketItem>) {
 	return 'jpeg';
 }
 
+export abstract class ObjectStorage {
+	protected readonly debug: boolean = false;
+	protected readonly logger: Logger;
+
+	protected constructor(protected params: IObjectStorageParams) {
+		this.logger = new Logger(ObjectStorage.name, { timestamp: true });
+	}
+
+	public setBucket(bucketId: string) {
+		this.params.bucketId = bucketId;
+		return this;
+	}
+
+	public abstract upload(file: IBucketItem): Promise<IAWSUploadResponse>;
+
+	public abstract remove(routeFullPath: string): Promise<boolean>;
+
+	public abstract uploadMulti(files: IBucketItem[]): Promise<{ Location: string[] }>
+}
+
+export class LocalObjectStorage
+	extends ObjectStorage {
+	constructor(protected override params: IObjectStorageParams) {
+		super(params);
+		const default_params: Partial<IObjectStorageParams> = {
+			endpoint_url: env.objectStorage.url,
+			httpOptions:  {
+				timeout:        10000,
+				connectTimeout: 10000
+			},
+			debug:        env.objectStorage.debug
+		};
+
+		this.params = Object.assign(params, default_params);
+	}
+
+	public async upload(file: IBucketItem): Promise<IAWSUploadResponse> {
+		let bucket: string = this.params.bucketId || BucketId.COMMON,
+			fileBody: Buffer,
+			extension: string,
+			file_md5: string,
+			fileUploadName: string;
+
+		if(file.path) {
+			fileBody = fs.readFileSync(file.path);
+			extension = path.extname(file.path);
+			if(file.save_name)
+				fileUploadName = path.basename(file.path);
+			if(file.name)
+				fileUploadName = file.name;
+		}
+		else if(file.buffer) {
+			fileBody = file.buffer;
+			extension = `.${fileExt(file)}`;
+			if(file.name)
+				fileUploadName = file.name;
+		}
+		else
+			throw new Error('file.path or file.buffer must be provided!');
+
+		if(!fileUploadName) {
+			file_md5 = md5(fileBody);
+			fileUploadName = `${file_md5}${extension}`;
+		}
+
+		const ContentType = lookup(fileUploadName) || 'image/jpeg';
+
+		const params = {
+			Bucket: bucket,
+			Key:    fileUploadName,
+			Body:   fileBody,
+			ContentType
+		};
+		const savePath = path.join(__dirname, env.app.fileSavePath, params.Bucket);
+
+		try {
+			const fullFilePath: string = path.join(savePath, params.Key);
+			const lastSlashIndex = fullFilePath.lastIndexOf('/');
+			const fullSavePath: string = fullFilePath.substring(0, lastSlashIndex);
+
+			if(!fs.existsSync(fullSavePath)) {
+				fs.mkdirSync(fullSavePath, { recursive: true });
+			}
+			const location = this.params.endpoint_url + path.join('/', env.app.fileSavePath, params.Bucket, params.Key);
+
+			if(this.debug)
+				this.logger.debug(`Saving at ${savePath} file ${params.Key}`);
+
+			fs.writeFileSync(fullFilePath, params.Body);
+
+			return Promise.resolve({
+				                       Key:      params.Key,
+				                       Bucket:   params.Bucket,
+				                       Location: location
+			                       });
+		} catch(error) {
+			this.logger.error('Image save error:', error);
+			return Promise.reject(error);
+		}
+	}
+
+	public async uploadMulti(files: IBucketItem[]): Promise<{ Location: string[] }> {
+		const uploadResponses = await Promise.all(
+			files.map(async file => this.upload(file))
+		);
+
+		return {
+			Location: uploadResponses
+				          .map(u => ({ Location: u instanceof Error ? null : u.Location }))
+				          .filter(u => u !== null)
+				          .map(l => l.Location)
+		};
+	}
+
+	public async remove(routeFullPath: string): Promise<boolean> {
+		routeFullPath = routeFullPath.replace(env.objectStorage.url, '/');
+		if(fs.existsSync(routeFullPath)) {
+			fs.rmSync(routeFullPath);
+			return Promise.resolve(true);
+		}
+		return Promise.resolve(false);
+	}
+}
+
 /**
  * Creating an object to work with S3 storage
  */
-export class YandexStorage {
+export class YandexObjectStorage
+	extends ObjectStorage {
 	protected threads: any;
 	protected readonly s3: aws.S3;
 	protected readonly debug: boolean = false;
-	protected readonly logger: Logger = new Logger(YandexStorage.name, { timestamp: true });
+	protected readonly logger: Logger = new Logger(YandexObjectStorage.name, { timestamp: true });
 	protected readonly ignoreList: string[] = [];
 
 	/**
@@ -61,14 +186,15 @@ export class YandexStorage {
 	 * @param {Boolean=} params.debug Debugging
 	 */
 	constructor(protected params: IObjectStorageParams) {
+		super(params);
 		const default_params: Partial<IObjectStorageParams> = {
-			endpoint_url: env.yandex.storage.url,
+			endpoint_url: env.objectStorage.url,
 			httpOptions:  {
 				timeout:        10000,
 				connectTimeout: 10000
 			},
-			region:       env.yandex.cloud.region,
-			debug:        env.yandex.storage.debug
+			debug:        env.objectStorage.debug,
+			region:       env.yandex.cloud.region
 		};
 
 		this.params = Object.assign(params, default_params);
@@ -85,11 +211,6 @@ export class YandexStorage {
 		this.debug = this.params.debug;
 		this.ignoreList = ['.DS_Store'];
 	};
-
-	public setBucket(bucketId: string) {
-		this.params.bucketId = bucketId;
-		return this;
-	}
 
 	/**
 	 * Get directory and folder list
@@ -151,7 +272,7 @@ export class YandexStorage {
 	 *
 	 * @returns {Promise<Object>} upload result
 	 */
-	public async upload(file: IBucketItem): Promise<IUploadResponse> {
+	public async upload(file: IBucketItem): Promise<IAWSUploadResponse> {
 		let bucket: string = this.params.bucketId || BucketId.COMMON,
 			fileBody: Buffer,
 			extension: string,
@@ -197,7 +318,7 @@ export class YandexStorage {
 			this.logger.log('S3', debug_object, params);
 
 		try {
-			const s3Promise = await new Promise<any>(
+			const s3Promise = await new Promise<IAWSUploadResponse>(
 				(resolve, reject) =>
 					s3.upload(params, function(err: Error, data: any)
 					{
@@ -211,24 +332,21 @@ export class YandexStorage {
 			this.params.bucketId = null;
 			return s3Promise;
 		} catch(error) {
-			if(this.debug)
-				this.logger.log('S3', debug_object, 'error:', error);
-
+			this.logger.error(error);
 			this.params.bucketId = null;
-			return null;
+			throw error;
 		}
-
 	};
 
 	public async uploadMulti(files: IBucketItem[]): Promise<{ Location: string[] }> {
-
 		const uploadResponses = await Promise.all(
-			files.map(async(file) => await this.upload(file))
+			files.map(async file => this.upload(file))
 		);
 
 		return {
 			Location: uploadResponses
-				          .map(u => ({ Location: u.Location }))
+				          .map(u => ({ Location: u instanceof Error ? null : u.Location }))
+				          .filter(u => u !== null)
 				          .map(l => l.Location)
 		};
 	}

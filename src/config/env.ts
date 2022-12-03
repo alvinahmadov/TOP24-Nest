@@ -9,6 +9,7 @@ export const DEFAULT_MEMORY: number = 2048;
 const parser: EnvironmentParser = new EnvironmentParser('.env');
 
 const isProd = parser.equal('NODE_ENV', 'production');
+const useLocalStorage = parser.equal('OBJECT_STORAGE', 'local');
 
 /**@ignore*/
 const env: IEnvironment = {
@@ -20,7 +21,8 @@ const env: IEnvironment = {
 		lang:          parser.str('LANG', 'ru'),
 		randomCode:    parser.bool('RANDOM_CODE', !isProd),
 		enableGraphql: parser.bool('ENABLE_GRAPHQL', false),
-		enableEvents:  parser.bool('ENABLE_EVENTS', true)
+		enableEvents:  parser.bool('ENABLE_EVENTS', true),
+		fileSavePath:  parser.str('OBJECT_STORAGE_PATH', '')
 	},
 	api:              {
 		prefix:     parser.str('API_PREFIX', 'api'),
@@ -62,16 +64,18 @@ const env: IEnvironment = {
 		key:     parser.str('BITRIX_KEY'),
 		token:   parser.str('BITRIX_TOKEN')
 	},
+	objectStorage:    {
+		type:        useLocalStorage ? 'local' : 'yandex',
+		accessKeyId: useLocalStorage ? null : parser.str('YANDEX_STORAGE_API_KEY'),
+		secretKey:   useLocalStorage ? null : parser.str('YANDEX_STORAGE_SECRET'),
+		url:         useLocalStorage ? parser.str('OBJECT_STORAGE_URL')
+		                             : parser.str('YANDEX_STORAGE_URL'),
+		debug:       parser.bool('OBJECT_STORAGE_DEBUG', false)
+	},
 	yandex:           {
-		cloud:   {
+		cloud: {
 			token:  parser.str('YANDEX_CLOUD_API_TOKEN'),
 			region: parser.str('YANDEX_CLOUD_REGION')
-		},
-		storage: {
-			accessKeyId: parser.str('YANDEX_STORAGE_API_KEY'),
-			secretKey:   parser.str('YANDEX_STORAGE_SECRET'),
-			url:         parser.str('YANDEX_STORAGE_URL'),
-			debug:       parser.bool('YANDEX_STORAGE_DEBUG')
 		}
 	},
 	osm:              {
