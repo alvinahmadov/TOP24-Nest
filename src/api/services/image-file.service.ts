@@ -1,32 +1,45 @@
 import { Injectable, Scope } from '@nestjs/common';
-import env                   from '@config/env';
 import { Bucket }            from '@common/constants';
 import {
-	IService,
-	IUploadResponse,
-	TMulterFile
+	IAWSUploadResponse,
+	IImageFileService,
+	IObjectStorageParams
 }                            from '@common/interfaces';
-import { YandexStorage }     from '@common/utils';
+import {
+	ObjectStorage,
+	LocalObjectStorage,
+	YandexObjectStorage
+}                            from '@common/classes';
+import env                   from '@config/env';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export default class ImageFileService
-	implements IService {
+	implements IImageFileService {
 	/**
 	 * Yandex Storage object that operates on files.
 	 * */
-	private objectStorage: YandexStorage;
+	private objectStorage: ObjectStorage;
 
 	constructor() {
-		this.objectStorage = new YandexStorage(
-			{
-				auth:     {
-					accessKeyId:     env.yandex.storage.accessKeyId,
-					secretAccessKey: env.yandex.storage.secretKey
-				},
-				bucketId: Bucket.COMMON,
-				region:   env.yandex.cloud.region
-			}
-		);
+		let storageParams: IObjectStorageParams = {
+			endpoint_url: env.objectStorage.url,
+			auth:         {
+				accessKeyId:     env.objectStorage.accessKeyId,
+				secretAccessKey: env.objectStorage.secretKey
+			},
+			bucketId:     Bucket.COMMON,
+			region:       env.yandex.cloud.region,
+			debug:        env.objectStorage.debug
+		};
+
+		if(env.objectStorage.type === 'local')
+			this.objectStorage = new LocalObjectStorage(storageParams);
+		else if(env.objectStorage.type === 'yandex') {
+			this.objectStorage = new YandexObjectStorage(storageParams);
+		}
+		else {
+			console.error('No image storage provided');
+		}
 	}
 
 	/**
@@ -40,7 +53,7 @@ export default class ImageFileService
 		fileBlob: Buffer,
 		storeName?: string,
 		bucketId?: string
-	): Promise<IUploadResponse> {
+	): Promise<IAWSUploadResponse> {
 		if(
 			storeName === undefined ||
 			storeName === null
@@ -55,7 +68,7 @@ export default class ImageFileService
 	}
 
 	public async uploadFiles(
-		files: TMulterFile[],
+		files: any[],
 		bucketId?: string
 	): Promise<{ Location: string[] }> {
 		if(!bucketId) bucketId = Bucket.COMMON;
@@ -84,14 +97,11 @@ export default class ImageFileService
 			imageList = Array.isArray(fileList) ? fileList
 			                                    : fileList.split(',');
 			affectedCount = await Promise.all(
-				imageList.map(
-					async(item: string): Promise<number> =>
-					{
-						if(item)
-							return Number(await this.deleteImage(item, bucketId));
-						return 0;
-					}
-				)
+				imageList
+					.filter(image => !!image)
+					.map(
+						async image => this.deleteImage(image, bucketId)
+					)
 			).then(
 				res => res.reduce((p: Awaited<number>, c: Awaited<number>) => p + c, 0)
 			);
@@ -100,12 +110,14 @@ export default class ImageFileService
 		return affectedCount;
 	}
 
-	public async deleteImage(location: string, bucketId?: string): Promise<boolean> {
+	public async deleteImage(location: string, bucketId?: string): Promise<number> {
+		let isDeleted: boolean = false;
+
 		if(location) {
-			return this.objectStorage
-			           .setBucket(bucketId ?? Bucket.COMMON)
-			           .remove(location);
+			isDeleted = await this.objectStorage
+			                      .setBucket(bucketId ?? Bucket.COMMON)
+			                      .remove(location);
 		}
-		return false;
+		return isDeleted ? 1 : 0;
 	}
 }
