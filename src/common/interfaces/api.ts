@@ -133,6 +133,11 @@ export type TStatusCode = 200 |
                           500 |
                           number;
 
+export type TYandexStorageAuth = {
+	accessKeyId: string;
+	secretAccessKey: string;
+}
+
 export type TWebHookEvent = 'ONCRMDEALADD' |
                             'ONCRMDEALUPDATE' |
                             'ONCRMDEALDELETE' |
@@ -149,7 +154,7 @@ export interface IAuthRequest
 }
 
 export interface IApiResponse<T> {
-	statusCode: TStatusCode;
+	statusCode: HttpStatus;
 	data?: T;
 	message?: string;
 }
@@ -175,7 +180,14 @@ export interface IApiRouteInfoParams {
 	fileOpts?: {
 		mimeTypes: TMediaType[];
 		interceptors: (NestInterceptor | Function)[];
+		multi?: boolean
 	};
+}
+
+export interface IApiSwaggerDescription {
+	operation?: ApiOperationOptions;
+	responses?: Record<number, ApiResponseOptions>;
+	queryOptions?: ApiQueryOptions | ApiQueryOptions[];
 }
 
 /**@ignore*/
@@ -190,11 +202,7 @@ export interface IApiRouteMetadata<M = any> {
 	 * */
 	method: RequestMethod;
 
-	api?: {
-		operation?: ApiOperationOptions;
-		responses?: Record<number, ApiResponseOptions>;
-		queryOptions?: ApiQueryOptions | ApiQueryOptions[];
-	};
+	api?: IApiSwaggerDescription;
 }
 
 export interface IApiRouteConfig<M = any> {
@@ -221,6 +229,25 @@ export interface ICompanyLoginResponse
 	extends ILoginResponse {
 	company?: ICompany;
 	code?: string;
+}
+
+export interface ICompanyDeleteResponse {
+	company: {
+		affectedCount: number;
+		images: number;
+	};
+	payment: {
+		affectedCount: number;
+		images: number;
+	};
+	driver: {
+		affectedCount: number;
+		images: number;
+	};
+	transport: {
+		affectedCount: number;
+		images: number;
+	};
 }
 
 export interface ICRMEntity {
@@ -368,10 +395,7 @@ export interface ILoginResponse {
 
 /**@ignore*/
 export interface IObjectStorageParams {
-	auth: {
-		accessKeyId: string;
-		secretAccessKey: string;
-	};
+	auth: TYandexStorageAuth;
 	bucketId: string;
 	endpoint_url?: string;
 	region?: string;
@@ -419,6 +443,30 @@ export interface IServerEvents {
 
 export interface IService {}
 
+export interface IImageFileService
+	extends IService {
+	uploadFile(
+		fileBlob: Buffer,
+		storeName?: string,
+		bucketId?: string
+	): Promise<IAWSUploadResponse | Error>;
+
+	uploadFiles(
+		files: TMulterFile[],
+		bucketId?: string
+	): Promise<{ Location: string[] }>;
+
+	deleteImage(
+		location: string,
+		bucketId?: string
+	): Promise<number>;
+
+	deleteImageList(
+		locations: string[],
+		bucketId?: string
+	): Promise<number>;
+}
+
 /**@ignore*/
 export interface ISwaggerOptionsRecord {
 	defaultModelsExpandDepth?: number;
@@ -452,6 +500,15 @@ export interface IUploadOptions<M extends Model> {
 	linkName: keyof M['_attributes'];
 	// Name/id of bucket in Yandex Storage.
 	bucketId?: string;
+}
+
+/**@ignore*/
+export interface IAWSUploadResponse {
+	Location: string;
+	ETag?: string;
+	VersionId?: any;
+	Key?: string;
+	Bucket?: string;
 }
 
 export interface IUserLoginData {
