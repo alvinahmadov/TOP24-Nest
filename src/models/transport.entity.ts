@@ -3,16 +3,16 @@ import {
 	HasMany,
 	IsUUID,
 	Table
-}                                from 'sequelize-typescript';
-import { Field, ObjectType }     from '@nestjs/graphql';
-import { CRM, TRANSPORT }        from '@config/json';
-import { Bucket, TABLE_OPTIONS } from '@common/constants';
-import { ApiProperty }           from '@nestjs/swagger';
+}                            from 'sequelize-typescript';
+import { Field, ObjectType } from '@nestjs/graphql';
+import { ApiProperty }       from '@nestjs/swagger';
+import { CRM, TRANSPORT }    from '@config/json';
+import { TABLE_OPTIONS }     from '@common/constants';
 import {
 	loadingTypeToStr,
 	LoadingType,
 	TransportStatus
-}                                from '@common/enums';
+}                            from '@common/enums';
 import {
 	BooleanColumn,
 	DateColumn,
@@ -28,16 +28,15 @@ import {
 	UrlColumn,
 	UuidColumn,
 	VirtualColumn
-}                                from '@common/interfaces';
-import entityConfig              from '@common/properties';
-import { UuidScalar }            from '@common/scalars';
-import { convertBitrix }         from '@common/utils';
-import { ImageFileService }      from '@api/services';
-import EntityModel               from './entity-model';
-import CargoCompany              from './cargo.entity';
-import CargoInnCompany           from './cargo-inn.entity';
-import Driver                    from './driver.entity';
-import Image                     from './image.entity';
+}                            from '@common/interfaces';
+import { UuidScalar }        from '@common/scalars';
+import { convertBitrix }     from '@common/utils';
+import { entityConfig }      from '@api/swagger/properties';
+import EntityModel           from './entity-model';
+import CargoCompany          from './cargo.entity';
+import CargoCompanyInn       from './cargo-inn.entity';
+import Driver                from './driver.entity';
+import Image                 from './image.entity';
 
 const { transport: prop } = entityConfig;
 
@@ -237,8 +236,8 @@ export default class Transport
 	cargo?: CargoCompany;
 
 	@ApiProperty(prop.cargoinn)
-	@BelongsTo(() => CargoInnCompany, 'cargoinnId')
-	cargoinn?: CargoInnCompany;
+	@BelongsTo(() => CargoCompanyInn, 'cargoinnId')
+	cargoinn?: CargoCompanyInn;
 
 	@ApiProperty(prop.driver)
 	@BelongsTo(() => Driver, 'driverId')
@@ -291,20 +290,4 @@ export default class Transport
 
 		return data;
 	};
-
-	public async deleteImages(): Promise<number> {
-		if(this.images) {
-			const imageFileService = new ImageFileService();
-			const imageList = this.images.map(i => i.url);
-
-			if(this.osagoPhotoLink)
-				imageList.push(this.osagoPhotoLink);
-
-			if(this.diagnosticsPhotoLink)
-				imageList.push(this.diagnosticsPhotoLink);
-
-			return imageFileService.deleteImageList(imageList, Bucket.DRIVER);
-		}
-		return 0;
-	}
 }
