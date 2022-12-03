@@ -30,45 +30,45 @@ export const getTransportFilterFromOrder =
 /**
  * Filter entity by regions in where it works.
  *
- * @param {ICompany} cargo Cargo company entity.
+ * @param {ICompany} company Cargo company entity.
  * @param {String[]!} directions List of regions which must be tested against direction, addresses.
  * @param {String} sep Separator in address from cargo company.
  *
  * @returns boolean
  * */
 export function filterDirections(
-	cargo: ICompany,
+	company: ICompany,
 	directions: string[],
 	sep = ','
 ): boolean {
 	let contains: boolean[] = [];
-	const checkRegion = (addr: string) =>
+	const checkCompanyDirection = (companyDirection: string) =>
 	{
-		if(addr === null || directions === null)
+		if(companyDirection === null || directions === null)
 			return;
 
-		const addressKeywords = addr.split(sep);
+		const directionParts = companyDirection.split(sep);
 
 		directions.filter(d => d !== null)
 		          .forEach(
 			          (direction: string) =>
 			          {
-				          for(const key of addressKeywords) {
+				          for(const companyDirectionPart of directionParts) {
 					          const res = RegExp(direction.trim(), 'gium')
-						          .test(key.trim());
+						          .test(companyDirectionPart.trim());
 
 					          if(res) contains.push(true);
 				          }
 			          }
 		          );
 	};
-	if(!cargo)
+	if(!company)
 		return false;
 
-	if(!cargo.directions)
+	if(!company.directions)
 		return false;
 
-	cargo.directions.forEach(direction => checkRegion(direction));
+	company.directions.forEach(checkCompanyDirection);
 
 	return contains.some(c => c == true);
 }
@@ -178,7 +178,7 @@ export function filterTransports(
 	} = filter;
 
 	const hasValues = (arr?: Array<any>) => arr && arr.length > 0;
-	const isActive = (transport: Transport) => !!onlyActive ? transport.status === TransportStatus.ACTIVE : true;
+	const isActive = (transport: Transport) => onlyActive ? transport.status === TransportStatus.ACTIVE : true;
 	const isTrailer = (transport: Transport) => transport.isTrailer;
 
 	const getSummedParams = (transport: Transport, trailer?: Transport): Transport =>
@@ -198,21 +198,21 @@ export function filterTransports(
 		.filter(
 			transport =>
 				hasValues(loadingTypes) ? transport.loadingTypes.some(
-					loadingType => loadingTypes.includes(loadingType)
+					                        loadingType => loadingTypes.includes(loadingType)
 				                        )
 				                        : true
 		)
 		.filter(
 			transport =>
 				hasValues(riskClasses) ? transport.riskClasses.some(
-					riskClass => riskClasses.includes(riskClass)
+					                       riskClass => riskClasses.includes(riskClass)
 				                       )
 				                       : true
 		)
 		.filter(
 			transport =>
 				hasValues(fixtures) ? transport.fixtures.some(
-					v => fixtures.includes(v)
+					                    v => fixtures.includes(v)
 				                    )
 				                    : true
 		)
@@ -224,7 +224,7 @@ export function filterTransports(
 		.filter(
 			transport =>
 				riskClass ? transport.riskClasses.some(
-					rc => filter.riskClass === rc
+					          rc => filter.riskClass === rc
 				          )
 				          : true
 		);
@@ -235,7 +235,8 @@ export function filterTransports(
 	const transportsWithTrailers: Transport[] = [];
 
 	for(const mainTransport of mainTransports) {
-		const transportTrailer = trailers.find(trailer => trailer.driverId === mainTransport.driverId);
+		const transportTrailer = trailers.find(trailer => trailer.driverId === mainTransport.driverId &&
+		                                                  trailer.status === TransportStatus.ACTIVE);
 
 		let transport: Transport = null;
 		if(
