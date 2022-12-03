@@ -28,6 +28,9 @@ RUN mkdir $APP_HOME/docs && chown $APP_USER:$APP_USER $APP_HOME/docs
 
 USER $APP_USER
 
+ENV GENERATE_SOURCEMAP false
+ENV NODE_OPTIONS="--max-old-space-size=8192"
+
 RUN npm run build && npm run doc
 
 ## ---- Development ---- ##
