@@ -7,12 +7,12 @@ import {
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { ApiRoute }            from '@common/decorators';
 import { CompanyType }         from '@common/enums';
 import {
 	randomOf,
 	sendResponse
 }                              from '@common/utils';
+import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
 import { AdminGuard }          from '@api/security';

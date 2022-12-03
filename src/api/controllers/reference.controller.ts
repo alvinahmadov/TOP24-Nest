@@ -13,7 +13,6 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { Reference }           from '@common/constants';
-import { ApiRoute }            from '@common/decorators';
 import {
 	LoadingType,
 	loadingTypeToStr
@@ -28,6 +27,7 @@ import {
 	sendResponse
 }                              from '@common/utils';
 import * as dto                from '@api/dto';
+import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
 import { AddressService }      from '@api/services';
