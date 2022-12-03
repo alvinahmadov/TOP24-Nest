@@ -41,10 +41,10 @@ export default (
 		}
 
 		if(fileOpts) {
-			const { mimeTypes, interceptors } = fileOpts;
+			const { mimeTypes, interceptors, multi } = fileOpts;
 			if(interceptors && interceptors.length > 0) {
 				interceptorFn = UseInterceptors(...interceptors);
-				bodyFn = ApiFileBody();
+				bodyFn = ApiFileBody({ multi, required: true });
 			}
 
 			if(mimeTypes && mimeTypes.length > 0) {
