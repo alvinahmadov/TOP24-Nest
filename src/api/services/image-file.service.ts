@@ -8,7 +8,7 @@ import {
 import {
 	ObjectStorage,
 	LocalObjectStorage,
-	YandexObjectStorage
+	ExternalObjectStorage
 }                            from '@common/classes';
 import env                   from '@config/env';
 
@@ -34,12 +34,8 @@ export default class ImageFileService
 
 		if(env.objectStorage.type === 'local')
 			this.objectStorage = new LocalObjectStorage(storageParams);
-		else if(env.objectStorage.type === 'yandex') {
-			this.objectStorage = new YandexObjectStorage(storageParams);
-		}
-		else {
-			console.error('No image storage provided');
-		}
+		else
+			this.objectStorage = new ExternalObjectStorage(storageParams);
 	}
 
 	/**

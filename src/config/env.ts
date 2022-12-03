@@ -65,11 +65,10 @@ const env: IEnvironment = {
 		token:   parser.str('BITRIX_TOKEN')
 	},
 	objectStorage:    {
-		type:        useLocalStorage ? 'local' : 'yandex',
-		accessKeyId: useLocalStorage ? null : parser.str('YANDEX_STORAGE_API_KEY'),
-		secretKey:   useLocalStorage ? null : parser.str('YANDEX_STORAGE_SECRET'),
-		url:         useLocalStorage ? parser.str('OBJECT_STORAGE_URL')
-		                             : parser.str('YANDEX_STORAGE_URL'),
+		type:        useLocalStorage ? 'local' : 'external',
+		accessKeyId: parser.str('OBJECT_STORAGE_API_KEY', ''),
+		secretKey:   parser.str('OBJECT_STORAGE_SECRET', ''),
+		url:         parser.str('OBJECT_STORAGE_URL', ''),
 		debug:       parser.bool('OBJECT_STORAGE_DEBUG', false)
 	},
 	yandex:           {

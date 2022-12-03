@@ -164,12 +164,12 @@ export class LocalObjectStorage
 /**
  * Creating an object to work with S3 storage
  */
-export class YandexObjectStorage
+export class ExternalObjectStorage
 	extends ObjectStorage {
 	protected threads: any;
 	protected readonly s3: aws.S3;
 	protected readonly debug: boolean = false;
-	protected readonly logger: Logger = new Logger(YandexObjectStorage.name, { timestamp: true });
+	protected readonly logger: Logger = new Logger(ExternalObjectStorage.name, { timestamp: true });
 	protected readonly ignoreList: string[] = [];
 
 	/**
