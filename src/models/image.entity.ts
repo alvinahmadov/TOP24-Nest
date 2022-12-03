@@ -17,12 +17,12 @@ import {
 	URL,
 	UuidColumn
 }                        from '@common/interfaces';
-import entityConfig      from '@common/properties';
 import { UuidScalar }    from '@common/scalars';
+import { entityConfig }  from '@api/swagger/properties';
 import EntityModel       from './entity-model';
-import CargoCompany      from './cargo.entity';
-import CargoInnCompany   from './cargo-inn.entity';
-import Transport         from './transport.entity';
+import CargoCompany    from './cargo.entity';
+import CargoCompanyInn from './cargo-inn.entity';
+import Transport       from './transport.entity';
 
 const { image: prop } = entityConfig;
 
@@ -50,7 +50,7 @@ export default class Image
 	@ApiProperty(prop.cargoinnId)
 	@IsUUID('all')
 	@Field(() => UuidScalar)
-	@ForeignKey(() => CargoInnCompany)
+	@ForeignKey(() => CargoCompanyInn)
 	@Index
 	@UuidColumn({ onDelete: 'SET NULL' })
 	cargoinnId?: string;
@@ -72,8 +72,8 @@ export default class Image
 	cargo?: CargoCompany;
 
 	@ApiProperty(prop.cargoinn)
-	@BelongsTo(() => CargoInnCompany, 'cargoinnId')
-	cargoinn?: CargoInnCompany;
+	@BelongsTo(() => CargoCompanyInn, 'cargoinnId')
+	cargoinn?: CargoCompanyInn;
 
 	@ApiProperty(prop.transport)
 	@BelongsTo(() => Transport, 'transportId')
