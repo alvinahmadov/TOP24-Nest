@@ -19,6 +19,10 @@ type AnnotationFunction = <T>(
 
 export type TAffectedRows = { affectedCount: number };
 
+export type TAffectedEntity = TAffectedRows & {
+	images: number;
+}
+
 export type TDbOnOption = 'CASCADE' |
                           'RESTRICT' |
                           'SET NULL' |
