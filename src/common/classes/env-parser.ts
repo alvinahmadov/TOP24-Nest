@@ -10,11 +10,12 @@ export default class EnvironmentParser {
 	protected readonly config: IEnvParseOutput;
 
 	constructor(path: string = '.env') {
-		const exists = fs.existsSync(path.includes('/') ? path : resolve(process.cwd(), path));
+		const envFilePath = path.includes('/') ? path : resolve(process.cwd(), path);
+		const exists = fs.existsSync(envFilePath);
 
 		if(exists) {
 			console.info('Using environment variables from .env file');
-			const { error, parsed } = config({ path: path.includes('/') ? path : resolve(process.cwd(), path) }) as
+			const { error, parsed } = config({ path: envFilePath }) as
 				IParsedEnvConfigOutput;
 			if(!parsed) {
 				console.error(error);
