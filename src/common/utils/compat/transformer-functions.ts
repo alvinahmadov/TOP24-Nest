@@ -85,7 +85,7 @@ function transformCargoCompany(company: models.CargoCompany)
 			company_type:                  company.getDataValue('type'),
 			type:                          company.get('role'),
 			inn:                           company.getDataValue('taxpayerNumber'),
-			shortname:                     company.getDataValue('shortName'),
+			shortname:                     company.getDataValue('legalName'),
 			passport_serial_number:        company.getDataValue('passportSerialNumber'),
 			passport_date:                 company.getDataValue('passportGivenDate'),
 			passport_subdivision_code:     company.getDataValue('passportSubdivisionCode'),
@@ -138,7 +138,7 @@ export function transformToCargoCompany(data: transformers.ICargoCompanyTransfor
 	return null;
 }
 
-function transformCargoInnCompany(company: models.CargoInnCompany)
+function transformCargoInnCompany(company: models.CargoCompanyInn)
 	: transformers.ICargoInnCompanyTransformer {
 	if(company) {
 		return {
@@ -186,7 +186,7 @@ function transformCargoInnCompany(company: models.CargoInnCompany)
 }
 
 export function transformToCargoInnCompany(data: transformers.ICargoInnCompanyTransformer)
-	: attributes.ICargoInnCompany {
+	: attributes.ICargoCompanyInn {
 	if(data) {
 		return {
 			...helpers.translateCargoInnCompany(data),
@@ -221,7 +221,7 @@ function transformDriver(driver: models.Driver)
 			passport_subdivision_code:     driver.getDataValue('passportSubdivisionCode'),
 			passport_issued_by:            driver.getDataValue('passportIssuedBy'),
 			passport_registration_address: driver.getDataValue('passportRegistrationAddress'),
-			passport_link:                 driver.getDataValue('passportPhotoLink'),
+			passport_photo_link:           driver.getDataValue('passportPhotoLink'),
 			passport_sign_link:            driver.getDataValue('passportSignLink'),
 			passport_selfie_link:          driver.getDataValue('passportSelfieLink'),
 			avatar_link:                   driver.getDataValue('avatarLink'),
@@ -600,7 +600,7 @@ export function transformEntity<T extends IModel, E extends EntityModel<T>>(enti
 	else if(entity instanceof models.CargoCompany) {
 		return transformCargoCompany(entity);
 	}
-	else if(entity instanceof models.CargoInnCompany) {
+	else if(entity instanceof models.CargoCompanyInn) {
 		return transformCargoInnCompany(entity);
 	}
 	else if(entity instanceof models.Driver) {
