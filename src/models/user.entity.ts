@@ -15,9 +15,9 @@ import {
 	IntColumn,
 	StringColumn
 }                        from '@common/interfaces';
-import entityConfig      from '@common/properties';
+import { entityConfig }  from '@api/swagger/properties';
 import CargoCompany      from './cargo.entity';
-import CargoInnCompany   from './cargo-inn.entity';
+import CargoCompanyInn   from './cargo-inn.entity';
 import EntityModel       from './entity-model';
 
 const { admin: prop } = entityConfig;
@@ -59,6 +59,6 @@ export default class User
 	@HasMany(() => CargoCompany, 'userId')
 	cargoCompanies?: CargoCompany[];
 
-	@HasMany(() => CargoInnCompany, 'userId')
-	cargoInnCompanies?: CargoInnCompany[];
+	@HasMany(() => CargoCompanyInn, 'userId')
+	cargoInnCompanies?: CargoCompanyInn[];
 }
