@@ -11,7 +11,6 @@ import {
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { ApiRoute, UserParam } from '@common/decorators';
 import {
 	IAdminLoginResponse,
 	IApiResponse,
@@ -23,6 +22,7 @@ import {
 import { sendResponse }        from '@common/utils';
 import { Admin }               from '@models/index';
 import * as dto                from '@api/dto';
+import { ApiRoute, UserParam } from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	AdminFilterPipe,
@@ -165,7 +165,7 @@ export default class AdminController
 		return sendResponse(response, result);
 	}
 
-	@ApiRoute(routes.host_login, {
+	@ApiRoute(routes.hostLogin, {
 		statuses: [HttpStatus.OK]
 	})
 	public async hostLogin(
@@ -178,7 +178,7 @@ export default class AdminController
 		return sendResponse(response, result);
 	}
 
-	@ApiRoute(routes.signin, { statuses: [HttpStatus.OK] })
+	@ApiRoute(routes.signIn, { statuses: [HttpStatus.OK] })
 	public async signIn(
 		@Query('by') by: string,
 		@Body() signInDto: dto.SignInEmailDto | dto.SignInPhoneDto,
