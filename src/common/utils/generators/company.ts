@@ -61,7 +61,7 @@ async function generateCargoCompany(): Promise<CompanyData> {
 		passportIssuedBy:            common.generateAddress(),
 		passportSubdivisionCode:     common.generateSerialNumber([3, 4]),
 		contactPhone:                faker.phone.phoneNumber('+7 998 ### ## ##'),
-		shortName:                   faker.company.catchPhrase(),
+		legalName:                   faker.company.catchPhrase(),
 		attorneySignLink:            faker.image.business(),
 		certificatePhotoLink:        faker.image.business(),
 		directorOrderPhotoLink:      faker.image.business()
