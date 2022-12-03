@@ -363,7 +363,7 @@ export interface ICargoCompany
 	 * @example
 	 * "Борис и КО"
 	 * */
-	shortName: string;
+	legalName: string;
 	/**
 	 * Tax Registration Reason Code for the cargo company.
 	 *
@@ -407,16 +407,23 @@ export interface ICargoCompany
 	postalAddress?: string;
 	/**
 	 * Contact number of the company
+	 * @deprecated
 	 * */
 	contact?: string;
 	/**
 	 * Second, additional contact number of the company
+	 * @deprecated
 	 * */
 	contactSecond?: string;
 	/**
 	 * Third, additional contact number of the company
+	 * @deprecated
 	 * */
 	contactThird?: string;
+	/**
+	 * @deprecated replaced by phone
+	 * */
+	contactPhone?: string;
 }
 
 /**
@@ -424,7 +431,7 @@ export interface ICargoCompany
  *
  * @extends ICompany
  * */
-export interface ICargoInnCompany
+export interface ICargoCompanyInn
 	extends ICompany {
 	/**
 	 * Cargo company's individual owner's date of birth.
@@ -931,12 +938,6 @@ export interface IOrder
 	 * */
 	hasProblem?: boolean;
 	/**
-	 * Order data sent to bitrix for update
-	 * @internal
-	 * @ignore
-	 * */
-	hasSent?: boolean;
-	/**
 	 * Cancel comment/reason.
 	 * */
 	cancelCause?: string;
@@ -1138,7 +1139,7 @@ export interface IPayment
 	 * @example
 	 * 321244848332114
 	 * */
-	ogrnip: string;
+	ogrnip?: string;
 	/**
 	 * Url to the main state registration
 	 * number of an individual entrepreneur scan.
