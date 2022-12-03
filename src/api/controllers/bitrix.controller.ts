@@ -8,13 +8,13 @@ import {
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { ApiRoute }            from '@common/decorators';
 import { IWebhookResponse }    from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import {
 	CompanyInnUpdateDto,
 	CompanyUpdateDto
 }                              from '@api/dto';
+import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
 import { BitrixService }       from '@api/services';
