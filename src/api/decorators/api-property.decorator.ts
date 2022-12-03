@@ -3,6 +3,7 @@ import { TApiProperty, IModel } from '@common/interfaces';
 import { ApiPropertyOptions }   from '@nestjs/swagger/dist/decorators/api-property.decorator';
 
 //TODO: Fix 'is not function' error
+// noinspection JSUnusedGlobalSymbols
 export default <T extends IModel>(property: TApiProperty<T> | ApiPropertyOptions): PropertyDecorator =>
 {
 	return (
@@ -10,7 +11,7 @@ export default <T extends IModel>(property: TApiProperty<T> | ApiPropertyOptions
 		propertyKey: string | symbol
 	) =>
 	{
-		console.debug('propertyKey', propertyKey)
+		console.debug('propertyKey', propertyKey);
 		if(propertyKey in property) {
 			ApiProperty((property as any)[propertyKey])(target, propertyKey);
 		}
