@@ -4,6 +4,7 @@ import { BitrixUrl, Bucket }   from '@common/constants';
 import { TransportStatus }     from '@common/enums';
 import {
 	IApiResponses,
+	ICompanyDeleteResponse,
 	IService,
 	ITransport,
 	TAsyncApiResponse,
@@ -182,25 +183,39 @@ export default class TransportService
 	 * @param {String!} id Id of cargo company transport to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<{
-		affectedCount: number,
-		images: number
-	}> {
+		: TAsyncApiResponse<Pick<ICompanyDeleteResponse, 'transport'>> {
 		const transport = await this.repository.get(id);
 
 		if(!transport)
 			return this.responses['NOT_FOUND'];
 
+		const transportImages: string[] = transport.images.map(i => i.url);
+
+		transportImages.push(
+			transport.osagoPhotoLink,
+			transport.diagnosticsPhotoLink
+		);
+
+		const images = await this.imageFileService.deleteImageList(transportImages, Bucket.TRANSPORT);
+
 		if(transport.crmId) {
-			await this.httpClient.get(`${BitrixUrl.CONTACT_DEL_URL}?id=${transport.crmId}`);
+			try {
+				await this.httpClient.get(`${BitrixUrl.CONTACT_DEL_URL}?id=${transport.crmId}`);
+			} catch(e) {
+				console.error(e);
+			}
 		}
 
-		const images = await transport.deleteImages();
-		const { affectedCount } = await this.repository.delete(id);
+		const { affectedCount = 0 } = await this.repository.delete(id) ?? {};
 
 		return {
 			statusCode: 200,
-			data:       { affectedCount, images },
+			data:       {
+				transport: {
+					affectedCount,
+					images
+				}
+			},
 			message:    formatArgs(TRANSLATIONS['DELETE'], transport.id)
 		};
 	}
@@ -331,41 +346,5 @@ export default class TransportService
 		return this.uploadPhoto(
 			{ id, buffer: file, name, linkName: 'diagnosticsPhotoLink', bucketId: Bucket.TRANSPORT }
 		);
-	}
-
-	public async deleteList(list: Transport[])
-		: TAsyncApiResponse<number> {
-		const result = await Promise.all(
-			list.map(
-				async(item: Transport) =>
-				{
-					if(item.crmId) {
-						await this.httpClient.get(`${BitrixUrl.CONTACT_DEL_URL}?id=${item.crmId}`);
-					}
-					if(item.images && item.images.length > 0)
-						await this.imageService.deleteList(item.images);
-					if(item.osagoPhotoLink)
-						await this.imageFileService.deleteImage(item.osagoPhotoLink, Bucket.TRANSPORT);
-					if(item.diagnosticsPhotoLink)
-						await this.imageFileService.deleteImage(item.diagnosticsPhotoLink, Bucket.TRANSPORT);
-					const { affectedCount } = await this.repository.delete(item.id);
-					return affectedCount;
-				}
-			)
-		).then(
-			(res) => res.reduce((p, c) => p + c, 0)
-		).catch(
-			(e) =>
-			{
-				this.logger.error(e);
-				return 0;
-			}
-		);
-
-		return {
-			statusCode: 200,
-			data:       result,
-			message:    `Deleted ${result} transports!`
-		};
 	}
 }
