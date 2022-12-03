@@ -17,7 +17,7 @@ export type TBitrixData = {
 
 export type TBitrixEnum = Array<TBitrixData>;
 
-export type TObjectStorageType = 'yandex' | 'local';
+export type TObjectStorageType = 'external' | 'local';
 
 /**@ignore*/
 export type TLanguageConfig = { [langCode: string]: any };
@@ -153,6 +153,8 @@ export interface IEnvParseOutput
 	OBJECT_STORAGE?: string;
 	OBJECT_STORAGE_PATH?: string;
 	OBJECT_STORAGE_DEBUG?: string;
+	OBJECT_STORAGE_API_KEY?: string;
+	OBJECT_STORAGE_SECRET?: string;
 	OBJECT_STORAGE_URL?: string;
 	NEST_DEBUG?: string;
 	SOCKET_PORT?: string;
