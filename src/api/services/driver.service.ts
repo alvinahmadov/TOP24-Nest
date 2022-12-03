@@ -3,13 +3,13 @@ import {
 	Injectable
 }                            from '@nestjs/common';
 import { BitrixUrl, Bucket } from '@common/constants';
-import { UserRole }          from '@common/enums';
+// import { UserRole }          from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
+	ICompanyDeleteResponse,
 	IDriver,
 	IService,
-	TAffectedRows,
 	TAsyncApiResponse,
 	TCRMData,
 	TCRMResponse,
@@ -34,11 +34,10 @@ import {
 	ListFilter,
 	TransportFilter
 }                            from '@api/dto';
-import { EventsGateway }     from '@api/events';
+// import { EventsGateway }     from '@api/events';
 import Service               from './service';
 import ImageFileService      from './image-file.service';
 import OrderService          from './order.service';
-import TransportService      from './transport.service';
 import CONTACT_DEL_URL = BitrixUrl.CONTACT_DEL_URL;
 import CONTACT_UPD_URL = BitrixUrl.CONTACT_UPD_URL;
 import CONTACT_ADD_URL = BitrixUrl.CONTACT_ADD_URL;
@@ -56,9 +55,9 @@ export default class DriverService
 	constructor(
 		protected readonly imageFileService: ImageFileService,
 		@Inject(forwardRef(() => OrderService))
-		protected readonly orderService: OrderService,
-		protected readonly transportService: TransportService,
-		protected readonly gateway: EventsGateway
+		protected readonly orderService: OrderService
+		// TODO: Inspect dependency resolve error
+		// protected readonly gateway: EventsGateway
 	) {
 		super();
 		this.repository = new DriverRepository();
@@ -172,16 +171,16 @@ export default class DriverService
 		const message = formatArgs(TRANSLATIONS['UPDATE'], driver.fullName);
 
 		if(sendInfo) {
-			this.gateway.sendDriverEvent(
-				{
-					id,
-					status:    driver.status,
-					longitude: data.longitude,
-					latitude:  data.latitude,
-					message
-				},
-				UserRole.CARGO
-			);
+			// 	this.gateway.sendDriverEvent(
+			// 		{
+			// 			id,
+			// 			status:    driver.status,
+			// 			longitude: data.longitude,
+			// 			latitude:  data.latitude,
+			// 			message
+			// 		},
+			// 		UserRole.CARGO
+			// 	);
 		}
 
 		return {
@@ -199,28 +198,45 @@ export default class DriverService
 	 * @param {String!} id Id of cargo company driver to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<TAffectedRows & {
-		driverImagesCount?: number;
-		transportImagesCount?: number;
-	}> {
+		: TAsyncApiResponse<Pick<ICompanyDeleteResponse, 'driver' | 'transport'>> {
 		const driver = await this.repository.get(id, true);
 		let driverImagesCount = 0,
-			transportImagesCount = 0;
+			transportImagesCount = 0,
+			transportsAffected = 0;
 
 		if(!driver)
 			return this.responses['NOT_FOUND'];
 
 		const message = formatArgs(TRANSLATIONS['DELETE'], driver.fullName);
 
-		driverImagesCount = await driver.deleteImages();
+		driverImagesCount = await this.imageFileService.deleteImageList(
+			[
+				driver.avatarLink,
+				driver.passportPhotoLink,
+				driver.passportSignLink,
+				driver.passportSelfieLink,
+				driver.licenseBackLink,
+				driver.licenseFrontLink
+			],
+			Bucket.DRIVER
+		);
 
 		if(driver.transports) {
-			const result = await this.transportService.deleteList(driver.transports);
-			transportImagesCount = result.data;
+			transportsAffected = driver.transports.length;
+			transportImagesCount = await this.imageFileService
+			                                 .deleteImageList(
+				                                 driver.transports
+				                                       .flatMap(t => t.images)
+				                                       .map(image => image.url)
+			                                 );
 		}
 
 		if(driver.crmId) {
-			await this.httpClient.get(`${CONTACT_DEL_URL}?ID=${driver.crmId}`);
+			try {
+				await this.httpClient.get(`${CONTACT_DEL_URL}?ID=${driver.crmId}`);
+			} catch(e) {
+				console.error(e);
+			}
 		}
 
 		const { affectedCount = 0 } = await this.repository.delete(id);
@@ -228,15 +244,17 @@ export default class DriverService
 		return {
 			statusCode: 200,
 			data:       {
-				affectedCount,
-				driverImagesCount,
-				transportImagesCount
+				driver:    {
+					affectedCount,
+					images: driverImagesCount
+				},
+				transport: {
+					affectedCount: transportsAffected,
+					images:        transportImagesCount
+				}
 			},
 			message
-		} as IApiResponse<TAffectedRows & {
-			driverImagesCount?: number;
-			transportImagesCount?: number;
-		}>;
+		};
 	}
 
 	/**
@@ -311,52 +329,24 @@ export default class DriverService
 				}
 				await this.orderService.update(order.id, { destinations });
 				await driver.save({ fields: ['currentAddress'] });
-				const data = { currentAddress };
-				this.gateway.sendDriverEvent(
-					{
-						id:             driver.id,
-						status:         driver.status,
-						latitude:       driver.latitude,
-						longitude:      driver.longitude,
-						currentPoint:   driver.currentAddress,
-						currentAddress: data.currentAddress
-					},
-					UserRole.ADMIN,
-					false
-				);
-				return data;
+				// const data = { currentAddress };
+				// this.gateway.sendDriverEvent(
+				// 	{
+				// 		id:             driver.id,
+				// 		status:         driver.status,
+				// 		latitude:       driver.latitude,
+				// 		longitude:      driver.longitude,
+				// 		currentPoint:   driver.currentAddress,
+				// 		currentAddress: data.currentAddress
+				// 	},
+				// 	UserRole.ADMIN,
+				// 	false
+				// );
+				// return data;
+				return { currentAddress };
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * @summary Upload license scan.
-	 *
-	 * @description Uploads to Yandex Storage front scan of
-	 * driver license. Then returns link to the uploaded file.
-	 *
-	 * @param {String!} id Id of driver which owns license.
-	 * @param {Buffer!} file Image file buffer to upload.
-	 * @param {String!} name Name to save in storage.
-	 * */
-	public async uploadLicenseFront(
-		id: string,
-		file: Buffer,
-		name: string
-	): TAsyncApiResponse<Driver> {
-		const linkName: keyof IDriver = 'licenseFrontLink';
-		const driver = await this.repository.get(id);
-
-		if(!driver)
-			return this.responses['NOT_FOUND'];
-
-		if(driver[linkName])
-			await this.imageFileService.deleteImage(driver[linkName], Bucket.DRIVER);
-
-		return this.uploadPhoto(
-			{ id, buffer: file, name, linkName, bucketId: Bucket.DRIVER }
-		);
 	}
 
 	/**
@@ -375,6 +365,35 @@ export default class DriverService
 		name: string
 	): TAsyncApiResponse<Driver> {
 		const linkName: keyof IDriver = 'avatarLink';
+		const driver = await this.repository.get(id);
+
+		if(!driver)
+			return this.responses['NOT_FOUND'];
+
+		if(driver[linkName])
+			await this.imageFileService.deleteImage(driver[linkName], Bucket.DRIVER);
+
+		return this.uploadPhoto(
+			{ id, buffer: file, name, linkName, bucketId: Bucket.DRIVER }
+		);
+	}
+
+	/**
+	 * @summary Upload license scan.
+	 *
+	 * @description Uploads to Yandex Storage front scan of
+	 * driver license. Then returns link to the uploaded file.
+	 *
+	 * @param {String!} id Id of driver which owns license.
+	 * @param {Buffer!} file Image file buffer to upload.
+	 * @param {String!} name Name to save in storage.
+	 * */
+	public async uploadLicenseFront(
+		id: string,
+		file: Buffer,
+		name: string
+	): TAsyncApiResponse<Driver> {
+		const linkName: keyof IDriver = 'licenseFrontLink';
 		const driver = await this.repository.get(id);
 
 		if(!driver)
