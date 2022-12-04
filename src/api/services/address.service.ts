@@ -99,11 +99,9 @@ export default class AddressService
 		}
 		const { provider = 'osm' } = listFilter;
 
-		const encoded = encodeURI(term);
-
 		const fullAddresses = await (
-			provider === 'osm' ? searchAddressByOSM(encoded, listFilter.from, listFilter.count)
-			                   : searchAddressByKladr(encoded, listFilter.from, listFilter.count)
+			provider === 'osm' ? searchAddressByOSM(term, listFilter.from, listFilter.count)
+			                   : searchAddressByKladr(term, listFilter.from, listFilter.count)
 		);
 
 		return {
