@@ -356,7 +356,7 @@ export default class CompanyController
 		@Res() response: ex.Response
 	) {
 		const apiResponse = await this.getCompany(id);
-		let result: IApiResponse<number>;
+		let result: IApiResponse<{ crmId?: number }>;
 
 		if(apiResponse && apiResponse.data) {
 			const { data: company } = apiResponse;
