@@ -39,6 +39,7 @@ import Order             from './order.entity';
 import Payment           from './payment.entity';
 import Transport         from './transport.entity';
 import User              from './user.entity';
+import { CARGOINN }      from '@config/json/bitrix.json';
 
 const { company: prop } = entityConfig;
 
@@ -236,28 +237,28 @@ export default class CargoCompany
 	{
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
 		data.fields[CARGO.SHORTNAME] = this.legalName ?? 'Company';
-		data.fields[CARGO.DIRECTIONS] = this.directions?.join() ?? '';
-		data.fields[CARGO.INN] = this.taxpayerNumber ?? '';
-		data.fields[CARGO.NAME] = this.name ?? '';
-		data.fields[CARGO.KPP] = this.taxReasonCode ?? '';
-		data.fields[CARGO.OGRN] = this.registrationNumber ?? '';
+		data.fields[CARGO.DIRECTIONS] = this.directions?.join();
+		data.fields[CARGO.INN] = this.taxpayerNumber;
+		data.fields[CARGO.NAME] = this.name;
+		data.fields[CARGO.KPP] = this.taxReasonCode;
+		data.fields[CARGO.OGRN] = this.registrationNumber;
 		data.fields[CARGO.TYPE] = CRM.COMPANY.TYPES[this.type].ID;
-		data.fields[CARGO.PASSPORT.SERIAL_NUMBER] = this.passportSerialNumber ?? '';
-		data.fields[CARGO.PASSPORT.GIVEN_DATE] = this.passportGivenDate.toDateString() ?? '';
-		data.fields[CARGO.PASSPORT.ISSUED_BY] = this.passportIssuedBy ?? '';
-		data.fields[CARGO.PASSPORT.SUBDIVISION_CODE] = this.passportSubdivisionCode ?? '';
-		data.fields[CARGO.PASSPORT.REGISTRATION_ADDRESS] = this.passportRegistrationAddress ?? '';
-		data.fields[CARGO.PAYMENT_TYPE] = convertBitrix('paymentType', this.paymentType, false) ?? '';
-		data.fields[CARGO.ADDRESS.LEGAL] = this.legalAddress ?? '';
-		data.fields[CARGO.ADDRESS.POSTAL] = this.postalAddress ?? '';
-		data.fields[CARGO.CEO] = this.director ?? '';
-		data.fields[CARGO.PHONE] = this.phone ?? '';
-		data.fields[CARGO.EMAIL] = this.email ?? '';
-		data.fields[CARGO.LINK.AVATAR] = this.avatarLink ?? '';
-		data.fields[CARGO.LINK.CERTIFICATE] = this.certificatePhotoLink ?? '';
-		data.fields[CARGO.LINK.DIRECTOR_PASSPORT] = this.passportPhotoLink ?? '';
-		data.fields[CARGO.LINK.APPOINTMENT_ORDER] = this.directorOrderPhotoLink ?? '';
-		data.fields[CARGO.LINK.ATTORNEY_SIGN] = this.attorneySignLink ?? '';
+		data.fields[CARGO.PASSPORT.SERIAL_NUMBER] = this.passportSerialNumber;
+		data.fields[CARGO.PASSPORT.GIVEN_DATE] = this.passportGivenDate;
+		data.fields[CARGO.PASSPORT.ISSUED_BY] = this.passportIssuedBy;
+		data.fields[CARGO.PASSPORT.SUBDIVISION_CODE] = this.passportSubdivisionCode;
+		data.fields[CARGO.PASSPORT.REGISTRATION_ADDRESS] = this.passportRegistrationAddress;
+		data.fields[CARGO.PAYMENT_TYPE] = convertBitrix('paymentType', this.paymentType, false);
+		data.fields[CARGO.ADDRESS.LEGAL] = this.legalAddress;
+		data.fields[CARGO.ADDRESS.POSTAL] = this.postalAddress;
+		data.fields[CARGO.CEO] = this.director;
+		data.fields[CARGO.PHONE] = this.phone;
+		data.fields[CARGO.EMAIL] = this.email;
+		data.fields[CARGO.LINK.AVATAR] = this.avatarLink;
+		data.fields[CARGO.LINK.CERTIFICATE] = this.certificatePhotoLink;
+		data.fields[CARGO.LINK.DIRECTOR_PASSPORT] = this.passportPhotoLink;
+		data.fields[CARGO.LINK.APPOINTMENT_ORDER] = this.directorOrderPhotoLink;
+		data.fields[CARGO.LINK.ATTORNEY_SIGN] = this.attorneySignLink;
 		if(this.payment) {
 			data.fields[PAYMENT.BANK_NAME] = this.payment.bankName;
 			data.fields[PAYMENT.BANK_ID_CODE] = this.payment.bankBic;
@@ -266,6 +267,8 @@ export default class CargoCompany
 			data.fields[PAYMENT.OGRNIP] = this.payment.ogrnip;
 			data.fields[PAYMENT.OGRNIP_LINK] = this.payment.ogrnipPhotoLink;
 		}
+		data.fields[CARGOINN.DATE_CREATE] = this.createdAt;
+		data.fields[CARGOINN.DATE_UPDATE] = this.updatedAt;
 		return data;
 	};
 }
