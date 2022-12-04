@@ -1,5 +1,26 @@
 import axios,
-{ AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+{
+	AxiosError,
+	AxiosRequestConfig,
+	AxiosResponse
+} from 'axios';
+
+interface IAxiosErrorJson<D = any> {
+	name: string;
+	message: string;
+	description?: string;
+	stack?: any | undefined;
+	config:
+		{
+			url: string;
+			method: string;
+			data?: D;
+			timeout?: number;
+			headers?: any;
+		},
+	code?: string;
+	status?: number;
+}
 
 export class AxiosStatic {
 	private static setConfig(config?: AxiosRequestConfig) {
@@ -13,7 +34,8 @@ export class AxiosStatic {
 	}
 
 	private static async makeRequest<T = any>(
-		cb: () => Promise<AxiosResponse<T>>
+		cb: () => Promise<AxiosResponse<T>>,
+		config?: AxiosRequestConfig
 	): Promise<T> {
 		let result: T = null;
 		try {
@@ -22,10 +44,19 @@ export class AxiosStatic {
 				result = axiosResponse.data;
 			}
 		} catch(e) {
-			if(e instanceof AxiosError)
-				console.error(e.message, e.toJSON());
-			else
-				console.error(e);
+			const axiosError = e as AxiosError<any>;
+			const errorJson = axiosError.toJSON() as any;
+			const errorDescription: IAxiosErrorJson = {
+				name:        axiosError.name,
+				message:     axiosError.message,
+				description: axiosError.response.data['error_description'],
+				config:      {
+					method: errorJson['config'].method,
+					url:    errorJson['config'].url,
+					data:   config?.data
+				}
+			};
+			console.error(errorDescription);
 		}
 		return result;
 	}
@@ -45,7 +76,8 @@ export class AxiosStatic {
 					method: 'post',
 					...config
 				}
-			)
+			),
+			{ data }
 		);
 	}
 
@@ -64,7 +96,8 @@ export class AxiosStatic {
 					method: 'get',
 					...config
 				}
-			)
+			),
+			{ data }
 		);
 	}
 
@@ -83,7 +116,8 @@ export class AxiosStatic {
 					method: 'put',
 					...config
 				}
-			)
+			),
+			{ data }
 		);
 	}
 
@@ -102,7 +136,8 @@ export class AxiosStatic {
 					method: 'patch',
 					...config
 				}
-			)
+			),
+			{ data }
 		);
 	}
 
