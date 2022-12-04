@@ -5,6 +5,7 @@ import { BitrixUrl }              from '@common/constants';
 import { AxiosStatic }            from '@common/classes';
 import { UserRole }               from '@common/enums';
 import {
+	IApiResponse,
 	IApiResponses,
 	ICompanyDeleteResponse,
 	IService,
@@ -33,6 +34,7 @@ import Service                    from './service';
 import AddressService             from './address.service';
 import ImageFileService           from './image-file.service';
 import PaymentService             from './payment.service';
+import TransportService           from './transport.service';
 import UserService                from './user.service';
 
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
@@ -56,6 +58,7 @@ export default class CargoCompanyService
 		protected readonly addressService: AddressService,
 		protected readonly paymentsService: PaymentService,
 		protected readonly imageFileService: ImageFileService,
+		protected readonly transportService: TransportService,
 		protected readonly userService: UserService
 	) {
 		super();
@@ -383,16 +386,25 @@ export default class CargoCompanyService
 	 *
 	 * @param {String!} id Id of cargo company
 	 * */
-	public async send(id: string): TAsyncApiResponse<number> {
+	public async send(id: string): TAsyncApiResponse<{ crmId?: number }> {
 		const company = await this.repository.get(id, true);
 		if(!company) {
 			return this.responses['NOT_FOUND'];
 		}
 		const result = await cargoToBitrix(company);
 
-		if(result.statusCode === 200)
+		if(result.statusCode === 200) {
 			await this.repository.update(id, { hasSent: true });
+			const { data: { contactCrmIds, crmId } } = result;
+			const promises: Promise<IApiResponse<Transport>>[] = [];
 
+			contactCrmIds?.forEach(
+				(transportCrmId, transportId) =>
+					promises.push(this.transportService.update(transportId, { crmId: transportCrmId, hasSent: true }))
+			);
+			await Promise.all(promises);
+			result.data = { crmId };
+		}
 		return result;
 	}
 }
