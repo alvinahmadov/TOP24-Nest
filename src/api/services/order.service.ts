@@ -339,7 +339,7 @@ export default class OrderService
 					companyCrmId = cargo.crmId;
 				}
 				else {
-					const { data: crmId } = await this.cargoService.send(cargo.id);
+					const { data: { crmId } } = await this.cargoService.send(cargo.id);
 					if(crmId)
 						companyCrmId = crmId;
 				}
@@ -350,7 +350,7 @@ export default class OrderService
 					companyCrmId = cargoinn.crmId;
 				}
 				else {
-					const { data: crmId } = await this.cargoInnService.send(cargoinn.id);
+					const { data: { crmId } } = await this.cargoInnService.send(cargoinn.id);
 					if(crmId) {
 						companyCrmId = crmId;
 					}
