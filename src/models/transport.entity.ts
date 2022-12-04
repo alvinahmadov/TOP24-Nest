@@ -278,8 +278,9 @@ export default class Transport
 		else
 			data.fields[TRANSPORT.DEDICATED] = CRM.TRANSPORT.DEDICATED[1].ID;
 		data.fields[TRANSPORT.OSAGO.NUM] = this.osagoNumber;
-		data.fields[TRANSPORT.OSAGO.EXP_DATE] = this.osagoExpiryDate?.toString();
+		data.fields[TRANSPORT.OSAGO.EXP_DATE] = this.osagoExpiryDate;
 		data.fields[TRANSPORT.OSAGO.LINK] = this.osagoPhotoLink;
+		data.fields[TRANSPORT.DIAGNOSTIC.EXP_DATE] = this.diagnosticsExpiryDate;
 		data.fields[TRANSPORT.DIAGNOSTIC.LINK] = this.diagnosticsPhotoLink;
 		data.fields[TRANSPORT.COMMENTS] = this.comments;
 		data.fields[TRANSPORT.EXTRA_PARTS] =
