@@ -255,22 +255,27 @@ export default class Transport
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'N' } };
 		if(this.crmId)
 			data.fields[TRANSPORT.ID] = this.crmId;
-		data.fields[TRANSPORT.TYPE] = [convertBitrix('paymentType', this.type, false)];
-		data.fields[TRANSPORT.BRAND] = this.brand;
+		data.fields[TRANSPORT.TYPE] = [convertBitrix('transportType', this.type, false)];
+		data.fields[TRANSPORT.BRAND] = convertBitrix('transportBrand', this.brand, false);
 		data.fields[TRANSPORT.MODEL] = this.model;
 		data.fields[TRANSPORT.REGISTR_NUMBER] = this.registrationNumber;
 		data.fields[TRANSPORT.PROD_YEAR] = this.prodYear;
 		data.fields[TRANSPORT.STS] = this.certificateNumber;
 		data.fields[TRANSPORT.PAYLOAD.TYPE] = [convertBitrix('transportPayload', this.payload, false)];
+		data.fields[TRANSPORT.RISK_CLASS] = this.riskClasses
+		                                        .map(
+			                                        rc => convertBitrix<string, string>('transportRiskClass', rc, false)
+		                                        );
 		data.fields[TRANSPORT.PARAMS.WEIGHT] = this.weight;
 		data.fields[TRANSPORT.PARAMS.VOLUME] = this.volume;
 		data.fields[TRANSPORT.PARAMS.LENGTH] = this.length;
 		data.fields[TRANSPORT.PARAMS.WIDTH] = this.width;
 		data.fields[TRANSPORT.PARAMS.HEIGHT] = this.height;
 		data.fields[TRANSPORT.PARAMS.PALLETS] = this.pallets;
-		data.fields[TRANSPORT.LOADING_TYPES] = this.loadingTypes ? this.loadingTypes.map(
-			lt => convertBitrix('loadingType', loadingTypeToStr(lt), false)
-		) : [];
+		data.fields[TRANSPORT.LOADING_TYPES] = this.loadingTypes
+		                                           ?.map(
+			                                           lt => convertBitrix('loadingType', loadingTypeToStr(lt), false)
+		                                           );
 		if(this.isDedicated)
 			data.fields[TRANSPORT.DEDICATED] = CRM.TRANSPORT.DEDICATED[0].ID;
 		else if(this.payloadExtra)
@@ -280,10 +285,11 @@ export default class Transport
 		data.fields[TRANSPORT.OSAGO.NUM] = this.osagoNumber;
 		data.fields[TRANSPORT.OSAGO.EXP_DATE] = this.osagoExpiryDate;
 		data.fields[TRANSPORT.OSAGO.LINK] = this.osagoPhotoLink;
+		data.fields[TRANSPORT.DIAGNOSTIC.NUM] = this.diagnosticsNumber;
 		data.fields[TRANSPORT.DIAGNOSTIC.EXP_DATE] = this.diagnosticsExpiryDate;
 		data.fields[TRANSPORT.DIAGNOSTIC.LINK] = this.diagnosticsPhotoLink;
 		data.fields[TRANSPORT.COMMENTS] = this.comments;
-		data.fields[TRANSPORT.EXTRA_PARTS] =
+		data.fields[TRANSPORT.FIXTURES] =
 			this.fixtures && Array.isArray(this.fixtures)
 			? this.fixtures.map(ef => convertBitrix('fixtures', ef, false)) : [];
 		if(this.images)
