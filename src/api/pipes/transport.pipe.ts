@@ -22,7 +22,7 @@ export class TransportCreatePipe
 		checkAndConvertBitrix(value, 'model', 'transportModel');
 		checkAndConvertBitrix(value, 'type', 'transportType');
 		checkAndConvertArrayBitrix(value, 'fixtures', 'fixtures', Reference.FIXTURES);
-		checkAndConvertArrayBitrix(value, 'riskClasses', 'riskClass', Reference.RISK_CLASSES);
+		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass', Reference.TRANSPORT_RISK_CLASSES);
 		reformatDateString<ITransport>(value, ['diagnosticsExpiryDate', 'osagoExpiryDate']);
 
 		return value;
