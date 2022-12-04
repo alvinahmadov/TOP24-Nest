@@ -15,6 +15,7 @@ import {
 }                                  from '@common/enums';
 import {
 	IApiResponse,
+	ICRMEntity,
 	IOrderDestination,
 	TBitrixEnum,
 	TCRMData,
@@ -37,6 +38,7 @@ import RISK_CLASSES = Reference.RISK_CLASSES;
 import TRANSPORT_BRANDS = Reference.TRANSPORT_BRANDS;
 import TRANSPORT_MODELS = Reference.TRANSPORT_MODELS;
 import TRANSPORT_TYPES = Reference.TRANSPORT_TYPES;
+import TRANSPORT_RISK_CLASSES = Reference.TRANSPORT_RISK_CLASSES;
 
 const DESTINATIONS: { [k: string]: TBitrixEnum } = CRM.ORDER.DESTINATION_TYPES;
 
@@ -48,6 +50,7 @@ export type TBitrixKey = 'fixtures' |
                          'paymentType' |
                          'riskClass' |
                          'transportBrand' |
+                         'transportRiskClass' |
                          'transportModel' |
                          'transportDedicated' |
                          'transportPayload' |
@@ -120,6 +123,34 @@ function typeFromCrm<T extends number | string | boolean>(
 	}
 }
 
+/**
+ * Convert typescript date object to
+ * formatted date string that accepted by Bitix
+ * 
+ * @example 12/30/2022 => 30-12-2022
+ * */
+function toCrmDate(date: Date): string {
+	let fmtDateString: string = date.toLocaleDateString();
+	let day, month, year;
+	const dateChunks = fmtDateString.split('/');
+
+	if(dateChunks.length == 3 && dateChunks[2].length == 4) {
+		if(Number(dateChunks[1]) > 12) {
+			day = dateChunks[1];
+			month = dateChunks[0];
+			year = dateChunks[2];
+		}
+		else {
+			day = dateChunks[0];
+			month = dateChunks[1];
+			year = dateChunks[2];
+		}
+		fmtDateString = `${year}-${month}-${day}`;
+	}
+
+	return fmtDateString;
+}
+
 function selectBitrixEnum<R>(
 	key: TBitrixKey,
 	callback: TBitrixEnumCallback<R>
@@ -139,6 +170,8 @@ function selectBitrixEnum<R>(
 			return callback(PAYMENT_TYPES);
 		case 'riskClass':
 			return callback(RISK_CLASSES);
+		case 'transportRiskClass':
+			return callback(TRANSPORT_RISK_CLASSES);
 		case 'transportBrand':
 			return callback(TRANSPORT_BRANDS);
 		case 'transportModel':
@@ -302,9 +335,10 @@ export function checkAndConvertArrayBitrix(
 export function buildBitrixRequestUrl(
 	url: string,
 	data: TCRMData,
-	id?: string | number
+	id?: string | number,
+	debug: boolean = false
 ): string {
-	const qBuilder = new ApiQuery(url);
+	const qBuilder = new ApiQuery(url, debug);
 	const writeMulti = (field: string, values: any[]) =>
 	{
 		for(const value of values) qBuilder.addQuery(`fields[${field}][]`, value);
@@ -320,9 +354,13 @@ export function buildBitrixRequestUrl(
 			continue;
 		}
 
-		if(id) {
-			if(isArray)
-				writeMulti(field, fieldValue);
+		if(isArray)
+			writeMulti(field, fieldValue);
+		else {
+			if(fieldValue instanceof Date) {
+				const dateString = toCrmDate(fieldValue);
+				qBuilder.addQuery(`fields[${field}]`, dateString);
+			}
 			else
 				qBuilder.addQuery(`fields[${field}]`, fieldValue);
 		}
@@ -385,16 +423,30 @@ export function orderFromBitrix(crmFields: TCRMFields): OrderCreateDto {
 	} as OrderCreateDto;
 }
 
-export async function cargoToBitrix(company: any): Promise<IApiResponse<number>> {
+/**
+ * Converts Company and Transport/Driver entities to CRM entities
+ * and sends them to Bitrix24.
+ * Creates a new record if no entity exists on Bitrix24 and saves
+ * it's id (crmId) from response in database or updates existing by
+ * it's crmId on database.
+ *
+ * @param {CargoCompany | CargoCompanyInn} company
+ *
+ * @return {crmId?: number; contactCrmIds?: Map<string, number>} crm info on response
+ * */
+export async function cargoToBitrix<T extends ICRMEntity & { [key: string]: any; }>(company: T)
+	: Promise<IApiResponse<{ crmId?: number, contactCrmIds?: Map<string, number> }>> {
 	let crmCargoId = company.crmId;
 	const data: TCRMData = company.toCrm() as TCRMData;
-	const url = crmCargoId ? BitrixUrl.COMPANY_UPD_URL
-	                       : BitrixUrl.COMPANY_ADD_URL;
+	const contactCrmIdMap: Map<string, number> = new Map<string, number>();
+	const companyUpdate = crmCargoId !== undefined &&
+	                      crmCargoId !== null;
 
+	const url = companyUpdate ? BitrixUrl.COMPANY_UPD_URL
+	                          : BitrixUrl.COMPANY_ADD_URL;
 	try {
-		const client = await AxiosStatic.post(
-			buildBitrixRequestUrl(url, data, crmCargoId)
-		) as { readonly result: TCRMFields | boolean | string; };
+		const client = await AxiosStatic.post(buildBitrixRequestUrl(url, data, crmCargoId)) as
+			{ readonly result: TCRMFields | boolean | string; };
 		if(!client) {
 			console.warn(`Error for '${crmCargoId}'`);
 			return { statusCode: 404, message: 'Company not found!' };
@@ -403,33 +455,32 @@ export async function cargoToBitrix(company: any): Promise<IApiResponse<number>>
 		if(!crmCargoId && (result && result !== '')) {
 			if(typeof result !== 'boolean') {
 				company.crmId = crmCargoId = Number(result);
-				// @ts-ignore
-				await company.save({ fields: ['crm_id'] });
+				await company.save({ fields: ['crmId'] });
 			}
 		}
 		if(crmCargoId) {
-			const contactCrmIds: number[] = [];
 			let contactResult: boolean;
 
 			if(company.drivers) {
 				for(const driver of company.drivers) {
 					const driverData = driver.toCrm(crmCargoId, company.directions);
 					for(const transport of driver.transports) {
-						let contactCrmId = transport.crm_id;
-						const transportData: TCRMData = transport.toCrm();
+						let contactCrmId = transport.crmId;
+						const transportData: TCRMData = transport.toCrm() as TCRMData;
 						const data: TCRMData = {
-							fields: {
-								...driverData.fields,
-								...transportData.fields
-							},
+							fields: Object.assign({}, driverData.fields, transportData.fields),
 							params: driverData.params
 						};
-						const url = contactCrmId ? BitrixUrl.CONTACT_UPD_URL
-						                         : BitrixUrl.CONTACT_ADD_URL;
 
-						const { data: client } = await AxiosStatic.post(
+						const contactUpdate = contactCrmId !== undefined &&
+						                      contactCrmId !== null;
+
+						const url = contactUpdate ? BitrixUrl.CONTACT_UPD_URL
+						                          : BitrixUrl.CONTACT_ADD_URL;
+
+						const client = await AxiosStatic.post(
 							buildBitrixRequestUrl(url, data, contactCrmId)
-						);
+						) as { readonly result: TCRMFields | boolean | string; };
 
 						if(!client) {
 							console.warn(`Error on contact '${contactCrmId}'`);
@@ -438,28 +489,22 @@ export async function cargoToBitrix(company: any): Promise<IApiResponse<number>>
 
 						const { result } = client;
 
-						if(result && result !== '' && !!contactCrmId) {
+						if(result && result !== '' && !contactUpdate) {
 							if(typeof result !== 'boolean') {
 								contactCrmId = Number(result);
-								if(driver.transports.length == 1) {
-									driver.crm_id = contactCrmId;
-									await driver.save({ fields: ['crm_id'] });
-								}
-								transport.crm_id = contactCrmId;
-								await transport.save({ fields: ['crm_id'] });
+								contactCrmIdMap.set(transport.id, contactCrmId);
 							}
 						}
-						if(contactCrmId) contactCrmIds.push(contactCrmId);
 					}
 				}
 			}
 
-			if(contactCrmIds.length > 0) {
+			if(contactCrmIdMap.size > 0) {
 				let contactFields = '';
-				contactCrmIds.forEach(
-					(item: number) => contactFields += `&fields[${TRANSPORT.ID}][]=${item}`
+				contactCrmIdMap.forEach(
+					value => contactFields += `&fields[${TRANSPORT.ID}][]=${value}`
 				);
-				const { data: { result: logg } } = await AxiosStatic.get(
+				const { result: logg } = await AxiosStatic.get(
 					`${BitrixUrl.COMPANY_UPD_URL}?ID=${crmCargoId}${contactFields}`
 				);
 				contactResult = logg;
@@ -467,7 +512,7 @@ export async function cargoToBitrix(company: any): Promise<IApiResponse<number>>
 			else contactResult = true;
 
 			if(contactResult)
-				return { statusCode: 200, data: crmCargoId };
+				return { statusCode: 200, data: { crmId: crmCargoId, contactCrmIds: contactCrmIdMap } };
 		}
 	} catch(e) {
 		console.error(e);
