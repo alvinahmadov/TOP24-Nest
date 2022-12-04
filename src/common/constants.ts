@@ -133,4 +133,6 @@ export namespace Reference {
 	export const TRANSPORT_MODELS: Array<TBitrixData & { BRAND_ID: string }> = CRM.TRANSPORT.MODELS;
 	/**@ignore*/
 	export const TRANSPORT_TYPES: TBitrixEnum = CRM.TRANSPORT.TYPES;
+	/**@ignore*/
+	export const TRANSPORT_RISK_CLASSES: TBitrixEnum = CRM.TRANSPORT.RISK_TYPES;
 }
