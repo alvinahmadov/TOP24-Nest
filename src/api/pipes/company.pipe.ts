@@ -29,15 +29,7 @@ class CompanyValidator {
 
 	protected checkPaymentType(company: ICompany) {
 		if(company.paymentType) {
-			if(!isNumber(company.paymentType))
-				throw Error('Значение типа оплаты должно быть числовым значением, взятым из справочника!');
-
-			company.paymentType = convertBitrix('paymentType', company.paymentType, true);
-		}
-		else {
-			if(company.type !== CompanyType.PI) {
-				throw new Error('Не указан тип оплаты!');
-			}
+			company.paymentType = convertBitrix('paymentType', company.paymentType, true) || company.paymentType;
 		}
 	}
 }
