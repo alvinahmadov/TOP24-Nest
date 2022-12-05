@@ -681,13 +681,18 @@ export function transformApiResult<T>(result: IApiResponse<T>): transformers.TTr
 	else {
 		if(typeof result.data === 'object') {
 			for(const dataKey in result.data) {
-				if(result.data[dataKey] instanceof EntityModel) {
+				const data = result.data[dataKey];
+				if(data instanceof EntityModel) {
 					//@ts-ignore
-					result.data[dataKey] = transformEntity(result.data[dataKey], result.message);
+					result.data[dataKey] = transformEntity(data, result.message);
 				}
-				else if(Array.isArray(result.data[dataKey])) {
-					//@ts-ignore
-					result.data[dataKey] = transformEntities(result.data[dataKey], result.message);
+				else if(Array.isArray(data)) {
+					if(data && data.length > 0) {
+						if(data[0] instanceof EntityModel) {
+							//@ts-ignore
+							result.data[dataKey] = transformEntities(data);
+						}
+					}
 				}
 			}
 		}
