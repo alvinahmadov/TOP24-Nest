@@ -1,4 +1,5 @@
 import * as ex                 from 'express';
+import { Op }                  from 'sequelize';
 import {
 	Body,
 	Controller,
@@ -157,6 +158,8 @@ export default class CompanyController
 			dto.type === CompanyType.ORG
 			? await this.cargoService.create(<dto.CompanyCreateDto>dto)
 			: await this.cargoInnService.create(<dto.CompanyInnCreateDto>dto);
+		
+		await this.activateCompany(company.id);
 
 		if(company) {
 			const { id, role } = company.user;
@@ -307,10 +310,7 @@ export default class CompanyController
 		@Param('id') companyId: string,
 		@Res() response: ex.Response
 	) {
-		let result: any = await this.cargoService.activate(companyId);
-		if(result?.statusCode !== 200)
-			result = await this.cargoInnService.activate(companyId);
-
+		const result = await this.activateCompany(companyId);
 		return sendResponse(response, result);
 	}
 
@@ -648,6 +648,42 @@ export default class CompanyController
 			return cargoInn;
 		else
 			return { statusCode: 404, message: TRANSLATIONS['NOT_FOUND'] };
+	}
+
+	private async activateCompany(companyId: string) {
+		let userId: string;
+		let companyType: CompanyType;
+		const companyResponse = await this.getCompany(companyId, false);
+
+		if(companyResponse.data) {
+			userId = companyResponse.data.userId;
+			companyType = companyResponse.data.type;
+		}
+		else return companyResponse;
+
+		await this.cargoService.updateAll(
+			{ isDefault: false },
+			{
+				[Op.and]: [
+					{ id: { [Op.ne]: companyId } },
+					{ userId: { [Op.eq]: userId } }
+				]
+			}
+		);
+		await this.cargoInnService.updateAll(
+			{ isDefault: false },
+			{
+				[Op.and]: [
+					{ id: { [Op.ne]: companyId } },
+					{ userId: { [Op.eq]: userId } }
+				]
+			}
+		);
+
+		if(companyType === CompanyType.ORG)
+			return this.cargoService.getById(companyId);
+		else
+			return this.cargoInnService.getById(companyId);
 	}
 
 	private async uploadPhoto<M>(

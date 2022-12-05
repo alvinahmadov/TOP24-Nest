@@ -1,5 +1,4 @@
 import * as uuid                  from 'uuid';
-import { Op }                     from 'sequelize';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { BitrixUrl }              from '@common/constants';
 import { AxiosStatic }            from '@common/classes';
@@ -163,9 +162,6 @@ export default class CargoCompanyService
 		if(!company)
 			return this.repository.getRecord('create');
 
-		if(dto.isDefault) {
-			await this.activate(company.id);
-		}
 		company.user = user;
 
 		return {
@@ -272,46 +268,6 @@ export default class CargoCompanyService
 				}
 			},
 			message:    formatArgs(TRANSLATIONS['DELETE'], company.name)
-		};
-	}
-
-	public async activate(id: string)
-		: TAsyncApiResponse<CargoCompany | null> {
-		let company = await this.repository.get(id, true);
-
-		if(company) {
-			const { user } = company;
-
-			if(user) {
-				company = await this.repository.update(id, { isDefault: true });
-				if(company && company.isDefault) {
-					await this.repository.bulkUpdate(
-						{ isDefault: false },
-						{
-							[Op.and]: [
-								{ id: { [Op.ne]: id } },
-								{ userId: { [Op.eq]: user.id } }
-							]
-						}
-					);
-
-					return {
-						statusCode: 200,
-						data:       company
-					};
-				}
-				else return this.repository.getRecord('update');
-			}
-			else {
-				return {
-					statusCode: 404,
-					message:    'User not found!'
-				};
-			}
-		}
-		else return {
-			statusCode: 404,
-			message:    `Company with phone ${id} not found!`
 		};
 	}
 
