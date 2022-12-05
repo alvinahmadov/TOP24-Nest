@@ -655,14 +655,14 @@ export function transformEntities<T extends IModel, E extends EntityModel<T>>(
 export function transformApiResult<T>(result: IApiResponse<T>): transformers.TTransformerResponse<T> {
 	if(!result) {
 		return {
-			status:  404,
-			message: 'Result is null'
+			statusCode: 404,
+			message:    'Result is null'
 		};
 	}
 	if(!result.data) {
 		return {
-			status:  result.statusCode ?? 404,
-			message: result.message
+			statusCode: result.statusCode ?? 404,
+			message:    result.message
 		};
 	}
 

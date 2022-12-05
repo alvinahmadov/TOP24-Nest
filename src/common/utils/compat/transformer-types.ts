@@ -17,7 +17,7 @@ import {
 } from '@common/interfaces';
 
 export type TTransformerApiResponse = {
-	status?: number,
+	statusCode?: number,
 	message?: string
 };
 
