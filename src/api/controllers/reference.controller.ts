@@ -78,7 +78,9 @@ export default class ReferenceController
 		}
 	) {
 		const { search, regions, ...rest } = listFilter;
-		rest.provider = 'osm';
+		
+		if(regions === undefined)
+			rest.provider = 'osm';
 
 		const result = (search?.length > 0)
 		               ? await (listFilter.full
