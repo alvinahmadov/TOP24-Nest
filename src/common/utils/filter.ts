@@ -42,9 +42,12 @@ export function filterDirections(
 	sep = ','
 ): boolean {
 	let contains: boolean[] = [];
+	if(directions === null)
+		return false;
+	
 	const checkCompanyDirection = (companyDirection: string) =>
 	{
-		if(companyDirection === null || directions === null)
+		if(companyDirection === null)
 			return;
 
 		const directionParts = companyDirection.split(sep);
@@ -70,7 +73,7 @@ export function filterDirections(
 
 	company.directions.forEach(checkCompanyDirection);
 
-	return contains.some(c => c == true);
+	return contains.some(c => c);
 }
 
 export function checkTransportRequirements(
