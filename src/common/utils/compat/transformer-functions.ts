@@ -86,6 +86,7 @@ function transformCargoCompany(company: models.CargoCompany)
 			type:                          company.get('role'),
 			inn:                           company.getDataValue('taxpayerNumber'),
 			shortname:                     company.getDataValue('legalName'),
+			director:                      company.getDataValue('director'),
 			passport_serial_number:        company.getDataValue('passportSerialNumber'),
 			passport_date:                 company.getDataValue('passportGivenDate'),
 			passport_subdivision_code:     company.getDataValue('passportSubdivisionCode'),
