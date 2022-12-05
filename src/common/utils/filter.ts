@@ -41,10 +41,17 @@ export function filterDirections(
 	directions: string[],
 	sep = ','
 ): boolean {
-	let contains: boolean[] = [];
-	if(directions === null)
+	if(!company)
 		return false;
-	
+
+	if(!company.directions)
+		return false;
+
+	if(!directions)
+		return false;
+
+	let contains: boolean[] = [];
+
 	const checkCompanyDirection = (companyDirection: string) =>
 	{
 		if(companyDirection === null)
@@ -52,24 +59,18 @@ export function filterDirections(
 
 		const directionParts = companyDirection.split(sep);
 
-		directions.filter(d => d !== null)
-		          .forEach(
-			          (direction: string) =>
-			          {
-				          for(const companyDirectionPart of directionParts) {
-					          const res = RegExp(direction.trim(), 'gium')
-						          .test(companyDirectionPart.trim());
+		directions.forEach(
+			(direction: string) =>
+			{
+				for(const companyDirectionPart of directionParts) {
+					const res = RegExp(direction.trim(), 'gium')
+						.test(companyDirectionPart.trim());
 
-					          if(res) contains.push(true);
-				          }
-			          }
-		          );
+					if(res) contains.push(true);
+				}
+			}
+		);
 	};
-	if(!company)
-		return false;
-
-	if(!company.directions)
-		return false;
 
 	company.directions.forEach(checkCompanyDirection);
 
