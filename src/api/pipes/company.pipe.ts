@@ -2,10 +2,7 @@ import { Injectable, PipeTransform } from '@nestjs/common';
 import env                           from '@config/env';
 import { CompanyType }               from '@common/enums';
 import { ICompany }                  from '@common/interfaces';
-import {
-	convertBitrix,
-	isNumber
-}                                    from '@common/utils';
+import { convertBitrix }             from '@common/utils';
 import {
 	transformToCargoCompany,
 	transformToCargoInnCompany
@@ -32,6 +29,23 @@ class CompanyValidator {
 			company.paymentType = convertBitrix('paymentType', company.paymentType, true) || company.paymentType;
 		}
 	}
+
+	protected checkPassportData(company: ICompany) {
+		if(!company.passportSerialNumber)
+			company.passportSerialNumber = '';
+
+		if(!company.passportSubdivisionCode)
+			company.passportSubdivisionCode = '';
+
+		if(!company.passportGivenDate)
+			company.passportGivenDate = new Date();
+
+		if(!company.passportRegistrationAddress)
+			company.passportRegistrationAddress = '';
+
+		if(!company.passportIssuedBy)
+			company.passportIssuedBy = '';
+	}
 }
 
 @Injectable()
@@ -52,6 +66,7 @@ export class CompanyCreatePipe
 				throw new Error('DTO data is null');
 
 			this.checkPaymentType(value);
+			this.checkPassportData(value);
 			value.user = data.user;
 
 			delete value.id;
