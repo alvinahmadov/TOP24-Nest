@@ -44,7 +44,7 @@ export function filterDirections(
 	if(!company)
 		return false;
 
-	if(!company.directions)
+	if(!company.directions || company.directions?.length === 0)
 		return false;
 
 	if(!directions)
@@ -72,7 +72,7 @@ export function filterDirections(
 		);
 	};
 
-	company.directions.forEach(checkCompanyDirection);
+	company.directions.forEach(d => checkCompanyDirection(d));
 
 	return contains.some(c => c);
 }

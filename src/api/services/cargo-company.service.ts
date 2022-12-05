@@ -281,23 +281,22 @@ export default class CargoCompanyService
 		filter: CompanyTransportFilter = {}
 	): TAsyncApiResponse<Transport[]> {
 		const transports: Transport[] = [];
-		let { riskClass, fromDate, toDate, ...rest } = filter;
+		let { riskClass, fromDate, toDate, directions, ...rest } = filter;
 		let companies: CargoCompany[] = await this.repository.getTransports(listFilter, rest);
 
-		if(rest && rest.directions) {
-			if(rest.directions.every(d => uuid.validate(d))) {
-				let directions: string[] = [];
-				for(const directionId of rest.directions) {
+		if(directions) {
+			if(directions.every(d => uuid.validate(d))) {
+				const _directions: string[] = [];
+				for(const directionId of directions) {
 					const { data: address } = await this.addressService.getById(directionId);
 
 					if(address) {
-						directions.push(address.city, address.region);
+						_directions.push(address.city, address.region);
 					}
 				}
-				rest.directions = directions;
+				directions = _directions;
 			}
-
-			companies = companies.filter(cargo => filterDirections(cargo, rest.directions));
+			companies = companies.filter(cargo => filterDirections(cargo, directions));
 		}
 
 		companies.forEach(
