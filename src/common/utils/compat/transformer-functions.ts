@@ -85,8 +85,8 @@ function transformCargoCompany(company: models.CargoCompany)
 			company_type:                  company.getDataValue('type'),
 			type:                          company.get('role'),
 			inn:                           company.getDataValue('taxpayerNumber'),
-			shortname:                     company.getDataValue('legalName'),
 			director:                      company.getDataValue('director'),
+			shortname:                     company.getDataValue('legalName'),
 			passport_serial_number:        company.getDataValue('passportSerialNumber'),
 			passport_date:                 company.getDataValue('passportGivenDate'),
 			passport_subdivision_code:     company.getDataValue('passportSubdivisionCode'),
@@ -591,56 +591,68 @@ function transformUser(user: models.User, deep?: boolean)
 	return null;
 }
 
-export function transformEntity<T extends IModel, E extends EntityModel<T>>(entity: E) {
+export function transformEntity<T extends IModel, E extends EntityModel<T>>(
+	entity: E,
+	message?: string
+) {
+	let transformedData: transformers.ITransformer;
 	if(entity instanceof models.Address) {
-		return transformAddress(entity);
+		transformedData = transformAddress(entity);
 	}
 	else if(entity instanceof models.Admin) {
-		return transformAdmin(entity);
+		transformedData = transformAdmin(entity);
 	}
 	else if(entity instanceof models.CargoCompany) {
-		return transformCargoCompany(entity);
+		transformedData = transformCargoCompany(entity);
 	}
 	else if(entity instanceof models.CargoCompanyInn) {
-		return transformCargoInnCompany(entity);
+		transformedData = transformCargoInnCompany(entity);
 	}
 	else if(entity instanceof models.Driver) {
-		return transformDriver(entity);
+		transformedData = transformDriver(entity);
 	}
 	else if(entity instanceof models.GatewayEvent) {
-		return transformGatewayEvent(entity);
+		transformedData = transformGatewayEvent(entity);
 	}
 	else if(entity instanceof models.Image) {
-		return transformImage(entity);
+		transformedData = transformImage(entity);
 	}
 	else if(entity instanceof models.Offer) {
-		return transformOffer(entity);
+		transformedData = transformOffer(entity);
 	}
 	else if(entity instanceof models.Order) {
-		return transformOrder(entity);
+		transformedData = transformOrder(entity);
 	}
 	else if(entity instanceof models.Payment) {
-		return transformPayment(entity);
+		transformedData = transformPayment(entity);
 	}
 	else if(entity instanceof models.Transport) {
-		return transformTransport(entity);
+		transformedData = transformTransport(entity);
 	}
 	else if(entity instanceof models.User) {
-		return transformUser(entity);
+		transformedData = transformUser(entity);
 	}
+
+	if(transformedData) {
+		transformedData.message = message;
+		return transformedData;
+	}
+
 	return entity;
 }
 
-export function transformEntities<T extends IModel, E extends EntityModel<T>>(entities: E[]) {
+export function transformEntities<T extends IModel, E extends EntityModel<T>>(
+	entities: E[],
+	message?: string
+) {
 	if(entities && entities.length > 0) {
-		return entities.map(transformEntity);
+		return entities.map(e => transformEntity(e, message));
 	}
 
 	return entities;
 }
 
-export function transformApiResult<T>(result: IApiResponse<T>)
-	: IModel | IModel[] | IApiResponse<T> | (T & any[]) | transformers.TTransformerApiResponse {
+export function transformApiResult<T>(result: IApiResponse<T>): transformers.TTransformerResponse<T> {
 	if(!result) {
 		return {
 			status:  404,
@@ -657,32 +669,38 @@ export function transformApiResult<T>(result: IApiResponse<T>)
 	if(Array.isArray(result.data)) {
 		if(result.data.length > 0) {
 			if(result.data[0] instanceof EntityModel) {
-				return transformEntities(result.data);
+				return transformEntities(result.data, result.message);
 			}
 			else {
-				return result.data;
+				return {
+					...result.data,
+					message: result.message
+				};
 			}
 		}
 
 		return [];
 	}
 	else if(result.data instanceof EntityModel) {
-		return transformEntity(result.data);
+		return transformEntity(result.data, result.message);
 	}
 	else {
 		if(typeof result.data === 'object') {
 			for(const dataKey in result.data) {
 				if(result.data[dataKey] instanceof EntityModel) {
 					//@ts-ignore
-					result.data[dataKey] = transformEntity(result.data[dataKey]);
+					result.data[dataKey] = transformEntity(result.data[dataKey], result.message);
 				}
 				else if(Array.isArray(result.data[dataKey])) {
 					//@ts-ignore
-					result.data[dataKey] = transformEntities(result.data[dataKey]);
+					result.data[dataKey] = transformEntities(result.data[dataKey], result.message);
 				}
 			}
 		}
 
-		return result.data;
+		return {
+			...result.data,
+			message: result.message
+		};
 	}
 }
