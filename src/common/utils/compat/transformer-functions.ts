@@ -686,12 +686,10 @@ export function transformApiResult<T>(result: IApiResponse<T>): transformers.TTr
 					//@ts-ignore
 					result.data[dataKey] = transformEntity(data, result.message);
 				}
-				else if(Array.isArray(data)) {
-					if(data && data.length > 0) {
-						if(data[0] instanceof EntityModel) {
-							//@ts-ignore
-							result.data[dataKey] = transformEntities(data);
-						}
+				else if(Array.isArray(data) && data?.length > 0) {
+					if(data[0] instanceof EntityModel) {
+						//@ts-ignore
+						result.data[dataKey] = transformEntities(data);
 					}
 				}
 			}
