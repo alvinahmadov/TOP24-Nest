@@ -642,11 +642,10 @@ export function transformEntity<T extends IModel, E extends EntityModel<T>>(
 }
 
 export function transformEntities<T extends IModel, E extends EntityModel<T>>(
-	entities: E[],
-	message?: string
+	entities: E[]
 ) {
 	if(entities && entities.length > 0) {
-		return entities.map(e => transformEntity(e, message));
+		return entities.map(e => transformEntity(e));
 	}
 
 	return entities;
@@ -669,14 +668,9 @@ export function transformApiResult<T>(result: IApiResponse<T>): transformers.TTr
 	if(Array.isArray(result.data)) {
 		if(result.data.length > 0) {
 			if(result.data[0] instanceof EntityModel) {
-				return transformEntities(result.data, result.message);
+				return transformEntities(result.data);
 			}
-			else {
-				return {
-					...result.data,
-					message: result.message
-				};
-			}
+			else return result.data;
 		}
 
 		return [];
