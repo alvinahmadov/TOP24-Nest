@@ -105,22 +105,23 @@ export default class AddressRepository
 			{
 				term = term?.toLowerCase() ?? '';
 				const {
-					from:  offset = 0,
+					from:  offset,
 					count: limit
 				} = listFilter ?? {};
-				const term1 = term ? term.replace(term[0], term[0].toUpperCase()) : '';
+
 				if(onlyRegions) {
 					return this.model.sequelize.query<Address>(
-						`SELECT DISTINCT ON(region) * FROM addresses WHERE (region LIKE '${term}%' OR region LIKE '${term1}%')`,
+						`SELECT DISTINCT ON(region) * FROM addresses WHERE region ILIKE '${term}%'`,
 						{ type: QueryTypes.SELECT }
 					);
 				}
+
 				return this.model.findAll(
 					{
 						where: this.whereClause('or')
-						           .inArray('city', [`${term}%`, `${term1}%`])
-						           .inArray('region', [`${term}%`, `${term1}%`])
-						           .inArray('settlement', [`${term}%`, `${term1}%`])
+						           .iLike('city', `${term}%`, false)
+						           .iLike('region', `${term}%`, false)
+						           .iLike('settlement', `${term}%`, false)
 							       .query,
 						order: [['region', 'ASC']],
 						offset,
