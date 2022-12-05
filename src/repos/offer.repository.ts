@@ -313,7 +313,8 @@ export default class OfferRepository
 					statuses = [
 						OfferStatus.SENT,
 						OfferStatus.SEEN,
-						OfferStatus.RESPONDED
+						OfferStatus.RESPONDED,
+						OfferStatus.DECLINED
 					],
 					orderStatuses,
 					hasComment,
