@@ -58,23 +58,23 @@ export default class CompanyInnCreateDto
 
 	@ApiProperty(prop.passportSerialNumber)
 	@IsString()
-	passportSerialNumber: string;
+	passportSerialNumber: string = '';
 
 	@ApiProperty(prop.passportSubdivisionCode)
 	@IsString()
-	passportSubdivisionCode: string;
+	passportSubdivisionCode: string = '';
 
 	@ApiProperty(prop.passportGivenDate)
 	@IsDate()
-	passportGivenDate: Date;
+	passportGivenDate: Date = new Date();
 
 	@ApiProperty(prop.passportIssuedBy)
 	@IsString()
-	passportIssuedBy: string;
+	passportIssuedBy: string = '';
 
 	@ApiProperty(prop.passportRegistrationAddress)
 	@IsString()
-	passportRegistrationAddress: string;
+	passportRegistrationAddress: string = '';
 
 	@ApiProperty(prop.passportPhotoLink)
 	@IsString()
