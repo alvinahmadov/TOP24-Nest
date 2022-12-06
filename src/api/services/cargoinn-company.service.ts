@@ -369,7 +369,21 @@ export default class CargoCompanyInnService
 	public async activate(id: string, options?: { disableAll: boolean, userId: string })
 		: TAsyncApiResponse<CargoCompanyInn | null> {
 		let company = await this.repository.get(id, true);
-		const { disableAll, userId } = options;
+		const { disableAll = false, userId } = options;
+		const disableCompany = async(_userId: string): Promise<boolean> =>
+		{
+			const res = await this.repository.bulkUpdate(
+				{ isDefault: false },
+				{
+					[Op.and]: [
+						{ id: { [Op.ne]: id } },
+						{ userId: { [Op.eq]: _userId } }
+					]
+				}
+			);
+
+			return res[0] > 0;
+		};
 
 		if(company) {
 			const { user } = company;
@@ -377,16 +391,7 @@ export default class CargoCompanyInnService
 			if(user) {
 				company = await this.repository.update(id, { isDefault: true });
 				if(company && company.isDefault) {
-					await this.repository.bulkUpdate(
-						{ isDefault: false },
-						{
-							[Op.and]: [
-								{ id: { [Op.ne]: id } },
-								{ userId: { [Op.eq]: user.id } }
-							]
-						}
-					);
-
+					await disableCompany(user.id);
 					return {
 						statusCode: 200,
 						data:       company
@@ -401,16 +406,8 @@ export default class CargoCompanyInnService
 				};
 			}
 		}
-		if(disableAll === true) {
-			await this.repository.bulkUpdate(
-				{ isDefault: false },
-				{
-					[Op.and]: [
-						{ id: { [Op.ne]: id } },
-						{ userId: { [Op.eq]: userId } }
-					]
-				}
-			);
+		if(disableAll && userId) {
+			await disableCompany(userId);
 		}
 
 		return {
