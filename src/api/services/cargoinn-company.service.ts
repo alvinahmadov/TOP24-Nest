@@ -214,7 +214,7 @@ export default class CargoCompanyInnService
 		const driversCount = company.drivers.length;
 		const transportsCount = company.transports.length;
 
-		const companyImages = await super.imageFileService.deleteImageList(
+		const companyImages = await this.imageFileService.deleteImageList(
 			[
 				company.avatarLink,
 				company.passportPhotoLink,
@@ -223,13 +223,13 @@ export default class CargoCompanyInnService
 			]
 		);
 
-		const transportImages = await super.imageFileService.deleteImageList(
+		const transportImages = await this.imageFileService.deleteImageList(
 			company.transports
 			       .flatMap(t => t.images)
 			       .map(image => image.url)
 		);
 
-		const driverImages = await super.imageFileService.deleteImageList(
+		const driverImages = await this.imageFileService.deleteImageList(
 			company.drivers
 			       .flatMap(d => [
 				       d.avatarLink,
