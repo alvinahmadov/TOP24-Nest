@@ -364,7 +364,7 @@ export default class CargoCompanyService
 		return result;
 	}
 
-	public async activate(id: string)
+	public async activate(id: string, disableAll?: boolean)
 		: TAsyncApiResponse<CargoCompany | null> {
 		let company = await this.repository.get(id, true);
 
@@ -389,7 +389,21 @@ export default class CargoCompanyService
 						data:       company
 					};
 				}
-				else return this.repository.getRecord('update');
+				if(disableAll === true) {
+					await this.repository.bulkUpdate(
+						{ isDefault: false },
+						{
+							[Op.and]: [
+								{ id: { [Op.ne]: id } },
+								{ userId: { [Op.eq]: user.id } }
+							]
+						}
+					);
+				}
+				return {
+					statusCode: 404,
+					message:    'Not found'
+				};
 			}
 			else {
 				return {

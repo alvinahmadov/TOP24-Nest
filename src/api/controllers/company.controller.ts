@@ -660,9 +660,6 @@ export default class CompanyController
 			companyType = companyResponse.data.type;
 		}
 		else return companyResponse;
-		
-		await this.cargoService.activate(companyId);
-		await this.cargoInnService.activate(companyId);
 
 		/*
 		await this.cargoService.updateAll(
@@ -686,10 +683,13 @@ export default class CompanyController
 		*/
 
 		if(companyType === CompanyType.ORG) {
-			// this.cargoService.uo
+			await this.cargoService.activate(companyId);
+			await this.cargoInnService.activate(companyId, true);
 			return this.cargoService.getById(companyId);
 		}
 		else {
+			await this.cargoInnService.activate(companyId);
+			await this.cargoService.activate(companyId, true);
 			return this.cargoInnService.getById(companyId);
 		}
 	}
