@@ -242,7 +242,9 @@ export default class CargoCompanyService
 			       ])
 		);
 
-		const paymentImages = await this.imageFileService.deleteImage(company.payment.ogrnipPhotoLink);
+		const paymentImages = company.payment
+		                      ? await this.imageFileService.deleteImage(company.payment.ogrnipPhotoLink)
+		                      : 0;
 		const { data: { affectedCount: paymentItem = 0 } } = await this.paymentsService.deleteByCompany(
 			{ cargoinnId: id }
 		);
