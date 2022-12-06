@@ -367,7 +367,7 @@ export default class CargoCompanyService
 	public async activate(id: string, options?: { disableAll: boolean, userId: string })
 		: TAsyncApiResponse<CargoCompany | null> {
 		let company = await this.repository.get(id, true);
-		const { disableAll = false, userId } = options;
+		const { disableAll = false, userId } = options ?? {};
 		const disableCompany = async(_userId: string): Promise<boolean> =>
 		{
 			const res = await this.repository.bulkUpdate(
