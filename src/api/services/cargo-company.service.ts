@@ -364,9 +364,10 @@ export default class CargoCompanyService
 		return result;
 	}
 
-	public async activate(id: string, disableAll?: boolean)
+	public async activate(id: string, options?: { disableAll: boolean, userId: string })
 		: TAsyncApiResponse<CargoCompany | null> {
 		let company = await this.repository.get(id, true);
+		const { disableAll, userId } = options;
 
 		if(company) {
 			const { user } = company;
@@ -389,21 +390,7 @@ export default class CargoCompanyService
 						data:       company
 					};
 				}
-				if(disableAll === true) {
-					await this.repository.bulkUpdate(
-						{ isDefault: false },
-						{
-							[Op.and]: [
-								{ id: { [Op.ne]: id } },
-								{ userId: { [Op.eq]: user.id } }
-							]
-						}
-					);
-				}
-				return {
-					statusCode: 404,
-					message:    'Not found'
-				};
+				else return this.repository.getRecord('update');
 			}
 			else {
 				return {
@@ -412,7 +399,19 @@ export default class CargoCompanyService
 				};
 			}
 		}
-		else return {
+		if(disableAll === true) {
+			await this.repository.bulkUpdate(
+				{ isDefault: false },
+				{
+					[Op.and]: [
+						{ id: { [Op.ne]: id } },
+						{ userId: { [Op.eq]: userId } }
+					]
+				}
+			);
+		}
+
+		return {
 			statusCode: 404,
 			message:    `Company with phone ${id} not found!`
 		};
