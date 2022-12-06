@@ -46,7 +46,6 @@ import {
 // import { EventsGateway }   from '@api/events';
 import Service             from './service';
 import DriverService       from './driver.service';
-import ImageFileService    from './image-file.service';
 import OrderService        from './order.service';
 import TransportService    from './transport.service';
 
@@ -66,7 +65,6 @@ export default class OfferService
 
 	constructor(
 		protected readonly driverService: DriverService,
-		protected readonly imageFileService: ImageFileService,
 		protected readonly orderService: OrderService,
 		protected readonly transportService: TransportService
 		// protected readonly gateway: EventsGateway
@@ -350,7 +348,8 @@ export default class OfferService
 											offer_status:  offer.status,
 											bid_price:     offer.bidPrice,
 											bid_price_max: offer.bidPriceVat,
-											bid_comments:  offer.bidComment
+											bid_comments:  offer.bidComment,
+											bid_info:  offer.bidComment
 										}
 									 : {
 											...t.get({ plain: true, clone: true }),
@@ -571,6 +570,7 @@ export default class OfferService
 						// 	},
 						// 	UserRole.CARGO
 						// );
+						// return this.responses['ACCEPTED'];
 					}
 
 					// this.gateway.sendDriverEvent(
@@ -630,10 +630,6 @@ export default class OfferService
 						unloaded: false
 					}
 				});
-
-				if(offer.order.contractPhotoLink) {
-					await this.imageFileService.deleteImageList(offer.order.contractPhotoLink);
-				}
 
 				this.orderService
 				    .send(offer.orderId)
