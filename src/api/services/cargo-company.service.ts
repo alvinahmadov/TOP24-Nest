@@ -1,4 +1,5 @@
 import * as uuid                  from 'uuid';
+import { Op }                     from 'sequelize';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { BitrixUrl }              from '@common/constants';
 import { AxiosStatic }            from '@common/classes';
@@ -213,7 +214,7 @@ export default class CargoCompanyService
 		const driversCount = company.drivers.length;
 		const transportsCount = company.transports.length;
 
-		const companyImages = await super.imageFileService.deleteImageList(
+		const companyImages = await this.imageFileService.deleteImageList(
 			[
 				company.avatarLink,
 				company.attorneySignLink,
@@ -223,13 +224,13 @@ export default class CargoCompanyService
 			]
 		);
 
-		const transportImages = await super.imageFileService.deleteImageList(
+		const transportImages = await this.imageFileService.deleteImageList(
 			company.transports
 			       .flatMap(t => t.images)
 			       .map(image => image.url)
 		);
 
-		const driverImages = await super.imageFileService.deleteImageList(
+		const driverImages = await this.imageFileService.deleteImageList(
 			company.drivers
 			       .flatMap(d => [
 				       d.avatarLink,
@@ -361,5 +362,45 @@ export default class CargoCompanyService
 			result.data = { crmId };
 		}
 		return result;
+	}
+
+	public async activate(id: string)
+		: TAsyncApiResponse<CargoCompany | null> {
+		let company = await this.repository.get(id, true);
+
+		if(company) {
+			const { user } = company;
+
+			if(user) {
+				company = await this.repository.update(id, { isDefault: true });
+				if(company && company.isDefault) {
+					await this.repository.bulkUpdate(
+						{ isDefault: false },
+						{
+							[Op.and]: [
+								{ id: { [Op.ne]: id } },
+								{ userId: { [Op.eq]: user.id } }
+							]
+						}
+					);
+
+					return {
+						statusCode: 200,
+						data:       company
+					};
+				}
+				else return this.repository.getRecord('update');
+			}
+			else {
+				return {
+					statusCode: 404,
+					message:    'User not found!'
+				};
+			}
+		}
+		else return {
+			statusCode: 404,
+			message:    `Company with phone ${id} not found!`
+		};
 	}
 }

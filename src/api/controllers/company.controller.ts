@@ -158,7 +158,7 @@ export default class CompanyController
 			dto.type === CompanyType.ORG
 			? await this.cargoService.create(<dto.CompanyCreateDto>dto)
 			: await this.cargoInnService.create(<dto.CompanyInnCreateDto>dto);
-		
+
 		await this.activateCompany(company.id);
 
 		if(company) {
@@ -653,14 +653,18 @@ export default class CompanyController
 	private async activateCompany(companyId: string) {
 		let userId: string;
 		let companyType: CompanyType;
-		const companyResponse = await this.getCompany(companyId, false);
+		const companyResponse = await this.getCompany(companyId);
 
 		if(companyResponse.data) {
 			userId = companyResponse.data.userId;
 			companyType = companyResponse.data.type;
 		}
 		else return companyResponse;
+		
+		await this.cargoService.activate(companyId, true);
+		await this.cargoInnService.activate(companyId, true);
 
+		/*
 		await this.cargoService.updateAll(
 			{ isDefault: false },
 			{
@@ -679,11 +683,15 @@ export default class CompanyController
 				]
 			}
 		);
+		*/
 
-		if(companyType === CompanyType.ORG)
+		if(companyType === CompanyType.ORG) {
+			// this.cargoService.uo
 			return this.cargoService.getById(companyId);
-		else
+		}
+		else {
 			return this.cargoInnService.getById(companyId);
+		}
 	}
 
 	private async uploadPhoto<M>(

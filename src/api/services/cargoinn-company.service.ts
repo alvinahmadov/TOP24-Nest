@@ -35,6 +35,7 @@ import ImageFileService              from './image-file.service';
 import PaymentService                from './payment.service';
 import TransportService              from './transport.service';
 import UserService                   from './user.service';
+import { Op }                        from 'sequelize';
 
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
 
@@ -282,7 +283,7 @@ export default class CargoCompanyInnService
 		const transports: Transport[] = [];
 		let { riskClass, fromDate, toDate, directions, ...rest } = filter;
 		let companies: CargoCompanyInn[] = await this.repository.getTransports(listFilter, rest);
-		
+
 		if(directions) {
 			if(directions.every(d => uuid.validate(d))) {
 				const _directions: string[] = [];
@@ -363,5 +364,45 @@ export default class CargoCompanyInnService
 		}
 
 		return result;
+	}
+
+	public async activate(id: string)
+		: TAsyncApiResponse<CargoCompanyInn | null> {
+		let company = await this.repository.get(id, true);
+
+		if(company) {
+			const { user } = company;
+
+			if(user) {
+				company = await this.repository.update(id, { isDefault: true });
+				if(company && company.isDefault) {
+					await this.repository.bulkUpdate(
+						{ isDefault: false },
+						{
+							[Op.and]: [
+								{ id: { [Op.ne]: id } },
+								{ userId: { [Op.eq]: user.id } }
+							]
+						}
+					);
+
+					return {
+						statusCode: 200,
+						data:       company
+					};
+				}
+				else return this.repository.getRecord('update');
+			}
+			else {
+				return {
+					statusCode: 404,
+					message:    'User not found!'
+				};
+			}
+		}
+		else return {
+			statusCode: 404,
+			message:    `Company with phone ${id} not found!`
+		};
 	}
 }
