@@ -684,12 +684,12 @@ export default class CompanyController
 
 		if(companyType === CompanyType.ORG) {
 			await this.cargoService.activate(companyId);
-			await this.cargoInnService.activate(companyId, true);
+			await this.cargoInnService.activate(companyId, { disableAll: true, userId });
 			return this.cargoService.getById(companyId);
 		}
 		else {
 			await this.cargoInnService.activate(companyId);
-			await this.cargoService.activate(companyId, true);
+			await this.cargoService.activate(companyId, { disableAll: true, userId });
 			return this.cargoInnService.getById(companyId);
 		}
 	}
