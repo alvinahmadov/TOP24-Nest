@@ -661,8 +661,8 @@ export default class CompanyController
 		}
 		else return companyResponse;
 		
-		await this.cargoService.activate(companyId, true);
-		await this.cargoInnService.activate(companyId, true);
+		await this.cargoService.activate(companyId);
+		await this.cargoInnService.activate(companyId);
 
 		/*
 		await this.cargoService.updateAll(
