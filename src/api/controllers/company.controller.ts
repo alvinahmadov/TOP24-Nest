@@ -1,5 +1,4 @@
 import * as ex                 from 'express';
-import { Op }                  from 'sequelize';
 import {
 	Body,
 	Controller,
