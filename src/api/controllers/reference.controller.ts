@@ -201,7 +201,7 @@ export default class ReferenceController
 		statuses: [HttpStatus.OK]
 	})
 	public getRiskClasses(@Res() response: ex.Response) {
-		const riskClasses = Reference.RISK_CLASSES
+		const riskClasses = Reference.TRANSPORT_RISK_CLASSES
 		                             .sort(compareByValFn)
 		                             .map(lowerCaseFn);
 
