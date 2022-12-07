@@ -169,7 +169,7 @@ export default class TransportController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id);
+		const { originalname: name, buffer } = renameMulterFile(image, id, 'image');
 		const result = await this.transportService.uploadImage(id, buffer, name);
 
 		return sendResponse(response, result);
