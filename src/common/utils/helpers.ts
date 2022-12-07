@@ -52,7 +52,7 @@ export function fileExt(file: { mimetype?: string }) {
 
 export function renameMulterFile(file: TMulterFile, ...args: string[]): TMulterFile {
 	const { originalname: name, ...rest } = file;
-	const fileName = uuid({ random: rest.buffer });
+	const fileName = uuid();
 	return {
 		originalname: path.join(...args, `${fileName.toUpperCase()}.${fileExt({ mimetype: rest.mimetype })}`),
 		...rest
