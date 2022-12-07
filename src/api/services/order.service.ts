@@ -9,6 +9,7 @@ import {
 import {
 	OfferStatus,
 	OrderStage,
+	OrderStatus,
 	TransportStatus
 }                             from '@common/enums';
 import {
@@ -266,7 +267,7 @@ export default class OrderService
 
 	public async getByDriver(driverId: string)
 		: TAsyncApiResponse<TMergedEntities> {
-		const order = await this.repository.getWithDriver(driverId);
+		const order = await this.repository.getDriverAssignedOrders(driverId);
 		let result: {
 			order?: Order;
 			driver?: Driver;
@@ -694,5 +695,21 @@ export default class OrderService
 			statusCode: 200,
 			data:       order
 		};
+	}
+
+	private async setNextOrderForCompletion(driverId: string) {
+		const nextOrder = await this.repository.getDriverAssignedOrders(
+			driverId,
+			{
+				statuses: [
+					OrderStatus.ACCEPTED,
+					OrderStatus.PROCESSING
+				],
+				stages:   [
+					OrderStage.AGREED_LOGIST,
+					OrderStage.AGREED_OWNER
+				]
+			}
+		);
 	}
 }

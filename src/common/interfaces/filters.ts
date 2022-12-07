@@ -18,6 +18,7 @@ import {
 	DriverStatus,
 	LoadingType,
 	OfferStatus,
+	OrderStage,
 	OrderStatus,
 	TransportStatus
 }                             from '../enums';
@@ -161,6 +162,7 @@ export interface IOrderFilter
 	heightMin?: number;
 	heightMax?: number;
 	statuses?: OrderStatus[];
+	stages?: OrderStage[];
 	types?: string[];
 	pallets?: number;
 	isDedicated?: boolean;

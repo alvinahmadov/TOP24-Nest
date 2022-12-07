@@ -93,7 +93,7 @@ export default class OrderRepository
 	): Promise<Order[]> {
 		if(filter === null)
 			return [];
-		
+
 		return this.log(
 			() =>
 			{
@@ -155,16 +155,27 @@ export default class OrderRepository
 		);
 	}
 
-	public async getWithDriver(id: string): Promise<Order> {
+	public async getDriverAssignedOrders(
+		driverId: string,
+		filter?: IOrderFilter
+	): Promise<Order> {
+		const {
+			statuses = [
+				OrderStatus.ACCEPTED,
+				OrderStatus.PROCESSING
+			],
+			stages,
+			onPayment
+		} = filter ?? {};
+
 		return this.log(
 			() => this.model.findOne(
 				{
 					where:         this.whereClause('and')
-					                   .eq('driverId', id)
-					                   .inArray('status', [
-						                   OrderStatus.ACCEPTED,
-						                   OrderStatus.PROCESSING
-					                   ])
+					                   .eq('driverId', driverId)
+					                   .eq('onPayment', onPayment)
+					                   .in('status', statuses)
+					                   .in('stage', stages)
 						               .query,
 					order:         DEFAULT_SORT_ORDER,
 					include:       [
@@ -184,8 +195,8 @@ export default class OrderRepository
 					rejectOnEmpty: false
 				}
 			),
-			{ id: 'getWithDriver' },
-			{ id }
+			{ id: 'getDriverAssignedOrders' },
+			{ id: driverId }
 		);
 	}
 

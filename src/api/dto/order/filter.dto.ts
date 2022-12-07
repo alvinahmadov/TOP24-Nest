@@ -6,6 +6,7 @@ import {
 import { InputType }    from '@nestjs/graphql';
 import {
 	LoadingType,
+	OrderStage,
 	OrderStatus
 }                       from '@common/enums';
 import { IOrderFilter } from '@common/interfaces';
@@ -35,6 +36,8 @@ export default class OrderFilter
 	heightMin?: number;
 	@ApiProperty({ description: 'Maximum height of order cargo. Inclusive.' })
 	heightMax?: number;
+	@ApiProperty({ description: 'List of stages of order.' })
+	stages?: OrderStage[];
 	@ApiProperty({ description: 'List of statuses of order.' })
 	statuses?: OrderStatus[];
 	@ApiProperty({ description: 'Types of transport.' })
