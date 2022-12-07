@@ -1,7 +1,7 @@
 import { Module }   from '@nestjs/common';
 import SERVICES     from '@api/services';
-import AuthModule   from './auth.module';
 import EventsModule from './events.module';
+import AuthModule   from './auth.module';
 
 @Module({
 	        imports:   [
