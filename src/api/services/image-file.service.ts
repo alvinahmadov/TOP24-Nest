@@ -1,6 +1,7 @@
 import { join }              from 'path';
 import { v4 as uuid }        from 'uuid';
 import { Injectable, Scope } from '@nestjs/common';
+import env                   from '@config/env';
 import { Bucket }            from '@common/constants';
 import {
 	IAWSUploadResponse,
@@ -13,7 +14,6 @@ import {
 	LocalObjectStorage,
 	ExternalObjectStorage
 }                            from '@common/classes';
-import env                   from '@config/env';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export default class ImageFileService
