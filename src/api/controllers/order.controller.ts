@@ -63,6 +63,7 @@ export default class OrderController
 		private readonly gateway: EventsGateway
 	) {
 		super();
+		this.orderService.gateway = this.gateway;
 	}
 
 	@ApiRoute(routes.filter, {

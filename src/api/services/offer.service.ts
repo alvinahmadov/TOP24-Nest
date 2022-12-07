@@ -43,15 +43,15 @@ import {
 	OfferUpdateDto,
 	OrderFilter
 }                          from '@api/dto';
-// import { EventsGateway }   from '@api/events';
+import { EventsGateway }   from '@api/events';
 import Service             from './service';
 import DriverService       from './driver.service';
 import OrderService        from './order.service';
 import TransportService    from './transport.service';
 
 const OFFER_TRANSLATIONS = getTranslation('REST', 'OFFER');
-// const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
-// const EVENT_ORDER_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
+const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
+const EVENT_ORDER_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
 
 @Injectable()
 export default class OfferService
@@ -62,16 +62,22 @@ export default class OfferService
 		DECLINED:  { statusCode: 400, message: OFFER_TRANSLATIONS['DECLINED'] },
 		NOT_FOUND: { statusCode: 404, message: OFFER_TRANSLATIONS['NOT_FOUND'] }
 	};
+	private _gateway: EventsGateway;
 
 	constructor(
 		protected readonly driverService: DriverService,
 		protected readonly orderService: OrderService,
 		protected readonly transportService: TransportService
-		// protected readonly gateway: EventsGateway
 	) {
 		super();
 		this.repository = new OfferRepository();
 	}
+
+	public set gateway(gateway: EventsGateway) {
+		this._gateway = gateway;
+	}
+
+	public get gateway(): EventsGateway { return this._gateway;}
 
 	public async getById(id: string, full?: boolean)
 		: TAsyncApiResponse<Offer> {
@@ -137,13 +143,13 @@ export default class OfferService
 					if(transport) {
 						const messageObj = { message: '' };
 						if(!checkTransportRequirements(filter, transport, trailer, messageObj)) {
-							// this.gateway.sendDriverEvent(
-							// 	{
-							// 		id:      driverId,
-							// 		message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NO_MATCH'], messageObj.message)
-							// 	},
-							// 	UserRole.CARGO
-							// );
+							this.gateway.sendDriverEvent(
+								{
+									id:      driverId,
+									message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NO_MATCH'], messageObj.message)
+								},
+								UserRole.CARGO
+							);
 						}
 					}
 				}
@@ -160,29 +166,29 @@ export default class OfferService
 					({ data: uOrder }) =>
 					{
 						if(uOrder) {
-							// this.gateway.sendDriverEvent(
-							// 	{
-							// 		id:      driverId,
-							// 		source:  'offer',
-							// 		message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], uOrder?.crmId?.toString())
-							// 	},
-							// 	UserRole.CARGO
-							// );
-							//
-							// this.gateway.sendOrderEvent(
-							// 	{
-							// 		id:      uOrder.id,
-							// 		stage:   uOrder.stage,
-							// 		status:  uOrder.status,
-							// 		source:  'offer',
-							// 		message: formatArgs(
-							// 			EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
-							// 			order.crmId?.toString() ?? '',
-							// 			driver.fullName
-							// 		)
-							// 	},
-							// 	UserRole.ADMIN
-							// );
+							this.gateway.sendDriverEvent(
+								{
+									id:      driverId,
+									source:  'offer',
+									message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], uOrder?.crmId?.toString())
+								},
+								UserRole.CARGO
+							);
+
+							this.gateway.sendOrderEvent(
+								{
+									id:      uOrder.id,
+									stage:   uOrder.stage,
+									status:  uOrder.status,
+									source:  'offer',
+									message: formatArgs(
+										EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
+										order.crmId?.toString() ?? '',
+										driver.fullName
+									)
+								},
+								UserRole.ADMIN
+							);
 						}
 					}
 				);
@@ -496,32 +502,32 @@ export default class OfferService
 
 		if(createCount > 0) {
 			await this.repository.bulkCreate(offersToCreate);
-			// const offers = await this.repository.bulkCreate(offersToCreate);
-			// offers.forEach(
-			// 	offer => this.gateway.sendDriverEvent(
-			// 		{
-			// 			id:      offer.driverId,
-			// 			source:  'offer',
-			// 			message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order.crmId?.toString())
-			// 		},
-			// 		UserRole.CARGO
-			// 	)
-			// );
+			const offers = await this.repository.bulkCreate(offersToCreate);
+			offers.forEach(
+				offer => this.gateway.sendDriverEvent(
+					{
+						id:      offer.driverId,
+						source:  'offer',
+						message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order.crmId?.toString())
+					},
+					UserRole.CARGO
+				)
+			);
 		}
 
 		offers = await this.repository.getOrderDrivers(orderId, { full: full === undefined ? true : full });
 
-		// this.gateway.sendOrderEvent(
-		// 	{
-		// 		id:     order.id,
-		// 		source: 'offer',
-		// 		status: order.status,
-		// 		stage:  order.stage,
-		// 		point:  order.destinations
-		// 		             .filter(d => !d.fulfilled)[0]
-		// 			        .point
-		// 	}
-		// );
+		this.gateway.sendOrderEvent(
+			{
+				id:     order.id,
+				source: 'offer',
+				status: order.status,
+				stage:  order.stage,
+				point:  order.destinations
+				             .filter(d => !d.fulfilled)[0]
+					        .point
+			}
+		);
 
 		return {
 			statusCode: 200,
@@ -539,10 +545,10 @@ export default class OfferService
 		role?: UserRole
 	): TAsyncApiResponse<Offer> {
 		const offer = await this.repository.getByAssociation(orderId, driverId);
-		// let orderTitle: string;
+		let orderTitle: string;
 
 		if(offer) {
-			// orderTitle = offer?.order.crmId?.toString() ?? '';
+			orderTitle = offer?.order.crmId?.toString() ?? '';
 
 			if(
 				offer.orderStatus === OrderStatus.CANCELLED &&
@@ -562,32 +568,32 @@ export default class OfferService
 						(driver.order.id !== offer.orderId &&
 						driver.order.status === OrderStatus.PROCESSING)
 					) {
-						// this.gateway.sendDriverEvent(
-						// 	{
-						// 		id:      driverId,
-						// 		source:  'offer',
-						// 		message: EVENT_DRIVER_TRANSLATIONS['HAS_EXISTING']
-						// 	},
-						// 	UserRole.CARGO
-						// );
-						// return this.responses['ACCEPTED'];
+						this.gateway.sendDriverEvent(
+							{
+								id:      driverId,
+								source:  'offer',
+								message: EVENT_DRIVER_TRANSLATIONS['HAS_EXISTING']
+							},
+							UserRole.CARGO
+						);
+						return this.responses['ACCEPTED'];
 					}
 
-					// this.gateway.sendDriverEvent(
-					// 	{
-					// 		id:             driver.id,
-					// 		status:         driver.status,
-					// 		latitude:       driver.latitude,
-					// 		longitude:      driver.longitude,
-					// 		currentPoint:   driver.currentPoint,
-					// 		currentAddress: driver.currentAddress,
-					// 		message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], orderTitle)
-					// 	},
-					// 	UserRole.CARGO
-					// );
+					this.gateway.sendDriverEvent(
+						{
+							id:             driver.id,
+							status:         driver.status,
+							latitude:       driver.latitude,
+							longitude:      driver.longitude,
+							currentPoint:   driver.currentPoint,
+							currentAddress: driver.currentAddress,
+							message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], orderTitle)
+						},
+						UserRole.CARGO
+					);
 				}
 
-				await this.orderService.update(
+				this.orderService.update(
 					orderId,
 					{
 						driverId:    driverId,
@@ -603,23 +609,22 @@ export default class OfferService
 						status:      OrderStatus.PROCESSING
 					},
 					false
+				).then(
+					({ data: order }) =>
+					{
+						if(order) {
+							this.gateway.sendOrderEvent(
+								{
+									id:      orderId,
+									status:  order.status,
+									stage:   order.stage,
+									message: formatArgs(EVENT_ORDER_TRANSLATIONS['ACCEPT'], orderTitle)
+								},
+								UserRole.ADMIN
+							);
+						}
+					}
 				);
-				//     .then(
-				// 	({ data: order }) =>
-				// 	{
-				// 		if(order) {
-				// 			this.gateway.sendOrderEvent(
-				// 				{
-				// 					id:      orderId,
-				// 					status:  order.status,
-				// 					stage:   order.stage,
-				// 					message: formatArgs(EVENT_ORDER_TRANSLATIONS['ACCEPT'], orderTitle)
-				// 				},
-				// 				UserRole.ADMIN
-				// 			);
-				// 		}
-				// 	}
-				// );
 
 				await this.driverService.update(driverId, {
 					status:       DriverStatus.ON_WAY,
@@ -680,20 +685,20 @@ export default class OfferService
 						    isFree:      true,
 						    cancelCause: reason ?? ''
 					    }, false)
-						// .then(({ data: order }) =>
-						//       {
-						//         if(order) {
-						//           this.gateway.sendOrderEvent(
-						// 	          {
-						// 		          id:      order.id,
-						// 		          status:  order.status,
-						// 		          stage:   order.stage,
-						// 		          message: `Водитель '${driver?.fullName}' отказался от сделки '№${order.number}'.`
-						// 	          }
-						//           );
-						//         }
-						//       })
-						  .catch(r => console.error(r));
+					    .then(({ data: order }) =>
+					          {
+						          if(order) {
+							          this.gateway.sendOrderEvent(
+								          {
+									          id:      order.id,
+									          status:  order.status,
+									          stage:   order.stage,
+									          message: `Водитель '${driver?.fullName}' отказался от сделки '№${order.number}'.`
+								          }
+							          );
+						          }
+					          })
+					    .catch(r => console.error(r));
 				}
 
 				if(driver) {
@@ -703,22 +708,20 @@ export default class OfferService
 							currentPoint:   '',
 							currentAddress: ''
 						}
-					)
-						//     .then(
-						// 	({ data: driver }) =>
-						// 	{
-						// 		if(driver)
-						// 			this.gateway.sendDriverEvent(
-						// 				{
-						// 					id:      driver.id,
-						// 					status:  driver.status,
-						// 					message: formatArgs(EVENT_DRIVER_TRANSLATIONS['DECLINE'], order.crmId?.toString() ?? 0)
-						// 				},
-						// 				UserRole.CARGO
-						// 			);
-						// 	}
-						// )
-						  .catch(r => console.debug(r));
+					).then(
+						({ data: driver }) =>
+						{
+							if(driver)
+								this.gateway.sendDriverEvent(
+									{
+										id:      driver.id,
+										status:  driver.status,
+										message: formatArgs(EVENT_DRIVER_TRANSLATIONS['DECLINE'], order.crmId?.toString() ?? 0)
+									},
+									UserRole.CARGO
+								);
+						}
+					).catch(r => console.error(r));
 				}
 
 				this.orderService
@@ -750,16 +753,16 @@ export default class OfferService
 		crmId: number
 	): TAsyncApiResponse<Offer[]> {
 		const offers = await this.repository.getOrderDrivers(orderId);
-		// offers.forEach(
-		// 	(offer) =>
-		// 		this.gateway.sendDriverEvent(
-		// 			{
-		// 				id:      offer.driverId,
-		// 				message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmId.toString())
-		// 			},
-		// 			UserRole.CARGO
-		// 		)
-		// );
+		offers.forEach(
+			(offer) =>
+				this.gateway.sendDriverEvent(
+					{
+						id:      offer.driverId,
+						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmId.toString())
+					},
+					UserRole.CARGO
+				)
+		);
 
 		return {
 			statusCode: 200,

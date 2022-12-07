@@ -37,7 +37,7 @@ import {
 	Order,
 	Transport
 }                             from '@models/index';
-// import { EventsGateway }      from '@api/events';
+import { EventsGateway }      from '@api/events';
 import { OrderRepository }    from '@repos/index';
 import {
 	ListFilter,
@@ -52,7 +52,7 @@ import DriverService          from './driver.service';
 import ImageFileService       from './image-file.service';
 
 const ORDER_TRANSLATIONS = getTranslation('REST', 'ORDER');
-// const EVENT_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
+const EVENT_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
 
 @Injectable()
 export default class OrderService
@@ -66,6 +66,7 @@ export default class OrderService
 		NO_OFFER:     { statusCode: 404, message: 'No offer found.' },
 		NO_CRM_ORDER: { statusCode: 404, message: 'Order doesn\'t have a crm id' }
 	};
+	private _gateway: EventsGateway;
 
 	constructor(
 		private readonly cargoService: CargoCompanyService,
@@ -73,12 +74,16 @@ export default class OrderService
 		@Inject(forwardRef(() => DriverService))
 		private readonly driverService: DriverService,
 		protected readonly imageFileService: ImageFileService
-		// TODO: Inspect dependency resolve error
-		// protected readonly gateway: EventsGateway
 	) {
 		super();
 		this.repository = new OrderRepository();
 	}
+
+	public set gateway(gateway: EventsGateway) {
+		this._gateway = gateway;
+	}
+
+	public get gateway(): EventsGateway { return this._gateway;}
 
 	/**
 	 * @summary Get order by id
@@ -182,16 +187,16 @@ export default class OrderService
 		if(!order)
 			return this.repository.getRecord('create');
 
-		// if(sendEvent) {
-		// 	this.gateway.sendOrderEvent(
-		// 		{
-		// 			id:      order.id,
-		// 			status:  order.status,
-		// 			stage:   order.stage,
-		// 			message: formatArgs(EVENT_TRANSLATIONS['CREATE'], order.title)
-		// 		}
-		// 	);
-		// }
+		if(sendEvent) {
+			this.gateway.sendOrderEvent(
+				{
+					id:      order.id,
+					status:  order.status,
+					stage:   order.stage,
+					message: formatArgs(EVENT_TRANSLATIONS['CREATE'], order.title)
+				}
+			);
+		}
 
 		return {
 			statusCode: 201,
@@ -219,15 +224,15 @@ export default class OrderService
 			return this.repository.getRecord('update');
 
 		if(sendInfo) {
-			// this.gateway.sendOrderEvent(
-			// 	{
-			// 		id:      order.id,
-			// 		source:  'update',
-			// 		status:  order.status,
-			// 		stage:   order.stage,
-			// 		message: formatArgs(EVENT_TRANSLATIONS['UPDATE'], order.title)
-			// 	}
-			// );
+			this.gateway.sendOrderEvent(
+				{
+					id:      order.id,
+					source:  'update',
+					status:  order.status,
+					stage:   order.stage,
+					message: formatArgs(EVENT_TRANSLATIONS['UPDATE'], order.title)
+				}
+			);
 		}
 
 		return {
@@ -253,10 +258,10 @@ export default class OrderService
 
 		const result = await this.repository.delete(id);
 
-		// if(result.affectedCount > 0)
-		// 	this.gateway.sendOrderEvent(
-		// 		{ id, message: 'Deleted' }
-		// 	);
+		if(result.affectedCount > 0)
+			this.gateway.sendOrderEvent(
+				{ id, message: 'Deleted' }
+			);
 
 		return {
 			statusCode: 200,
@@ -614,8 +619,8 @@ export default class OrderService
 
 		if(fileUploaded) {
 			this.send(order.id)
-				// .then(() => this.gateway.sendOrderEvent({ id, message }))
-				  .catch(console.error);
+			    .then(() => this.gateway.sendOrderEvent({ id, message }))
+			    .catch(console.error);
 
 			return {
 				statusCode: 200,
@@ -697,6 +702,7 @@ export default class OrderService
 		};
 	}
 
+	// noinspection JSUnusedLocalSymbols
 	private async setNextOrderForCompletion(driverId: string) {
 		const nextOrder = await this.repository.getDriverAssignedOrders(
 			driverId,
@@ -711,5 +717,7 @@ export default class OrderService
 				]
 			}
 		);
+
+		console.debug(nextOrder.get({ plain: true }));
 	}
 }

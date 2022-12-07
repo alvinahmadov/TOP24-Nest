@@ -3,7 +3,7 @@ import {
 	Injectable
 }                            from '@nestjs/common';
 import { BitrixUrl, Bucket } from '@common/constants';
-// import { UserRole }          from '@common/enums';
+import { UserRole }          from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -34,7 +34,7 @@ import {
 	ListFilter,
 	TransportFilter
 }                            from '@api/dto';
-// import { EventsGateway }     from '@api/events';
+import { EventsGateway }     from '@api/events';
 import Service               from './service';
 import ImageFileService      from './image-file.service';
 import OrderService          from './order.service';
@@ -51,17 +51,22 @@ export default class DriverService
 	public override readonly responses: IApiResponses<null> = {
 		NOT_FOUND: { statusCode: 404, message: TRANSLATIONS['NOT_FOUND'] }
 	};
+	private _gateway: EventsGateway;
 
 	constructor(
 		protected readonly imageFileService: ImageFileService,
 		@Inject(forwardRef(() => OrderService))
 		protected readonly orderService: OrderService
-		// TODO: Inspect dependency resolve error
-		// protected readonly gateway: EventsGateway
 	) {
 		super();
 		this.repository = new DriverRepository();
 	}
+
+	public set gateway(gateway: EventsGateway) {
+		this._gateway = gateway;
+	}
+
+	public get gateway(): EventsGateway { return this._gateway;}
 
 	/**
 	 * @summary Get list of cargo company drivers
@@ -163,16 +168,16 @@ export default class DriverService
 		const message = formatArgs(TRANSLATIONS['UPDATE'], driver.fullName);
 
 		if(sendInfo) {
-			// 	this.gateway.sendDriverEvent(
-			// 		{
-			// 			id,
-			// 			status:    driver.status,
-			// 			longitude: data.longitude,
-			// 			latitude:  data.latitude,
-			// 			message
-			// 		},
-			// 		UserRole.CARGO
-			// 	);
+			this.gateway.sendDriverEvent(
+				{
+					id,
+					status:    driver.status,
+					longitude: data.longitude,
+					latitude:  data.latitude,
+					message
+				},
+				UserRole.CARGO
+			);
 		}
 
 		return {
@@ -321,21 +326,20 @@ export default class DriverService
 				}
 				await this.orderService.update(order.id, { destinations });
 				await driver.save({ fields: ['currentAddress'] });
-				// const data = { currentAddress };
-				// this.gateway.sendDriverEvent(
-				// 	{
-				// 		id:             driver.id,
-				// 		status:         driver.status,
-				// 		latitude:       driver.latitude,
-				// 		longitude:      driver.longitude,
-				// 		currentPoint:   driver.currentAddress,
-				// 		currentAddress: data.currentAddress
-				// 	},
-				// 	UserRole.ADMIN,
-				// 	false
-				// );
-				// return data;
-				return { currentAddress };
+				const data = { currentAddress };
+				this.gateway.sendDriverEvent(
+					{
+						id:             driver.id,
+						status:         driver.status,
+						latitude:       driver.latitude,
+						longitude:      driver.longitude,
+						currentPoint:   driver.currentAddress,
+						currentAddress: data.currentAddress
+					},
+					UserRole.ADMIN,
+					false
+				);
+				return data;
 			}
 		}
 		return null;
