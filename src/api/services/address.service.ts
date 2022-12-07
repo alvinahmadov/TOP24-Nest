@@ -8,6 +8,7 @@ import {
 	TAsyncApiResponse
 }                            from '@common/interfaces';
 import {
+	calculateDistance,
 	formatArgs,
 	getTranslation,
 	searchAddressByKladr,
@@ -109,5 +110,19 @@ export default class AddressService
 			data:       fullAddresses,
 			message:    formatArgs(TRANSLATIONS['LIST'], fullAddresses.length)
 		} as IApiResponse<any>;
+	}
+
+	public async searchByGeolocation(
+		coordinates: { latitude: number; longitude: number },
+		distance: number = 60.0
+	): TAsyncApiResponse<Address[]> {
+		const { latitude, longitude } = coordinates;
+
+		const result = await this.repository.findByCoordinates([latitude, longitude], distance);
+
+		return {
+			statusCode: 200,
+			data:       result
+		};
 	}
 }

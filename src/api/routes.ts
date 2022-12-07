@@ -605,6 +605,10 @@ export const routeConfig: TApiRouteList = {
 					method: RequestMethod.GET,
 					api:    NApiDescriptors.reference.addresses
 				},
+				addressLocation: {
+					path:   'address/location',
+					method: RequestMethod.POST
+				},
 				filter:          {
 					path:   'address',
 					method: RequestMethod.POST,

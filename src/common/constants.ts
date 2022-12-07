@@ -136,3 +136,31 @@ export namespace Reference {
 	/**@ignore*/
 	export const TRANSPORT_RISK_CLASSES: TBitrixEnum = CRM.TRANSPORT.RISK_TYPES;
 }
+
+export function geoDistanceDbFn() {
+	return `
+CREATE OR REPLACE FUNCTION geo_distance(p1 point, p2 point)
+    RETURNS double precision AS
+$BODY$
+DECLARE
+    R          integer          = 6371e3; -- Meters
+    rad        double precision = radians(1);
+    latitude1  double precision = p1[0];
+    longitude1 double precision = p1[1];
+    latitude2  double precision = p2[0];
+    longitude2 double precision = p2[1];
+    φ1         double precision = latitude1 * rad;
+    φ2         double precision = latitude2 * rad;
+    latitude   double precision = (latitude2 - latitude1) * rad;
+    longitude  double precision = (longitude2 - longitude1) * rad;
+    a          double precision = sin(latitude / 2) * sin(latitude / 2) +
+                                  cos(φ1) * cos(φ2) * sin(longitude / 2) * sin(longitude / 2);
+    c          double precision = 2 * atan2(sqrt(a), sqrt(1 - a));
+BEGIN
+    RETURN R * c;
+END
+$BODY$
+    LANGUAGE plpgsql VOLATILE
+                     COST 100;
+`;
+}

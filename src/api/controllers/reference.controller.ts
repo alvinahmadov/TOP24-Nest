@@ -78,7 +78,7 @@ export default class ReferenceController
 		}
 	) {
 		const { search, regions, ...rest } = listFilter;
-		
+
 		if(regions === undefined)
 			rest.provider = 'osm';
 
@@ -101,6 +101,18 @@ export default class ReferenceController
 	) {
 		const result = await this.addressService.filter(listFilter, filter);
 
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.addressLocation, {
+		statuses: [HttpStatus.OK]
+	})
+	public async getNearestAddress(
+		@Body() geoLocation: { latitude: number; longitude: number, distance?: number },
+		@Res() response: ex.Response
+	) {
+		const { latitude = 0, longitude = 0, distance = 60.0 } = geoLocation;
+		const result = await this.addressService.searchByGeolocation({ latitude, longitude }, distance);
 		return sendResponse(response, result);
 	}
 
