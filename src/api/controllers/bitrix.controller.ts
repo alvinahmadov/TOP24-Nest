@@ -15,6 +15,7 @@ import {
 	CompanyUpdateDto
 }                              from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
+import { EventsGateway }       from '@api/events';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
 import { BitrixService }       from '@api/services';
@@ -29,9 +30,11 @@ const { path, tag, routes } = getRouteConfig('bitrix');
 export default class BitrixController
 	extends StaticController {
 	public constructor(
-		private readonly bitrixService: BitrixService
+		private readonly bitrixService: BitrixService,
+		private readonly gateway: EventsGateway
 	) {
 		super();
+		this.bitrixService.gateway = gateway;
 	}
 
 	@ApiRoute(routes.orders, {
