@@ -110,17 +110,11 @@ export namespace Reference {
 	export const OSM_API_URL: string = env.osm.url;
 
 	/**@ignore*/
-	export const DEDICATED_MACHINE: TBitrixEnum = CRM.TRANSPORT.DEDICATED;
-	/**@ignore*/
 	export const FIXTURES: TBitrixEnum = CRM.TRANSPORT.EXTRA_FIXTURES;
 	/**@ignore*/
 	export const LOADING_TYPES: TBitrixEnum = CRM.TRANSPORT.LOADING_TYPES;
 	/**@ignore*/
 	export const ORDER_STATUSES: TBitrixEnum = CRM.ORDER.STATUSES;
-	/**@ignore*/
-	export const ORDER_STAGES: TBitrixEnum = CRM.ORDER.STAGES;
-	/**@ignore*/
-	export const ORDER_PAYLOADS: TBitrixEnum = CRM.ORDER.PAYLOADS;
 	/**@ignore*/
 	export const TRANSPORT_PAYLOADS: TBitrixEnum = CRM.TRANSPORT.PAYLOADS;
 	/**@ignore*/
@@ -137,8 +131,7 @@ export namespace Reference {
 	export const TRANSPORT_RISK_CLASSES: TBitrixEnum = CRM.TRANSPORT.RISK_TYPES;
 }
 
-export function geoDistanceDbFn() {
-	return `
+export const GEO_DISTANCE_FN = `
 CREATE OR REPLACE FUNCTION geo_distance(p1 point, p2 point)
     RETURNS double precision AS
 $BODY$
@@ -163,4 +156,3 @@ $BODY$
     LANGUAGE plpgsql VOLATILE
                      COST 100;
 `;
-}
