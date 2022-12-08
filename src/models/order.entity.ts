@@ -294,6 +294,10 @@ export default class Order
 	@BooleanColumn({ defaultValue: true })
 	isOpen?: boolean;
 
+	@ApiProperty(prop.isCurrent)
+	@BooleanColumn({ defaultValue: false })
+	isCurrent?: boolean;
+
 	@ApiProperty(prop.isFree)
 	@BooleanColumn({ defaultValue: true })
 	isFree?: boolean;

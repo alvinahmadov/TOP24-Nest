@@ -918,6 +918,11 @@ export interface IOrder
 	 * */
 	isOpen?: boolean;
 	/**
+	 * Order is currently fullfilling by driver who has 
+	 * several orders in processing (payload extra)
+	 * */
+	isCurrent?: boolean;
+	/**
 	 * Order waiting for payment
 	 * */
 	onPayment?: boolean;

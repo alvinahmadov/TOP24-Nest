@@ -78,6 +78,9 @@ export default class OrderUpdateDto
 	@ApiProperty(prop.isOpen)
 	public isOpen?: boolean;
 
+	@ApiProperty(prop.isCurrent)
+	public isCurrent?: boolean;
+
 	@ApiProperty(prop.length)
 	public length?: number;
 
