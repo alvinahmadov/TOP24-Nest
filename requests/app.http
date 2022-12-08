@@ -1,21 +1,27 @@
 ### Make migration for database
+// @no-log
+// @no-cookie-jar
 POST {{host}}/migrate
 Content-Type: application/json
 
 {
-	"preview": true,
+	"preview": {{preview}},
 	"filename": "migration"
 }
 
+###
+PATCH {{host}}/migrate
+Content-Type: application/json
+
 ### Get agreement pdf file
+// @no-log
+// @no-cookie-jar
 GET {{host}}/agreement
 Content-Type: application/json
 
-###
-POST {{host}}/reset
-Content-Type: application/json
-
 ### Generate random companies
+// @no-log
+// @no-cookie-jar
 POST {{api}}/generator/companies
 Authorization: {{accessToken}}
 Content-Type: application/json
@@ -26,10 +32,37 @@ Content-Type: application/json
 }
 
 ### Generate random orders
+// @no-log
+// @no-cookie-jar
 POST {{api}}/generator/orders
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"count": 10
+	"count": 1,
+	"maxDestination": 3
 }
+
+### Get fields of crm deal
+// @no-log 
+// @no-cookie-jar
+GET {{bitrix}}/rest/32/{{bitrixKey}}/crm.deal.fields
+Content-Type: application/json
+
+### Get fields of crm company
+// @no-log 
+// @no-cookie-jar
+GET {{bitrix}}/rest/32/{{bitrixKey}}/crm.company.fields
+Content-Type: application/json
+
+### Get fields of crm contact
+// @no-log 
+// @no-cookie-jar
+GET {{bitrix}}/rest/32/{{bitrixKey}}/crm.contact.fields
+Content-Type: application/json
+
+### Get crm deal by id
+// @no-log 
+// @no-cookie-jar
+GET {{bitrix}}/rest/32/{{bitrixKey}}/crm.deal.get?ID={{crmId}}
+Content-Type: application/json
