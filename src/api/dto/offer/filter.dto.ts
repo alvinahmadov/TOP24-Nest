@@ -8,5 +8,6 @@ import { OfferStatus }  from '@common/enums';
 export default class OfferFilter
 	extends PartialType(OfferCreateDto)
 	implements IOfferFilter {
+	driverIds?: string[];
 	statuses?: OfferStatus[];
 }
