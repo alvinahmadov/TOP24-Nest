@@ -139,8 +139,8 @@ export function transformToCargoCompany(data: transformers.ICargoCompanyTransfor
 	return null;
 }
 
-function transformCargoInnCompany(company: models.CargoCompanyInn)
-	: transformers.ICargoInnCompanyTransformer {
+function transformCargoCompanyInn(company: models.CargoCompanyInn)
+	: transformers.ICargoCompanyInnTransformer {
 	if(company) {
 		return {
 			id:                            company.getDataValue('id'),
@@ -186,11 +186,11 @@ function transformCargoInnCompany(company: models.CargoCompanyInn)
 	return null;
 }
 
-export function transformToCargoInnCompany(data: transformers.ICargoInnCompanyTransformer)
+export function transformToCargoCompanyInn(data: transformers.ICargoCompanyInnTransformer)
 	: attributes.ICargoCompanyInn {
 	if(data) {
 		return {
-			...helpers.translateCargoInnCompany(data),
+			...helpers.translateCargoCompanyInn(data),
 			createdAt: data.createdAt,
 			updatedAt: data.updatedAt
 		};
@@ -245,7 +245,7 @@ function transformDriver(driver: models.Driver)
 			fullname:                      driver.get('fullName'),
 			company_name:                  driver.get('companyName'),
 			cargo:                         transformCargoCompany(driver.cargo),
-			cargoinn:                      transformCargoInnCompany(driver.cargoinn),
+			cargoinn:                      transformCargoCompanyInn(driver.cargoinn),
 			order:                         transformOrder(driver.order),
 			transports:                    driver.transports?.map(transformTransport),
 			createdAt:                     driver.getDataValue('createdAt'),
@@ -448,7 +448,7 @@ function transformOrder(order: models.Order)
 			contract_link:              order.getDataValue('contractPhotoLink'),
 			filter:                     order.getDataValue('filter'),
 			cargo:                      transformCargoCompany(order?.cargo),
-			cargoinn:                   transformCargoInnCompany(order?.cargoinn),
+			cargoinn:                   transformCargoCompanyInn(order?.cargoinn),
 			driver:                     transformDriver(order?.driver),
 			createdAt:                  order.getDataValue('createdAt'),
 			updatedAt:                  order.getDataValue('updatedAt')
@@ -581,7 +581,7 @@ function transformUser(user: models.User, deep?: boolean)
 			           !!deep ? user.cargoCompanies.map(transformCargoCompany)
 			                  : undefined,
 			cargoinn_companies:
-			           !!deep ? user.cargoInnCompanies.map(transformCargoInnCompany)
+			           !!deep ? user.cargoInnCompanies.map(transformCargoCompanyInn)
 			                  : undefined,
 			createdAt: user.getDataValue('createdAt'),
 			updatedAt: user.getDataValue('updatedAt')
@@ -606,7 +606,7 @@ export function transformEntity<T extends IModel, E extends EntityModel<T>>(
 		transformedData = transformCargoCompany(entity);
 	}
 	else if(entity instanceof models.CargoCompanyInn) {
-		transformedData = transformCargoInnCompany(entity);
+		transformedData = transformCargoCompanyInn(entity);
 	}
 	else if(entity instanceof models.Driver) {
 		transformedData = transformDriver(entity);

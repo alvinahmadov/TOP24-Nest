@@ -57,7 +57,7 @@ export const translateCargoCompany = <T extends transformers.ICargoCompanyTransf
 		.get();
 };
 
-export const translateCargoInnCompany = <T extends transformers.ICargoInnCompanyTransformer>(data: T | Partial<T>)
+export const translateCargoCompanyInn = <T extends transformers.ICargoCompanyInnTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.ICargoCompanyInn> =>
 {
 	return new FieldTransformer<T, attributes.ICargoCompanyInn>(data)

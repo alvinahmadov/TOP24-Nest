@@ -40,7 +40,7 @@ export interface IUserTransformer
 	confirmed?: boolean;
 
 	cargo_companies?: ICargoCompanyTransformer[];
-	cargoinn_companies?: ICargoInnCompanyTransformer[];
+	cargoinn_companies?: ICargoCompanyInnTransformer[];
 }
 
 /**
@@ -217,7 +217,7 @@ export interface ICargoCompanyTransformer
 /**
  * @see ICargoInnCompany
  * */
-export interface ICargoInnCompanyTransformer
+export interface ICargoCompanyInnTransformer
 	extends ICompanyTransformer {
 	/**
 	 * @see ICargoInnCompany.lastName
@@ -386,7 +386,7 @@ export interface IDriverTransformer
 	company_name?: string;
 
 	cargo?: ICargoCompanyTransformer;
-	cargoinn?: ICargoInnCompanyTransformer;
+	cargoinn?: ICargoCompanyInnTransformer;
 	order?: IOrderTransformer;
 	transports?: ITransportTransformer[];
 }
@@ -564,7 +564,7 @@ export interface IOrderTransformer
 	priority?: boolean;
 
 	cargo?: ICargoCompanyTransformer;
-	cargoinn?: ICargoInnCompanyTransformer;
+	cargoinn?: ICargoCompanyInnTransformer;
 	driver?: IDriverTransformer;
 }
 

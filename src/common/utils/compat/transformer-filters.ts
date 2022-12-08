@@ -38,7 +38,7 @@ export interface ICargoCompanyTransformerFilter
 export interface ICargoCompanyInnTransformerFilter
 	extends IFilter,
 	        IModelSortable,
-	        Partial<transformers.ICargoInnCompanyTransformer> {}
+	        Partial<transformers.ICargoCompanyInnTransformer> {}
 
 export interface ICompanyTransportTransformerFilter
 	extends IFilter,
@@ -169,7 +169,7 @@ export function transformToCompanyFilter(data: ICargoCompanyTransformerFilter)
 export function transformToCompanyInnFilter(data: ICargoCompanyInnTransformerFilter)
 	: filters.ICargoCompanyInnFilter {
 	if(data) {
-		return helpers.translateCargoInnCompany(data);
+		return helpers.translateCargoCompanyInn(data);
 	}
 	return null;
 }
