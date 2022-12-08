@@ -69,22 +69,15 @@ export default class DriverRepository
 			address,
 			statuses,
 			payloadDate,
+			isReady = true,
 			...rest
 		} = filter ?? {};
 
 		let hasTerm: boolean = term !== undefined && term !== '';
 
-		if(statuses && statuses.includes(1)) {
-			if(rest.isReady === undefined) {
-				rest.isReady = true;
-				statuses.push(0);
-			}
-		}
-
 		if(hasTerm) {
 			full = true;
 			strict = false;
-			statuses = statuses.filter((s: number) => s !== 4);
 		}
 		const conjunct: 'and' | 'or' | null = (strict === undefined || strict === true) ? 'and' : 'or';
 
@@ -92,14 +85,15 @@ export default class DriverRepository
 			() => this.model.findAll(
 				{
 					where:   hasTerm
-					         ? this.whereClause()
+					         ? this.whereClause(conjunct)
 					               .eq('cargoId', rest?.cargoId)
 					               .eq('cargoinnId', rest?.cargoinnId)
+					               .eq('isReady', isReady)
 					               .lte('payloadDate', payloadDate)
-					               .eq('isReady', rest?.isReady)
 					               .in('status', statuses)
 						         .query
 					         : this.whereClause(conjunct)
+					               .eq('isReady', isReady)
 					               .in('phone', [rest?.phone, formatPhone(rest?.phone)])
 					               .iLike('name', name)
 					               .iLike('patronymic', patronymic)
