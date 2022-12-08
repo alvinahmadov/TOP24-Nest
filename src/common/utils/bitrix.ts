@@ -33,11 +33,11 @@ export type TBitrixKey = 'transportFixtures' |
                          'paymentType' |
                          'riskClass' |
                          'transportBrand' |
-                         'transportRiskClass' |
-                         'transportModel' |
-                         'transportLoading' |
                          'transportDedicated' |
+                         'transportLoading' |
+                         'transportModel' |
                          'transportPayload' |
+                         'transportRiskClass' |
                          'transportType';
 
 type TCrmOrderDestination = {
