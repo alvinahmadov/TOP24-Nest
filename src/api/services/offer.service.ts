@@ -591,7 +591,6 @@ export default class OfferService
 		}
 
 		if(createCount > 0) {
-			await this.repository.bulkCreate(offersToCreate);
 			const offers = await this.repository.bulkCreate(offersToCreate);
 			offers.forEach(
 				offer => this.gateway.sendDriverEvent(
