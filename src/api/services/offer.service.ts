@@ -534,15 +534,13 @@ export default class OfferService
 		const existingOffers = await this.repository.getList({}, { driverIds: Array.from(driverIds) });
 		await this.repository.bulkDelete({ id: { [Op.in]: existingOffers.map(e => e.id) } });
 
-		let driverOffers: TOfferDriver[] = Array.from(
-			new Set<string>(
-				driverDataList.map(driverData => driverData.driverId)
-			)
-		).map(
-			driverId => driverDataList.find(d => d.driverId === driverId)
-		).filter(
-			driverData => driverData !== null
-		);
+		let driverOffers: TOfferDriver[] = Array.from(driverIds)
+		                                        .map(
+			                                        driverId => driverDataList.find(d => d.driverId === driverId)
+		                                        )
+		                                        .filter(
+			                                        driverData => driverData !== null
+		                                        );
 
 		let { data: drivers } = await this.driverService.getByTransport(
 			{ driverIds: driverOffers.map(o => o.driverId) }
