@@ -79,9 +79,15 @@ export default class DriverService
 	 * */
 	public async getList(
 		listFilter: ListFilter,
-		filter: DriverFilter = {}
+		filter: DriverFilter = {},
+		debug: boolean = false
 	): Promise<IApiResponse<Driver[]>> {
 		const { full = false } = listFilter;
+		
+		if(debug){
+			filter.statuses = undefined;
+			filter.isReady = true
+		}
 
 		const data = await this.repository.getList(listFilter, filter);
 		const message = formatArgs(TRANSLATIONS['LIST'], data?.length);
