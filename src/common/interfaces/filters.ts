@@ -183,6 +183,7 @@ export interface IOrderFilter
 export interface IOfferFilter
 	extends IFilter,
 	        TModelFilter<IOffer> {
+	driverIds?: string[]
 	orderStatuses?: OrderStatus[];
 	driverStatus?: DriverStatus;
 	statuses?: OfferStatus[];

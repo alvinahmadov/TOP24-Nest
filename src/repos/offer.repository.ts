@@ -22,7 +22,7 @@ import {
 import {
 	CargoCompany,
 	CargoCompanyInn,
-	Driver, 
+	Driver,
 	Image,
 	Offer,
 	Order,
@@ -118,26 +118,27 @@ export default class OfferRepository
 		if(filter === null)
 			return [];
 
+		const {
+			from:  offset = 0,
+			count: limit,
+			full = false
+		} = listFilter ?? {};
+		const {
+			sortOrder = DEFAULT_SORT_ORDER,
+			strict = false,
+			orderStatus,
+			driverIds,
+			driverStatus,
+			transportStatus,
+			hasComment,
+			orderStatuses,
+			statuses,
+			...rest
+		} = filter ?? {};
+
 		return this.log(
 			() =>
 			{
-				const {
-					from:  offset = 0,
-					count: limit,
-					full = false
-				} = listFilter ?? {};
-				const {
-					sortOrder = DEFAULT_SORT_ORDER,
-					strict = false,
-					orderStatus,
-					driverStatus,
-					transportStatus,
-					hasComment,
-					orderStatuses,
-					statuses,
-					...rest
-				} = filter ?? {};
-
 				return this.model.findAll(
 					{
 						where:   {
@@ -146,6 +147,7 @@ export default class OfferRepository
 							       .eq('orderId', rest?.orderId)
 							       .eq('status', rest?.status)
 							       .eq('orderStatus', orderStatus)
+							       .in('driverId', driverIds)
 							       .in('orderStatus', orderStatuses)
 							       .in('status', statuses)
 								   .query ?? {}
