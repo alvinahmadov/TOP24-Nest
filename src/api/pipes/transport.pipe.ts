@@ -21,7 +21,7 @@ export class TransportCreatePipe
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');
 		checkAndConvertBitrix(value, 'model', 'transportModel');
 		checkAndConvertBitrix(value, 'type', 'transportType');
-		checkAndConvertArrayBitrix(value, 'fixtures', 'fixtures', Reference.FIXTURES);
+		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures', Reference.FIXTURES);
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass', Reference.TRANSPORT_RISK_CLASSES);
 		reformatDateString<ITransport>(value, ['diagnosticsExpiryDate', 'osagoExpiryDate']);
 
@@ -39,7 +39,7 @@ export class TransportUpdatePipe
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');
 		checkAndConvertBitrix(value, 'model', 'transportModel');
 		checkAndConvertBitrix(value, 'type', 'transportType');
-		checkAndConvertArrayBitrix(value, 'fixtures', 'fixtures', Reference.FIXTURES);
+		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures', Reference.FIXTURES);
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'riskClass', Reference.RISK_CLASSES);
 		reformatDateString<ITransport>(value, ['diagnosticsExpiryDate', 'osagoExpiryDate']);
 		delete value.id;
