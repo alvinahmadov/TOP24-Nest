@@ -11,14 +11,23 @@ const { companyinn: prop } = entityConfig;
 @InputType()
 export default class CompanyInnUpdateDto
 	implements TUpdateAttribute<ICargoCompanyInn> {
+	@ApiProperty(prop.name)
+	public name?: string;
+
+	@ApiProperty(prop.patronymic)
+	public patronymic?: string;
+
+	@ApiProperty(prop.lastName)
+	public lastName?: string;
+
+	@ApiProperty(prop.birthDate)
+	public birthDate?: Date;
+	
 	@ApiProperty(prop.actualAddress)
 	public actualAddress?: string;
 
 	@ApiProperty(prop.address)
 	public address?: string;
-
-	@ApiProperty(prop.birthDate)
-	public birthDate?: Date;
 
 	@ApiProperty(prop.confirmed)
 	public confirmed?: boolean;
@@ -38,12 +47,6 @@ export default class CompanyInnUpdateDto
 	@ApiProperty(prop.isDefault)
 	public isDefault?: boolean;
 
-	@ApiProperty(prop.lastName)
-	public lastName?: string;
-
-	@ApiProperty(prop.name)
-	public name?: string;
-
 	@ApiProperty(prop.passportGivenDate)
 	public passportGivenDate?: Date;
 
@@ -58,9 +61,6 @@ export default class CompanyInnUpdateDto
 
 	@ApiProperty(prop.passportSubdivisionCode)
 	public passportSubdivisionCode?: string;
-
-	@ApiProperty(prop.patronymic)
-	public patronymic?: string;
 
 	@ApiProperty(prop.paymentType)
 	public paymentType?: string;
