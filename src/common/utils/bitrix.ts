@@ -1,8 +1,5 @@
 import { CRM, ORDER, TRANSPORT }   from '@config/json';
-import {
-	BitrixUrl,
-	Reference
-}                                  from '@common/constants';
+import { BitrixUrl }               from '@common/constants';
 import {
 	AxiosStatic,
 	ApiQuery
@@ -26,32 +23,19 @@ import { dateValidator, isNumber } from '@common/utils';
 import { OrderCreateDto }          from '@api/dto';
 import { splitAddress }            from './address';
 
-import DEDICATED_MACHINE = Reference.DEDICATED_MACHINE;
-import FIXTURES = Reference.FIXTURES;
-import LOADING_TYPES = Reference.LOADING_TYPES;
-import ORDER_STATUSES = Reference.ORDER_STATUSES;
-import ORDER_STAGES = Reference.ORDER_STAGES;
-import ORDER_PAYLOADS = Reference.ORDER_PAYLOADS;
-import TRANSPORT_PAYLOADS = Reference.TRANSPORT_PAYLOADS;
-import PAYMENT_TYPES = Reference.PAYMENT_TYPES;
-import RISK_CLASSES = Reference.RISK_CLASSES;
-import TRANSPORT_BRANDS = Reference.TRANSPORT_BRANDS;
-import TRANSPORT_MODELS = Reference.TRANSPORT_MODELS;
-import TRANSPORT_TYPES = Reference.TRANSPORT_TYPES;
-import TRANSPORT_RISK_CLASSES = Reference.TRANSPORT_RISK_CLASSES;
-
 const DESTINATIONS: { [k: string]: TBitrixEnum } = CRM.ORDER.DESTINATION_TYPES;
 
-export type TBitrixKey = 'fixtures' |
-                         'loadingType' |
+export type TBitrixKey = 'transportFixtures' |
                          'orderStatus' |
                          'orderStage' |
                          'orderPayload' |
+                         'orderLoading' |
                          'paymentType' |
                          'riskClass' |
                          'transportBrand' |
                          'transportRiskClass' |
                          'transportModel' |
+                         'transportLoading' |
                          'transportDedicated' |
                          'transportPayload' |
                          'transportType';
@@ -76,7 +60,7 @@ function convertLoadingTypes(loadingType: number[]): LoadingType[] {
 
 	const setLoadingType = (value: number): LoadingType =>
 	{
-		const item = convertBitrix<string, string>('loadingType', value.toString(), true);
+		const item = convertBitrix<string, string>('orderLoading', value.toString(), true);
 		switch(item?.toLowerCase()?.trim()) {
 			case 'задняя':
 				return LoadingType.BACK;
@@ -126,7 +110,7 @@ function typeFromCrm<T extends number | string | boolean>(
 /**
  * Convert typescript date object to
  * formatted date string that accepted by Bitix
- * 
+ *
  * @example 12/30/2022 => 30-12-2022
  * */
 function toCrmDate(date: Date): string {
@@ -156,32 +140,34 @@ function selectBitrixEnum<R>(
 	callback: TBitrixEnumCallback<R>
 ): R {
 	switch(key) {
-		case 'fixtures':
-			return callback(FIXTURES);
-		case 'loadingType':
-			return callback(LOADING_TYPES);
 		case 'orderStatus':
-			return callback(ORDER_STATUSES);
+			return callback(CRM.ORDER.STATUSES);
 		case 'orderStage':
-			return callback(ORDER_STAGES);
+			return callback(CRM.ORDER.STAGES);
 		case 'orderPayload':
-			return callback(ORDER_PAYLOADS);
+			return callback(CRM.ORDER.PAYLOADS);
+		case 'orderLoading':
+			return callback(CRM.ORDER.LOADING_TYPES);
 		case 'paymentType':
-			return callback(PAYMENT_TYPES);
+			return callback(CRM.COMPANY.PAYMENT_TYPES);
 		case 'riskClass':
-			return callback(RISK_CLASSES);
-		case 'transportRiskClass':
-			return callback(TRANSPORT_RISK_CLASSES);
+			return callback(CRM.COMPANY.RISK_TYPES);
 		case 'transportBrand':
-			return callback(TRANSPORT_BRANDS);
-		case 'transportModel':
-			return callback(TRANSPORT_MODELS);
+			return callback(CRM.TRANSPORT.BRANDS);
 		case 'transportDedicated':
-			return callback(DEDICATED_MACHINE);
+			return callback(CRM.TRANSPORT.DEDICATED);
+		case 'transportFixtures':
+			return callback(CRM.TRANSPORT.EXTRA_FIXTURES);
+		case 'transportLoading':
+			return callback(CRM.TRANSPORT.LOADING_TYPES);
+		case 'transportModel':
+			return callback(CRM.TRANSPORT.MODELS);
 		case 'transportPayload':
-			return callback(TRANSPORT_PAYLOADS);
+			return callback(CRM.TRANSPORT.PAYLOADS);
+		case 'transportRiskClass':
+			return callback(CRM.TRANSPORT.RISK_TYPES);
 		case 'transportType':
-			return callback(TRANSPORT_TYPES);
+			return callback(CRM.TRANSPORT.TYPES);
 	}
 
 	return undefined;
