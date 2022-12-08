@@ -5,15 +5,18 @@ import {
 	DriverStatus,
 	OfferStatus,
 	OrderStatus,
+	OrderStage,
 	TransportStatus,
 	UserRole
 }                          from '@common/enums';
 import {
 	IApiResponses,
+	ICompanyTransportFilter,
 	IDriverFilter,
 	IListFilter,
 	IOfferFilter,
 	IOrder,
+	IOrderGatewayData,
 	IService,
 	ITransportFilter,
 	TAffectedRows,
@@ -29,7 +32,9 @@ import {
 }                          from '@common/utils';
 import {
 	transformEntity,
-	IOrderTransformer
+	IDriverTransformer,
+	IOrderTransformer,
+	ITransportTransformer
 }                          from '@common/utils/compat';
 import {
 	Driver,
@@ -119,39 +124,76 @@ export default class OfferService
 
 		const { order, driver } = offer;
 		if(driver) {
-			if(driver.order) {
-				if(
-					driver.order.id !== order.id &&
-					driver.order.status === OrderStatus.PROCESSING
-				) {
-					const transport = driver.transports.find(
-						t => t.status === TransportStatus.ACTIVE &&
-						     !t.isTrailer
-					);
-					const trailer = driver.transports.find(
-						t => t.status === TransportStatus.ACTIVE &&
-						     t.isTrailer
-					);
-					const filter = {
-						weightMin: offer.order.weight,
-						volumeMin: offer.order.volume,
-						heightMin: offer.order.height,
-						lengthMin: offer.order.length,
-						widthMin:  offer.order.width,
-						pallets:   offer.order.pallets
-					};
+			// Prevent the driver from processing of two distinct 
+			// orders at the same time if the new order is not of extra payload type
+			// Previous order must be finished prior to the taking new one.
 
-					if(transport) {
-						const messageObj = { message: '' };
-						if(!checkTransportRequirements(filter, transport, trailer, messageObj)) {
-							this.gateway.sendDriverEvent(
-								{
-									id:      driverId,
-									message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NO_MATCH'], messageObj.message)
-								},
-								UserRole.CARGO
-							);
+			// driver has old/active order
+			if(driver.order && driver.order.id !== order.id) {
+				if(
+					driver.order.status === OrderStatus.PROCESSING && // driver is processing the active order
+					driver.order.stage === OrderStage.SIGNED_DRIVER && // driver has signed the document of active order
+					!driver.order.onPayment // driver is not waiting for payment for active order
+				) {
+					// the new order is not extra
+					if(order.dedicated === 'Догруз') {
+						const transport = driver.transports.find(
+							t => t.status === TransportStatus.ACTIVE &&
+							     !t.isTrailer
+						);
+						const trailer = driver.transports.find(
+							t => t.status === TransportStatus.ACTIVE &&
+							     t.isTrailer
+						);
+						const filter: ICompanyTransportFilter = {
+							weightMin: order.weight,
+							volumeMin: order.volume,
+							heightMin: order.height,
+							lengthMin: order.length,
+							widthMin:  order.width,
+							pallets:   order.pallets
+						};
+
+						// Check for transport parameters matching 
+						// additional order parameters
+						if(transport) {
+							const messageObj = { message: '' };
+							if(
+								!transport.payloadExtra ||
+								!checkTransportRequirements(filter, transport, trailer, messageObj)
+							) {
+								const message = formatArgs(EVENT_DRIVER_TRANSLATIONS['NO_MATCH'], messageObj.message);
+
+								this.gateway.sendDriverEvent(
+									{
+										id: driverId,
+										message
+									},
+									UserRole.CARGO
+								);
+
+								return {
+									statusCode: 403,
+									message
+								};
+							}
 						}
+					}
+					else {
+						const message = OFFER_TRANSLATIONS['ACCEPTED'];
+
+						this.gateway.sendDriverEvent(
+							{
+								id: driverId,
+								message
+							},
+							UserRole.CARGO
+						);
+
+						return {
+							statusCode: 403,
+							message
+						};
 					}
 				}
 			}
@@ -193,6 +235,25 @@ export default class OfferService
 						}
 					}
 				);
+			}
+		}
+
+		if(dto.status !== undefined) {
+			const eventObject: IOrderGatewayData = {
+				id:     order.id,
+				event:  'order',
+				source: 'offer',
+				status: order.status,
+				stage:  order.stage
+			};
+
+			if(dto.status === OfferStatus.DECLINED) {
+				eventObject.message = 'Driver declined offer.';
+				this.gateway.sendOrderEvent(eventObject, UserRole.LOGIST);
+			}
+			if(dto.status === OfferStatus.CANCELLED) {
+				eventObject.message = 'Driver cancelled offer prior to approval.';
+				this.gateway.sendOrderEvent(eventObject, UserRole.LOGIST);
 			}
 		}
 
@@ -340,33 +401,58 @@ export default class OfferService
 							mainTransports[activeIndex].trailer = trailer;
 						}
 					}
-					driver.transports = null;
 					if(!driver.currentPoint) driver.currentPoint = 'A';
+					const getOptions = { plain: true, clone: false };
 
 					transports.push(
 						...mainTransports
 							.map(
-								t =>
-									(env.api.compatMode
-									 ? {
-											...transformEntity(t),
-											driver:        transformEntity(driver),
-											company_name:  driver.companyName,
-											offer_status:  offer.status,
-											bid_price:     offer.bidPrice,
-											bid_price_max: offer.bidPriceVat,
-											bid_comments:  offer.bidComment,
-											bid_info:      offer.bidComment
-										}
-									 : {
-											...t.get({ plain: true, clone: true }),
-											driver:      driver,
-											companyName: driver.companyName,
-											offerStatus: offer.status,
-											bidPrice:    offer.bidPrice,
-											bidPriceVat: offer.bidPriceVat,
-											bidComment:  offer.bidComment
-										})
+								transport =>
+								{
+									const {
+										status,
+										cargoId,
+										cargoinnId,
+										..._driver
+									} = env.api.compatMode
+									    ? transformEntity(driver) as IDriverTransformer
+									    : driver.get(getOptions);
+
+									const _transport = env.api.compatMode
+									                   ? transformEntity(transport) as ITransportTransformer
+									                   : transport.get(getOptions);
+
+									if('transports' in _driver)
+										delete _driver.transports;
+									if('cargo' in _driver)
+										delete _driver['cargo'];
+									if('cargoinn' in _driver)
+										delete _driver['cargoinn'];
+
+									if('driver' in _transport)
+										delete _transport.driver;
+
+									return env.api.compatMode ? {
+										..._transport,
+										driver:        _driver,
+										company_name:  driver.companyName,
+										offer_status:  offer.status,
+										order_status:  offer.orderStatus,
+										bid_price:     offer.bidPrice,
+										bid_price_max: offer.bidPriceVat,
+										bid_comments:  offer.bidComment,
+										bid_info:      offer.bidComment
+									} : {
+										..._transport,
+										driver:      _driver,
+										companyName: driver.companyName,
+										offerStatus: offer.status,
+										orderStatus: offer.orderStatus,
+										bidPrice:    offer.bidPrice,
+										bidPriceVat: offer.bidPriceVat,
+										bidComment:  offer.bidComment
+									};
+								}
 							)
 					);
 				}
@@ -600,6 +686,7 @@ export default class OfferService
 						driverId:    driverId,
 						isFree:      false,
 						isOpen:      false,
+						isCurrent:   true,
 						isCanceled:  false,
 						hasProblem:  false,
 						bidPrice:    offer.bidPrice,
