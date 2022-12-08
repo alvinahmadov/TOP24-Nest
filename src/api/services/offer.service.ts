@@ -52,6 +52,7 @@ import TransportService    from './transport.service';
 const OFFER_TRANSLATIONS = getTranslation('REST', 'OFFER');
 const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
 const EVENT_ORDER_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
+const SET_DRIVER_ACCEPTED = false;
 
 @Injectable()
 export default class OfferService
@@ -626,15 +627,17 @@ export default class OfferService
 					}
 				);
 
-				await this.driverService.update(driverId, {
-					status:       DriverStatus.ON_WAY,
-					currentPoint: 'A',
-					operation:    {
-						type:     DestinationType.LOAD,
-						loaded:   false,
-						unloaded: false
-					}
-				});
+				if(SET_DRIVER_ACCEPTED) {
+					await this.driverService.update(driverId, {
+						status:       DriverStatus.ON_WAY,
+						currentPoint: 'A',
+						operation:    {
+							type:     DestinationType.LOAD,
+							loaded:   false,
+							unloaded: false
+						}
+					});
+				}
 
 				this.orderService
 				    .send(offer.orderId)
@@ -642,7 +645,11 @@ export default class OfferService
 
 				return {
 					statusCode: 200,
-					data:       await this.repository.update(offer.id, { orderStatus: OrderStatus.PROCESSING }),
+					data:       await this.repository.update(offer.id,
+					                                         {
+						                                         orderStatus: OrderStatus.PROCESSING,
+						                                         status:      OfferStatus.RESPONDED
+					                                         }),
 					message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
 				};
 			}
