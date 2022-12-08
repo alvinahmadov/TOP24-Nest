@@ -5,7 +5,7 @@ import { ICompany }                  from '@common/interfaces';
 import { convertBitrix }             from '@common/utils';
 import {
 	transformToCargoCompany,
-	transformToCargoInnCompany
+	transformToCargoCompanyInn
 }                                    from '@common/utils/compat/transformer-functions';
 import {
 	CargoCompanyRepository,
@@ -60,7 +60,7 @@ export class CompanyCreatePipe
 				value = !env.api.compatMode ? data : transformToCargoCompany(data);
 			}
 			else {
-				value = !env.api.compatMode ? data : transformToCargoInnCompany(data);
+				value = !env.api.compatMode ? data : transformToCargoCompanyInn(data);
 			}
 			if(!value)
 				throw new Error('DTO data is null');

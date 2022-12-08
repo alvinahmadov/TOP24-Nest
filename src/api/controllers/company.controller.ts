@@ -34,7 +34,7 @@ import {
 }                              from '@common/utils';
 import {
 	transformToCargoCompany,
-	transformToCargoInnCompany,
+	transformToCargoCompanyInn,
 	transformToCompanyFilter,
 	transformToCompanyInnFilter
 }                              from '@common/utils/compat';
@@ -204,7 +204,7 @@ export default class CompanyController
 					result = await this.cargoService.update(id, <dto.CompanyUpdateDto>data);
 				}
 				else {
-					const data = !env.api.compatMode ? dto : transformToCargoInnCompany(dto);
+					const data = !env.api.compatMode ? dto : transformToCargoCompanyInn(dto);
 					result = await this.cargoInnService.update(id, <dto.CompanyInnUpdateDto>data);
 				}
 			}
