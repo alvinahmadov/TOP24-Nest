@@ -5,7 +5,7 @@ import { getTranslation } from '@common/utils';
  * */
 export enum DriverStatus {
 	/**
-	 * Driver is not ready or not willing to fulfill the order
+	 * Default value
 	 * */
 	NONE = 0,
 	/**
