@@ -46,23 +46,23 @@ Content-Type: application/json
 ### Get fields of crm deal
 // @no-log 
 // @no-cookie-jar
-GET {{bitrix}}/rest/32/{{bitrixKey}}/crm.deal.fields
+GET {{bitrixUrl}}/rest/32/{{bitrixKey}}/crm.deal.fields
 Content-Type: application/json
 
 ### Get fields of crm company
 // @no-log 
 // @no-cookie-jar
-GET {{bitrix}}/rest/32/{{bitrixKey}}/crm.company.fields
+GET {{bitrixUrl}}/rest/32/{{bitrixKey}}/crm.company.fields
 Content-Type: application/json
 
 ### Get fields of crm contact
 // @no-log 
 // @no-cookie-jar
-GET {{bitrix}}/rest/32/{{bitrixKey}}/crm.contact.fields
+GET {{bitrixUrl}}/rest/32/{{bitrixKey}}/crm.contact.fields
 Content-Type: application/json
 
 ### Get crm deal by id
 // @no-log 
 // @no-cookie-jar
-GET {{bitrix}}/rest/32/{{bitrixKey}}/crm.deal.get?ID={{crmId}}
+GET {{bitrixUrl}}/rest/32/{{bitrixKey}}/crm.deal.get?ID={{crmId}}
 Content-Type: application/json
