@@ -28,11 +28,18 @@ export default class AppService {
 		name: string = 'migration',
 		preview?: boolean
 	) {
-		return SequelizeMigration.makeMigration(this.sequelize, {
-			outDir:   path.join(__dirname, '../../db/migrations'),
-			filename: name,
-			preview:  preview
-		});
+		try {
+			return SequelizeMigration.makeMigration(this.sequelize, {
+				outDir:   path.join(__dirname, '../../db/migrations'),
+				filename: name,
+				preview:  preview
+			});
+		} catch(e) {
+			return {
+				statusCode: 500,
+				message:    e.message
+			};
+		}
 	}
 
 	public async reset() {
