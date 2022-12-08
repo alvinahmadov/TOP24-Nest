@@ -8,7 +8,6 @@ import {
 	TAsyncApiResponse
 }                            from '@common/interfaces';
 import {
-	calculateDistance,
 	formatArgs,
 	getTranslation,
 	searchAddressByKladr,

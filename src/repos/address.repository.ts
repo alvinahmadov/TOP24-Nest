@@ -4,7 +4,7 @@ import {
 }                        from 'sequelize';
 import {
 	DEFAULT_SORT_ORDER,
-	geoDistanceDbFn
+	GEO_DISTANCE_FN
 }                        from '@common/constants';
 import {
 	IAddress,
@@ -142,7 +142,7 @@ export default class AddressRepository
 		const latitude = coordinates[0];
 		const longitude = coordinates[1];
 
-		this.model.sequelize.fn(geoDistanceDbFn());
+		this.model.sequelize.fn(GEO_DISTANCE_FN);
 
 		return this.log(
 			() => this.model.sequelize.query<Address>(
