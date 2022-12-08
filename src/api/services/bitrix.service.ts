@@ -1,4 +1,4 @@
-import { Injectable }         from '@nestjs/common';
+import { Injectable, Scope }  from '@nestjs/common';
 import {
 	CARGO,
 	CARGOINN,
@@ -11,8 +11,8 @@ import { BitrixUrl }          from '@common/constants';
 import {
 	CompanyType,
 	OrderStage,
-	OrderStatus
-	// UserRole
+	OrderStatus,
+	UserRole
 }                             from '@common/enums';
 import {
 	IApiResponses,
@@ -31,9 +31,12 @@ import {
 	getTranslation,
 	orderFromBitrix
 }                             from '@common/utils';
-import { Order, Transport }   from '@models/index';
+import {
+	Order,
+	Transport
+}                             from '@models/index';
 import { OrderCreateDto }     from '@api/dto';
-// import { EventsGateway }      from '@api/events';
+import { EventsGateway }      from '@api/events';
 import Service                from './service';
 import CargoCompanyService    from './cargo-company.service';
 import CargoCompanyInnService from './cargoinn-company.service';
@@ -53,7 +56,7 @@ const DRIVER_EVENT_TRANSLATION = getTranslation('EVENT', 'DRIVER');
  *
  * @description Bitrix24 CRM service in bound of which works the service
  * */
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export default class BitrixService
 	extends Service<any, any>
 	implements IService {
@@ -64,17 +67,23 @@ export default class BitrixService
 		NOT_FOUND_TRANSPORT: { statusCode: 404, message: 'Transport Not found ...' },
 		NOT_FOUND_ORDER:     { statusCode: 404, message: 'Order Not found ...' }
 	};
+	private _gateway: EventsGateway;
 
 	constructor(
 		protected readonly cargoService: CargoCompanyService,
 		protected readonly cargoInnService: CargoCompanyInnService,
 		protected readonly orderService: OrderService,
 		protected readonly offerService: OfferService,
-		protected readonly transportService: TransportService,
-		// protected readonly gateway: EventsGateway
+		protected readonly transportService: TransportService
 	) {
 		super();
 	}
+
+	public set gateway(gateway: EventsGateway) {
+		this._gateway = gateway;
+	}
+
+	public get gateway(): EventsGateway { return this._gateway;}
 
 	/**
 	 * Fetch orders from bitrix
@@ -262,19 +271,17 @@ export default class BitrixService
 					if(cargo.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
 
 					await cargo.save({ fields: ['confirmed'] })
-					 /*
-					     .then((res) =>
-					           {
-						           this.gateway.sendCargoEvent(
-							           {
-								           id:     res.id,
-								           event:  'cargo',
-								           source: 'bitrix',
-								           message
-							           }
-						           );
-					           });
-					*/
+					           .then((res) =>
+					                 {
+						                 this.gateway.sendCargoEvent(
+							                 {
+								                 id:     res.id,
+								                 event:  'cargo',
+								                 source: 'bitrix',
+								                 message
+							                 }
+						                 );
+					                 });
 
 					return {
 						statusCode: 200,
@@ -288,17 +295,17 @@ export default class BitrixService
 					if(cargoinn.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
 
 					await cargoinn.save({ fields: ['confirmed'] })
-					        // .then((res) =>
-					        //       {
-						      //         this.gateway.sendCargoEvent(
-							    //           {
-								  //             id:     res.id,
-								  //             event:  'cargo',
-								  //             source: 'bitrix',
-								  //             message
-							    //           }
-						      //         );
-					        //       });
+					              .then((res) =>
+					                    {
+						                    this.gateway.sendCargoEvent(
+							                    {
+								                    id:     res.id,
+								                    event:  'cargo',
+								                    source: 'bitrix',
+								                    message
+							                    }
+						                    );
+					                    });
 
 					return {
 						statusCode: 200,
@@ -325,17 +332,17 @@ export default class BitrixService
 			if(transport) {
 				transport.confirmed = Number(crmItem[TRANSPORT.CONFIRMED]) === 1;
 				await transport.save({ fields: ['confirmed'] })
-				         // .then(() =>
-				         //       {
-					       //         this.gateway.sendDriverEvent(
-						     //           {
-							   //             id:     transport.driverId,
-							   //             source: 'bitrix',
-							   //             message
-						     //           },
-						     //           UserRole.CARGO
-					       //         );
-				         //       });
+				               .then(() =>
+				                     {
+					                     this.gateway.sendDriverEvent(
+						                     {
+							                     id:     transport.driverId,
+							                     source: 'bitrix',
+							                     message
+						                     },
+						                     UserRole.CARGO
+					                     );
+				                     });
 
 				return {
 					statusCode: 200,
@@ -425,16 +432,16 @@ export default class BitrixService
 						           async(response) =>
 						           {
 							           if(response.data) {
-								           // const order = response.data;
-								           // this.gateway.sendOrderEvent(
-									         //   {
-										       //     id:      order.id,
-										       //     source:  'bitrix',
-										       //     status:  order.status,
-										       //     stage:   order.stage,
-										       //     message: `Обновлены данные заказа ${order.title}!`
-									         //   }
-								           // );
+								           const order = response.data;
+								           this.gateway.sendOrderEvent(
+									           {
+										           id:      order.id,
+										           source:  'bitrix',
+										           status:  order.status,
+										           stage:   order.stage,
+										           message: `Обновлены данные заказа ${order.title}!`
+									           }
+								           );
 							           }
 							           return response;
 						           }
@@ -443,24 +450,24 @@ export default class BitrixService
 				else {
 					return this.orderService
 					           .create(orderData, false)
-					           // .then(
-						         //   (res) =>
-						         //   {
-							       //     if(res.data) {
-								     //       const order = res.data;
-								     //       this.gateway.sendOrderEvent(
-									   //         {
-										 //           id:      order.id,
-										 //           source:  'bitrix',
-										 //           status:  order.status,
-										 //           stage:   order.stage,
-										 //           message: `Появился новый заказ '${order.title}'!`
-									   //         }
-								     //       );
-							       //     }
-							       //     return res;
-						         //   }
-					           // );
+					           .then(
+						           (res) =>
+						           {
+							           if(res.data) {
+								           const order = res.data;
+								           this.gateway.sendOrderEvent(
+									           {
+										           id:      order.id,
+										           source:  'bitrix',
+										           status:  order.status,
+										           stage:   order.stage,
+										           message: `Появился новый заказ '${order.title}'!`
+									           }
+								           );
+							           }
+							           return res;
+						           }
+					           );
 				}
 			}
 			return this.responses['bitrixErr'];
@@ -479,7 +486,7 @@ export default class BitrixService
 		const { data: order } = await this.orderService.getByCrmId(crmId);
 		if(order) {
 			const { data: { affectedCount } } = await this.orderService.delete(order.id);
-			// if(affectedCount > 0) this.gateway.sendOrderEvent({ id: order.id, status: -1 });
+			if(affectedCount > 0) this.gateway.sendOrderEvent({ id: order.id, status: -1 });
 			return {
 				statusCode: 200,
 				data:       { affectedCount },
