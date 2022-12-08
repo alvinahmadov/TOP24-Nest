@@ -69,7 +69,7 @@ export default class DriverRepository
 			address,
 			statuses,
 			payloadDate,
-			isReady = true,
+			isReady,
 			...rest
 		} = filter ?? {};
 
