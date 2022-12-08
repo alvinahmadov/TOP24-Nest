@@ -274,7 +274,7 @@ export default class Transport
 		data.fields[TRANSPORT.PARAMS.PALLETS] = this.pallets;
 		data.fields[TRANSPORT.LOADING_TYPES] = this.loadingTypes
 		                                           ?.map(
-			                                           lt => convertBitrix('loadingType', loadingTypeToStr(lt), false)
+			                                           lt => convertBitrix('transportLoading', loadingTypeToStr(lt), false)
 		                                           );
 		if(this.isDedicated)
 			data.fields[TRANSPORT.DEDICATED] = CRM.TRANSPORT.DEDICATED[0].ID;
@@ -291,7 +291,7 @@ export default class Transport
 		data.fields[TRANSPORT.COMMENTS] = this.comments;
 		data.fields[TRANSPORT.FIXTURES] =
 			this.fixtures && Array.isArray(this.fixtures)
-			? this.fixtures.map(ef => convertBitrix('fixtures', ef, false)) : [];
+			? this.fixtures.map(ef => convertBitrix('transportFixtures', ef, false)) : [];
 		if(this.images)
 			data.fields[TRANSPORT.IMAGE] = this.images.map(image => image.url);
 
