@@ -53,6 +53,7 @@ import Service             from './service';
 import DriverService       from './driver.service';
 import OrderService        from './order.service';
 import TransportService    from './transport.service';
+import { Op }              from 'sequelize';
 
 const OFFER_TRANSLATIONS = getTranslation('REST', 'OFFER');
 const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
@@ -528,6 +529,10 @@ export default class OfferService
 				message:    OFFER_TRANSLATIONS['NOT_FOUND']
 			};
 		}
+
+		const driverIds = new Set<string>(driverDataList.map(d => d.driverId));
+		const existingOffers = await this.repository.getList({}, { driverIds: Array.from(driverIds) });
+		await this.repository.bulkDelete({ id: { [Op.in]: existingOffers.map(e => e.id) } });
 
 		let driverOffers: TOfferDriver[] = Array.from(
 			new Set<string>(
