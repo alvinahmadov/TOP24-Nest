@@ -29,7 +29,7 @@ const { path, tag, routes } = getRouteConfig('bitrix');
 @UseFilters(HttpExceptionFilter)
 export default class BitrixController
 	extends StaticController {
-	private static eventTimestamps: Set<string> = new Set<string>();
+	private static eventMap: Map<number, string> = new Map<number, string>();
 
 	public constructor(
 		private readonly bitrixService: BitrixService,
@@ -112,15 +112,15 @@ export default class BitrixController
 			return;
 
 		const crmId = Number(crm.data['FIELDS']['ID']);
-		
-		if(BitrixController.eventTimestamps.has(crm.ts)) {
-			if(BitrixController.eventTimestamps.size > 1000) {
-				BitrixController.eventTimestamps.clear();
+
+		if(BitrixController.eventMap.has(crmId)) {
+			if(BitrixController.eventMap.get(crmId) === crm.ts) {
+				return;
 			}
-			return;
+			if(BitrixController.eventMap.size > 1000)
+				BitrixController.eventMap.clear();
 		}
-		else
-			BitrixController.eventTimestamps.add(crm.ts);
+		BitrixController.eventMap.set(crmId, crm.ts);
 
 		switch(crm.event) {
 			case 'ONCRMDEALADD':
