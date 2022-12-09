@@ -253,27 +253,14 @@ export default class OfferRepository
 			orderStatuses
 		} = filter ?? {};
 
-		const andClause = this.whereClause('and')
-		                      .eq('orderId', orderId)
-		                      .eq('orderStatus', orderStatus)
-		                      .in('orderStatus', orderStatuses).query;
-
 		return this.log(
 			() => this.model.findAll(
 				{
-					where:   {
-						[Op.or]: [
-							{
-								status: {
-									[Op.in]: [
-										OfferStatus.DECLINED,
-										OfferStatus.CANCELLED
-									]
-								},
-								...andClause
-							}
-						]
-					},
+					where:   this.whereClause('and')
+					             .eq('orderId', orderId)
+					             .eq('orderStatus', orderStatus)
+					             .in('orderStatus', orderStatuses)
+						         .query,
 					offset,
 					limit,
 					order,
