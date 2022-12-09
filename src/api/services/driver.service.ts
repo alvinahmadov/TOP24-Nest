@@ -87,10 +87,7 @@ export default class DriverService
 		const { full = false } = listFilter;
 
 		if(debug) {
-			if(
-				filter.statuses?.every(s => DriverStatus.NONE < s && s <= DriverStatus.DOC_LOAD) ||
-				listFilter?.full !== true
-			) {
+			if(filter.statuses?.every(s => 1 <= s && s <= 4)) {
 				filter.statuses = undefined;
 				filter.isReady = true;
 			}
