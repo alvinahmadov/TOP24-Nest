@@ -251,8 +251,10 @@ export default class OfferService
 			};
 
 			if(
-				OfferStatus.DECLINED <= dto.status &&
-				dto.status <= OfferStatus.CANCELLED
+				[
+					OfferStatus.DECLINED,
+					OfferStatus.CANCELLED
+				].some(s => s === dto.status)
 			) {
 				if(dto.status === OfferStatus.DECLINED)
 					eventObject.message = 'Driver declined offer.';
