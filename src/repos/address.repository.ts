@@ -143,7 +143,7 @@ export default class AddressRepository
 			async() =>
 			{
 				return this.model.sequelize.query<Address>(
-					`SELECT * FROM addresses 
+					`SELECT DISTINCT ON(region) * FROM addresses 
 				WHERE geo_distance(
 					point(:latitude, :longitude),
 					point(latitude, longitude)
