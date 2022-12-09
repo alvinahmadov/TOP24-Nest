@@ -53,7 +53,6 @@ import DriverService          from './driver.service';
 import ImageFileService       from './image-file.service';
 
 const ORDER_TRANSLATIONS = getTranslation('REST', 'ORDER');
-const EVENT_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
 
 @Injectable()
 export default class OrderService
@@ -177,27 +176,12 @@ export default class OrderService
 	 * @description Creates order in database from bitrix service.
 	 *
 	 * @param {IOrder!} dto New data of order.
-	 * @param {Boolean} sendEvent Send notification.
 	 * */
-	public async create(
-		dto: OrderCreateDto,
-		sendEvent: boolean = true
-	): TAsyncApiResponse<Order> {
+	public async create(dto: OrderCreateDto): TAsyncApiResponse<Order> {
 		const order = await this.createModel(dto);
 
 		if(!order)
 			return this.repository.getRecord('create');
-
-		if(sendEvent) {
-			this.gateway.sendOrderEvent(
-				{
-					id:      order.id,
-					status:  order.status,
-					stage:   order.stage,
-					message: formatArgs(EVENT_TRANSLATIONS['CREATE'], order.title)
-				}
-			);
-		}
 
 		return {
 			statusCode: HttpStatus.CREATED,
@@ -212,29 +196,15 @@ export default class OrderService
 	 *
 	 * @param {String!} id Id of order to update.
 	 * @param {Partial<IOrder>!} dto Partial new data about order.
-	 * @param {Boolean} sendInfo Send websocket information. Default: true
 	 * */
 	public async update(
 		id: string,
-		dto: OrderUpdateDto,
-		sendInfo: boolean = true
+		dto: OrderUpdateDto
 	): TAsyncApiResponse<Order> {
 		const order = await this.repository.update(id, dto);
 
 		if(!order)
 			return this.repository.getRecord('update');
-
-		if(sendInfo) {
-			this.gateway.sendOrderEvent(
-				{
-					id:      order.id,
-					source:  'update',
-					status:  order.status,
-					stage:   order.stage,
-					message: formatArgs(EVENT_TRANSLATIONS['UPDATE'], order.title)
-				}
-			);
-		}
 
 		return {
 			statusCode: HttpStatus.OK,

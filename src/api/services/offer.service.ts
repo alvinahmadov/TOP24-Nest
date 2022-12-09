@@ -1,4 +1,7 @@
-import { Injectable }      from '@nestjs/common';
+import {
+	Injectable,
+	HttpStatus
+}                          from '@nestjs/common';
 import env                 from '@config/env';
 import {
 	DestinationType,
@@ -65,9 +68,9 @@ export default class OfferService
 	extends Service<Offer, OfferRepository>
 	implements IService {
 	public override readonly responses: IApiResponses<null> = {
-		ACCEPTED:  { statusCode: 400, message: OFFER_TRANSLATIONS['ACCEPTED'] },
-		DECLINED:  { statusCode: 400, message: OFFER_TRANSLATIONS['DECLINED'] },
-		NOT_FOUND: { statusCode: 404, message: OFFER_TRANSLATIONS['NOT_FOUND'] }
+		ACCEPTED:  { statusCode: HttpStatus.BAD_REQUEST, message: OFFER_TRANSLATIONS['ACCEPTED'] },
+		DECLINED:  { statusCode: HttpStatus.BAD_REQUEST, message: OFFER_TRANSLATIONS['DECLINED'] },
+		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: OFFER_TRANSLATIONS['NOT_FOUND'] }
 	};
 	private _gateway: EventsGateway;
 
@@ -94,7 +97,7 @@ export default class OfferService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       offer,
 			message:    formatArgs(OFFER_TRANSLATIONS['GET'], offer.id)
 		};
@@ -107,7 +110,7 @@ export default class OfferService
 		const offers = await this.repository.getList(listFilter, filter);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       offers,
 			message:    formatArgs(OFFER_TRANSLATIONS['LIST'], offers.length)
 		};
@@ -204,8 +207,7 @@ export default class OfferService
 			if(dto.orderStatus > OrderStatus.ACCEPTED) {
 				this.orderService.update(
 					order.id,
-					{ status: dto.orderStatus },
-					false
+					{ status: dto.orderStatus }
 				).then(
 					({ data: uOrder }) =>
 					{
@@ -262,7 +264,7 @@ export default class OfferService
 
 		if(result)
 			return {
-				statusCode: 200,
+				statusCode: HttpStatus.OK,
 				data:       result,
 				message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
 			};
@@ -278,7 +280,7 @@ export default class OfferService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       await this.repository.delete(id),
 			message:    formatArgs(OFFER_TRANSLATIONS['DELETE'], id)
 		};
@@ -293,7 +295,7 @@ export default class OfferService
 		const drivers = offers.map(offer => offer.driver);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       drivers,
 			message:    formatArgs(OFFER_TRANSLATIONS['DRIVERS'], drivers.length)
 		};
@@ -359,7 +361,7 @@ export default class OfferService
 		                     );
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       orders,
 			message:    formatArgs(OFFER_TRANSLATIONS['ORDERS'], orders.length)
 		};
@@ -461,7 +463,7 @@ export default class OfferService
 		);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       transports,
 			message:    formatArgs(OFFER_TRANSLATIONS['TRANSPORTS'], transports.length)
 		};
@@ -487,7 +489,8 @@ export default class OfferService
 
 		if(offer)
 			return {
-				statusCode: !exists ? 201 : 200,
+				statusCode: !exists ? HttpStatus.CREATED
+				                    : HttpStatus.OK,
 				data:       offer
 			};
 
@@ -508,7 +511,7 @@ export default class OfferService
 					.query
 			);
 			return {
-				statusCode: 200,
+				statusCode: HttpStatus.OK,
 				data:       {
 					createCount: 0,
 					updateCount: 0,
@@ -619,7 +622,7 @@ export default class OfferService
 		);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       { createCount, updateCount, offers },
 			message:    formatArgs(OFFER_TRANSLATIONS['SEND'], createCount, updateCount)
 		};
@@ -697,8 +700,7 @@ export default class OfferService
 						cargoId:     offer.driver.cargoId,
 						cargoinnId:  offer.driver.cargoinnId,
 						status:      OrderStatus.PROCESSING
-					},
-					false
+					}
 				).then(
 					({ data: order }) =>
 					{
@@ -733,7 +735,7 @@ export default class OfferService
 				    .catch(console.error);
 
 				return {
-					statusCode: 200,
+					statusCode: HttpStatus.OK,
 					data:       await this.repository.update(offer.id,
 					                                         {
 						                                         orderStatus: OrderStatus.PROCESSING,
@@ -744,7 +746,7 @@ export default class OfferService
 			}
 			else
 				return {
-					statusCode: 200,
+					statusCode: HttpStatus.OK,
 					data:       offer,
 					message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
 				};
@@ -780,7 +782,7 @@ export default class OfferService
 						    isOpen:      true,
 						    isFree:      true,
 						    cancelCause: reason ?? ''
-					    }, false)
+					    })
 					    .then(({ data: order }) =>
 					          {
 						          if(order) {
@@ -825,7 +827,7 @@ export default class OfferService
 				    .catch(console.error);
 
 				return {
-					statusCode: 200,
+					statusCode: HttpStatus.OK,
 					data:       await this.repository.update(
 						offer.id,
 						{
@@ -861,7 +863,7 @@ export default class OfferService
 		);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       offers,
 			message:    crmId ? crmId.toString() : ''
 		};
