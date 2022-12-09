@@ -26,6 +26,9 @@ export const getRandomCode = (
 
 export const isNumber = (value: any): boolean => !isNaN(Number(value));
 
+export const isSuccessResponse = <T>(response: IApiResponse<T>) =>
+	response?.statusCode >= 200 && response?.statusCode < 400;
+
 export const min = (a: number, b: number): number => a > b ? b : a;
 
 export const randomOf = <T>(...args: T[]): T => args[Math.floor(Math.random() * args?.length)];
