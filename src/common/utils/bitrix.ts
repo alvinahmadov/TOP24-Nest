@@ -93,14 +93,14 @@ function typeFromCrm<T extends number | string | boolean>(
 		return conv(crmItem);
 	}
 
-	switch(typeof crmItem) {
+	switch(typeof defaultValue) {
 		case 'string':
 		case 'symbol':
 			return conv(crmItem?.toString()) ?? defaultValue;
 		case 'number': {
 			if(!crmItem)
 				return defaultValue;
-			return conv(Number(crmItem));
+			return conv(Number(crmItem)) ?? defaultValue;
 		}
 		case 'boolean':
 			return conv(isBool() || defaultValue);
