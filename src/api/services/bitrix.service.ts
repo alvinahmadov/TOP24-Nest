@@ -56,7 +56,7 @@ const DRIVER_EVENT_TRANSLATION = getTranslation('EVENT', 'DRIVER');
  *
  * @description Bitrix24 CRM service in bound of which works the service
  * */
-@Injectable({ scope: Scope.REQUEST })
+@Injectable({ scope: Scope.TRANSIENT })
 export default class BitrixService
 	extends Service<any, any>
 	implements IService {
