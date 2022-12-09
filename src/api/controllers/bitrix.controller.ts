@@ -107,7 +107,7 @@ export default class BitrixController
 		if(crm.data === undefined ||
 		   crm.data['FIELDS'] === undefined ||
 		   crm.data['FIELDS']['ID'] === undefined)
-			return;
+			return crm;
 
 		const crmId = Number(crm.data['FIELDS']['ID']);
 
@@ -128,5 +128,7 @@ export default class BitrixController
 				await this.bitrixService.updateTransport(crmId);
 				break;
 		}
+		
+		return crm;
 	}
 }
