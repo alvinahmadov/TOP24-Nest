@@ -183,7 +183,7 @@ export interface IOrderFilter
 export interface IOfferFilter
 	extends IFilter,
 	        TModelFilter<IOffer> {
-	driverIds?: string[]
+	driverIds?: string[];
 	orderStatuses?: OrderStatus[];
 	driverStatus?: DriverStatus;
 	statuses?: OfferStatus[];
@@ -241,3 +241,7 @@ export interface ICompanyTransportFilter
 export interface IUserFilter
 	extends IFilter,
 	        TModelFilter<IUser> {}
+
+export type TOfferTransportFilter = Pick<IOfferFilter, 'transportStatus' | 'orderStatuses'> &
+                                    Omit<IDriverFilter, 'statuses'>
+                                    & { offerStatuses?: OfferStatus[] };
