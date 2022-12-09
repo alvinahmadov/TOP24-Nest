@@ -1,6 +1,7 @@
 import {
 	forwardRef, Inject,
-	Injectable
+	Injectable,
+	HttpStatus
 }                            from '@nestjs/common';
 import { BitrixUrl, Bucket } from '@common/constants';
 import { UserRole }          from '@common/enums';
@@ -49,7 +50,7 @@ export default class DriverService
 	extends Service<Driver, DriverRepository>
 	implements IService {
 	public override readonly responses: IApiResponses<null> = {
-		NOT_FOUND: { statusCode: 404, message: TRANSLATIONS['NOT_FOUND'] }
+		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: TRANSLATIONS['NOT_FOUND'] }
 	};
 	private _gateway: EventsGateway;
 
@@ -84,17 +85,17 @@ export default class DriverService
 		debug: boolean = false
 	): Promise<IApiResponse<Driver[]>> {
 		const { full = false } = listFilter;
-		
-		if(debug){
+
+		if(debug) {
 			filter.statuses = undefined;
-			filter.isReady = true
+			filter.isReady = true;
 		}
 
 		const data = await this.repository.getList(listFilter, filter);
 		const message = formatArgs(TRANSLATIONS['LIST'], data?.length);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       filterDrivers(data, filter, full, 2),
 			message
 		};
@@ -114,7 +115,7 @@ export default class DriverService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       driver,
 			message:    formatArgs(TRANSLATIONS['GET'], driver.fullName)
 		};
@@ -126,10 +127,10 @@ export default class DriverService
 		const drivers = await this.repository.getByTransports(filter);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       drivers,
 			message:    formatArgs(TRANSLATIONS['TRANSPORTS'], drivers.length)
-		} as IApiResponse<Driver[]>;
+		};
 	}
 
 	/**
@@ -150,7 +151,7 @@ export default class DriverService
 			statusCode: 201,
 			data:       driver,
 			message:    formatArgs(TRANSLATIONS['CREATE'], driver.fullName)
-		} as IApiResponse<Driver>;
+		};
 	}
 
 	/**
@@ -173,7 +174,7 @@ export default class DriverService
 		const message = formatArgs(TRANSLATIONS['UPDATE'], driver.fullName);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       driver,
 			message
 		};
@@ -231,7 +232,7 @@ export default class DriverService
 		const { affectedCount = 0 } = await this.repository.delete(id);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       {
 				driver:    {
 					affectedCount,
@@ -290,7 +291,7 @@ export default class DriverService
 		}
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       crmId
 		};
 	}
