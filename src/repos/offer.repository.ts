@@ -257,11 +257,13 @@ export default class OfferRepository
 		return this.log(
 			() => this.model.findAll(
 				{
-					where:   this.whereClause()
-					             .eq('orderId', orderId)
-					             .in('orderStatus', orderStatuses)
-					             .in('status', offerStatuses)
-						         .query,
+					where:   {
+						orderId: { [Op.eq]: orderId },
+						[Op.or]: [
+							{ orderStatus: { [Op.in]: orderStatuses } },
+							{ status: { [Op.in]: offerStatuses } }
+						]
+					},
 					offset,
 					limit,
 					order,
