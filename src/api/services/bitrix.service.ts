@@ -414,9 +414,9 @@ export default class BitrixService
 				if(orderData.stage === OrderStage.PAYMENT_RECEIVED) {
 					orderData.status = OrderStatus.FINISHED;
 				}
+				let { data: order } = await this.orderService.getByCrmId(crmId);
 
-				if(isUpdateRequest) {
-					let { data: order } = await this.orderService.getByCrmId(crmId);
+				if(isUpdateRequest && order) {
 					if(order.hasSent) {
 						return this.orderService.update(order.id, { hasSent: false });
 					}
