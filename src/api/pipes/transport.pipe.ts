@@ -43,6 +43,8 @@ export class TransportUpdatePipe
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'riskClass', Reference.RISK_CLASSES);
 		reformatDateString<ITransport>(value, ['diagnosticsExpiryDate', 'osagoExpiryDate']);
 		delete value.id;
+		delete value.isTrailer;
+		delete value.hasSent;
 		delete value.confirmed;
 		delete value.createdAt;
 		delete value.updatedAt;
