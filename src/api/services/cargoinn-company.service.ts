@@ -1,5 +1,5 @@
 import * as uuid                     from 'uuid';
-import { Injectable }                from '@nestjs/common';
+import { HttpStatus, Injectable }    from '@nestjs/common';
 import { BitrixUrl }                 from '@common/constants';
 import { AxiosStatic }               from '@common/classes';
 import { UserRole }                  from '@common/enums';
@@ -15,6 +15,7 @@ import {
 	filterDirections,
 	filterTransports,
 	formatArgs,
+	isSuccessResponse,
 	getTranslation
 }                                    from '@common/utils';
 import {
@@ -44,14 +45,14 @@ export default class CargoCompanyInnService
 	extends Service<CargoCompanyInn, CargoInnCompanyRepository>
 	implements IService {
 	public override readonly responses: IApiResponses<null> = {
-		NOT_FOUND:       { statusCode: 404, message: TRANSLATIONS['NOT_FOUND'] },
-		NOT_ACCEPTABLE:  { statusCode: 406, message: TRANSLATIONS['NOT_ACCEPTABLE'] },
-		ACCESS_DENIED:   { statusCode: 401, message: TRANSLATIONS['ACCESS_DENIED'] },
-		INCORRECT_TOKEN: { statusCode: 400, message: TRANSLATIONS['INCORRECT_TOKEN'] },
-		INCORRECT_PASSW: { statusCode: 403, message: TRANSLATIONS['INCORRECT_PASSW'] },
-		INCORRECT_CODE:  { statusCode: 403, message: TRANSLATIONS['INCORRECT_CODE'] },
-		INCORRECT_PHONE: { statusCode: 403, message: TRANSLATIONS['INCORRECT_PHONE'] },
-		CRM_ERROR:       { statusCode: 500, message: TRANSLATIONS['CRM_ERROR'] }
+		NOT_FOUND:       { statusCode: HttpStatus.NOT_FOUND, message: TRANSLATIONS['NOT_FOUND'] },
+		NOT_ACCEPTABLE:  { statusCode: HttpStatus.NOT_ACCEPTABLE, message: TRANSLATIONS['NOT_ACCEPTABLE'] },
+		ACCESS_DENIED:   { statusCode: HttpStatus.FORBIDDEN, message: TRANSLATIONS['ACCESS_DENIED'] },
+		INCORRECT_TOKEN: { statusCode: HttpStatus.BAD_REQUEST, message: TRANSLATIONS['INCORRECT_TOKEN'] },
+		INCORRECT_PASSW: { statusCode: HttpStatus.BAD_REQUEST, message: TRANSLATIONS['INCORRECT_PASSW'] },
+		INCORRECT_CODE:  { statusCode: HttpStatus.BAD_REQUEST, message: TRANSLATIONS['INCORRECT_CODE'] },
+		INCORRECT_PHONE: { statusCode: HttpStatus.BAD_REQUEST, message: TRANSLATIONS['INCORRECT_PHONE'] },
+		CRM_ERROR:       { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: TRANSLATIONS['CRM_ERROR'] }
 	};
 
 	constructor(
@@ -81,7 +82,7 @@ export default class CargoCompanyInnService
 		const data = await this.repository.getList(listFilter, filter);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data,
 			message:    formatArgs(TRANSLATIONS['LIST'], data?.length)
 		};
@@ -101,7 +102,7 @@ export default class CargoCompanyInnService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['GET'], company.name)
 		};
@@ -121,7 +122,7 @@ export default class CargoCompanyInnService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['GET'], company.name)
 		};
@@ -166,7 +167,7 @@ export default class CargoCompanyInnService
 		company.user = user;
 
 		return {
-			statusCode: 201,
+			statusCode: HttpStatus.CREATED,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['CREATE'], company.name)
 		};
@@ -188,7 +189,7 @@ export default class CargoCompanyInnService
 			return this.repository.getRecord('update');
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['UPDATE'], company.name)
 		};
@@ -250,7 +251,7 @@ export default class CargoCompanyInnService
 		const { affectedCount = 0 } = await this.repository.delete(id);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       {
 				company:   {
 					affectedCount,
@@ -330,7 +331,7 @@ export default class CargoCompanyInnService
 		const message = formatArgs(TRANSLATIONS['TRANSPORTS'], transports.length);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data,
 			message
 		};
@@ -352,7 +353,7 @@ export default class CargoCompanyInnService
 		}
 		const result = await cargoToBitrix(company);
 
-		if(result.statusCode === 200) {
+		if(isSuccessResponse(result)) {
 			await this.repository.update(id, { hasSent: true });
 			const { data: { contactCrmIds, crmId } } = result;
 			const promises: Promise<IApiResponse<Transport>>[] = [];
@@ -395,7 +396,7 @@ export default class CargoCompanyInnService
 				if(company && company.isDefault) {
 					await disableCompany(user.id);
 					return {
-						statusCode: 200,
+						statusCode: HttpStatus.OK,
 						data:       company
 					};
 				}
@@ -403,7 +404,7 @@ export default class CargoCompanyInnService
 			}
 			else {
 				return {
-					statusCode: 404,
+					statusCode: HttpStatus.NOT_FOUND,
 					message:    'User not found!'
 				};
 			}
@@ -413,7 +414,7 @@ export default class CargoCompanyInnService
 		}
 
 		return {
-			statusCode: 404,
+			statusCode: HttpStatus.NOT_FOUND,
 			message:    `Company with phone ${id} not found!`
 		};
 	}
