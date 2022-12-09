@@ -1,11 +1,8 @@
 import {
 	FindAttributeOptions,
 	QueryTypes
-}                        from 'sequelize';
-import {
-	DEFAULT_SORT_ORDER,
-	GEO_DISTANCE_FN
-}                        from '@common/constants';
+}                             from 'sequelize';
+import { DEFAULT_SORT_ORDER } from '@common/constants';
 import {
 	IAddress,
 	IAddressFilter,
@@ -13,9 +10,9 @@ import {
 	IRepository,
 	IRepositoryOptions,
 	TGeoCoordinate
-}                        from '@common/interfaces';
-import { Address }       from '@models/index';
-import GenericRepository from './generic';
+}                             from '@common/interfaces';
+import { Address }            from '@models/index';
+import GenericRepository      from './generic';
 
 export default class AddressRepository
 	extends GenericRepository<Address, IAddress>
@@ -150,7 +147,7 @@ export default class AddressRepository
 				WHERE geo_distance(
 					point(:latitude, :longitude),
 					point(latitude, longitude)
-				) <= :distance;`,
+				)/1000 <= :distance;`,
 					{
 						replacements: { latitude, longitude, distance },
 						type:         QueryTypes.SELECT
