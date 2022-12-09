@@ -309,7 +309,7 @@ export default class OrderService
 		try {
 			let companyCrmId = null,
 				driverCrmId = null;
-			let driverCoordinates: [number, number] = null;
+			let driverCoordinates: [number, number];
 			if(order.cargo) {
 				const cargo = order.cargo;
 				if(cargo.crmId) {
@@ -355,14 +355,15 @@ export default class OrderService
 				                         buildBitrixRequestUrl(BitrixUrl.ORDER_UPD_URL, data, crmOrderId)
 			                         );
 
-			if(client !== undefined) {
+			if(client) {
 				const { result } = client;
 				if(!crmOrderId && result && result !== '') {
 					if(typeof result !== 'boolean' && typeof result === 'string') {
 						crmOrderId = Number(result);
-						await this.repository.update(id, { crmId: crmOrderId, hasSent: true });
+						await this.repository.update(id, { crmId: crmOrderId });
 					}
 				}
+				await this.repository.update(id, { hasSent: true });
 			}
 		} catch(e) {
 			console.error(e);
