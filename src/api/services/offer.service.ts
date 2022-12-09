@@ -246,10 +246,8 @@ export default class OfferService
 				id:     order.id,
 				event:  'order',
 				source: 'offer',
-				status: order.status,
 				stage:  order.stage
 			};
-
 			if(
 				[
 					OfferStatus.DECLINED,
@@ -261,8 +259,16 @@ export default class OfferService
 				else if(dto.status === OfferStatus.CANCELLED)
 					eventObject.message = 'Driver cancelled offer prior to approval.';
 
-				await this.orderService.update(orderId, { status: 0 });
-				this.gateway.sendOrderEvent(eventObject, UserRole.LOGIST);
+				dto.orderStatus = OrderStatus.PENDING;
+
+				this.orderService
+				    .update(orderId, { status: dto.orderStatus })
+				    .then(({ data: o }) =>
+				          {
+					          eventObject.status = o?.status;
+					          this.gateway.sendOrderEvent(eventObject, UserRole.LOGIST);
+				          })
+				    .catch(console.error);
 			}
 		}
 
