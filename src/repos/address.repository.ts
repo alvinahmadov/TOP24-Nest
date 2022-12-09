@@ -1,8 +1,21 @@
-import { FindAttributeOptions, QueryTypes }                                                       from 'sequelize';
-import { DEFAULT_SORT_ORDER, GEO_DISTANCE_FN }                                                    from '@common/constants';
-import { IAddress, IAddressFilter, IListFilter, IRepository, IRepositoryOptions, TGeoCoordinate } from '@common/interfaces';
-import { Address }                                                                                from '@models/index';
-import GenericRepository                                                                          from './generic';
+import {
+	FindAttributeOptions,
+	QueryTypes
+}                        from 'sequelize';
+import {
+	DEFAULT_SORT_ORDER,
+	GEO_DISTANCE_FN
+}                        from '@common/constants';
+import {
+	IAddress,
+	IAddressFilter,
+	IListFilter,
+	IRepository,
+	IRepositoryOptions,
+	TGeoCoordinate
+}                        from '@common/interfaces';
+import { Address }       from '@models/index';
+import GenericRepository from './generic';
 
 export default class AddressRepository
 	extends GenericRepository<Address, IAddress>
