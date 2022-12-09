@@ -90,13 +90,13 @@ function typeFromCrm<T extends number | string | boolean>(
 	if(Array.isArray(crmItem)) {
 		return crmItem;
 	}
-	
+
 	switch(typeof crmItem) {
 		case 'string':
 		case 'symbol':
 			return crmItem ?? defaultValue;
 		case 'number':
-			return Number(crmItem ?? defaultValue) as unknown as T;
+			return (Number(crmItem) ?? defaultValue) as unknown as T;
 		case 'boolean':
 			return (isBool() || defaultValue) as unknown as T;
 		case 'undefined':
