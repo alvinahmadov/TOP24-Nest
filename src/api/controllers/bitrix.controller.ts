@@ -113,8 +113,10 @@ export default class BitrixController
 
 		switch(crm.event) {
 			case 'ONCRMDEALADD':
-			case 'ONCRMDEALUPDATE':
 				await this.bitrixService.synchronizeOrder(crmId);
+				break;
+			case 'ONCRMDEALUPDATE':
+				await this.bitrixService.synchronizeOrder(crmId, true);
 				break;
 			case 'ONCRMDEALDELETE':
 				await this.bitrixService.deleteOrder(crmId);

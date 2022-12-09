@@ -361,11 +361,12 @@ export default class BitrixService
 	 * @description Sends request to Bitrix service to fetch and update order data.
 	 *
 	 * @param {Number!} crmId CRM id of order to update in bitrix
+	 * @param {Boolean} isUpdateRequest Response as order update
 	 * */
-	public async synchronizeOrder(crmId: number)
+	public async synchronizeOrder(crmId: number, isUpdateRequest: boolean = false)
 		: TAsyncApiResponse<Order> {
 		try {
-			const { result } = await this.httpClient.post<TCRMResponse>(`${ORDER_GET_URL}?ID=${crmId}`);
+			const { result } = await this.httpClient.get<TCRMResponse>(`${ORDER_GET_URL}?ID=${crmId}`);
 			const crmItem = getCrm(result);
 
 			if(crmItem) {
@@ -407,7 +408,7 @@ export default class BitrixService
 					orderData.status = OrderStatus.FINISHED;
 				}
 
-				if(order) {
+				if(isUpdateRequest || order) {
 					if(order.hasSent) {
 						const { data } = await this.orderService.update(order.id, { hasSent: false });
 						if(data) {
@@ -472,7 +473,7 @@ export default class BitrixService
 			}
 			return this.responses['bitrixErr'];
 		} catch(e) {
-			console.error(e);
+			console.error(e.message);
 			return { statusCode: 400, message: e.message };
 		}
 	}
