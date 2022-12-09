@@ -254,15 +254,16 @@ export default class OfferService
 					OfferStatus.CANCELLED
 				].some(s => s === dto.status)
 			) {
-				if(dto.status === OfferStatus.DECLINED)
+				if(dto.status === OfferStatus.DECLINED) {
 					eventObject.message = 'Driver declined offer.';
-				else if(dto.status === OfferStatus.CANCELLED)
+				}
+				else if(dto.status === OfferStatus.CANCELLED) {
 					eventObject.message = 'Driver cancelled offer prior to approval.';
-
-				dto.orderStatus = OrderStatus.PENDING;
-				dto.bidPrice = null;
-				dto.bidPriceVat = null;
-				dto.bidComment = null;
+					dto.orderStatus = OrderStatus.PENDING;
+					dto.bidPrice = null;
+					dto.bidPriceVat = null;
+					dto.bidComment = null;
+				}
 
 				this.orderService
 				    .update(orderId, { status: dto.orderStatus })
