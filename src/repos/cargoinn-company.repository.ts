@@ -27,8 +27,14 @@ export default class CargoInnCompanyRepository
 	protected override readonly include: Includeable[] = [
 		{
 			model:   Driver,
-			include: [{ model: Transport }]
+			include: [
+				{
+					model:   Transport,
+					include: [{ model: Image }]
+				}
+			]
 		},
+		{ model: Image },
 		{ model: Order },
 		{ model: Payment },
 		{
