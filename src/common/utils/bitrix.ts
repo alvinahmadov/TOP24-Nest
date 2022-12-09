@@ -94,9 +94,12 @@ function typeFromCrm<T extends number | string | boolean>(
 	switch(typeof crmItem) {
 		case 'string':
 		case 'symbol':
-			return crmItem ?? defaultValue;
-		case 'number':
-			return (Number(crmItem) ?? defaultValue) as unknown as T;
+			return crmItem?.toString() as unknown as T ?? defaultValue;
+		case 'number': {
+			if(!crmItem)
+				return defaultValue;
+			return Number(crmItem) as unknown as T;
+		}
 		case 'boolean':
 			return (isBool() || defaultValue) as unknown as T;
 		case 'undefined':
