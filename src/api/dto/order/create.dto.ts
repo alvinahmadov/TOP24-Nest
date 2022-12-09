@@ -152,10 +152,10 @@ export default class OrderCreateDto
 	bidInfo?: string;
 
 	@ApiProperty(prop.bidPrice)
-	bidPrice?: number;
+	bidPrice?: number = 0.0;
 
 	@ApiProperty(prop.bidPriceVat)
-	bidPriceVAT?: number;
+	bidPriceVAT?: number = 0.0;
 
 	@ApiProperty(prop.destinations)
 	destinations: OrderDestination[] = [];
