@@ -31,7 +31,8 @@ import {
 	checkTransportRequirements,
 	filterTransports,
 	formatArgs,
-	getTranslation
+	getTranslation,
+	isSuccessResponse
 }                          from '@common/utils';
 import {
 	transformEntity,
@@ -263,17 +264,18 @@ export default class OfferService
 					dto.bidPrice = null;
 					dto.bidPriceVat = null;
 					dto.bidComment = null;
-				}
 
-				this.orderService
-				    .update(orderId, { status: dto.orderStatus })
-				    .then(({ data: o }) =>
-				          {
-					          eventObject.status = o?.status;
-					          this.gateway.sendOrderEvent(eventObject, UserRole.LOGIST);
-				          })
-				    .catch(console.error);
+					this.orderService
+					    .update(orderId, { status: dto.orderStatus })
+					    .then((res) =>
+					          {
+						          if(isSuccessResponse(res))
+							          eventObject.status = res.data.status;
+					          });
+				}
 			}
+			
+			this.gateway.sendOrderEvent(eventObject, UserRole.LOGIST);
 		}
 
 		const result = await this.repository.update(offer.id, dto);
