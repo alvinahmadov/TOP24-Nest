@@ -1,21 +1,8 @@
-import {
-	FindAttributeOptions,
-	QueryTypes
-}                        from 'sequelize';
-import {
-	DEFAULT_SORT_ORDER,
-	GEO_DISTANCE_FN
-}                        from '@common/constants';
-import {
-	IAddress,
-	IAddressFilter,
-	IListFilter,
-	IRepository,
-	IRepositoryOptions,
-	TGeoCoordinate
-}                        from '@common/interfaces';
-import { Address }       from '@models/index';
-import GenericRepository from './generic';
+import { FindAttributeOptions, QueryTypes }                                                       from 'sequelize';
+import { DEFAULT_SORT_ORDER, GEO_DISTANCE_FN }                                                    from '@common/constants';
+import { IAddress, IAddressFilter, IListFilter, IRepository, IRepositoryOptions, TGeoCoordinate } from '@common/interfaces';
+import { Address }                                                                                from '@models/index';
+import GenericRepository                                                                          from './generic';
 
 export default class AddressRepository
 	extends GenericRepository<Address, IAddress>
@@ -142,19 +129,21 @@ export default class AddressRepository
 		const latitude = coordinates[0];
 		const longitude = coordinates[1];
 
-		this.model.sequelize.fn(GEO_DISTANCE_FN);
-
 		return this.log(
-			() => this.model.sequelize.query<Address>(
-				`SELECT * FROM addresses 
+			async() =>
+			{
+				this.model.sequelize.fn(GEO_DISTANCE_FN);
+				return this.model.sequelize.query<Address>(
+					`SELECT * FROM addresses 
 				WHERE geo_distance(
 					point(:latitude, :longitude),
 					point(latitude, longitude)
 				) <= :distance;`,
-				{
-					replacements: { latitude, longitude, distance: maxDistance },
-					type:         QueryTypes.SELECT
-				}),
+					{
+						replacements: { latitude, longitude, distance: maxDistance },
+						type:         QueryTypes.SELECT
+					});
+			},
 			{ id: 'findByCoordinates' },
 			{ coordinates }
 		);
