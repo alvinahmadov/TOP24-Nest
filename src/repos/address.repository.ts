@@ -138,14 +138,13 @@ export default class AddressRepository
 		);
 	}
 
-	public async findByCoordinates(coordinates: TGeoCoordinate, maxDistance: number = 60.0) {
+	public async findByCoordinates(coordinates: TGeoCoordinate, distance: number = 60.0) {
 		const latitude = coordinates[0];
 		const longitude = coordinates[1];
 
 		return this.log(
 			async() =>
 			{
-				this.model.sequelize.fn(GEO_DISTANCE_FN);
 				return this.model.sequelize.query<Address>(
 					`SELECT * FROM addresses 
 				WHERE geo_distance(
@@ -153,12 +152,12 @@ export default class AddressRepository
 					point(latitude, longitude)
 				) <= :distance;`,
 					{
-						replacements: { latitude, longitude, distance: maxDistance },
+						replacements: { latitude, longitude, distance },
 						type:         QueryTypes.SELECT
 					});
 			},
 			{ id: 'findByCoordinates' },
-			{ coordinates }
+			{ coordinates, distance }
 		);
 	}
 }
