@@ -2,9 +2,9 @@ import {
 	forwardRef, Inject,
 	Injectable,
 	HttpStatus
-}                            from '@nestjs/common';
-import { BitrixUrl, Bucket } from '@common/constants';
-import { UserRole }          from '@common/enums';
+}                                 from '@nestjs/common';
+import { BitrixUrl, Bucket }      from '@common/constants';
+import { DriverStatus, UserRole } from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -17,7 +17,7 @@ import {
 	TGeoCoordinate,
 	TMergedEntities,
 	TUpdateAttribute
-}                            from '@common/interfaces';
+}                                 from '@common/interfaces';
 import {
 	addressFromCoordinates,
 	buildBitrixRequestUrl,
@@ -25,20 +25,20 @@ import {
 	filterDrivers,
 	formatArgs,
 	getTranslation
-}                            from '@common/utils';
-import { Driver, Order }     from '@models/index';
-import { DriverRepository }  from '@repos/index';
+}                                 from '@common/utils';
+import { Driver, Order }          from '@models/index';
+import { DriverRepository }       from '@repos/index';
 import {
 	DriverCreateDto,
 	DriverFilter,
 	DriverUpdateDto,
 	ListFilter,
 	TransportFilter
-}                            from '@api/dto';
-import { EventsGateway }     from '@api/events';
-import Service               from './service';
-import ImageFileService      from './image-file.service';
-import OrderService          from './order.service';
+}                                 from '@api/dto';
+import { EventsGateway }          from '@api/events';
+import Service                    from './service';
+import ImageFileService           from './image-file.service';
+import OrderService               from './order.service';
 import CONTACT_DEL_URL = BitrixUrl.CONTACT_DEL_URL;
 import CONTACT_UPD_URL = BitrixUrl.CONTACT_UPD_URL;
 import CONTACT_ADD_URL = BitrixUrl.CONTACT_ADD_URL;
@@ -87,8 +87,10 @@ export default class DriverService
 		const { full = false } = listFilter;
 
 		if(debug) {
-			filter.statuses = undefined;
-			filter.isReady = true;
+			if(filter.statuses.every(s => DriverStatus.NONE < s && s <= DriverStatus.DOC_LOAD)) {
+				filter.statuses = undefined;
+				filter.isReady = true;
+			}
 		}
 
 		const data = await this.repository.getList(listFilter, filter);
