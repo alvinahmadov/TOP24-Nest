@@ -81,21 +81,20 @@ function convertLoadingTypes(loadingType: number[]): LoadingType[] {
 }
 
 function typeFromCrm<T extends number | string | boolean>(
-	crmItem: any,
+	crmItem: T,
 	defaultValue?: T
 ): T {
 	const isBool = (): boolean | T => crmItem === 'Y' ||
 	                                  crmItem === '1' ||
 	                                  crmItem === true;
-	const isArray = (): boolean => Array.isArray(crmItem);
-
-	if(isArray()) {
-		return crmItem ?? [];
+	if(Array.isArray(crmItem)) {
+		return crmItem;
 	}
-	switch(typeof defaultValue) {
+	
+	switch(typeof crmItem) {
 		case 'string':
 		case 'symbol':
-			return crmItem ?? '';
+			return crmItem ?? defaultValue;
 		case 'number':
 			return Number(crmItem ?? defaultValue) as unknown as T;
 		case 'boolean':
@@ -377,32 +376,32 @@ export function orderFromBitrix(crmFields: TCRMFields): OrderCreateDto {
 		title:           crmFields[ORDER.TITLE],
 		date:            dateValidator(crmFields[ORDER.DATE_AT]),
 		price:           crmFields[ORDER.PRICE],
-		mileage:         typeFromCrm(crmFields[ORDER.MILEAGE], 0),
+		mileage:         typeFromCrm<number>(crmFields[ORDER.MILEAGE], 0),
 		payload:         convertBitrix('orderPayload', crmFields[ORDER.PAYLOAD.SELF]),
 		payloadRiskType: convertBitrix('riskClass', crmFields[ORDER.PAYLOAD.RISK_TYPE]),
 		loadingTypes:    convertLoadingTypes(crmFields[ORDER.LOADING_TYPE]),
 		weight:          typeFromCrm(crmFields[ORDER.PARAMS.WEIGHT], 0.0),
-		length:          typeFromCrm(crmFields[ORDER.PARAMS.LENGTH], 0.0),
+		length:          typeFromCrm<number>(crmFields[ORDER.PARAMS.LENGTH], 0.0),
 		width:           typeFromCrm(crmFields[ORDER.PARAMS.WIDTH], 0.0),
-		height:          typeFromCrm(crmFields[ORDER.PARAMS.HEIGHT], 0.0),
-		volume:          typeFromCrm(crmFields[ORDER.PARAMS.VOLUME], 0.0),
-		pallets:         typeFromCrm(crmFields[ORDER.PARAMS.PALLETS], 0),
-		number:          typeFromCrm(crmFields[ORDER.NUMBER]) || 0,
-		isBid:           typeFromCrm(crmFields[ORDER.BID.SELF], false),
-		bidPrice:        typeFromCrm(crmFields[ORDER.BID.PRICE.INIT], 0.0),
-		bidPriceVAT:     typeFromCrm(crmFields[ORDER.BID.PRICE.MAX], 0.0),
+		height:          typeFromCrm<number>(crmFields[ORDER.PARAMS.HEIGHT], 0.0),
+		volume:          typeFromCrm<number>(crmFields[ORDER.PARAMS.VOLUME], 0.0),
+		pallets:         typeFromCrm<number>(crmFields[ORDER.PARAMS.PALLETS], 0),
+		number:          typeFromCrm<number>(crmFields[ORDER.NUMBER], 0),
+		isBid:           typeFromCrm<boolean>(crmFields[ORDER.BID.SELF], false),
+		bidPrice:        typeFromCrm<number>(crmFields[ORDER.BID.PRICE.INIT], 0.0),
+		bidPriceVAT:     typeFromCrm<number>(crmFields[ORDER.BID.PRICE.MAX], 0.0),
 		bidInfo:         crmFields[ORDER.BID.INFO],
 		destinations,
 		driverDeferralConditions:
-		                 crmFields[ORDER.DRIVER_DEFERRAL_CONDITIONS],
+		                 typeFromCrm<string>(crmFields[ORDER.DRIVER_DEFERRAL_CONDITIONS], ''),
 		ownerDeferralConditions:
-		                 crmFields[ORDER.OWNER_DEFERRAL_CONDITIONS],
+		                 typeFromCrm<string>(crmFields[ORDER.OWNER_DEFERRAL_CONDITIONS], ''),
 		paymentType:     convertBitrix('paymentType', crmFields[ORDER.PAYMENT_TYPE]),
-		isOpen:          typeFromCrm(crmFields[ORDER.IS_OPEN], true),
-		isFree:          typeFromCrm(crmFields[ORDER.IS_FREE], true),
-		cancelCause:     typeFromCrm(crmFields[ORDER.CANCEL_CAUSE], ''),
+		isOpen:          typeFromCrm<boolean>(crmFields[ORDER.IS_OPEN], true),
+		isFree:          typeFromCrm<boolean>(crmFields[ORDER.IS_FREE], true),
+		cancelCause:     typeFromCrm<string>(crmFields[ORDER.CANCEL_CAUSE], ''),
 		isCanceled:      isCanceled,
-		hasProblem:      typeFromCrm(crmFields[ORDER.HAS_PROBLEM], false),
+		hasProblem:      typeFromCrm<boolean>(crmFields[ORDER.HAS_PROBLEM], false),
 		dedicated:       convertBitrix('transportDedicated', crmFields[ORDER.MACHINE]),
 		transportTypes:  crmFields[ORDER.TRANSPORT_TYPE]
 			                 ?.map((t: string) => convertBitrix('transportType', t))
