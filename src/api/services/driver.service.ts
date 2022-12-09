@@ -76,6 +76,7 @@ export default class DriverService
 	 *
 	 * @param {ListFilter} listFilter Filter for range and data fullness
 	 * @param {DriverFilter} filter Field filters for company driver
+	 * @param {Boolean} debug Temporary fix for not showing active drivers
 	 * */
 	public async getList(
 		listFilter: ListFilter,
@@ -159,12 +160,10 @@ export default class DriverService
 	 *
 	 * @param {String!} id Id of cargo company driver to update.
 	 * @param {Partial<IDriver>!} data Partial new data about cargo company driver.
-	 * @param {Boolean} sendInfo Send websocket information.
 	 * */
 	public async update(
 		id: string,
-		data: DriverUpdateDto,
-		sendInfo: boolean = true
+		data: DriverUpdateDto
 	): TAsyncApiResponse<Driver> {
 		const driver = await this.repository.update(id, data);
 
@@ -173,24 +172,11 @@ export default class DriverService
 
 		const message = formatArgs(TRANSLATIONS['UPDATE'], driver.fullName);
 
-		if(sendInfo) {
-			this.gateway.sendDriverEvent(
-				{
-					id,
-					status:    driver.status,
-					longitude: data.longitude,
-					latitude:  data.latitude,
-					message
-				},
-				UserRole.CARGO
-			);
-		}
-
 		return {
 			statusCode: 200,
 			data:       driver,
 			message
-		} as IApiResponse<Driver>;
+		};
 	}
 
 	/**
