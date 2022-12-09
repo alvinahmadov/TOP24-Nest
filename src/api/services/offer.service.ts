@@ -250,12 +250,16 @@ export default class OfferService
 				stage:  order.stage
 			};
 
-			if(dto.status === OfferStatus.DECLINED) {
-				eventObject.message = 'Driver declined offer.';
-				this.gateway.sendOrderEvent(eventObject, UserRole.LOGIST);
-			}
-			if(dto.status === OfferStatus.CANCELLED) {
-				eventObject.message = 'Driver cancelled offer prior to approval.';
+			if(
+				OfferStatus.DECLINED <= dto.status &&
+				dto.status <= OfferStatus.CANCELLED
+			) {
+				if(dto.status === OfferStatus.DECLINED)
+					eventObject.message = 'Driver declined offer.';
+				else if(dto.status === OfferStatus.CANCELLED)
+					eventObject.message = 'Driver cancelled offer prior to approval.';
+
+				await this.orderService.update(orderId, { status: 0 });
 				this.gateway.sendOrderEvent(eventObject, UserRole.LOGIST);
 			}
 		}
