@@ -1,12 +1,13 @@
 import {
 	IApiResponse,
 	IModel
-}                        from '@common/interfaces';
-import * as attributes   from '@common/interfaces/attributes';
-import * as models       from '@models/index';
-import EntityModel       from '@models/entity-model';
-import * as transformers from './transformer-types';
-import * as helpers      from './helpers';
+}                            from '@common/interfaces';
+import * as attributes       from '@common/interfaces/attributes';
+import { isSuccessResponse } from '@common/utils';
+import * as models           from '@models/index';
+import EntityModel           from '@models/entity-model';
+import * as transformers     from './transformer-types';
+import * as helpers          from './helpers';
 
 function transformAddress(address: models.Address)
 	: transformers.IAddressTransformer {
@@ -651,17 +652,18 @@ export function transformEntities<T extends IModel, E extends EntityModel<T>>(
 	return entities;
 }
 
-export function transformApiResult<T>(result: IApiResponse<T>): transformers.TTransformerResponse<T> {
+export function transformApiResult<T>(result: IApiResponse<T>)
+	: transformers.TTransformerResponse<T> | { status?: number; message?: string } {
 	if(!result) {
 		return {
-			statusCode: 404,
-			message:    'Result is null'
+			status:  404,
+			message: 'Result is null'
 		};
 	}
-	if(!result.data) {
+	if(!isSuccessResponse(result)) {
 		return {
-			statusCode: result.statusCode ?? 404,
-			message:    result.message
+			status:  result.statusCode ?? 404,
+			message: result.message
 		};
 	}
 
