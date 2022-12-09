@@ -17,6 +17,7 @@ import {
 	IRepositoryOptions,
 	ITransport,
 	TAffectedRows,
+	TOfferTransportFilter,
 	TUpdateAttribute
 }                             from '@common/interfaces';
 import {
@@ -239,27 +240,27 @@ export default class OfferRepository
 	public async getOrderTransports(
 		orderId: string,
 		listFilter: IListFilter = {},
-		filter?: Pick<IOfferFilter, 'transportStatus' | 'orderStatuses'> & IDriverFilter
+		filter?: TOfferTransportFilter
 	): Promise<Offer[]> {
 		const {
-			from:  offset = 0,
+			from:  offset,
 			count: limit
 		} = listFilter;
 
 		const {
 			sortOrder: order = DEFAULT_SORT_ORDER,
-			orderStatus,
 			transportStatus,
-			orderStatuses
+			orderStatuses,
+			offerStatuses
 		} = filter ?? {};
 
 		return this.log(
 			() => this.model.findAll(
 				{
-					where:   this.whereClause('and')
+					where:   this.whereClause()
 					             .eq('orderId', orderId)
-					             .eq('orderStatus', orderStatus)
 					             .in('orderStatus', orderStatuses)
+					             .in('status', offerStatuses)
 						         .query,
 					offset,
 					limit,
