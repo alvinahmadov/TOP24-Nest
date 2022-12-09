@@ -1,6 +1,9 @@
 import { WhereOptions }   from 'sequelize';
 import { Model }          from 'sequelize-typescript';
-import { Logger }         from '@nestjs/common';
+import {
+	HttpStatus,
+	Logger
+}                         from '@nestjs/common';
 import { Axios }          from '@common/classes';
 import {
 	IApiResponses,
@@ -23,8 +26,8 @@ export default abstract class Service<M extends Model,
 		GenericRepository<M, IModel>, A = R['attributes']>
 	implements IService {
 	readonly responses: IApiResponses<null> = {
-		NOT_FOUND: { statusCode: 400, message: FAIL_TRANSLATION['NOT_FOUND'] },
-		WRITE_ERR: { statusCode: 500, message: FAIL_TRANSLATION['WRITE_FILE'] }
+		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: FAIL_TRANSLATION['NOT_FOUND'] },
+		WRITE_ERR: { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: FAIL_TRANSLATION['WRITE_FILE'] }
 	};
 	protected repository: R;
 	protected httpClient: Axios;
@@ -91,7 +94,7 @@ export default abstract class Service<M extends Model,
 
 					if(result) {
 						return {
-							statusCode: 200,
+							statusCode: HttpStatus.OK,
 							data:       result,
 							message:    SUCC_TRANSLATION['WRITE_FILE']
 						};
@@ -112,7 +115,7 @@ export default abstract class Service<M extends Model,
 export abstract class StaticService
 	implements IService {
 	public readonly responses: IApiResponses<null> = {
-		notFound: { statusCode: 400, message: 'Entity not found!' }
+		notFound: { statusCode: HttpStatus.NOT_FOUND, message: 'Entity not found!' }
 	};
 	protected readonly logger: Logger;
 
