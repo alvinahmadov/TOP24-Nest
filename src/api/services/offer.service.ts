@@ -260,6 +260,9 @@ export default class OfferService
 					eventObject.message = 'Driver cancelled offer prior to approval.';
 
 				dto.orderStatus = OrderStatus.PENDING;
+				dto.bidPrice = null;
+				dto.bidPriceVat = null;
+				dto.bidComment = null;
 
 				this.orderService
 				    .update(orderId, { status: dto.orderStatus })
