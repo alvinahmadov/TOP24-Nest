@@ -316,7 +316,6 @@ export default class OfferRepository
 						OfferStatus.SENT,
 						OfferStatus.SEEN,
 						OfferStatus.RESPONDED,
-						OfferStatus.DECLINED,
 						OfferStatus.CANCELLED
 					],
 					orderStatuses,
