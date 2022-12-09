@@ -1,4 +1,7 @@
-import { Injectable, Scope }  from '@nestjs/common';
+import {
+	HttpStatus, Injectable,
+	Scope
+}                             from '@nestjs/common';
 import {
 	CARGO,
 	CARGOINN,
@@ -29,6 +32,7 @@ import {
 	formatArgs,
 	getCrm,
 	getTranslation,
+	isSuccessResponse,
 	orderFromBitrix
 }                             from '@common/utils';
 import {
@@ -61,11 +65,11 @@ export default class BitrixService
 	extends Service<any, any>
 	implements IService {
 	public override readonly responses: IApiResponses<null> = {
-		updateErr:           { statusCode: 404, message: 'Error Cargo updating ...' },
-		bitrixErr:           { statusCode: 404, message: 'Error in bitrix answer ...' },
-		NOT_FOUND_COMPANY:   { statusCode: 404, message: 'Cargo Not found ...' },
-		NOT_FOUND_TRANSPORT: { statusCode: 404, message: 'Transport Not found ...' },
-		NOT_FOUND_ORDER:     { statusCode: 404, message: 'Order Not found ...' }
+		updateErr:           { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Error Cargo updating ...' },
+		bitrixErr:           { statusCode: HttpStatus.BAD_REQUEST, message: 'Error in bitrix answer ...' },
+		NOT_FOUND_COMPANY:   { statusCode: HttpStatus.NOT_FOUND, message: 'Cargo Not found ...' },
+		NOT_FOUND_TRANSPORT: { statusCode: HttpStatus.NOT_FOUND, message: 'Transport Not found ...' },
+		NOT_FOUND_ORDER:     { statusCode: HttpStatus.NOT_FOUND, message: 'Order Not found ...' }
 	};
 	private _gateway: EventsGateway;
 
@@ -139,7 +143,7 @@ export default class BitrixService
 		}
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       crmOrders,
 			message:    `Fetched ${crmOrders.length} orders from bitrix.`
 		};
@@ -217,7 +221,8 @@ export default class BitrixService
 			              );
 
 			return {
-				statusCode: 200,
+				statusCode: createdCount > updatedCount ? HttpStatus.CREATED
+				                                        : HttpStatus.OK,
 				data:       {
 					createdCount,
 					updatedCount,
@@ -227,7 +232,8 @@ export default class BitrixService
 		}
 
 		return {
-			statusCode: 200,
+			statusCode: createdCount > updatedCount ? HttpStatus.CREATED
+			                                        : HttpStatus.OK,
 			data:       {
 				createdCount,
 				updatedCount,
@@ -363,8 +369,10 @@ export default class BitrixService
 	 * @param {Number!} crmId CRM id of order to update in bitrix
 	 * @param {Boolean} isUpdateRequest Response as order update
 	 * */
-	public async synchronizeOrder(crmId: number, isUpdateRequest: boolean = false)
-		: TAsyncApiResponse<Order> {
+	public async synchronizeOrder(
+		crmId: number,
+		isUpdateRequest: boolean = false
+	): TAsyncApiResponse<Order> {
 		try {
 			const { result } = await this.httpClient.get<TCRMResponse>(`${ORDER_GET_URL}?ID=${crmId}`);
 			const crmItem = getCrm(result);
@@ -379,7 +387,6 @@ export default class BitrixService
 					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N'
 				) return { statusCode: 200, message: 'Invalid order source/stage' };
 
-				let { data: order } = await this.orderService.getByCrmId(crmId);
 				const orderData = orderFromBitrix(crmItem);
 
 				if(crmClientId > 0) {
@@ -408,16 +415,10 @@ export default class BitrixService
 					orderData.status = OrderStatus.FINISHED;
 				}
 
-				if(isUpdateRequest || order) {
+				if(isUpdateRequest) {
+					let { data: order } = await this.orderService.getByCrmId(crmId);
 					if(order.hasSent) {
-						const { data } = await this.orderService.update(order.id, { hasSent: false });
-						if(data) {
-							order = data;
-						}
-						return {
-							statusCode: 200,
-							data:       order
-						};
+						return this.orderService.update(order.id, { hasSent: false });
 					}
 
 					if(orderData.isCanceled) {
@@ -427,54 +428,53 @@ export default class BitrixService
 						await this.offerService.cancel(order.id, order.crmId);
 					}
 
-					return this.orderService
-					           .update(order.id, { ...orderData, hasSent: true }, false)
-					           .then(
-						           async(response) =>
-						           {
-							           if(response.data) {
-								           const order = response.data;
-								           this.gateway.sendOrderEvent(
-									           {
-										           id:      order.id,
-										           source:  'bitrix',
-										           status:  order.status,
-										           stage:   order.stage,
-										           message: `Обновлены данные заказа ${order.title}!`
-									           }
-								           );
-							           }
-							           return response;
-						           }
-					           );
+					const updateResponse = await this.orderService
+					                                 .update(order.id, { ...orderData, hasSent: true });
+
+					if(isSuccessResponse(updateResponse)) {
+						const order = updateResponse.data;
+						this.gateway.sendOrderEvent(
+							{
+								id:      order.id,
+								source:  'bitrix',
+								status:  order.status,
+								stage:   order.stage,
+								message: `Обновлены данные заказа ${order.title}!`
+							},
+							UserRole.LOGIST,
+							false
+						);
+					}
+					return updateResponse;
 				}
 				else {
-					return this.orderService
-					           .create(orderData, false)
-					           .then(
-						           (res) =>
-						           {
-							           if(res.data) {
-								           const order = res.data;
-								           this.gateway.sendOrderEvent(
-									           {
-										           id:      order.id,
-										           source:  'bitrix',
-										           status:  order.status,
-										           stage:   order.stage,
-										           message: `Появился новый заказ '${order.title}'!`
-									           }
-								           );
-							           }
-							           return res;
-						           }
-					           );
+					const createResponse = await this.orderService
+					                                 .create(orderData);
+
+					if(isSuccessResponse(createResponse)) {
+						const order = createResponse.data;
+						this.gateway.sendOrderEvent(
+							{
+								id:      order.id,
+								source:  'bitrix',
+								status:  order.status,
+								stage:   order.stage,
+								message: `Появился новый заказ '${order.title}'!`
+							},
+							UserRole.LOGIST,
+							false
+						);
+					}
+					return createResponse;
 				}
 			}
 			return this.responses['bitrixErr'];
 		} catch(e) {
 			console.error(e.message);
-			return { statusCode: 400, message: e.message };
+			return {
+				statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+				message:    e.message
+			};
 		}
 	}
 
