@@ -236,7 +236,7 @@ export default class CargoCompany
 	public readonly toCrm = (): TCRMData =>
 	{
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
-		data.fields[CARGO.SHORTNAME] = this.legalName ?? 'Company';
+		data.fields[CARGO.LEGAL_NAME] = this.legalName ?? 'Company';
 		data.fields[CARGO.DIRECTIONS] = this.directions?.join();
 		data.fields[CARGO.INN] = this.taxpayerNumber;
 		data.fields[CARGO.NAME] = this.name;
