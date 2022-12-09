@@ -24,6 +24,7 @@ import {
 	ITransportFilter,
 	TAffectedRows,
 	TAsyncApiResponse,
+	TOfferTransportFilter,
 	TOfferDriver,
 	TSentOffer
 }                          from '@common/interfaces';
@@ -274,7 +275,7 @@ export default class OfferService
 					          });
 				}
 			}
-			
+
 			this.gateway.sendOrderEvent(eventObject, UserRole.LOGIST);
 		}
 
@@ -388,7 +389,7 @@ export default class OfferService
 	public async getTransports(
 		orderId: string,
 		listFilter: IListFilter,
-		filter?: Pick<IOfferFilter, 'transportStatus' | 'orderStatuses'> & IDriverFilter
+		filter?: TOfferTransportFilter
 	): TAsyncApiResponse<any[]> {
 		const transports: any[] = [];
 		//Temporary fix
@@ -397,7 +398,10 @@ export default class OfferService
 				OrderStatus.ACCEPTED,
 				OrderStatus.PROCESSING
 			];
-			filter.orderStatus = undefined;
+			if(!filter.orderStatuses.includes(filter.orderStatus))
+				filter.orderStatuses.push(filter.orderStatus);
+			filter.offerStatuses = [OfferStatus.CANCELLED];
+			delete filter.orderStatus;
 		}
 
 		const offers = await this.repository.getOrderTransports(orderId, listFilter, filter);
