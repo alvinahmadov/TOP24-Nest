@@ -1,6 +1,7 @@
 import {
 	forwardRef, Inject,
-	Injectable
+	Injectable,
+	HttpStatus
 }                             from '@nestjs/common';
 import {
 	BitrixUrl,
@@ -59,12 +60,12 @@ export default class OrderService
 	extends Service<Order, OrderRepository>
 	implements IService {
 	public override readonly responses: IApiResponses<null> = {
-		ACCEPTED:     { statusCode: 404, message: ORDER_TRANSLATIONS['ACCEPTED'] },
-		DECLINED:     { statusCode: 404, message: ORDER_TRANSLATIONS['DECLINED'] },
-		WRITE_FILE:   { statusCode: 500, message: ORDER_TRANSLATIONS['WRITE_FILE'] },
-		NOT_FOUND:    { statusCode: 404, message: ORDER_TRANSLATIONS['NOT_FOUND'] },
-		NO_OFFER:     { statusCode: 404, message: 'No offer found.' },
-		NO_CRM_ORDER: { statusCode: 404, message: 'Order doesn\'t have a crm id' }
+		ACCEPTED:     { statusCode: HttpStatus.NOT_ACCEPTABLE, message: ORDER_TRANSLATIONS['ACCEPTED'] },
+		DECLINED:     { statusCode: HttpStatus.FORBIDDEN, message: ORDER_TRANSLATIONS['DECLINED'] },
+		WRITE_FILE:   { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: ORDER_TRANSLATIONS['WRITE_FILE'] },
+		NOT_FOUND:    { statusCode: HttpStatus.NOT_FOUND, message: ORDER_TRANSLATIONS['NOT_FOUND'] },
+		NO_OFFER:     { statusCode: HttpStatus.NOT_FOUND, message: 'No offer found.' },
+		NO_CRM_ORDER: { statusCode: HttpStatus.NOT_FOUND, message: 'Order doesn\'t have a crm id' }
 	};
 	private _gateway: EventsGateway;
 
@@ -100,10 +101,10 @@ export default class OrderService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       order,
 			message:    formatArgs(ORDER_TRANSLATIONS['GET'], order.title)
-		} as IApiResponse<Order>;
+		};
 	}
 
 	/**
@@ -120,10 +121,10 @@ export default class OrderService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       order,
 			message:    formatArgs(ORDER_TRANSLATIONS['GET'], order.title)
-		} as IApiResponse<Order>;
+		};
 	}
 
 	/**
@@ -142,7 +143,7 @@ export default class OrderService
 		const orders = filterOrders(data) as Order[];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       orders,
 			message:    formatArgs(ORDER_TRANSLATIONS['LIST'], orders.length)
 		};
@@ -164,7 +165,7 @@ export default class OrderService
 		const orders = filterOrders(data) as Order[];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       orders,
 			message:    formatArgs(ORDER_TRANSLATIONS['LIST'], orders.length)
 		};
@@ -199,7 +200,7 @@ export default class OrderService
 		}
 
 		return {
-			statusCode: 201,
+			statusCode: HttpStatus.CREATED,
 			data:       order
 		};
 	}
@@ -236,7 +237,7 @@ export default class OrderService
 		}
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       order,
 			message:    formatArgs(ORDER_TRANSLATIONS['UPDATE'], order.title)
 		};
@@ -264,10 +265,10 @@ export default class OrderService
 			);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       result,
 			message:    formatArgs(ORDER_TRANSLATIONS['DELETE'], id)
-		} as IApiResponse<TAffectedRows>;
+		};
 	}
 
 	public async getByDriver(driverId: string)
@@ -312,7 +313,7 @@ export default class OrderService
 		}
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       result,
 			message:    formatArgs(ORDER_TRANSLATIONS['DRIVERS'], result.driver ? 1 : 0)
 		} as IApiResponse<TMergedEntities>;
@@ -397,7 +398,7 @@ export default class OrderService
 			console.error(e);
 		}
 
-		return { statusCode: 200, data: crmOrderId };
+		return { statusCode: HttpStatus.OK, data: crmOrderId };
 	}
 
 	/**
@@ -463,7 +464,7 @@ export default class OrderService
 
 			if(fileUploaded)
 				return {
-					statusCode: 200,
+					statusCode: HttpStatus.OK,
 					data:       order,
 					message
 				};
@@ -526,7 +527,7 @@ export default class OrderService
 		}
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       order,
 			message
 		};
@@ -623,7 +624,7 @@ export default class OrderService
 			    .catch(console.error);
 
 			return {
-				statusCode: 200,
+				statusCode: HttpStatus.OK,
 				data:       order,
 				message
 			};
@@ -697,7 +698,7 @@ export default class OrderService
 		}
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       order
 		};
 	}
