@@ -388,9 +388,6 @@ export function orderFromBitrix(crmFields: TCRMFields): OrderCreateDto {
 		pallets:         typeFromCrm<number>(crmFields[ORDER.PARAMS.PALLETS], 0),
 		number:          typeFromCrm<number>(crmFields[ORDER.NUMBER], 0),
 		isBid:           typeFromCrm<boolean>(crmFields[ORDER.BID.SELF], false),
-		bidPrice:        typeFromCrm<number>(crmFields[ORDER.BID.PRICE.INIT], 0.0),
-		bidPriceVAT:     typeFromCrm<number>(crmFields[ORDER.BID.PRICE.MAX], 0.0),
-		bidInfo:         crmFields[ORDER.BID.INFO],
 		destinations,
 		driverDeferralConditions:
 		                 typeFromCrm<string>(crmFields[ORDER.DRIVER_DEFERRAL_CONDITIONS], ''),

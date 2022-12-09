@@ -448,10 +448,6 @@ export default class BitrixService
 					return updateResponse;
 				}
 				else {
-					delete orderData.bidPrice;
-					delete orderData.bidPriceVAT;
-					delete orderData.bidInfo;
-
 					const createResponse = await this.orderService
 					                                 .create(orderData);
 
