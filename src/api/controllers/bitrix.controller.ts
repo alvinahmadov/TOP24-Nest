@@ -29,6 +29,8 @@ const { path, tag, routes } = getRouteConfig('bitrix');
 @UseFilters(HttpExceptionFilter)
 export default class BitrixController
 	extends StaticController {
+	private static eventTimestamps: Set<string> = new Set<string>();
+
 	public constructor(
 		private readonly bitrixService: BitrixService,
 		private readonly gateway: EventsGateway
@@ -107,9 +109,18 @@ export default class BitrixController
 		if(crm.data === undefined ||
 		   crm.data['FIELDS'] === undefined ||
 		   crm.data['FIELDS']['ID'] === undefined)
-			return crm;
+			return;
 
 		const crmId = Number(crm.data['FIELDS']['ID']);
+		
+		if(BitrixController.eventTimestamps.has(crm.ts)) {
+			if(BitrixController.eventTimestamps.size > 1000) {
+				BitrixController.eventTimestamps.clear();
+			}
+			return;
+		}
+		else
+			BitrixController.eventTimestamps.add(crm.ts);
 
 		switch(crm.event) {
 			case 'ONCRMDEALADD':
@@ -128,7 +139,7 @@ export default class BitrixController
 				await this.bitrixService.updateTransport(crmId);
 				break;
 		}
-		
-		return crm;
+
+		return;
 	}
 }
