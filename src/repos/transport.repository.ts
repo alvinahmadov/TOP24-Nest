@@ -135,7 +135,7 @@ export default class TransportRepository
 						offset,
 						limit,
 						order:   sortOrder,
-						include: full ? this.include : []
+						include: full ? this.include : [{ model: Image }]
 					}
 				);
 			},
