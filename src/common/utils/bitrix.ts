@@ -81,27 +81,29 @@ function convertLoadingTypes(loadingType: number[]): LoadingType[] {
 }
 
 function typeFromCrm<T extends number | string | boolean>(
-	crmItem: T,
+	crmItem: any,
 	defaultValue?: T
 ): T {
 	const isBool = (): boolean | T => crmItem === 'Y' ||
 	                                  crmItem === '1' ||
 	                                  crmItem === true;
+
+	const conv = (c: any): T => c as unknown as T;
 	if(Array.isArray(crmItem)) {
-		return crmItem;
+		return conv(crmItem);
 	}
 
 	switch(typeof crmItem) {
 		case 'string':
 		case 'symbol':
-			return crmItem?.toString() as unknown as T ?? defaultValue;
+			return conv(crmItem?.toString()) ?? defaultValue;
 		case 'number': {
 			if(!crmItem)
 				return defaultValue;
-			return Number(crmItem) as unknown as T;
+			return conv(Number(crmItem));
 		}
 		case 'boolean':
-			return (isBool() || defaultValue) as unknown as T;
+			return conv(isBool() || defaultValue);
 		case 'undefined':
 			return null;
 		default:
