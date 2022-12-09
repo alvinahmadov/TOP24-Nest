@@ -34,7 +34,6 @@ export default class CargoCompanyRepository
 				}
 			]
 		},
-		{ model: Image },
 		{ model: Order },
 		{ model: Payment },
 		{
