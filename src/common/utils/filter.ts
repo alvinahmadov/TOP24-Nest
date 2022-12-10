@@ -33,11 +33,16 @@ const checkAgainst = (
 ): boolean =>
 {
 	if(hasValues(filterValues)) {
+		if(!identifier)
+			identifier = '';
+		else
+			identifier += ': ';
+
 		const includes = values.some((value: any) => filterValues.includes(value));
 		if(!includes) {
 			if(debugTransportFilter)
 				console.debug(
-					`No match for ${name}, requested [${arrToString(filterValues, cb)}] against ${arrToString(values, cb)}].`
+					`${identifier}No match for ${name}, requested [${arrToString(filterValues, cb)}] against ${arrToString(values, cb)}].`
 				);
 			return false;
 		}
@@ -48,11 +53,16 @@ const checkAgainst = (
 const checkAgainstIn = (value: any, filterValues: any[], name: string, identifier?: string): boolean =>
 {
 	if(hasValues(filterValues)) {
+		if(!identifier)
+			identifier = '';
+		else
+			identifier += ': ';
+
 		const includes = filterValues.some((filterValue: any) => value === filterValue);
 		if(!includes) {
 			if(debugTransportFilter)
 				console.debug(
-					`${identifier}: No match for ${name}, requested [${arrToString(filterValues)}] against ${toString(value)}].`
+					`${identifier}No match for ${name}, requested [${arrToString(filterValues)}] against ${toString(value)}].`
 				);
 			return false;
 		}
