@@ -733,6 +733,9 @@ export default class OfferService
 								},
 								UserRole.ADMIN
 							);
+							this.orderService
+							    .send(offer.orderId)
+							    .catch(console.error);
 						}
 					}
 				);
@@ -748,10 +751,6 @@ export default class OfferService
 						}
 					});
 				}
-
-				this.orderService
-				    .send(offer.orderId)
-				    .catch(console.error);
 
 				return {
 					statusCode: HttpStatus.OK,
