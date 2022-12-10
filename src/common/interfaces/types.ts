@@ -85,9 +85,10 @@ export interface IEnvironment {
 		token: string;
 	};
 	objectStorage?: {
-		readonly type?: TObjectStorageType
-		auth: TObjectStorageAuth,
+		readonly type?: TObjectStorageType;
+		auth: TObjectStorageAuth;
 		url: string;
+		bucketId?: string;
 		region?: string;
 		debug?: boolean;
 	};
@@ -156,6 +157,7 @@ export interface IEnvParseOutput
 	OBJECT_STORAGE_DEBUG?: string;
 	OBJECT_STORAGE_API_KEY?: string;
 	OBJECT_STORAGE_SECRET?: string;
+	OBJECT_STORAGE_BUCKET_ID?: string;
 	OBJECT_STORAGE_URL?: string;
 	OBJECT_STORAGE_REGION?: string;
 	NEST_DEBUG?: string;
