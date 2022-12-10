@@ -13,10 +13,7 @@ import {
 import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import { TMulterFile }         from '@common/interfaces';
-import {
-	renameMulterFile,
-	sendResponse
-}                              from '@common/utils';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
@@ -169,10 +166,9 @@ export default class TransportController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'image');
-		const result = await this.transportService.uploadImage(id, buffer, name);
+		const apiResponse = await this.transportService.uploadImage(id, image);
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.diag, {
@@ -188,10 +184,9 @@ export default class TransportController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'diagnostic');
-		const result = await this.transportService.uploadDiagnosticsPhoto(id, name, buffer);
+		const apiResponse = await this.transportService.uploadDiagnosticsPhoto(id, image);
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.osago, {
@@ -207,10 +202,9 @@ export default class TransportController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'osago');
-		const result = await this.transportService.uploadOsagoPhoto(id, name, buffer);
+		const apiResponse = await this.transportService.uploadOsagoPhoto(id, image);
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.imageDel, {
