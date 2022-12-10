@@ -319,7 +319,7 @@ export class ExternalObjectStorage
 		if(this.debug)
 			this.logger.log('S3', debug_object, 'started');
 		if(this.debug)
-			this.logger.log('S3', debug_object, params);
+			this.logger.log('S3', debug_object, { params });
 
 		try {
 			const s3Promise = await new Promise<IAWSUploadResponse>(
@@ -332,8 +332,6 @@ export class ExternalObjectStorage
 			);
 			if(this.debug)
 				this.logger.log('S3', debug_object, 'done:', s3Promise);
-
-			this.params.bucketId = null;
 			return s3Promise;
 		} catch(error) {
 			this.logger.error(error);
