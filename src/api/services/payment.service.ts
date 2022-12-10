@@ -1,5 +1,4 @@
 import { Injectable }         from '@nestjs/common';
-import { Bucket }             from '@common/constants';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -158,10 +157,7 @@ export default class PaymentService
 		if(!payment)
 			return this.responses['NOT_FOUND'];
 
-		const images = await this.imageFileService.deleteImageList([
-			                                                           payment.ogrnipPhotoLink,
-			                                                           Bucket.COMPANY_FOLDER
-		                                                           ]);
+		const images = await this.imageFileService.deleteImageList([payment.ogrnipPhotoLink]);
 
 		const { affectedCount } = await this.repository.delete(id);
 
