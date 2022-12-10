@@ -241,9 +241,9 @@ export default class OrderService
 		};
 	}
 
-	public async getByDriver(driverId: string)
+	public async getByDriver(driverId: string, orderId?: string)
 		: TAsyncApiResponse<TMergedEntities> {
-		const order = await this.repository.getDriverAssignedOrders(driverId);
+		const order = await this.repository.getDriverAssignedOrders(driverId, { id: orderId });
 		let result: {
 			order?: Order;
 			driver?: Driver;

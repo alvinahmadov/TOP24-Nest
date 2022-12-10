@@ -160,6 +160,7 @@ export default class OrderRepository
 		filter?: IOrderFilter
 	): Promise<Order> {
 		const {
+			id,
 			statuses = [
 				OrderStatus.ACCEPTED,
 				OrderStatus.PROCESSING,
@@ -173,6 +174,7 @@ export default class OrderRepository
 			() => this.model.findOne(
 				{
 					where:         this.whereClause('and')
+					                   .eq('id', id)
 					                   .eq('driverId', driverId)
 					                   .eq('onPayment', onPayment)
 					                   .in('status', statuses)

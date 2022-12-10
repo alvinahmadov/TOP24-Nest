@@ -173,6 +173,7 @@ export default class OrderController
 	public async driver(
 		@Param('driverId', ParseUUIDPipe)
 			driverId: string,
+		@Query('order') orderId: string,
 		@Res() response: ex.Response
 	) {
 		const result = await this.orderService.getByDriver(driverId);
@@ -311,7 +312,7 @@ export default class OrderController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK]
 	})
-	public async deleteShippinh(
+	public async deleteShipping(
 		@Param('id', ParseUUIDPipe) id: string,
 		@Query('pt') point: string,
 		@Res() response: ex.Response,
