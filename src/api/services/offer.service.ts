@@ -445,6 +445,8 @@ export default class OfferService
 									const _transport = env.api.compatMode
 									                   ? transformEntity(transport) as ITransportTransformer
 									                   : transport.get(getOptions);
+									const orderStatus = offer.orderStatus;
+									const offerStatus = offer.status;
 
 									if('transports' in _driver)
 										delete _driver.transports;
@@ -460,8 +462,8 @@ export default class OfferService
 										..._transport,
 										driver:        _driver,
 										company_name:  driver.companyName,
-										offer_status:  offer.status,
-										order_status:  offer.orderStatus,
+										offer_status:  offerStatus,
+										order_status:  orderStatus,
 										bid_price:     offer.bidPrice,
 										bid_price_max: offer.bidPriceVat,
 										bid_comments:  offer.bidComment,
@@ -470,8 +472,8 @@ export default class OfferService
 										..._transport,
 										driver:      _driver,
 										companyName: driver.companyName,
-										offerStatus: offer.status,
-										orderStatus: offer.orderStatus,
+										offerStatus,
+										orderStatus,
 										bidPrice:    offer.bidPrice,
 										bidPriceVat: offer.bidPriceVat,
 										bidComment:  offer.bidComment
