@@ -38,7 +38,7 @@ const checkAgainst = (
 		else
 			identifier += ': ';
 
-		const includes = values.some((value: any) => filterValues.includes(value));
+		const includes = values.some((value: any) => filterValues.some(v => v === value));
 		if(!includes) {
 			if(debugTransportFilter)
 				console.debug(
