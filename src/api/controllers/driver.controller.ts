@@ -14,10 +14,7 @@ import {
 import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import { TMulterFile }         from '@common/interfaces';
-import {
-	renameMulterFile,
-	sendResponse
-}                              from '@common/utils';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
 import { EventsGateway }       from '@api/events';
@@ -165,10 +162,9 @@ export default class DriverController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'avatar');
-		const result = await this.driverService.uploadAvatarPhoto(id, buffer, name);
+		const apiResponse = await this.driverService.uploadAvatarPhoto(id, image);
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.front, {
@@ -184,10 +180,9 @@ export default class DriverController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'license', 'front');
-		const result = await this.driverService.uploadLicenseFront(id, buffer, name);
+		const apiResponse = await this.driverService.uploadLicenseFront(id, image);
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.back, {
@@ -203,9 +198,8 @@ export default class DriverController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'license', 'back');
-		const result = await this.driverService.uploadLicenseBack(id, buffer, name);
+		const apiResponse = await this.driverService.uploadLicenseBack(id, image);
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 }
