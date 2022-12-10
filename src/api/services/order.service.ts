@@ -1,5 +1,6 @@
 import {
-	forwardRef, Inject,
+	forwardRef,
+	Inject,
 	Injectable,
 	HttpStatus
 }                             from '@nestjs/common';
@@ -31,7 +32,8 @@ import {
 	filterOrders,
 	formatArgs,
 	getTranslation,
-	transformTransportParameters
+	transformTransportParameters,
+	renameMulterFile
 }                             from '@common/utils';
 import {
 	Driver,
@@ -399,11 +401,12 @@ export default class OrderService
 		const index = destinations.findIndex(d => d.point === point);
 
 		if(index >= 0) {
-			const { Location: shippingPhotoLinks } = await this.imageFileService
-			                                                   .uploadFiles(
-				                                                   renameMulterFiles(files, id, 'shipping', point),
-				                                                   Bucket.COMMON_FOLDER
-			                                                   );
+			const {
+				Location: shippingPhotoLinks
+			} = await this.imageFileService
+			              .uploadFiles(
+				              renameMulterFiles(files, Bucket.Folders.ORDER, id, 'shipping', point)
+			              );
 
 			if(shippingPhotoLinks?.length > 0) {
 				fileUploaded = true;
@@ -529,63 +532,67 @@ export default class OrderService
 		if(!order)
 			return this.responses['NOT_FOUND'];
 
-		if(mode === 'payment') {
-			const { Location: paymentPhotoLinks } = await this.imageFileService.uploadFiles(
-				renameMulterFiles(files, id, mode),
-				Bucket.COMMON_FOLDER
-			) ?? { Location: null };
-			if(paymentPhotoLinks) {
-				fileUploaded = true;
-				message = ORDER_TRANSLATIONS['PAYMENT'];
+		if(files && files.length > 0) {
+			if(mode === 'payment') {
+				const {
+					Location: paymentPhotoLinks
+				} = await this.imageFileService
+				              .uploadFiles(
+					              renameMulterFiles(files, Bucket.Folders.ORDER, id, mode)
+				              );
+				if(paymentPhotoLinks) {
+					fileUploaded = true;
+					message = ORDER_TRANSLATIONS['PAYMENT'];
 
-				if(order.paymentPhotoLinks)
-					order.paymentPhotoLinks.push(...paymentPhotoLinks);
-				else
-					order.paymentPhotoLinks = paymentPhotoLinks;
+					if(order.paymentPhotoLinks)
+						order.paymentPhotoLinks.push(...paymentPhotoLinks);
+					else
+						order.paymentPhotoLinks = paymentPhotoLinks;
 
-				await this.repository.update(id, {
-					onPayment:         true,
-					paymentPhotoLinks: order.paymentPhotoLinks,
-					stage:             OrderStage.PAYMENT_FORMED
-				});
-			}
-		}
-		else if(mode === 'receipt') {
-			const { Location: receiptPhotoLinks } = await this.imageFileService.uploadFiles(
-				renameMulterFiles(files, id, mode),
-				Bucket.COMMON_FOLDER
-			) ?? { Location: null };
-			if(receiptPhotoLinks) {
-				fileUploaded = true;
-				message = ORDER_TRANSLATIONS['RECEIPT'];
-
-				if(order.paymentPhotoLinks)
-					order.receiptPhotoLinks.push(...receiptPhotoLinks);
-				else
-					order.receiptPhotoLinks = receiptPhotoLinks;
-
-				await this.repository.update(id, { receiptPhotoLinks: order.receiptPhotoLinks });
-			}
-		}
-		else if(mode === 'contract') {
-			order = await this.repository.get(id, true);
-
-			const file = renameMulterFiles(files, id, mode)[0];
-			const { Location: contractPhotoLink } = await this.imageFileService.uploadFile(
-				file.buffer,
-				{
-					fileName: file.originalname,
-					folderId: Bucket.COMMON_FOLDER
+					order = await this.repository.update(id, {
+						onPayment:         true,
+						paymentPhotoLinks: order.paymentPhotoLinks,
+						stage:             OrderStage.PAYMENT_FORMED
+					});
 				}
-			) ?? { Location: null };
-			if(contractPhotoLink) {
-				fileUploaded = true;
-				message = ORDER_TRANSLATIONS['CONTRACT'];
+			}
+			else if(mode === 'receipt') {
+				const {
+					Location: receiptPhotoLinks
+				} = await this.imageFileService
+				              .uploadFiles(
+					              renameMulterFiles(files, Bucket.Folders.ORDER, id, mode)
+				              );
+				if(receiptPhotoLinks) {
+					fileUploaded = true;
+					message = ORDER_TRANSLATIONS['RECEIPT'];
 
-				if(order.contractPhotoLink) {
-					await this.imageFileService.deleteImage(order.contractPhotoLink);
+					if(order.paymentPhotoLinks)
+						order.receiptPhotoLinks.push(...receiptPhotoLinks);
+					else
+						order.receiptPhotoLinks = receiptPhotoLinks;
+
+					order = await this.repository.update(id, { receiptPhotoLinks: order.receiptPhotoLinks });
 				}
-				await this.repository.update(id, { contractPhotoLink, stage: OrderStage.SIGNED_DRIVER });
+			}
+			else if(mode === 'contract') {
+				order = await this.repository.get(id, true);
+
+				const {
+					Location: contractPhotoLink
+				} = await this.imageFileService.uploadFile(
+					renameMulterFile(files[0], Bucket.Folders.ORDER, id, mode)
+				);
+
+				if(contractPhotoLink) {
+					fileUploaded = true;
+					message = ORDER_TRANSLATIONS['CONTRACT'];
+
+					if(order.contractPhotoLink) {
+						await this.imageFileService.deleteImage(order.contractPhotoLink);
+					}
+					order = await this.repository.update(id, { contractPhotoLink, stage: OrderStage.SIGNED_DRIVER });
+				}
 			}
 		}
 
