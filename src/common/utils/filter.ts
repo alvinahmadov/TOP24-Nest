@@ -28,7 +28,8 @@ const checkAgainst = (
 	values: any[],
 	filterValues: any[],
 	name: string,
-	cb?: (v: any) => string
+	cb?: (v: any) => string,
+	identifier?: string
 ): boolean =>
 {
 	if(hasValues(filterValues)) {
@@ -44,14 +45,14 @@ const checkAgainst = (
 	return true;
 };
 
-const checkAgainstIn = (value: any, filterValues: any[], name: string): boolean =>
+const checkAgainstIn = (value: any, filterValues: any[], name: string, identifier?: string): boolean =>
 {
 	if(hasValues(filterValues)) {
 		const includes = filterValues.some((filterValue: any) => value === filterValue);
 		if(!includes) {
 			if(debugTransportFilter)
 				console.debug(
-					`No match for ${name}, requested [${arrToString(filterValues)}] against ${toString(value)}].`
+					`${identifier}: No match for ${name}, requested [${arrToString(filterValues)}] against ${toString(value)}].`
 				);
 			return false;
 		}
@@ -87,21 +88,21 @@ export function filterDirections(
 ): boolean {
 	if(!company) {
 		if(debugDirectionFilter) {
-			console.debug('No company exists!');
+			console.debug('filterDirections: No company exists!');
 		}
 		return false;
 	}
 
 	if(!company.directions || company.directions?.length === 0) {
 		if(debugDirectionFilter) {
-			console.debug('Company doesn\'t have directions!');
+			console.debug('filterDirections: Company doesn\'t have directions!');
 		}
 		return false;
 	}
 
 	if(!directions) {
 		if(debugDirectionFilter) {
-			console.debug('No direction filter provided!');
+			console.debug('filterDirections: No direction filter provided!');
 		}
 		return false;
 	}
@@ -124,7 +125,7 @@ export function filterDirections(
 
 					if(debugDirectionFilter) {
 						console.debug(
-							`Company direction "${companyDirectionPart}" matches filter direction ${direction}: ${res}`
+							`filterDirections: Company direction "${companyDirectionPart}" matches filter direction ${direction}: ${res}`
 						);
 					}
 					contains.push(res);
@@ -137,10 +138,10 @@ export function filterDirections(
 
 	if(debugDirectionFilter) {
 		console.debug(
-			`Is any company direction matches filter directions: ${contains.some(c => c)}`
+			`filterDirections: Is any company direction matches filter directions: ${contains.some(c => c)}`
 		);
 	}
-					
+
 	return contains.some(c => c);
 }
 
@@ -267,13 +268,13 @@ export function filterTransports(
 	};
 
 	const checkType = (transport: Transport): boolean =>
-		checkAgainstIn(transport.type, types, 'transport type');
+		checkAgainstIn(transport.type, types, 'transport type', 'filterTransports');
 	const checkFixtures = (transport: Transport): boolean =>
-		checkAgainst(transport.fixtures, fixtures, 'fixtures');
+		checkAgainst(transport.fixtures, fixtures, 'fixtures', undefined, 'filterTransports');
 	const checkRiskClasses = (transport: Transport): boolean =>
-		checkAgainst(transport.riskClasses, riskClasses, 'risk class');
+		checkAgainst(transport.riskClasses, riskClasses, 'risk class', undefined, 'filterTransports');
 	const checkLoadingTypes = (transport: Transport): boolean =>
-		checkAgainst(transport.loadingTypes, loadingTypes, 'loading type', loadingTypeToStr);
+		checkAgainst(transport.loadingTypes, loadingTypes, 'loading type', loadingTypeToStr, 'filterTransports');
 
 	const filteredTransports = transports
 		.filter(isActive)
@@ -310,9 +311,43 @@ export function filterTransports(
 	}
 
 	if(debugTransportFilter)
-		console.debug('transportsWithTrailers.length ', transportsWithTrailers.length);
+		console.debug('filterTransports: length ', transportsWithTrailers.length);
 
 	return transportsWithTrailers;
+}
+
+export function filterTransportsByOrder(
+	transport: Transport,
+	filter?: ICompanyTransportFilter
+) {
+	if(!filter) {
+		return true;
+	}
+	if(transport.driver !== null) {
+		if(transport.driver.order === null) {
+			if(debugTransportFilter)
+				console.debug('filterTransportsByOrder: No order exists, passing!');
+			return true;
+		}
+		else {
+			if(!filter.fromDate || !filter.toDate) {
+				if(debugTransportFilter)
+					console.debug('filterTransportsByOrder: No date filters, passing!');
+				return true;
+			}
+			const { order } = transport.driver;
+			const matchesByDate = (order.date >= filter.fromDate) && (order.date <= filter.toDate);
+
+			if(debugTransportFilter)
+				console.debug(`filterTransportsByOrder: Matches by date filters: ${matchesByDate}`);
+
+			return matchesByDate;
+		}
+	}
+
+	if(debugTransportFilter)
+		console.debug('filterTransportsByOrder: No driver exists!');
+	return false;
 }
 
 export function filterDrivers(

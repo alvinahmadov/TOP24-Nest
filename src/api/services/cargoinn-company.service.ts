@@ -14,6 +14,7 @@ import {
 	cargoToBitrix,
 	filterDirections,
 	filterTransports,
+	filterTransportsByOrder,
 	formatArgs,
 	isSuccessResponse,
 	getTranslation
@@ -302,31 +303,13 @@ export default class CargoCompanyInnService
 			companies = companies.filter(cargo => filterDirections(cargo, directions));
 		}
 
-		companies?.forEach(
+		companies.forEach(
 			company => transports.push(
-				...company.transports?.filter(
-					(companyTransport: Transport) =>
-					{
-						if(companyTransport.driver !== null) {
-							// driver doesn't have any order
-							if(companyTransport.driver.order === null) {
-								return true;
-							}
-							else {
-								if(!fromDate || !toDate)
-									return true;
-								// driver have order and check against dates from filter
-								const order = companyTransport.driver.order;
-								return (
-									(order.date >= fromDate) && (order.date <= toDate)
-								);
-							}
-						}
-						return false;
-					}
-				)
+				...company.transports
+				          ?.filter(t => filterTransportsByOrder(t, { fromDate, toDate }))
 			)
 		);
+
 		const data = filterTransports(transports, filter);
 		const message = formatArgs(TRANSLATIONS['TRANSPORTS'], transports.length);
 

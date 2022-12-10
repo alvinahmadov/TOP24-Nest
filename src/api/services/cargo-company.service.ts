@@ -15,6 +15,7 @@ import {
 	cargoToBitrix,
 	filterDirections,
 	filterTransports,
+	filterTransportsByOrder,
 	formatArgs,
 	getTranslation,
 	isSuccessResponse
@@ -304,28 +305,12 @@ export default class CargoCompanyService
 		}
 
 		companies.forEach(
-			c => transports.push(
-				...c.transports?.filter(
-					t =>
-					{
-						if(t.driver !== null) {
-							if(t.driver.order === null) {
-								return true;
-							}
-							else {
-								if(!fromDate || !toDate)
-									return true;
-								const order = t.driver.order;
-								return (
-									(order.date >= fromDate) && (order.date <= toDate)
-								);
-							}
-						}
-						return false;
-					}
-				)
+			company => transports.push(
+				...company.transports
+				          ?.filter(t => filterTransportsByOrder(t, { fromDate, toDate }))
 			)
 		);
+
 		const data = filterTransports(transports, filter);
 		const message = formatArgs(TRANSLATIONS['TRANSPORTS'], transports.length);
 
