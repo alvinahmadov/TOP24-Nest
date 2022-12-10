@@ -285,6 +285,7 @@ export function transformToCompanyTransportFilter(data: ICompanyTransportTransfo
 			heightMin:   data.height_min,
 			heightMax:   data.height_max,
 			types:       data.types ?? data.auto_types,
+			riskClass:   data.class ?? data.risk_class,
 			payloadType: data.payload_type
 		};
 	}
