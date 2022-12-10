@@ -96,11 +96,14 @@ export namespace BitrixUrl {
 }
 
 export namespace Bucket {
-	export const COMMON_FOLDER: string = 'common';
-	export const COMPANY_FOLDER: string = 'company';
-	export const DRIVER_FOLDER: string = 'driver';
-	export const TRANSPORT_FOLDER: string = 'transport';
 	export const IMAGES_BUCKET: string = '24top-images';
+
+	export namespace Folders {
+		export const COMPANY: string = 'company';
+		export const DRIVER: string = 'driver';
+		export const ORDER: string = 'order';
+		export const TRANSPORT: string = 'transport';
+	}
 }
 
 export namespace Reference {
@@ -131,6 +134,7 @@ export namespace Reference {
 	export const TRANSPORT_RISK_CLASSES: TBitrixEnum = CRM.TRANSPORT.RISK_TYPES;
 }
 
+// noinspection JSUnusedGlobalSymbols
 export const GEO_DISTANCE_FN = `
 CREATE OR REPLACE FUNCTION geo_distance(p1 point, p2 point)
     RETURNS double precision AS
