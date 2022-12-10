@@ -1,19 +1,62 @@
-import { MAX_FLOAT, MIN_FLOAT }        from '@common/constants';
-import { OrderStage, TransportStatus } from '@common/enums';
+import { MAX_FLOAT, MIN_FLOAT }                          from '@common/constants';
+import { loadingTypeToStr, OrderStage, TransportStatus } from '@common/enums';
 import {
 	ICompany,
 	ICompanyTransportFilter,
 	IDriverFilter,
 	IOrder,
 	ITransportFilter
-}                                      from '@common/interfaces';
+}                                                        from '@common/interfaces';
 import {
 	min,
 	transformDriverTransports
-}                                      from '@common/utils';
-import Driver                          from '@models/driver.entity';
-import Order                           from '@models/order.entity';
-import Transport                       from '@models/transport.entity';
+}                                                        from '@common/utils';
+import Driver                                            from '@models/driver.entity';
+import Order                                             from '@models/order.entity';
+import Transport                                         from '@models/transport.entity';
+
+const debugTransportFilter = false;
+
+const hasValues = (arr?: Array<any>) => arr && arr.length > 0;
+const arrToString = (arr: any[], cb?: (v: any) => string) =>
+	cb !== undefined ? arr.map(a => cb(a)).join(', ') : arr.join(', ');
+const toString = (item: any, cb?: (v: any) => string) =>
+	cb !== undefined ? cb(item) : item?.toString();
+
+const checkAgainst = (
+	values: any[],
+	filterValues: any[],
+	name: string,
+	cb?: (v: any) => string
+): boolean =>
+{
+	if(hasValues(filterValues)) {
+		const includes = values.some((value: any) => filterValues.includes(value));
+		if(!includes) {
+			if(debugTransportFilter)
+				console.debug(
+					`No match for ${name}, requested [${arrToString(filterValues, cb)}] against ${arrToString(values, cb)}].`
+				);
+			return false;
+		}
+	}
+	return true;
+};
+
+const checkAgainstIn = (value: any, filterValues: any[], name: string): boolean =>
+{
+	if(hasValues(filterValues)) {
+		const includes = filterValues.some((filterValue: any) => value === filterValue);
+		if(!includes) {
+			if(debugTransportFilter)
+				console.debug(
+					`No match for ${name}, requested [${arrToString(filterValues)}] against ${toString(value)}].`
+				);
+			return false;
+		}
+	}
+	return true;
+};
 
 export const getTransportFilterFromOrder =
 	(order: IOrder): ITransportFilter => (
@@ -181,8 +224,10 @@ export function filterTransports(
 		riskClass
 	} = filter;
 
-	const hasValues = (arr?: Array<any>) => arr && arr.length > 0;
-	const isActive = (transport: Transport) => onlyActive ? transport.status === TransportStatus.ACTIVE : true;
+	if(riskClass && !riskClasses.includes(riskClass))
+		riskClasses.push(riskClass);
+
+	const isActive = (transport: Transport) => !!onlyActive ? transport.status === TransportStatus.ACTIVE : true;
 	const isTrailer = (transport: Transport) => transport.isTrailer;
 
 	const getSummedParams = (transport: Transport, trailer?: Transport): Transport =>
@@ -197,40 +242,22 @@ export function filterTransports(
 		return transport;
 	};
 
+	const checkType = (transport: Transport): boolean =>
+		checkAgainstIn(transport.type, types, 'transport type');
+	const checkFixtures = (transport: Transport): boolean =>
+		checkAgainst(transport.fixtures, fixtures, 'fixtures');
+	const checkRiskClasses = (transport: Transport): boolean =>
+		checkAgainst(transport.riskClasses, riskClasses, 'risk class');
+	const checkLoadingTypes = (transport: Transport): boolean =>
+		checkAgainst(transport.loadingTypes, loadingTypes, 'loading type', loadingTypeToStr);
+
 	const filteredTransports = transports
 		.filter(isActive)
 		.filter(
-			transport =>
-				hasValues(loadingTypes) ? transport.loadingTypes.some(
-					                        loadingType => loadingTypes.includes(loadingType)
-				                        )
-				                        : true
-		)
-		.filter(
-			transport =>
-				hasValues(riskClasses) ? transport.riskClasses.some(
-					                       riskClass => riskClasses.includes(riskClass)
-				                       )
-				                       : true
-		)
-		.filter(
-			transport =>
-				hasValues(fixtures) ? transport.fixtures.some(
-					                    v => fixtures.includes(v)
-				                    )
-				                    : true
-		)
-		.filter(
-			transport =>
-				hasValues(types) ? types.some(transportType => transport.type === transportType)
-				                 : true
-		)
-		.filter(
-			transport =>
-				riskClass ? transport.riskClasses.some(
-					          rc => filter.riskClass === rc
-				          )
-				          : true
+			transport => checkLoadingTypes(transport) &&
+			             checkRiskClasses(transport) &&
+			             checkFixtures(transport) &&
+			             checkType(transport)
 		);
 
 	const mainTransports = filteredTransports.filter(transport => !isTrailer(transport));
@@ -257,6 +284,9 @@ export function filterTransports(
 		if(transport)
 			transportsWithTrailers.push(transport);
 	}
+
+	if(debugTransportFilter)
+		console.debug('transportsWithTrailers.length ', transportsWithTrailers.length);
 
 	return transportsWithTrailers;
 }
