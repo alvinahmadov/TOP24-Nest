@@ -10,7 +10,6 @@ import {
 	TApiResponseSchemaOptions,
 	TMediaType
 }                        from '@common/interfaces';
-import * as mo           from '@models/index';
 
 /**@ignore*/
 export function getApiResponseContent(
