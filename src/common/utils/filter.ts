@@ -38,7 +38,8 @@ const checkAgainst = (
 		else
 			identifier += ': ';
 
-		const includes = values.some((value: any) => filterValues.some(v => v === value));
+		const includes = values.some((value: any) => filterValues.toString()
+		                                                         .includes(value?.toString()));
 		if(!includes) {
 			if(debugTransportFilter)
 				console.debug(
@@ -58,7 +59,7 @@ const checkAgainstIn = (value: any, filterValues: any[], name: string, identifie
 		else
 			identifier += ': ';
 
-		const includes = filterValues.some((filterValue: any) => value === filterValue);
+		const includes = filterValues.some((filterValue: any) => value?.toString() === filterValue?.toString());
 		if(!includes) {
 			if(debugTransportFilter)
 				console.debug(
