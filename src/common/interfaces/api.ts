@@ -1,7 +1,6 @@
 import { Request } from 'express';
 // @ts-ignore
 import { Multer }  from 'multer';
-import { Model }   from 'sequelize-typescript';
 import {
 	CanActivate,
 	HttpStatus,
@@ -213,7 +212,7 @@ export interface IApiRouteConfig<M = any> {
 
 /**@ignore*/
 export interface IBucketItem {
-	buffer: Buffer;
+	buffer?: Buffer;
 	name?: string;
 	save_name?: string;
 	path?: string;
@@ -395,20 +394,41 @@ export interface ILoginResponse {
 
 /**@ignore*/
 export interface IObjectStorageParams {
+	/**
+	 * Authentication data
+	 * */
 	auth: TObjectStorageAuth;
+	/**
+	 * Id or name of the bucket of object storage
+	 * */
 	bucketId: string;
+	/**
+	 * The url to the object storage endpoint
+	 * */
 	endpoint_url?: string;
+	/**
+	 * Region of the object storage host
+	 * */
 	region?: string;
 	httpOptions?: {
-		timeout?: number;
+		/**
+		 * the URL to proxy requests through.
+		 */
+		proxy?: string;
+		/**
+		 * The maximum time in milliseconds that the connection phase of the request
+		 * should be allowed to take. This only limits the connection phase and has
+		 * no impact once the socket has established a connection.
+		 * Used in node.js environments only.
+		 */
 		connectTimeout?: number;
+		/**
+		 * The number of milliseconds a request can take before automatically being terminated.
+		 * Defaults to two minutes (120000).
+		 */
+		timeout?: number;
 	};
 	debug?: boolean;
-}
-
-export interface IObjectStorageUploadOptions {
-	folderId?: string;
-	fileName?: string;
 }
 
 /**@ignore*/
@@ -450,10 +470,7 @@ export interface IService {}
 
 export interface IImageFileService
 	extends IService {
-	uploadFile(
-		fileBlob: Buffer,
-		options?: IObjectStorageUploadOptions
-	): Promise<IAWSUploadResponse | Error>;
+	uploadFile(file: TMulterFile): Promise<IAWSUploadResponse | Error>;
 
 	uploadFiles(
 		files: TMulterFile[],
@@ -490,20 +507,6 @@ export interface ISwaggerTag {
 	name: string;
 	description?: string;
 	externalDocs?: any;
-}
-
-/**@ignore*/
-export interface IUploadOptions<M extends Model> {
-	// Entity id.
-	id: string;
-	// Uploaded file target name in Yandex Storage.
-	name: string;
-	// Image file buffer to send.
-	buffer: Buffer;
-	// Key for link model field.
-	linkName: keyof M['_attributes'];
-	// Name/id of folder in Object Storage.
-	folderId?: string;
 }
 
 /**@ignore*/
