@@ -2,9 +2,9 @@ import {
 	forwardRef, Inject,
 	Injectable,
 	HttpStatus
-}                                 from '@nestjs/common';
-import { BitrixUrl, Bucket }      from '@common/constants';
-import { DriverStatus, UserRole } from '@common/enums';
+}                            from '@nestjs/common';
+import { BitrixUrl, Bucket } from '@common/constants';
+import { UserRole }          from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -16,8 +16,9 @@ import {
 	TCRMResponse,
 	TGeoCoordinate,
 	TMergedEntities,
+	TMulterFile,
 	TUpdateAttribute
-}                                 from '@common/interfaces';
+}                            from '@common/interfaces';
 import {
 	addressFromCoordinates,
 	buildBitrixRequestUrl,
@@ -25,20 +26,20 @@ import {
 	filterDrivers,
 	formatArgs,
 	getTranslation
-}                                 from '@common/utils';
-import { Driver, Order }          from '@models/index';
-import { DriverRepository }       from '@repos/index';
+}                            from '@common/utils';
+import { Driver, Order }     from '@models/index';
+import { DriverRepository }  from '@repos/index';
 import {
 	DriverCreateDto,
 	DriverFilter,
 	DriverUpdateDto,
 	ListFilter,
 	TransportFilter
-}                                 from '@api/dto';
-import { EventsGateway }          from '@api/events';
-import Service                    from './service';
-import ImageFileService           from './image-file.service';
-import OrderService               from './order.service';
+}                            from '@api/dto';
+import { EventsGateway }     from '@api/events';
+import Service               from './service';
+import ImageFileService      from './image-file.service';
+import OrderService          from './order.service';
 import CONTACT_DEL_URL = BitrixUrl.CONTACT_DEL_URL;
 import CONTACT_UPD_URL = BitrixUrl.CONTACT_UPD_URL;
 import CONTACT_ADD_URL = BitrixUrl.CONTACT_ADD_URL;
@@ -347,26 +348,20 @@ export default class DriverService
 	 * driver. Then returns link to the uploaded file.
 	 *
 	 * @param {String!} id Id of driver.
-	 * @param {Buffer!} file Image file buffer to upload.
-	 * @param {String!} name Name to save in storage.
+	 * @param {TMulterFile!} image Image file to upload.
+	 * @param {String} folder Name of the folder to upload the image
 	 * */
 	public async uploadAvatarPhoto(
 		id: string,
-		file: Buffer,
-		name: string
+		image: TMulterFile,
+		folder: string = 'avatar'
 	): TAsyncApiResponse<Driver> {
-		const linkName: keyof IDriver = 'avatarLink';
 		const driver = await this.repository.get(id);
 
 		if(!driver)
 			return this.responses['NOT_FOUND'];
 
-		if(driver[linkName])
-			await this.imageFileService.deleteImage(driver[linkName]);
-
-		return this.uploadPhoto(
-			{ id, buffer: file, name, linkName, folderId: Bucket.DRIVER_FOLDER }
-		);
+		return this.uploadPhoto(id, image, 'avatarLink', Bucket.Folders.DRIVER, folder);
 	}
 
 	/**
@@ -376,54 +371,56 @@ export default class DriverService
 	 * driver license. Then returns link to the uploaded file.
 	 *
 	 * @param {String!} id Id of driver which owns license.
-	 * @param {Buffer!} file Image file buffer to upload.
-	 * @param {String!} name Name to save in storage.
+	 * @param {Buffer!} image Image file to upload.
+	 * @param {String!} folder Name of the folder to which save image in the storage.
 	 * */
 	public async uploadLicenseFront(
 		id: string,
-		file: Buffer,
-		name: string
+		image: TMulterFile,
+		folder: string = 'front'
 	): TAsyncApiResponse<Driver> {
-		const linkName: keyof IDriver = 'licenseFrontLink';
 		const driver = await this.repository.get(id);
 
 		if(!driver)
 			return this.responses['NOT_FOUND'];
 
-		if(driver[linkName])
-			await this.imageFileService.deleteImage(driver[linkName]);
-
 		return this.uploadPhoto(
-			{ id, buffer: file, name, linkName, folderId: Bucket.DRIVER_FOLDER }
+			id,
+			image,
+			'licenseFrontLink',
+			Bucket.Folders.DRIVER,
+			'license',
+			folder
 		);
 	}
 
 	/**
-	 * @summary Upload license scan.
+	 * @summary Upload license back scan.
 	 *
-	 * @description Uploads to Yandex Storage back scan of
+	 * @description Uploads to Yandex Storage front scan of
 	 * driver license. Then returns link to the uploaded file.
 	 *
 	 * @param {String!} id Id of driver which owns license.
-	 * @param {Buffer!} file Image file buffer to upload.
-	 * @param {String!} name Name to save in storage.
+	 * @param {Buffer!} image Image file to upload.
+	 * @param {String!} folder Name of the folder to which save image in the storage.
 	 * */
 	public async uploadLicenseBack(
 		id: string,
-		file: Buffer,
-		name: string
+		image: TMulterFile,
+		folder: string = 'back'
 	): TAsyncApiResponse<Driver> {
-		const linkName: keyof IDriver = 'licenseBackLink';
 		const driver = await this.repository.get(id);
 
 		if(!driver)
 			return this.responses['NOT_FOUND'];
 
-		if(driver[linkName])
-			await this.imageFileService.deleteImage(driver[linkName]);
-
 		return this.uploadPhoto(
-			{ id, buffer: file, name, linkName, folderId: Bucket.DRIVER_FOLDER }
+			id,
+			image,
+			'licenseBackLink',
+			Bucket.Folders.DRIVER,
+			'license',
+			folder
 		);
 	}
 }
