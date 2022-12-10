@@ -16,6 +16,7 @@ import Order                                             from '@models/order.ent
 import Transport                                         from '@models/transport.entity';
 
 const debugTransportFilter = false;
+const debugDirectionFilter = false;
 
 const hasValues = (arr?: Array<any>) => arr && arr.length > 0;
 const arrToString = (arr: any[], cb?: (v: any) => string) =>
@@ -84,14 +85,26 @@ export function filterDirections(
 	directions: string[],
 	sep = ','
 ): boolean {
-	if(!company)
+	if(!company) {
+		if(debugDirectionFilter) {
+			console.debug('No company exists!');
+		}
 		return false;
+	}
 
-	if(!company.directions || company.directions?.length === 0)
+	if(!company.directions || company.directions?.length === 0) {
+		if(debugDirectionFilter) {
+			console.debug('Company doesn\'t have directions!');
+		}
 		return false;
+	}
 
-	if(!directions)
+	if(!directions) {
+		if(debugDirectionFilter) {
+			console.debug('No direction filter provided!');
+		}
 		return false;
+	}
 
 	let contains: boolean[] = [];
 
@@ -109,7 +122,12 @@ export function filterDirections(
 					const res = RegExp(direction.trim(), 'gium')
 						.test(companyDirectionPart.trim());
 
-					if(res) contains.push(true);
+					if(debugDirectionFilter) {
+						console.debug(
+							`Company direction "${companyDirectionPart}" matches filter direction ${direction}: ${res}`
+						);
+					}
+					contains.push(res);
 				}
 			}
 		);
@@ -117,6 +135,12 @@ export function filterDirections(
 
 	company.directions.forEach(d => checkCompanyDirection(d));
 
+	if(debugDirectionFilter) {
+		console.debug(
+			`Is any company direction matches filter directions: ${contains.some(c => c)}`
+		);
+	}
+					
 	return contains.some(c => c);
 }
 
