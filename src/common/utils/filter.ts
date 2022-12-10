@@ -20,7 +20,7 @@ const debugDirectionFilter = false;
 
 const hasValues = (arr?: Array<any>) => arr && arr.length > 0;
 const arrToString = (arr: any[], cb?: (v: any) => string) =>
-	cb !== undefined ? arr.map(a => cb(a)).join(', ') : arr.join(', ');
+	cb !== undefined ? arr.map(a => `${cb(a)} (${a})`).join(', ') : arr.join(', ');
 const toString = (item: any, cb?: (v: any) => string) =>
 	cb !== undefined ? cb(item) : item?.toString();
 
