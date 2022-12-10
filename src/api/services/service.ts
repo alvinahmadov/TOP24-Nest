@@ -1,10 +1,10 @@
-import { WhereOptions }   from 'sequelize';
-import { Model }          from 'sequelize-typescript';
+import { WhereOptions }  from 'sequelize';
+import { Model }         from 'sequelize-typescript';
 import {
 	HttpStatus,
 	Logger
-}                         from '@nestjs/common';
-import { Axios }          from '@common/classes';
+}                        from '@nestjs/common';
+import { Axios }         from '@common/classes';
 import {
 	IApiResponses,
 	IModel,
@@ -12,11 +12,14 @@ import {
 	TAsyncApiResponse,
 	TCreationAttribute,
 	TUpdateAttribute,
-	IUploadOptions
-}                         from '@common/interfaces';
-import { getTranslation } from '@common/utils';
-import GenericRepository  from '@repos/generic';
-import ImageFileService   from './image-file.service';
+	TMulterFile
+}                        from '@common/interfaces';
+import {
+	getTranslation,
+	renameMulterFile
+}                        from '@common/utils';
+import GenericRepository from '@repos/generic';
+import ImageFileService  from './image-file.service';
 
 const FAIL_TRANSLATION = getTranslation('FAIL');
 const SUCC_TRANSLATION = getTranslation('SUCCESS');
@@ -75,16 +78,29 @@ export default abstract class Service<M extends Model,
 	 *
 	 * @description Uploads/updates document scan files and
 	 * returns link to the updated file in Yandex Storage
+	 *
+	 * @param id Id of entity to upload. Starting folder
+	 * @param image {TMulterFile} File upload item.
+	 * @param linkName {String} Name of field in database containing image link.
+	 * @param folderId {String} Name of the folder to where upload the image.
+	 * @param paths {String[]!} Array of folder names to create before the image
 	 * */
-	public async uploadPhoto(options: IUploadOptions<M>): TAsyncApiResponse<M> {
-		const { id, folderId, buffer, linkName, name: fileName } = options;
+	public async uploadPhoto(
+		id: string,
+		image: TMulterFile,
+		linkName: keyof M,
+		folderId: string,
+		...paths: string[]
+	): TAsyncApiResponse<M> {
 		const model = await this.repository.get(id);
 		if(model) {
 			if(model[linkName]) {
 				const locationUrl = model.getDataValue(linkName);
 				await this.imageFileService.deleteImage(locationUrl);
 			}
-			const uploadResponse = await this.imageFileService.uploadFile(buffer, { folderId, fileName });
+			const uploadResponse = await this.imageFileService.uploadFile(
+				renameMulterFile(image, folderId, id, ...paths)
+			);
 
 			if(uploadResponse) {
 				if(uploadResponse.Location) {
