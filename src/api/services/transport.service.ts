@@ -8,13 +8,13 @@ import {
 	IService,
 	ITransport,
 	TAsyncApiResponse,
-	TCreationAttribute,
+	TCreationAttribute, TMulterFile,
 	TUpdateAttribute
 }                              from '@common/interfaces';
 import {
 	formatArgs,
 	filterTransports,
-	getTranslation
+	getTranslation, renameMulterFile
 }                              from '@common/utils';
 import { Image, Transport }    from '@models/index';
 import { TransportRepository } from '@repos/index';
@@ -260,25 +260,23 @@ export default class TransportService
 	 * and returns link to the updated file in Yandex Storage.
 	 *
 	 * @param {String!} id Id of the cargo company transport.
-	 * @param {Buffer!} file File buffer to send image.
-	 * @param {String!} name Name of image file to save in.
+	 * @param {TMulterFile!} image Image to send.
+	 * @param {String!} folder Name of the folder to save image to.
 	 * */
 	public async uploadImage(
 		id: string,
-		file: Buffer,
-		name: string
+		image: TMulterFile,
+		folder: string = 'image'
 	): TAsyncApiResponse<Image> {
 		let transport = await this.repository.get(id);
 
 		if(!transport)
 			return this.responses['NOT_FOUND'];
 
-		const { Location: url } = await this.imageFileService.uploadFile(
-			file,
-			{
-				fileName: name,
-				folderId: Bucket.TRANSPORT_FOLDER
-			}
+		const {
+			Location: url
+		} = await this.imageFileService.uploadFile(
+			renameMulterFile(image, Bucket.Folders.TRANSPORT, id, folder)
 		);
 
 		if(url) {
@@ -321,17 +319,15 @@ export default class TransportService
 	 * and returns link to the updated file in Yandex Storage.
 	 *
 	 * @param {String!} id Id of the cargo company transport.
-	 * @param {Buffer!} file File buffer to send image.
-	 * @param {String!} name Name of image file to save in.
+	 * @param {TMulterFile!} image Image to send.
+	 * @param {String!} folder Name of the folder to save image to.
 	 * */
 	public async uploadOsagoPhoto(
 		id: string,
-		name: string,
-		file: Buffer
+		image: TMulterFile,
+		folder: string = 'osago'
 	): TAsyncApiResponse<Transport> {
-		return this.uploadPhoto(
-			{ id, name, buffer: file, linkName: 'osagoPhotoLink', folderId: Bucket.TRANSPORT_FOLDER }
-		);
+		return this.uploadPhoto(id, image, 'osagoPhotoLink', Bucket.Folders.TRANSPORT, folder);
 	}
 
 	/**
@@ -341,16 +337,14 @@ export default class TransportService
 	 * and returns link to the updated file in Yandex Storage.
 	 *
 	 * @param {String!} id Id of the cargo company transport.
-	 * @param {Buffer!} file File buffer to send image.
-	 * @param {String!} name Name of image file to save in.
+	 * @param {TMulterFile!} image Image to send.
+	 * @param {String!} folder Name of the folder to save image to.
 	 * */
 	public async uploadDiagnosticsPhoto(
 		id: string,
-		name: string,
-		file: Buffer
+		image: TMulterFile,
+		folder: string = 'diagnostic'
 	): TAsyncApiResponse<Transport> {
-		return this.uploadPhoto(
-			{ id, buffer: file, name, linkName: 'diagnosticsPhotoLink', folderId: Bucket.TRANSPORT_FOLDER }
-		);
+		return this.uploadPhoto(id, image, 'diagnosticsPhotoLink', Bucket.Folders.TRANSPORT, folder);
 	}
 }
