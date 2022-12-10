@@ -42,7 +42,7 @@ const checkAgainst = (
 		if(!includes) {
 			if(debugTransportFilter)
 				console.debug(
-					`${identifier}No match for ${name}, requested [${arrToString(filterValues, cb)}] against ${arrToString(values, cb)}].`
+					`${identifier}No match for ${name}, requested [${arrToString(filterValues, cb)}] against [${arrToString(values, cb)}].`
 				);
 			return false;
 		}
