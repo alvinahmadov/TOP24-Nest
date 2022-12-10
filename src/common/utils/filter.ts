@@ -38,8 +38,7 @@ const checkAgainst = (
 		else
 			identifier += ': ';
 
-		const includes = values.some((value: any) => filterValues.toString()
-		                                                         .includes(value?.toString()));
+		const includes = values.some((value: any) => filterValues.includes(value));
 		if(!includes) {
 			if(debugTransportFilter)
 				console.debug(
@@ -59,7 +58,7 @@ const checkAgainstIn = (value: any, filterValues: any[], name: string, identifie
 		else
 			identifier += ': ';
 
-		const includes = filterValues.some((filterValue: any) => value?.toString() === filterValue?.toString());
+		const includes = filterValues.some((filterValue: any) => value === filterValue);
 		if(!includes) {
 			if(debugTransportFilter)
 				console.debug(
@@ -285,7 +284,8 @@ export function filterTransports(
 	const checkRiskClasses = (transport: Transport): boolean =>
 		checkAgainst(transport.riskClasses, riskClasses, 'risk class', undefined, 'filterTransports');
 	const checkLoadingTypes = (transport: Transport): boolean =>
-		checkAgainst(transport.loadingTypes, loadingTypes, 'loading type', loadingTypeToStr, 'filterTransports');
+		checkAgainst(transport.loadingTypes, loadingTypes.map(t => Number(t)),
+		             'loading type', loadingTypeToStr, 'filterTransports');
 
 	const filteredTransports = transports
 		.filter(isActive)
