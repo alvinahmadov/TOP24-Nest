@@ -162,7 +162,8 @@ export default class OrderRepository
 		const {
 			statuses = [
 				OrderStatus.ACCEPTED,
-				OrderStatus.PROCESSING
+				OrderStatus.PROCESSING,
+				OrderStatus.CANCELLED
 			],
 			stages,
 			onPayment
