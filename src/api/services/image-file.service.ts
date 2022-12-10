@@ -1,5 +1,3 @@
-import { join }              from 'path';
-import { v4 as uuid }        from 'uuid';
 import { Injectable, Scope } from '@nestjs/common';
 import env                   from '@config/env';
 import { Bucket }            from '@common/constants';
@@ -7,7 +5,7 @@ import {
 	IAWSUploadResponse,
 	IImageFileService,
 	IObjectStorageParams,
-	IObjectStorageUploadOptions
+	TMulterFile
 }                            from '@common/interfaces';
 import {
 	ObjectStorage,
@@ -27,7 +25,7 @@ export default class ImageFileService
 		let storageParams: IObjectStorageParams = {
 			endpoint_url: env.objectStorage.url,
 			auth:         env.objectStorage.auth,
-			bucketId:     Bucket.IMAGES_BUCKET,
+			bucketId:     env.objectStorage.bucketId || Bucket.IMAGES_BUCKET,
 			region:       env.objectStorage.region,
 			debug:        env.objectStorage.debug
 		};
@@ -41,41 +39,23 @@ export default class ImageFileService
 	/**
 	 * @summary Upload image buffer to storage
 	 *
-	 * @param {Buffer!} fileBlob File buffer to send to storage
-	 * @param {IObjectStorageUploadOptions} options upload options
-	 * @param {String} options.fileName Name of file on storage
-	 * @param {String} options.folderId Folder identifier on storage bucket
+	 * @param {TMulterFile!} file File to upload to the storage
 	 * */
-	public async uploadFile(
-		fileBlob: Buffer,
-		options?: IObjectStorageUploadOptions
-	): Promise<IAWSUploadResponse> {
-		if(!options) {
-			options = {
-				fileName: uuid({ random: fileBlob }).toUpperCase(),
-				folderId: Bucket.COMMON_FOLDER
-			};
-		}
-		else if(!options.fileName) {
-			options.fileName = uuid({ random: fileBlob }).toUpperCase();
-		}
+	public async uploadFile(file: TMulterFile): Promise<IAWSUploadResponse> {
+		if(file)
+			return this.objectStorage
+			           .upload({
+				                   name:     file.originalname,
+				                   buffer:   file.buffer,
+				                   mimetype: file.mimetype
+			                   });
 
-		const storeName = join(options.folderId ?? Bucket.COMMON_FOLDER, options.fileName);
-
-		return this.objectStorage
-		           .setBucket(Bucket.IMAGES_BUCKET)
-		           .upload({ buffer: fileBlob, name: storeName });
+		return { Location: null };
 	}
 
-	public async uploadFiles(
-		files: any[],
-		bucketId?: string
-	): Promise<{ Location: string[] }> {
-		if(!bucketId) bucketId = Bucket.COMMON_FOLDER;
-
+	public async uploadFiles(files: TMulterFile[]): Promise<{ Location: string[] }> {
 		if(files) {
 			return this.objectStorage
-			           .setBucket(bucketId)
 			           .uploadMulti(
 				           files.map(
 					           ({ buffer, originalname: name }) => ({ buffer, name })
@@ -112,7 +92,6 @@ export default class ImageFileService
 
 		if(location) {
 			isDeleted = await this.objectStorage
-			                      .setBucket(Bucket.IMAGES_BUCKET)
 			                      .remove(location);
 		}
 		return isDeleted ? 1 : 0;
