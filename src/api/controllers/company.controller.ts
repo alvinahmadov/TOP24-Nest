@@ -29,7 +29,7 @@ import {
 import {
 	formatArgs,
 	getTranslation,
-	renameMulterFile,
+	isSuccessResponse,
 	sendResponse
 }                              from '@common/utils';
 import {
@@ -41,6 +41,7 @@ import {
 import {
 	CargoCompany,
 	CargoCompanyInn,
+	Payment,
 	Transport,
 	User
 }                              from '@models/index';
@@ -421,22 +422,25 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'avatar');
 		const { data: company } = await this.getCompany(id);
 
-		const result = company ? await (
+		const result: IApiResponse<CargoCompany | CargoCompanyInn> = company ? await (
 			company.type === CompanyType.ORG
 			? this.uploadPhoto<CargoCompany>(
-				id, name, buffer,
+				id,
+				image,
 				'avatarLink',
-				CompanyType.ORG,
-				Bucket.COMPANY_FOLDER
+				company.type,
+				Bucket.Folders.COMPANY,
+				'avatar'
 			)
 			: this.uploadPhoto<CargoCompanyInn>(
-				id, name, buffer,
+				id,
+				image,
 				'avatarLink',
-				CompanyType.IE,
-				Bucket.COMPANY_FOLDER
+				company.type,
+				Bucket.Folders.COMPANY,
+				'avatar'
 			)
 		) : { statusCode: 400, message: 'Not found!' };
 
@@ -457,31 +461,32 @@ export default class CompanyController
 		@Res() response: ex.Response
 	) {
 		let companyResponse = await this.getCompany(id);
-		if(companyResponse.data) {
-			const { originalname: name, buffer } = renameMulterFile(image, id, 'passport');
-			if(companyResponse.data) {
-				const { data: company } = companyResponse;
-				let result = await (
-					company.type === CompanyType.ORG
-					? this.uploadPhoto<CargoCompany>(
-						id, name, buffer,
-						'passportPhotoLink',
-						CompanyType.ORG,
-						Bucket.COMPANY_FOLDER
-					)
-					: this.uploadPhoto<CargoCompanyInn>(
-						id, name, buffer,
-						'passportPhotoLink',
-						CompanyType.IE,
-						Bucket.COMPANY_FOLDER
-					)
-				);
-				return response.status(result.statusCode)
-				               .send(result);
-			}
-		}
 
-		return sendResponse(response, companyResponse);
+		if(!isSuccessResponse(companyResponse))
+			return companyResponse;
+
+		const { data: company } = companyResponse;
+		const result: IApiResponse<CargoCompany | CargoCompanyInn> = await (
+			company.type === CompanyType.ORG
+			? this.uploadPhoto<CargoCompany>(
+				id,
+				image,
+				'passportPhotoLink',
+				company.type,
+				Bucket.Folders.COMPANY,
+				'passport'
+			)
+			: this.uploadPhoto<CargoCompanyInn>(
+				id,
+				image,
+				'passportPhotoLink',
+				company.type,
+				Bucket.Folders.COMPANY,
+				'passport'
+			)
+		);
+
+		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.certificate, {
@@ -497,12 +502,13 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'certificate');
 		const result = await this.uploadPhoto<CargoCompany>(
-			id, name, buffer,
+			id,
+			image,
 			'certificatePhotoLink',
 			CompanyType.ORG,
-			Bucket.COMPANY_FOLDER
+			Bucket.Folders.COMPANY,
+			'certificate'
 		);
 
 		return sendResponse(response, result);
@@ -521,12 +527,13 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'director_order');
 		const result = await this.uploadPhoto<CargoCompany>(
-			id, name, buffer,
+			id,
+			image,
 			'directorOrderPhotoLink',
 			CompanyType.ORG,
-			Bucket.COMPANY_FOLDER
+			Bucket.Folders.COMPANY,
+			'director_order'
 		);
 
 		return sendResponse(response, result);
@@ -545,10 +552,13 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'attorney');
 		const result = await this.uploadPhoto<CargoCompany>(
-			id, name, buffer, 'attorneySignLink',
-			CompanyType.ORG, Bucket.COMPANY_FOLDER
+			id,
+			image,
+			'attorneySignLink',
+			CompanyType.ORG,
+			Bucket.Folders.COMPANY,
+			'attorney'
 		);
 
 		return sendResponse(response, result);
@@ -567,12 +577,14 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'passport', 'sign');
 		const result = await this.uploadPhoto<CargoCompanyInn>(
-			id, name, buffer,
+			id,
+			image,
 			'passportSignLink',
-			CompanyType.ORG,
-			Bucket.COMPANY_FOLDER
+			CompanyType.IE,
+			Bucket.Folders.COMPANY,
+			'passport',
+			'sign'
 		);
 
 		return sendResponse(response, result);
@@ -591,11 +603,14 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = renameMulterFile(image, id, 'passport', 'selfie');
 		const result = await this.uploadPhoto<CargoCompanyInn>(
-			id, name, buffer, 'passportSelfieLink',
+			id,
+			image,
+			'passportSelfieLink',
 			CompanyType.IE,
-			Bucket.COMPANY_FOLDER
+			Bucket.Folders.COMPANY,
+			'passport',
+			'selfie'
 		);
 
 		return sendResponse(response, result);
@@ -614,26 +629,32 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const destination = `${id}/${name}`;
-		const { data: company } = await this.getCompany(id, true);
-		let result: IApiResponse<any> = { statusCode: 400, message: 'Payment not found' };
+		const companyResponse = await this.getCompany(id, true);
+		let apiResponse: IApiResponse<Payment | null>;
 
-		if(company.type !== CompanyType.ORG) {
-			if(company.payment) {
-				result = await this.paymentService.uploadPhoto(
-					{
-						id:       company.payment.id,
-						name:     destination,
-						buffer,
-						linkName: 'ogrnipPhotoLink',
-						folderId: Bucket.COMPANY_FOLDER
-					}
-				);
+		if(!isSuccessResponse(companyResponse)) {
+			apiResponse = {
+				statusCode: companyResponse.statusCode,
+				message:    companyResponse.message
+			};
+		}
+		else {
+			const { data: company } = companyResponse;
+			if(company.type === CompanyType.IE) {
+				if(company.payment) {
+					apiResponse = await this.paymentService.uploadPhoto(
+						id,
+						image,
+						'ogrnipPhotoLink',
+						Bucket.Folders.COMPANY,
+						'payment',
+						'ogrnip'
+					);
+				}
 			}
 		}
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	private async getCompany(id: string, full?: boolean)
@@ -660,27 +681,6 @@ export default class CompanyController
 		}
 		else return companyResponse;
 
-		/*
-		await this.cargoService.updateAll(
-			{ isDefault: false },
-			{
-				[Op.and]: [
-					{ id: { [Op.ne]: companyId } },
-					{ userId: { [Op.eq]: userId } }
-				]
-			}
-		);
-		await this.cargoInnService.updateAll(
-			{ isDefault: false },
-			{
-				[Op.and]: [
-					{ id: { [Op.ne]: companyId } },
-					{ userId: { [Op.eq]: userId } }
-				]
-			}
-		);
-		*/
-
 		if(companyType === CompanyType.ORG) {
 			await this.cargoService.activate(companyId);
 			await this.cargoInnService.activate(companyId, { disableAll: true, userId });
@@ -695,16 +695,16 @@ export default class CompanyController
 
 	private async uploadPhoto<M>(
 		id: string,
-		name: string,
-		buffer: Buffer,
+		image: TMulterFile,
 		key: keyof M,
 		type: CompanyType = CompanyType.ORG,
-		folderId: string = Bucket.COMPANY_FOLDER
-	): Promise<IApiResponse<ICompany>> {
+		folderId: string = Bucket.Folders.COMPANY,
+		...paths: string[]
+	): Promise<IApiResponse<any>> {
 		return (
 			type === CompanyType.ORG
-			? this.cargoService.uploadPhoto({ id, buffer, linkName: <any>key, name, folderId })
-			: this.cargoInnService.uploadPhoto({ id, buffer, linkName: <any>key, name, folderId })
+			? this.cargoService.uploadPhoto(id, image, <any>key, folderId, ...paths)
+			: this.cargoInnService.uploadPhoto(id, image, <any>key, folderId, ...paths)
 		);
 	}
 }
