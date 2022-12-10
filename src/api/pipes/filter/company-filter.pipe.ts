@@ -14,6 +14,9 @@ export default class CompanyTransportFilterPipe
 	transform(data: any): ICompanyTransportFilter {
 		let value: ICompanyTransportFilter = !env.api.compatMode ? data
 		                                                         : transformToCompanyTransportFilter(data);
+		
+		if(data.pallets)
+			value.pallets = data.pallets;
 
 		checkAndConvertBitrix(value, 'payload', 'transportPayload');
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');

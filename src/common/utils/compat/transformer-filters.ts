@@ -46,6 +46,7 @@ export interface ICompanyTransportTransformerFilter
 	cargoId?: string;
 	cargoinnId?: string;
 	risk_class?: string;
+	class?: string;
 	payment_types?: string[];
 	dedicated?: string;
 	directions?: string[];
@@ -139,6 +140,7 @@ export interface ITransportTransformerFilter
 	height_min?: number;
 	height_max?: number;
 	types?: string[];
+	auto_types?: string[];
 	pallets?: number;
 	is_dedicated?: boolean;
 	payload_extra?: boolean;
@@ -282,7 +284,7 @@ export function transformToCompanyTransportFilter(data: ICompanyTransportTransfo
 			widthMax:    data.width_max,
 			heightMin:   data.height_min,
 			heightMax:   data.height_max,
-			types:       data.types,
+			types:       data.types ?? data.auto_types,
 			payloadType: data.payload_type
 		};
 	}
