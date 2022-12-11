@@ -386,9 +386,10 @@ export default class CompanyController
 			if(filter.directions.every(isUuid)) {
 				const _directions: string[] = [];
 				for(const directionId of filter.directions) {
-					const { data: address } = await this.addressService.getById(directionId);
+					const addressResponse = await this.addressService.getById(directionId);
 
-					if(address) {
+					if(isSuccessResponse(addressResponse)) {
+						const { data: address } = addressResponse;
 						_directions.push(address.city, address.region);
 					}
 				}
