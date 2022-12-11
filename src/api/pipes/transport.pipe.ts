@@ -40,7 +40,7 @@ export class TransportUpdatePipe
 		checkAndConvertBitrix(value, 'model', 'transportModel');
 		checkAndConvertBitrix(value, 'type', 'transportType');
 		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures');
-		checkAndConvertArrayBitrix(value, 'riskClasses', 'riskClass');
+		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass');
 		reformatDateString<ITransport>(value, ['diagnosticsExpiryDate', 'osagoExpiryDate']);
 		delete value.id;
 		delete value.isTrailer;
