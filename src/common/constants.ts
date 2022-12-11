@@ -119,7 +119,7 @@ export namespace Reference {
 	/**@ignore*/
 	export const ORDER_STATUSES: TBitrixEnum = CRM.ORDER.STATUSES;
 	/**@ignore*/
-	export const TRANSPORT_PAYLOADS: TBitrixEnum = CRM.TRANSPORT.PAYLOADS;
+	export const ORDER_PAYLOADS: TBitrixEnum = CRM.ORDER.PAYLOADS;
 	/**@ignore*/
 	export const PAYMENT_TYPES: TBitrixEnum = CRM.COMPANY.PAYMENT_TYPES;
 	/**@ignore*/
@@ -128,6 +128,8 @@ export namespace Reference {
 	export const TRANSPORT_BRANDS: TBitrixEnum = CRM.TRANSPORT.BRANDS;
 	/**@ignore*/
 	export const TRANSPORT_MODELS: Array<TBitrixData & { BRAND_ID: string }> = CRM.TRANSPORT.MODELS;
+	/**@ignore*/
+	export const TRANSPORT_PAYLOADS: TBitrixEnum = CRM.TRANSPORT.PAYLOADS;
 	/**@ignore*/
 	export const TRANSPORT_TYPES: TBitrixEnum = CRM.TRANSPORT.TYPES;
 	/**@ignore*/
