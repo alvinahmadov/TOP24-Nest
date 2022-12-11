@@ -12,7 +12,7 @@ import {
 }                                  from '@common/enums';
 import {
 	IApiResponse,
-	ICRMEntity,
+	ICRMEntity, IFilter,
 	IModel,
 	IOrderDestination,
 	TBitrixEnum,
@@ -268,7 +268,7 @@ export function convertBitrix<V, R>(
 	value: V,
 	fromCrm: boolean = true,
 	byAlias: boolean = false
-): R {
+): R | null {
 	if(value === undefined)
 		return null;
 	const find = (benum: TBitrixEnum): R =>
@@ -294,7 +294,7 @@ export function convertBitrix<V, R>(
 	return selectBitrixEnum<R>(key, find);
 }
 
-export function checkAndConvertBitrix<T extends IModel, K extends keyof T>(
+export function checkAndConvertBitrix<T extends IModel | IFilter, K extends keyof T>(
 	data: T,
 	key: K,
 	bitrixKey: TBitrixKey
@@ -303,27 +303,22 @@ export function checkAndConvertBitrix<T extends IModel, K extends keyof T>(
 		const item = data[key] as string;
 		if(item !== undefined && isNumber(item)) {
 			//@ts-ignore
-			data[key] = convertBitrix<string, string>(bitrixKey, item);
+			data[key] = convertBitrix<string, string>(bitrixKey, item) ?? item;
 		}
 	}
 }
 
-export function checkAndConvertArrayBitrix<T extends IModel, K extends keyof T>(
+export function checkAndConvertArrayBitrix<T extends IModel | IFilter, K extends keyof T>(
 	data: T,
 	key: K,
-	bitrixKey: TBitrixKey,
-	ref: TBitrixEnum
+	bitrixKey: TBitrixKey
 ) {
 	if(data) {
 		if(data[key] && Array.isArray(data[key])) {
 			//@ts-ignore
-			const items: string[] = data[key].map((ef: any) => String(ef));
-
+			const items: string[] = data[key].map((ef: typeof data[key]) => String(ef));
 			//@ts-ignore
-			if(ref.some(ef => items.includes(ef.ID))) {
-				//@ts-ignore
-				data[key] = items.map(ef => convertBitrix<string, string>(bitrixKey, ef));
-			}
+			data[key] = items.map(ef => convertBitrix<string, string>(bitrixKey, ef) ?? ef);
 		}
 	}
 }
