@@ -533,7 +533,26 @@ export default class OrderService
 			return this.responses['NOT_FOUND'];
 
 		if(files && files.length > 0) {
-			if(mode === 'payment') {
+			if(mode === 'contract') {
+				order = await this.repository.get(id, true);
+
+				const {
+					Location: contractPhotoLink
+				} = await this.imageFileService.uploadFile(
+					renameMulterFile(files[0], Bucket.Folders.ORDER, id, mode)
+				);
+
+				if(contractPhotoLink) {
+					fileUploaded = true;
+					message = ORDER_TRANSLATIONS['CONTRACT'];
+
+					if(order.contractPhotoLink) {
+						await this.imageFileService.deleteImage(order.contractPhotoLink);
+					}
+					order = await this.repository.update(id, { contractPhotoLink, stage: OrderStage.SIGNED_DRIVER });
+				}
+			}
+			else if(mode === 'payment') {
 				const {
 					Location: paymentPhotoLinks
 				} = await this.imageFileService
@@ -573,25 +592,6 @@ export default class OrderService
 						order.receiptPhotoLinks = receiptPhotoLinks;
 
 					order = await this.repository.update(id, { receiptPhotoLinks: order.receiptPhotoLinks });
-				}
-			}
-			else if(mode === 'contract') {
-				order = await this.repository.get(id, true);
-
-				const {
-					Location: contractPhotoLink
-				} = await this.imageFileService.uploadFile(
-					renameMulterFile(files[0], Bucket.Folders.ORDER, id, mode)
-				);
-
-				if(contractPhotoLink) {
-					fileUploaded = true;
-					message = ORDER_TRANSLATIONS['CONTRACT'];
-
-					if(order.contractPhotoLink) {
-						await this.imageFileService.deleteImage(order.contractPhotoLink);
-					}
-					order = await this.repository.update(id, { contractPhotoLink, stage: OrderStage.SIGNED_DRIVER });
 				}
 			}
 		}
