@@ -13,11 +13,11 @@ import {
 import {
 	IApiResponse,
 	ICRMEntity,
+	IModel,
 	IOrderDestination,
 	TBitrixEnum,
 	TCRMData,
-	TCRMFields,
-	TBitrixData
+	TCRMFields
 }                                  from '@common/interfaces';
 import { dateValidator, isNumber } from '@common/utils';
 import { OrderCreateDto }          from '@api/dto';
@@ -294,32 +294,35 @@ export function convertBitrix<V, R>(
 	return selectBitrixEnum<R>(key, find);
 }
 
-export function checkAndConvertBitrix(
-	data: any,
-	key: string,
+export function checkAndConvertBitrix<T extends IModel, K extends keyof T>(
+	data: T,
+	key: K,
 	bitrixKey: TBitrixKey
 ) {
 	if(data) {
-		if(data[key]) {
-			if(isNumber(data[key])) {
-				data[key] = convertBitrix<string, string>(bitrixKey, data[key]);
-			}
+		const item = data[key] as string;
+		if(item !== undefined && isNumber(item)) {
+			//@ts-ignore
+			data[key] = convertBitrix<string, string>(bitrixKey, item);
 		}
 	}
 }
 
-export function checkAndConvertArrayBitrix(
-	data: any,
-	key: string,
+export function checkAndConvertArrayBitrix<T extends IModel, K extends keyof T>(
+	data: T,
+	key: K,
 	bitrixKey: TBitrixKey,
 	ref: TBitrixEnum
 ) {
 	if(data) {
-		if(data[key]) {
-			data[key] = data[key].map((ef: string) => String(ef));
+		if(data[key] && Array.isArray(data[key])) {
+			//@ts-ignore
+			const items: string[] = data[key].map((ef: any) => String(ef));
 
-			if(ref.some((ef: TBitrixData) => data[key].includes(ef.ID))) {
-				data[key] = data[key].map((ef: string) => convertBitrix<string, string>(bitrixKey, ef));
+			//@ts-ignore
+			if(ref.some(ef => items.includes(ef.ID))) {
+				//@ts-ignore
+				data[key] = items.map(ef => convertBitrix<string, string>(bitrixKey, ef));
 			}
 		}
 	}
