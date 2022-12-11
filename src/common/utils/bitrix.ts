@@ -23,6 +23,8 @@ import { dateValidator, isNumber } from '@common/utils';
 import { OrderCreateDto }          from '@api/dto';
 import { splitAddress }            from './address';
 
+let debugConvert: boolean = false;
+
 const DESTINATIONS: { [k: string]: TBitrixEnum } = CRM.ORDER.DESTINATION_TYPES;
 
 export type TBitrixKey = 'transportFixtures' |
@@ -271,7 +273,7 @@ export function convertBitrix<V, R>(
 ): R | null {
 	if(value === undefined)
 		return null;
-	const find = (benum: TBitrixEnum): R =>
+	const find: TBitrixEnumCallback<R> = (benum: TBitrixEnum): R =>
 	{
 		const isNumber = byAlias ? benum.every(b => b.ALIAS !== undefined && typeof (b.ALIAS) === 'number')
 		                         : false;
@@ -280,12 +282,17 @@ export function convertBitrix<V, R>(
 		if(fromCrm) {
 			result = byAlias ? benum.find(data => data.ID === String(value))?.ALIAS
 			                 : benum.find(data => data.ID === String(value))?.VALUE;
+
+			if(debugConvert)
+				console.debug(`convertBitrix::find`, { result, value, fromCrm, bitrixEnum: benum.slice(0, 5) });
 		}
 		else {
 			result = byAlias ? benum.find(data => data.ALIAS === (
 				                 isNumber ? Number(value) : String(value)
 			                 ))?.ID
 			                 : benum.find(data => data.VALUE === String(value))?.ID;
+			if(debugConvert)
+				console.debug(`convertBitrix::find`, { result, value, fromCrm, bitrixEnum: benum.slice(0, 5) });
 		}
 
 		return byAlias ? result as R : result;
