@@ -30,6 +30,7 @@ export type TBitrixKey = 'transportFixtures' |
                          'orderStage' |
                          'orderPayload' |
                          'orderLoading' |
+                         'orderTransportType' |
                          'paymentType' |
                          'riskClass' |
                          'transportBrand' |
@@ -152,6 +153,8 @@ function selectBitrixEnum<R>(
 			return callback(CRM.ORDER.PAYLOADS);
 		case 'orderLoading':
 			return callback(CRM.ORDER.LOADING_TYPES);
+		case 'orderTransportType':
+			return callback(CRM.ORDER.TRANSPORT_TYPES);
 		case 'paymentType':
 			return callback(CRM.COMPANY.PAYMENT_TYPES);
 		case 'riskClass':
@@ -406,7 +409,7 @@ export function orderFromBitrix(crmFields: TCRMFields): OrderCreateDto {
 		hasProblem:      typeFromCrm<boolean>(crmFields[ORDER.HAS_PROBLEM], false),
 		dedicated:       convertBitrix('transportDedicated', crmFields[ORDER.MACHINE]),
 		transportTypes:  crmFields[ORDER.TRANSPORT_TYPE]
-			                 ?.map((t: string) => convertBitrix('transportType', t))
+			                 ?.map((t: string) => convertBitrix('orderTransportType', t))
 	} as OrderCreateDto;
 }
 
