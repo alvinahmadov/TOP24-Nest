@@ -176,7 +176,7 @@ export default class OrderController
 		@Query('order') orderId: string,
 		@Res() response: ex.Response
 	) {
-		const result = await this.orderService.getByDriver(driverId);
+		const result = await this.orderService.getByDriver(driverId, orderId);
 
 		return sendResponse(response, result);
 	}
