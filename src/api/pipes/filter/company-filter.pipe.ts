@@ -22,9 +22,9 @@ export default class CompanyTransportFilterPipe
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');
 		checkAndConvertBitrix(value, 'model', 'transportModel');
 		checkAndConvertBitrix(value, 'riskClass', 'transportRiskClass');
-		checkAndConvertArrayBitrix(value, 'types', 'transportType', Reference.TRANSPORT_TYPES);
-		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures', Reference.FIXTURES);
-		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass', Reference.TRANSPORT_RISK_CLASSES);
+		checkAndConvertArrayBitrix(value, 'types', 'transportType');
+		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures');
+		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass');
 
 		return value;
 	}
