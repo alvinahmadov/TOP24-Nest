@@ -169,9 +169,13 @@ export default class ReferenceController
 		                          .sort(compareByValFn)
 		                          .map(lowerCaseFn);
 
+		const orderPayloads = Reference.ORDER_PAYLOADS
+		                               .sort(compareByValFn)
+		                               .map(lowerCaseFn);
+
 		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       { payloads },
+			data:       { payloads, orderPayloads },
 			message:    formatArgs(TRANSLATIONS['PAYLOAD_TYPES'], payloads.length)
 		};
 
