@@ -284,7 +284,11 @@ export function transformToCompanyTransportFilter(data: ICompanyTransportTransfo
 			widthMax:    data.width_max,
 			heightMin:   data.height_min,
 			heightMax:   data.height_max,
-			directions:  data.directions,
+			directions:  data.directions ?? [],
+			dedicated:   data.dedicated,
+			hasDriver:   data.has_driver,
+			isDedicated: data.is_dedicated,
+			paymentTypes: data.payment_types,
 			types:       data.types ?? data.auto_types,
 			riskClass:   data.class ?? data.risk_class,
 			payloadType: data.payload_type
