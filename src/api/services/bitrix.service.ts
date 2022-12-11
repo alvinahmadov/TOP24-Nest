@@ -411,7 +411,8 @@ export default class BitrixService
 					}
 				}
 
-				if(orderData.stage === OrderStage.PAYMENT_RECEIVED) {
+				if(orderData.stage >= OrderStage.PAYMENT_RECEIVED) {
+					orderData.onPayment = false;
 					orderData.status = OrderStatus.FINISHED;
 				}
 				let { data: order } = await this.orderService.getByCrmId(crmId);
