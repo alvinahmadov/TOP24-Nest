@@ -66,6 +66,8 @@ import {
 	PaymentService
 }                              from '@api/services';
 import BaseController          from './controller';
+import { validate as isUuid }  from 'uuid';
+import AddressService          from '../services/address.service';
 
 const { path, tag, routes } = getRouteConfig('company');
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
@@ -77,6 +79,7 @@ export default class CompanyController
 	extends BaseController {
 	public constructor(
 		private readonly authService: AuthService,
+		private readonly addressService: AddressService,
 		private readonly cargoService: CargoCompanyService,
 		private readonly cargoInnService: CargoCompanyInnService,
 		private readonly offerService: OfferService,
@@ -379,6 +382,20 @@ export default class CompanyController
 		@Query() listFilter?: dto.ListFilter,
 		@Body(CompanyTransportFilterPipe) filter?: dto.CompanyTransportFilter
 	) {
+		if(filter) {
+			if(filter.directions.every(isUuid)) {
+				const _directions: string[] = [];
+				for(const directionId of filter.directions) {
+					const { data: address } = await this.addressService.getById(directionId);
+
+					if(address) {
+						_directions.push(address.city, address.region);
+					}
+				}
+				filter.directions = _directions;
+			}
+		}
+
 		let { data: cargoTransports } = await this.cargoService.getTransports(listFilter, filter);
 		let { data: cargoInnTransports } = await this.cargoInnService.getTransports(listFilter, filter);
 

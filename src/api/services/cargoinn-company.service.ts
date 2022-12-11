@@ -1,4 +1,3 @@
-import * as uuid                     from 'uuid';
 import { HttpStatus, Injectable }    from '@nestjs/common';
 import { BitrixUrl }                 from '@common/constants';
 import { AxiosStatic }               from '@common/classes';
@@ -32,7 +31,6 @@ import {
 	ListFilter
 }                                    from '@api/dto';
 import Service                       from './service';
-import AddressService                from './address.service';
 import ImageFileService              from './image-file.service';
 import PaymentService                from './payment.service';
 import TransportService              from './transport.service';
@@ -57,7 +55,6 @@ export default class CargoCompanyInnService
 	};
 
 	constructor(
-		protected readonly addressService: AddressService,
 		protected readonly imageFileService: ImageFileService,
 		protected readonly paymentsService: PaymentService,
 		protected readonly transportService: TransportService,
@@ -289,17 +286,6 @@ export default class CargoCompanyInnService
 		let companies: CargoCompanyInn[] = await this.repository.getTransports(listFilter, rest);
 
 		if(directions) {
-			if(directions.every(d => uuid.validate(d))) {
-				const _directions: string[] = [];
-				for(const directionId of directions) {
-					const { data: address } = await this.addressService.getById(directionId);
-
-					if(address) {
-						_directions.push(address.city, address.region);
-					}
-				}
-				directions = _directions;
-			}
 			companies = companies.filter(cargo => filterDirections(cargo, directions));
 		}
 
