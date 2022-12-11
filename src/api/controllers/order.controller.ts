@@ -77,8 +77,8 @@ export default class OrderController
 	) {
 		if(filter && filter.crmId) {
 			const result = await this.orderService.getByCrmId(filter.crmId);
-			return response.status(result.statusCode)
-			               .send(result);
+
+			return sendResponse(response, result);
 		}
 		const result = await this.orderService.getList(listFilter, filter);
 
