@@ -135,7 +135,7 @@ export function filterDirections(
 
 					if(debugDirectionFilter) {
 						console.debug(
-							`filterDirections: Company direction "${companyDirectionPart}" matches filter direction ${direction}: ${res}`
+							`filterDirections: Company direction "${companyDirectionPart}" matches filter direction "${direction}": ${res}`
 						);
 					}
 					contains.push(res);
