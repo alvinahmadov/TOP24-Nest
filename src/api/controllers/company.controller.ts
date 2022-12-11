@@ -382,7 +382,7 @@ export default class CompanyController
 		@Query() listFilter?: dto.ListFilter,
 		@Body(CompanyTransportFilterPipe) filter?: dto.CompanyTransportFilter
 	) {
-		if(filter) {
+		if(filter && filter.directions) {
 			if(filter.directions.every(isUuid)) {
 				const _directions: string[] = [];
 				for(const directionId of filter.directions) {
