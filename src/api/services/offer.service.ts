@@ -159,7 +159,7 @@ export default class OfferService
 						};
 
 						// Check for transport parameters matching 
-						// additional order parameters
+						// additional order's physical parameters
 						if(transport) {
 							const messageObj = { message: '' };
 							if(
@@ -362,7 +362,7 @@ export default class OfferService
 					                     : offer.order.get({ plain: true, clone: false });
 
 				                     if(offer.orderStatus === OrderStatus.ACCEPTED)
-					                     order.status = offer.orderStatus;
+					                     order.status = OrderStatus.PROCESSING;
 
 				                     if(inAcceptedRange(offer))
 					                     order.priority = priorityCounter++ === 0;
