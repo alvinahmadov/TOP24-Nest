@@ -291,7 +291,7 @@ export function filterTransports(
 		checkAgainst(transport.loadingTypes, loadingTypes.map(t => Number(t)),
 		             'loading type', loadingTypeToStr, 'filterTransports');
 	const checkPayloads = (transport: Transport): boolean =>
-		checkAgainst(transport.payloads, payloads, 'payloads', undefined, 'filterTransports');
+		checkAgainst(transport.payloads ?? [], payloads, 'payloads', undefined, 'filterTransports');
 
 	const filteredTransports = transports
 		.filter(isActive)
