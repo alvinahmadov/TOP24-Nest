@@ -1,3 +1,4 @@
+import { Op }              from 'sequelize';
 import {
 	Injectable,
 	HttpStatus
@@ -321,7 +322,7 @@ export default class OfferService
 		};
 	}
 
-	public async getOrders(
+	public async getDriverOrders(
 		driverId: string,
 		listFilter?: IListFilter,
 		filter?: OfferFilter & Omit<OrderFilter, 'status' | 'statuses'>
@@ -379,6 +380,18 @@ export default class OfferService
 				                     };
 			                     }
 		                     );
+
+		if(offers.every(o => o.status < OfferStatus.SEEN)) {
+			await this.repository.bulkUpdate(
+				{ status: OfferStatus.SEEN },
+				{
+					[Op.and]: [
+						{ orderId: { [Op.in]: orders?.map(o => o.id) } },
+						{ driverId }
+					]
+				}
+			);
+		}
 
 		return {
 			statusCode: HttpStatus.OK,
