@@ -14,7 +14,7 @@ import {
 import {
 	formatArgs,
 	filterTransports,
-	getTranslation, renameMulterFile
+	getTranslation, renameMulterFile, isSuccessResponse
 }                              from '@common/utils';
 import { Image, Transport }    from '@models/index';
 import { TransportRepository } from '@repos/index';
@@ -163,10 +163,30 @@ export default class TransportService
 		id: string,
 		dto: TUpdateAttribute<ITransport>
 	): TAsyncApiResponse<Transport> {
-		const transport = await this.repository.update(id, dto);
+		let transport = await this.repository.get(id);
+
+		if(!transport?.isTrailer && dto.status === 0) {
+			delete dto.status;
+		}
+
+		transport = await this.repository.update(id, dto);
 
 		if(!transport)
 			return this.repository.getRecord('update');
+
+		if(!transport.images) {
+			const apiResponse = await this.imageService.getList(
+				{ from: 0, count: 5 },
+				{
+					transportId: transport.id,
+					cargoId:     transport.cargoId,
+					cargoinnId:  transport.cargoinnId
+				}
+			);
+			
+			if(isSuccessResponse(apiResponse))
+				transport.images = apiResponse.data;
+		}
 
 		return {
 			statusCode: 200,
