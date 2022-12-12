@@ -594,18 +594,13 @@ export default class OfferService
 
 		// TODO(alvinahmadov): Implement offer status update for non-matching offers
 
-		// @ts-ignore
 		const offersToUpdate: OfferUpdateDto[] = driverOffers
 			.filter(
 				driverData => prevOffers.some(
-					offer => (
-					         offer.driverId === driverData.driverId &&
-					         offer.orderId === orderId
-					         ) &&
+					offer => offer.driverId === driverData.driverId &&
 					         (
 						         offer.orderStatus !== driverData.orderStatus ||
-						         //@ts-ignore
-						         ((offer.status !== OfferStatus.NONE) || (offer.status === OfferStatus.DECLINED))
+						         offer.status > OfferStatus.SENT
 					         )
 				)
 			).map(driverData => ({ orderId: orderId, status: OfferStatus.SENT, ...driverData }));
