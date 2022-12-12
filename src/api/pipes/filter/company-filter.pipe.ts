@@ -6,7 +6,6 @@ import {
 	checkAndConvertArrayBitrix,
 	checkAndConvertBitrix
 }                                            from '@common/utils';
-import { Reference }                         from '@common/constants';
 
 @Injectable()
 export default class CompanyTransportFilterPipe
