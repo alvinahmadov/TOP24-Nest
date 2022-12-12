@@ -17,10 +17,10 @@ export class TransportCreatePipe
 	implements PipeTransform<any, ITransport> {
 	transform(data: any): ITransport {
 		const value: ITransport = !env.api.compatMode ? data : transformToTransport(data);
-		checkAndConvertBitrix(value, 'payload', 'transportPayload');
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');
 		checkAndConvertBitrix(value, 'model', 'transportModel');
 		checkAndConvertBitrix(value, 'type', 'transportType');
+		checkAndConvertArrayBitrix(value, 'payloads', 'transportPayload');
 		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures');
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass');
 		reformatDateString<ITransport>(value, ['diagnosticsExpiryDate', 'osagoExpiryDate']);
@@ -35,10 +35,10 @@ export class TransportUpdatePipe
 	transform(data: any): Partial<ITransport> {
 		const value: ITransport = !env.api.compatMode ? data : transformToTransport(data);
 		value.payloadExtra = value.volumeExtra > 0 || value.weightExtra > 0;
-		checkAndConvertBitrix(value, 'payload', 'transportPayload');
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');
 		checkAndConvertBitrix(value, 'model', 'transportModel');
 		checkAndConvertBitrix(value, 'type', 'transportType');
+		checkAndConvertArrayBitrix(value, 'payloads', 'transportPayload');
 		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures');
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass');
 		reformatDateString<ITransport>(value, ['diagnosticsExpiryDate', 'osagoExpiryDate']);

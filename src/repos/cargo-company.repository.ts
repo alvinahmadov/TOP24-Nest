@@ -157,7 +157,7 @@ export default class CargoCompanyRepository
 							model:   Transport,
 							where:   this.whereClause<ITransport>('and')
 							             .notNull('driverId', !!hasDriver)
-							             .iLike('payload', rest?.payload)
+							             .inArray('payloads', rest?.payloads)
 							             .inArray('type', types, true)
 							             .contains('riskClasses', rest?.riskClass)
 							             .eq('isDedicated', isDedicated)

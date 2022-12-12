@@ -99,9 +99,9 @@ export default class TransportCreateDto
 	@IsDate()
 	osagoExpiryDate: Date;
 
-	@ApiProperty(prop.payload)
+	@ApiProperty(prop.payloads)
 	@IsString()
-	payload: string;
+	payloads: string[];
 
 	@ApiProperty(prop.payloadExtra)
 	@IsBoolean()

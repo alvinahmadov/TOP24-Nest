@@ -77,8 +77,8 @@ export default class TransportUpdateDto
 	@ApiProperty(prop.pallets)
 	pallets?: number;
 
-	@ApiProperty(prop.payload)
-	payload?: string;
+	@ApiProperty(prop.payloads)
+	payloads?: string[];
 
 	@ApiProperty(prop.payloadExtra)
 	payloadExtra?: boolean;

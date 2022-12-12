@@ -652,7 +652,7 @@ export interface ITransportTransformer
 	 * @see ITransport.prodYear
 	 * */
 	prod_year: number;
-	payload: string;
+	payloads: string[];
 	/**
 	 * @see ITransport.payloadExtra
 	 * */

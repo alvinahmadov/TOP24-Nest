@@ -1545,7 +1545,7 @@ export const entityConfig: TEntityConfigList = {
 					description: 'Link to the photo of OSAGO certificate.',
 					format:      'url'
 				},
-			payload:
+			payloads:
 				{
 					description: 'Тип груза для транспорта.',
 					example:     ['Бумага', 'ГСМ']

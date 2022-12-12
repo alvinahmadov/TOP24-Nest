@@ -110,7 +110,7 @@ export default class TransportRepository
 					widthMin, widthMax,
 					heightMin, heightMax,
 					pallets,
-					payload,
+					payloads,
 					types,
 					status,
 					...rest
@@ -126,7 +126,7 @@ export default class TransportRepository
 						           .between('width', widthMin, widthMax)
 						           .between('height', heightMin, heightMax)
 						           .lteOrNull('pallets', pallets)
-						           .iLike('payload', payload)
+						           .inArray('payloads', payloads)
 						           .inArray('type', types)
 						           .eq('status', status)
 						           .fromFilter<ITransportFilter>(rest)

@@ -260,7 +260,7 @@ export const translateTransport = <T extends transformers.ITransportTransformer>
 		.set('pallets', 'polets')
 		.set('weightExtra', 'weight_extra')
 		.set('volumeExtra', 'volume_extra')
-		.set('payload')
+		.set('payloads')
 		.set('payloadExtra', 'payload_extra')
 		.set('isTrailer', 'is_trailer')
 		.set('isDedicated', 'is_dedicated')

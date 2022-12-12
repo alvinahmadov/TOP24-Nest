@@ -523,7 +523,7 @@ function transformTransport(transport: models.Transport)
 			model:          transport.getDataValue('model'),
 			registr_num:    transport.getDataValue('registrationNumber'),
 			prod_year:      transport.getDataValue('prodYear'),
-			payload:        transport.getDataValue('payload'),
+			payloads:       transport.getDataValue('payloads'),
 			payload_extra:  transport.getDataValue('payloadExtra'),
 			is_trailer:     transport.getDataValue('isTrailer'),
 			is_dedicated:   transport.getDataValue('isDedicated'),

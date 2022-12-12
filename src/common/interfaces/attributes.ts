@@ -1241,7 +1241,7 @@ export interface ITransport
 	 * Арматура
 	 * Бумага
 	 * */
-	payload: string;
+	payloads: string[];
 	/**
 	 * Transport can carry additional cargo.
 	 * Opposite of isDedicated.

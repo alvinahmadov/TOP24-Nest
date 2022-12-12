@@ -176,9 +176,9 @@ export default class Transport
 	@UrlColumn()
 	osagoPhotoLink: string;
 
-	@ApiProperty(prop.payload)
+	@ApiProperty(prop.payloads)
 	@StringColumn()
-	payload: string;
+	payloads: string[];
 
 	@ApiProperty(prop.payloadExtra)
 	@BooleanColumn({ defaultValue: false })
@@ -261,7 +261,10 @@ export default class Transport
 		data.fields[TRANSPORT.REGISTR_NUMBER] = this.registrationNumber;
 		data.fields[TRANSPORT.PROD_YEAR] = this.prodYear;
 		data.fields[TRANSPORT.STS] = this.certificateNumber;
-		data.fields[TRANSPORT.PAYLOAD.TYPE] = [convertBitrix('transportPayload', this.payload, false)];
+		data.fields[TRANSPORT.PAYLOAD.TYPE] = this.payloads
+		                                          .map(
+			                                          payload => convertBitrix<string, string>('transportPayload', payload, false)
+		                                          );
 		data.fields[TRANSPORT.RISK_CLASS] = this.riskClasses
 		                                        .map(
 			                                        rc => convertBitrix<string, string>('transportRiskClass', rc, false)

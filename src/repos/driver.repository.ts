@@ -152,7 +152,7 @@ export default class DriverRepository
 									              .between('width', filter?.widthMin, filter?.widthMax)
 									              .between('height', filter?.heightMin, filter?.heightMax)
 									              .gte('pallets', filter?.pallets)
-									              .iLike('payload', filter?.payload)
+									              .inArray('payloads', filter?.payloads, true)
 									              .inArray('type', filter?.types, true)
 									              .eq('status', filter?.status)
 									              .eq('isDedicated', filter?.isDedicated)
