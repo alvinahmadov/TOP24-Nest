@@ -12,7 +12,9 @@ import {
 import {
 	IApiResponse,
 	IDriverOperation,
-	IModel, IOffer,
+	IModel,
+	IOffer,
+	TCreationAttribute,
 	TGeoCoordinate
 } from '@common/interfaces';
 
@@ -728,11 +730,7 @@ export interface ITransportTransformer
 	images?: IImageTransformer[];
 }
 
-export type TOfferDriverTransformer = Pick<IOfferTransformer, 'driverId' |
-                                                              'bid_price' |
-                                                              'bid_price_max' |
-                                                              'comments' |
-                                                              'order_status'>;
+export type TOfferDriverTransformer = Omit<TCreationAttribute<IOfferTransformer>, 'orderId'>;
 
 export type TTransformerResponse<T> = IModel |
                                       IModel[] |

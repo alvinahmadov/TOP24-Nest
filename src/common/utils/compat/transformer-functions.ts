@@ -396,6 +396,7 @@ export function transformToOfferDriver(data: Partial<transformers.TOfferDriverTr
 			bidPrice:    data.bid_price,
 			bidPriceVat: data.bid_price_max,
 			bidComment:  data.comments,
+			status:      data.status,
 			orderStatus: data.order_status
 		};
 	}

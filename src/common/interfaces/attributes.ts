@@ -918,7 +918,7 @@ export interface IOrder
 	 * */
 	isOpen?: boolean;
 	/**
-	 * Order is currently fullfilling by driver who has 
+	 * Order is currently fullfilling by driver who has
 	 * several orders in processing (payload extra)
 	 * */
 	isCurrent?: boolean;
@@ -1378,11 +1378,7 @@ export type TSentOffer = {
 	updateCount?: number;
 }
 
-export type TOfferDriver = Pick<IOffer, 'driverId' |
-                                        'bidPrice' |
-                                        'bidComment' |
-                                        'orderStatus' |
-                                        'bidPriceVat'>;
+export type TOfferDriver = Omit<TCreationAttribute<IOffer>, 'orderId'>;
 
 // noinspection JSUnusedGlobalSymbols
 export type TOfferTransport = Pick<IOffer, 'bidPrice' |
