@@ -307,7 +307,7 @@ export default class OfferService
 		};
 	}
 
-	public async getDrivers(
+	public async getOrderDrivers(
 		orderId: string,
 		listFilter?: IListFilter,
 		filter?: IOfferFilter & IDriverFilter
@@ -365,8 +365,8 @@ export default class OfferService
 					                     ? <IOrderTransformer>transformEntity(offer.order)
 					                     : offer.order.get({ plain: true, clone: false });
 
-				                     if(offer.orderStatus === OrderStatus.ACCEPTED)
-					                     order.status = OrderStatus.PROCESSING;
+				                     // if(offer.orderStatus === OrderStatus.ACCEPTED)
+					                   //   order.status = OrderStatus.PROCESSING;
 
 				                     if(inAcceptedRange(offer))
 					                     order.priority = priorityCounter++ === 0;
@@ -400,7 +400,7 @@ export default class OfferService
 		};
 	}
 
-	public async getTransports(
+	public async getOfferTransports(
 		orderId: string,
 		listFilter: IListFilter,
 		filter?: TOfferTransportFilter
