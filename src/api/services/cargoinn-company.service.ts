@@ -281,7 +281,7 @@ export default class CargoCompanyInnService
 		listFilter: ListFilter = {},
 		filter: CompanyTransportFilter = {}
 	): TAsyncApiResponse<Transport[]> {
-		const transports: Transport[] = [];
+		let transports: Transport[] = [];
 		let { riskClass, fromDate, toDate, directions, ...rest } = filter;
 		let companies: CargoCompanyInn[] = await this.repository.getTransports(listFilter, rest);
 
@@ -290,18 +290,25 @@ export default class CargoCompanyInnService
 		}
 
 		companies.forEach(
-			company => transports.push(
-				...company.transports
-				          ?.filter(t => filterTransportsByOrder(t, { fromDate, toDate }))
-			)
+			company =>
+			{
+				company.transports.forEach(
+					({ driver }) => { if(!driver.avatarLink) driver.avatarLink = company.avatarLink; }
+				);
+
+				transports.push(
+					...company.transports
+					          ?.filter(t => filterTransportsByOrder(t, { fromDate, toDate }))
+				);
+			}
 		);
 
-		const data = filterTransports(transports, filter);
+		transports = filterTransports(transports, filter);
 		const message = formatArgs(TRANSLATIONS['TRANSPORTS'], transports.length);
 
 		return {
 			statusCode: HttpStatus.OK,
-			data,
+			data:       transports,
 			message
 		};
 	}
