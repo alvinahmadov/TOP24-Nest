@@ -160,8 +160,6 @@ export default class CargoCompanyRepository
 							             .inArray('type', types, true)
 							             .any('payloads', rest?.payload)
 							             .any('riskClasses', rest?.riskClass)
-							             .inArray('payloads', rest?.payloads)
-							             .inArray('riskClasses', rest?.riskClasses)
 							             .eq('isDedicated', isDedicated)
 							             .eq('payloadExtra', rest?.payloadExtra)
 								         .query,
