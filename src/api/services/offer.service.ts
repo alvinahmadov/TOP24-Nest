@@ -277,6 +277,10 @@ export default class OfferService
 			this.gateway.sendOrderEvent(eventObject, UserRole.LOGIST);
 		}
 
+		if(dto.status === OfferStatus.SENT &&
+		   dto.orderStatus === OrderStatus.ACCEPTED)
+			dto.status = OfferStatus.RESPONDED;
+
 		const result = await this.repository.update(offer.id, dto);
 
 		if(result)
