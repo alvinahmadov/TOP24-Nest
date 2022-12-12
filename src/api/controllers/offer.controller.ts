@@ -127,7 +127,7 @@ export default class OfferController
 		@Body(OfferDriverFilterPipe) filter?: dto.OfferFilter & dto.DriverFilter,
 		@Query() listFilter?: dto.ListFilter
 	) {
-		let result = await this.offerService.getDrivers(orderId, listFilter, filter);
+		let result = await this.offerService.getOrderDrivers(orderId, listFilter, filter);
 
 		return sendResponse(response, result);
 	}
@@ -143,7 +143,7 @@ export default class OfferController
 		@Body(OfferDriverFilterPipe) filter?: Pick<IOfferFilter, 'transportStatus' | 'orderStatuses'> &
 		                                      dto.DriverFilter
 	) {
-		const result = await this.offerService.getTransports(orderId, listFilter, filter);
+		const result = await this.offerService.getOfferTransports(orderId, listFilter, filter);
 
 		return response.status(result.statusCode)
 		               .send(result.data);
