@@ -18,6 +18,7 @@ import {
 	ICompanyTransportFilter,
 	IDriverFilter,
 	IListFilter,
+	IOffer,
 	IOfferFilter,
 	IOrder,
 	IOrderGatewayData,
@@ -554,6 +555,12 @@ export default class OfferService
 			};
 		}
 
+		const setOfferStatusToSent = (offer: any) =>
+		{
+			offer.status = OfferStatus.SENT;
+			return offer;
+		};
+
 		const driverIds = new Set<string>(driverDataList.map(d => d.driverId));
 
 		let driverOffers: TOfferDriver[] = Array
@@ -600,11 +607,11 @@ export default class OfferService
 					offer => offer.driverId === driverData.driverId &&
 					         offer.orderStatus !== driverData.orderStatus
 				)
-			).map(driverData => ({ orderId: orderId, status: OfferStatus.SENT, ...driverData }));
+			).map(driverData => ({ orderId: orderId, ...driverData }));
 
 		const offersToCreate: OfferCreateDto[] = driverOffers
 			.filter(driverData => prevOffers.every(offer => offer.driverId !== driverData.driverId))
-			.map(driverData => ({ orderId: orderId, status: OfferStatus.SENT, ...driverData }));
+			.map(driverData => ({ orderId: orderId, ...driverData }));
 
 		updateCount = offersToUpdate.length;
 		createCount = offersToCreate.length;
@@ -614,7 +621,7 @@ export default class OfferService
 		}
 
 		if(createCount > 0) {
-			const offers = await this.repository.bulkCreate(offersToCreate);
+			const offers = await this.repository.bulkCreate(offersToCreate.map(setOfferStatusToSent));
 			offers.forEach(
 				offer => this.gateway.sendDriverEvent(
 					{
