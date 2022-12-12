@@ -1,4 +1,4 @@
-import { TQueryConfig } from '@common/interfaces';
+import { TQueryConfig, TStringOrNumber } from '@common/interfaces';
 
 export default class ApiQuery {
 	private readonly _config: TQueryConfig;
@@ -12,7 +12,7 @@ export default class ApiQuery {
 
 	public addQuery(
 		key: string,
-		value: string | number
+		value: TStringOrNumber | Array<TStringOrNumber>
 	): this {
 		if(!value)
 			return this;
@@ -22,23 +22,6 @@ export default class ApiQuery {
 
 			if(this.debug)
 				console.debug({ method: 'addQuery', data: { key, value } });
-		}
-
-		return this;
-	}
-
-	public addQueryArray(
-		key: string,
-		values: (string | number)[]
-	): this {
-		if(!values)
-			return this;
-
-		if(!(key in this._config)) {
-			this._config[key] = values;
-
-			if(this.debug)
-				console.debug({ method: 'addQuery', data: { key, values } });
 		}
 
 		return this;

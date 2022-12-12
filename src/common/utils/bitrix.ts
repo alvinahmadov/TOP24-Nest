@@ -340,10 +340,7 @@ export function buildBitrixRequestUrl(
 	const writeMulti = (field: string, values: any[]) =>
 	{
 		for(const value of values) {
-			if(!Array.isArray(value))
-				qBuilder.addQuery(`fields[${field}][]`, value);
-			else
-				qBuilder.addQueryArray(`fields[${field}]`, value);
+			qBuilder.addQuery(`fields[${field}][]`, value);
 		}
 	};
 

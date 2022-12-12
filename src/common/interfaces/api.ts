@@ -115,7 +115,7 @@ export type TOperationCount = {
 }
 
 /**@ignore*/
-export type TQueryConfig = Record<string, (string | number) | (string | number)[]>;
+export type TQueryConfig = Record<string, TStringOrNumber | Array<TStringOrNumber>>;
 
 /**@ignore*/
 export type TRouteAccess = {
@@ -131,6 +131,8 @@ export type TStatusCode = 200 |
                           403 |
                           500 |
                           number;
+
+export type TStringOrNumber = string | number;
 
 export type TObjectStorageAuth = {
 	accessKeyId: string;
