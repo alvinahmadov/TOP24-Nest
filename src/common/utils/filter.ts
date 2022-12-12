@@ -113,16 +113,16 @@ export function filterDirections(
 		return false;
 	}
 
+	if(!directions) {
+		if(debugDirectionFilter) {
+			console.debug('filterDirections: No direction filter provided, passing!');
+		}
+		return true;
+	}
+
 	if(!company.directions || company.directions?.length === 0) {
 		if(debugDirectionFilter) {
 			console.debug('filterDirections: Company doesn\'t have directions!');
-		}
-		return false;
-	}
-
-	if(!directions) {
-		if(debugDirectionFilter) {
-			console.debug('filterDirections: No direction filter provided!');
 		}
 		return false;
 	}
