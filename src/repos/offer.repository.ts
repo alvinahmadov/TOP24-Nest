@@ -250,8 +250,8 @@ export default class OfferRepository
 		const {
 			sortOrder: order = DEFAULT_SORT_ORDER,
 			transportStatus,
-			orderStatuses,
-			offerStatuses
+			orderStatuses = [],
+			offerStatuses = []
 		} = filter ?? {};
 
 		return this.log(
