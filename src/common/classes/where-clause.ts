@@ -40,8 +40,7 @@ export default class WhereClause<T extends IModel> {
 
 	public any(
 		key: keyof T,
-		value: string,
-		full?: boolean
+		value: string
 	): this {
 		return this._exec(
 			key,
@@ -50,10 +49,7 @@ export default class WhereClause<T extends IModel> {
 				if(value === undefined) return;
 				if(this.debug)
 					console.debug({ name: 'any', conj: this._conjunct, key, value });
-				this._query[key] = {
-					[Op.any]: !!full ? `%${value}%`
-					                 : `${value}%`
-				};
+				this._query[key] = { [Op.any]: value };
 			}
 		);
 	}
