@@ -605,7 +605,10 @@ export default class OfferService
 			.filter(
 				driverData => prevOffers.some(
 					offer => offer.driverId === driverData.driverId &&
-					         offer.orderStatus !== driverData.orderStatus
+					         (
+						         offer.orderStatus !== driverData.orderStatus ||
+						         offer.status > OfferStatus.SENT
+					         )
 				)
 			).map(driverData => ({ orderId: orderId, ...driverData }));
 
