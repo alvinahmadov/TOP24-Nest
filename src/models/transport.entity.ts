@@ -177,7 +177,7 @@ export default class Transport
 	osagoPhotoLink: string;
 
 	@ApiProperty(prop.payloads)
-	@StringColumn()
+	@StringArrayColumn()
 	payloads: string[];
 
 	@ApiProperty(prop.payloadExtra)
