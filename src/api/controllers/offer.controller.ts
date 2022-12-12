@@ -112,7 +112,7 @@ export default class OfferController
 		@Body(OfferOrderFilterPipe) filter?: dto.OfferFilter & dto.OrderFilter,
 		@Query() listFilter?: dto.ListFilter
 	) {
-		let result = await this.offerService.getOrders(driverId, listFilter, filter);
+		let result = await this.offerService.getDriverOrders(driverId, listFilter, filter);
 
 		return sendResponse(response, result);
 	}
