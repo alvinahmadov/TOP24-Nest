@@ -16,6 +16,7 @@ export default class CompanyTransportFilterPipe
 
 		if(data.pallets)
 			value.pallets = data.pallets;
+		
 
 		checkAndConvertBitrix(value, 'payload', 'transportPayload');
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');
@@ -25,6 +26,8 @@ export default class CompanyTransportFilterPipe
 		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures');
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass');
 
+		delete value.isTrailer;
+		
 		return value;
 	}
 }
