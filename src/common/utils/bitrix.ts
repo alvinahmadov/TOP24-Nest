@@ -17,7 +17,7 @@ import {
 	IOrderDestination,
 	TBitrixEnum,
 	TCRMData,
-	TCRMFields
+	TCRMFields, TStringOrNumber
 }                                  from '@common/interfaces';
 import { dateValidator, isNumber } from '@common/utils';
 import { OrderCreateDto }          from '@api/dto';
@@ -340,7 +340,14 @@ export function buildBitrixRequestUrl(
 	const writeMulti = (field: string, values: any[]) =>
 	{
 		for(const value of values) {
-			qBuilder.addQuery(`fields[${field}][]`, value);
+			if(Array.isArray(value)) {
+				for(const v of value) {
+					qBuilder.addQuery(`fields[${field}][]`, v);
+				}
+			}
+			else {
+				qBuilder.addQuery(`fields[${field}][]`, value);
+			}
 		}
 	};
 
