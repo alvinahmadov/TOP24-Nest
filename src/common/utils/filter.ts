@@ -32,6 +32,8 @@ const checkAgainst = (
 	identifier?: string
 ): boolean =>
 {
+	if(!values)
+		return false;
 	if(hasValues(filterValues)) {
 		if(!identifier)
 			identifier = '';
@@ -47,6 +49,8 @@ const checkAgainst = (
 			return false;
 		}
 	}
+	else
+		return false;
 	return true;
 };
 
