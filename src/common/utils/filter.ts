@@ -256,11 +256,15 @@ export function filterTransports(
 		riskClasses = [],
 		fixtures = [],
 		types = [],
+		payloads = [],
+		payload,
 		riskClass
 	} = filter;
 
 	if(riskClass && !riskClasses.includes(riskClass))
 		riskClasses.push(riskClass);
+	if(payload && !payloads.includes(payload))
+		payloads.push(payload);
 
 	const isActive = (transport: Transport) => !!onlyActive ? transport.status === TransportStatus.ACTIVE : true;
 	const isTrailer = (transport: Transport) => transport.isTrailer;
@@ -286,6 +290,8 @@ export function filterTransports(
 	const checkLoadingTypes = (transport: Transport): boolean =>
 		checkAgainst(transport.loadingTypes, loadingTypes.map(t => Number(t)),
 		             'loading type', loadingTypeToStr, 'filterTransports');
+	const checkPayloads = (transport: Transport): boolean =>
+		checkAgainst(transport.payloads, payloads, 'payloads', undefined, 'filterTransports');
 
 	const filteredTransports = transports
 		.filter(isActive)
@@ -293,6 +299,7 @@ export function filterTransports(
 			transport => checkLoadingTypes(transport) &&
 			             checkRiskClasses(transport) &&
 			             checkFixtures(transport) &&
+			             checkPayloads(transport) &&
 			             checkType(transport)
 		);
 
