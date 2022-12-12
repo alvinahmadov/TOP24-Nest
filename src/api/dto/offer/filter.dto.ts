@@ -9,5 +9,6 @@ export default class OfferFilter
 	extends PartialType(OfferCreateDto)
 	implements IOfferFilter {
 	driverIds?: string[];
+	orderIds?: string[];
 	statuses?: OfferStatus[];
 }
