@@ -38,6 +38,26 @@ export default class WhereClause<T extends IModel> {
 		return new WhereClause<T>(opType, debug);
 	}
 
+	public any(
+		key: keyof T,
+		value: string,
+		full?: boolean
+	): this {
+		return this._exec(
+			key,
+			() =>
+			{
+				if(value === undefined) return;
+				if(this.debug)
+					console.debug({ name: 'any', conj: this._conjunct, key, value });
+				this._query[key] = {
+					[Op.any]: !!full ? `%${value}%`
+					                 : `${value}%`
+				};
+			}
+		);
+	}
+
 	/**
 	 * Check operator ILIKE
 	 *
@@ -83,7 +103,7 @@ export default class WhereClause<T extends IModel> {
 				if(values === undefined || values.every(v => v === undefined) || values.length === 0) return;
 				if(this.debug)
 					console.debug({ name: 'in', conj: this._conjunct, key, values });
-				
+
 				this._query[key] = { [Op.in]: values.filter(v => v !== undefined) };
 			}
 		);
