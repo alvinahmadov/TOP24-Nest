@@ -666,13 +666,13 @@ export default class OfferService
 		if(offer) {
 			orderTitle = offer.order?.crmId?.toString() ?? '';
 
-			if(offer.order?.stage < OrderStage.SIGNED_DRIVER) {
-				return {
-					statusCode: HttpStatus.NOT_ACCEPTABLE,
-					data:       offer,
-					message:    formatArgs(OFFER_TRANSLATIONS['GET'], offer.id)
-				};
-			}
+			// if(offer.order?.stage < OrderStage.SIGNED_DRIVER) {
+			// 	return {
+			// 		statusCode: HttpStatus.NOT_ACCEPTABLE,
+			// 		data:       offer,
+			// 		message:    formatArgs(OFFER_TRANSLATIONS['GET'], offer.id)
+			// 	};
+			// }
 
 			if(
 				offer.orderStatus === OrderStatus.CANCELLED &&
