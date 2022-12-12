@@ -32,9 +32,10 @@ const checkAgainst = (
 	identifier?: string
 ): boolean =>
 {
-	if(!values)
-		return false;
-	if(hasValues(filterValues)) {
+	if(!hasValues(filterValues))
+		return true;
+
+	if(hasValues(values)) {
 		if(!identifier)
 			identifier = '';
 		else
@@ -56,7 +57,10 @@ const checkAgainst = (
 
 const checkAgainstIn = (value: any, filterValues: any[], name: string, identifier?: string): boolean =>
 {
-	if(hasValues(filterValues)) {
+	if(!hasValues(filterValues))
+		return true;
+
+	if(value) {
 		if(!identifier)
 			identifier = '';
 		else
@@ -71,6 +75,8 @@ const checkAgainstIn = (value: any, filterValues: any[], name: string, identifie
 			return false;
 		}
 	}
+	else
+		return false;
 	return true;
 };
 
