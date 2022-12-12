@@ -115,7 +115,7 @@ export type TOperationCount = {
 }
 
 /**@ignore*/
-export type TQueryConfig = Record<string, string | number>;
+export type TQueryConfig = Record<string, (string | number) | (string | number)[]>;
 
 /**@ignore*/
 export type TRouteAccess = {

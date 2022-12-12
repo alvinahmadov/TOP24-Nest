@@ -343,7 +343,7 @@ export function buildBitrixRequestUrl(
 			if(!Array.isArray(value))
 				qBuilder.addQuery(`fields[${field}][]`, value);
 			else
-				qBuilder.addQuery(`fields[${field}]`, value[0]);
+				qBuilder.addQueryArray(`fields[${field}]`, value);
 		}
 	};
 
