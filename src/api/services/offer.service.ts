@@ -541,23 +541,6 @@ export default class OfferService
 		driverDataList: Array<TOfferDriver>,
 		full?: boolean
 	): TAsyncApiResponse<TSentOffer> {
-		if(!driverDataList || !driverDataList?.length) {
-			const { affectedCount } = await this.repository.bulkDelete(
-				this.repository.whereClause('and')
-				    .eq('orderId', orderId)
-				    .lte('orderStatus', OrderStatus.CANCELLED)
-					.query
-			);
-			return {
-				statusCode: HttpStatus.OK,
-				data:       {
-					createCount: 0,
-					updateCount: 0,
-					offers:      await this.repository.getOrderDrivers(orderId)
-				},
-				message:    `Deleted ${affectedCount} rows.`
-			};
-		}
 		const { data: order } = await this.orderService.getById(orderId);
 		const prevOffers = await this.repository.getOrderDrivers(orderId);
 		let createCount = 0, updateCount = 0;
@@ -573,13 +556,10 @@ export default class OfferService
 
 		const driverIds = new Set<string>(driverDataList.map(d => d.driverId));
 
-		let driverOffers: TOfferDriver[] = Array.from(driverIds)
-		                                        .map(
-			                                        driverId => driverDataList.find(d => d.driverId === driverId)
-		                                        )
-		                                        .filter(
-			                                        driverData => driverData !== null
-		                                        );
+		let driverOffers: TOfferDriver[] = Array
+			.from(driverIds)
+			.map(driverId => driverDataList.find(d => d.driverId === driverId))
+			.filter(driverData => driverData !== null);
 
 		let { data: drivers } = await this.driverService.getByTransport(
 			{ driverIds: driverOffers.map(o => o.driverId) }
@@ -606,15 +586,27 @@ export default class OfferService
 				message:    formatArgs(OFFER_TRANSLATIONS['DRIVERS'], 0)
 			};
 		else
-			driverOffers = driverOffers.filter(o => drivers.some(d => d.id === o.driverId));
+			driverOffers = driverOffers.filter(
+				(offerDriver) => drivers.some(
+					(driver) => driver.id === offerDriver.driverId
+				)
+			);
 
 		// TODO(alvinahmadov): Implement offer status update for non-matching offers
 
+		// @ts-ignore
 		const offersToUpdate: OfferUpdateDto[] = driverOffers
 			.filter(
 				driverData => prevOffers.some(
-					offer => offer.driverId === driverData.driverId &&
-					         offer.orderStatus !== driverData.orderStatus
+					offer => (
+					         offer.driverId === driverData.driverId &&
+					         offer.orderId === orderId
+					         ) &&
+					         (
+						         offer.orderStatus !== driverData.orderStatus ||
+						         //@ts-ignore
+						         ((offer.status !== OfferStatus.NONE) || (offer.status === OfferStatus.DECLINED))
+					         )
 				)
 			).map(driverData => ({ orderId: orderId, status: OfferStatus.SENT, ...driverData }));
 
