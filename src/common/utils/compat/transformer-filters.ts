@@ -274,24 +274,25 @@ export function transformToCompanyTransportFilter(data: ICompanyTransportTransfo
 	if(data) {
 		return {
 			...helpers.translateTransport(data),
-			weightMin:   data.weight_min,
-			weightMax:   data.weight_max,
-			volumeMin:   data.volume_min,
-			volumeMax:   data.volume_max,
-			lengthMin:   data.length_min,
-			lengthMax:   data.length_max,
-			widthMin:    data.width_min,
-			widthMax:    data.width_max,
-			heightMin:   data.height_min,
-			heightMax:   data.height_max,
-			directions:  data.directions,
-			dedicated:   data.dedicated,
-			hasDriver:   data.has_driver,
-			isDedicated: data.is_dedicated,
+			weightMin:    data.weight_min,
+			weightMax:    data.weight_max,
+			volumeMin:    data.volume_min,
+			volumeMax:    data.volume_max,
+			lengthMin:    data.length_min,
+			lengthMax:    data.length_max,
+			widthMin:     data.width_min,
+			widthMax:     data.width_max,
+			heightMin:    data.height_min,
+			heightMax:    data.height_max,
+			directions:   data.directions,
+			dedicated:    data.dedicated,
+			hasDriver:    data.has_driver,
+			isDedicated:  data.is_dedicated,
 			paymentTypes: data.payment_types,
-			types:       data.types ?? data.auto_types,
-			riskClass:   data.class ?? data.risk_class,
-			payloadType: data.payload_type
+			types:        data.types ?? data.auto_types,
+			riskClass:    data.class ?? data.risk_class,
+			payload:      data.payload,
+			payloadType:  data.payload_type
 		};
 	}
 	return null;
