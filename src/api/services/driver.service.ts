@@ -28,7 +28,10 @@ import {
 	getTranslation
 }                            from '@common/utils';
 import { Driver, Order }     from '@models/index';
-import { DriverRepository }  from '@repos/index';
+import {
+	DestinationRepository,
+	DriverRepository
+}                            from '@repos/index';
 import {
 	DriverCreateDto,
 	DriverFilter,
@@ -54,6 +57,7 @@ export default class DriverService
 		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: TRANSLATIONS['NOT_FOUND'] }
 	};
 	private _gateway: EventsGateway;
+	private destinationRepo: DestinationRepository = new DestinationRepository();
 
 	constructor(
 		protected readonly imageFileService: ImageFileService,
@@ -316,11 +320,10 @@ export default class DriverService
 				}
 				const point: TGeoCoordinate = [driver.latitude, driver.longitude];
 				const currentAddress = await addressFromCoordinates(driver.latitude, driver.longitude);
-				const destinations = order.destinations;
-				for(const destination of destinations) {
-					destination.distance = calculateDistance(point, destination.coordinates);
-				}
-				await this.orderService.update(order.id, { destinations });
+				const destination = await this.destinationRepo.getOrderDestination(order.id, { point: driver.currentPoint });
+				const distance = calculateDistance(point, destination.coordinates);
+				await this.destinationRepo.update(destination.id, { distance });
+
 				await driver.save({ fields: ['currentAddress'] });
 				const data = { currentAddress };
 				this.gateway.sendDriverEvent(

@@ -16,13 +16,11 @@ import {
 	OrderStatus
 }                       from '@common/enums';
 import {
+	IDestination,
 	IOrder,
 	TCreationAttribute
 }                       from '@common/interfaces';
-import {
-	OrderDestination,
-	OrderFilter
-}                       from '@models/order.entity';
+import { OrderFilter }  from '@models/order.entity';
 import { entityConfig } from '@api/swagger/properties';
 
 const { order: prop } = entityConfig;
@@ -162,7 +160,7 @@ export default class OrderCreateDto
 	bidPriceVAT?: number = 0.0;
 
 	@ApiProperty(prop.destinations)
-	destinations: OrderDestination[] = [];
+	destinations?: IDestination[] = [];
 
 	@ApiProperty(prop.filter)
 	filter?: OrderFilter = null;

@@ -12,15 +12,18 @@ import {
 }                                  from '@common/enums';
 import {
 	IApiResponse,
-	ICRMEntity, IFilter,
+	ICRMEntity,
+	IFilter,
 	IModel,
-	IOrderDestination,
 	TBitrixEnum,
 	TCRMData,
-	TCRMFields, TStringOrNumber
+	TCRMFields
 }                                  from '@common/interfaces';
 import { dateValidator, isNumber } from '@common/utils';
-import { OrderCreateDto }          from '@api/dto';
+import {
+	DestinationCreateDto,
+	OrderCreateDto
+}                                  from '@api/dto';
 import { splitAddress }            from './address';
 
 let debugConvert: boolean = false;
@@ -199,9 +202,8 @@ function convertBitrixDest<V, R>(
 	return result;
 }
 
-function parseDestination(crmFields: TCRMFields)
-	: IOrderDestination[] {
-	const destinations: IOrderDestination[] = [];
+function parseDestination(crmFields: TCRMFields): DestinationCreateDto[] {
+	const destinations: DestinationCreateDto[] = [];
 
 	const addDestElement = (index: number, crmElement: TCrmOrderDestination) =>
 	{
@@ -231,6 +233,7 @@ function parseDestination(crmFields: TCRMFields)
 				                               [];
 			destinations.push(
 				{
+					orderId:   null,
 					point:     name,
 					type:      dType,
 					address,
@@ -381,11 +384,14 @@ export function buildBitrixRequestUrl(
 	return qBuilder.query;
 }
 
-export function orderFromBitrix(crmFields: TCRMFields): OrderCreateDto {
+export function orderFromBitrix(crmFields: TCRMFields): {
+	orderDto: OrderCreateDto;
+	destinationDtos: DestinationCreateDto[]
+} {
 	if(!crmFields[ORDER.ID] || !crmFields[ORDER.ID].length)
 		return null;
 	const crmId = Number(crmFields[ORDER.ID]);
-	const destinations = parseDestination(crmFields);
+	const destinationDtos = parseDestination(crmFields);
 	const isCanceled = typeFromCrm(crmFields[ORDER.IS_CANCELED], false);
 	const stage: number = convertBitrix('orderStage', crmFields[ORDER.STAGE], true, true)
 	                      ?? OrderStage.NEW;
@@ -393,7 +399,7 @@ export function orderFromBitrix(crmFields: TCRMFields): OrderCreateDto {
 	                                     ?? OrderStatus.PENDING
 	                                   : OrderStatus.CANCELLED_BITRIX;
 
-	return {
+	const orderDto: OrderCreateDto = {
 		crmId,
 		status,
 		stage,
@@ -412,7 +418,6 @@ export function orderFromBitrix(crmFields: TCRMFields): OrderCreateDto {
 		pallets:         typeFromCrm<number>(crmFields[ORDER.PARAMS.PALLETS], 0),
 		number:          typeFromCrm<number>(crmFields[ORDER.NUMBER], 0),
 		isBid:           typeFromCrm<boolean>(crmFields[ORDER.BID.SELF], false),
-		destinations,
 		driverDeferralConditions:
 		                 typeFromCrm<string>(crmFields[ORDER.DRIVER_DEFERRAL_CONDITIONS], ''),
 		ownerDeferralConditions:
@@ -426,7 +431,9 @@ export function orderFromBitrix(crmFields: TCRMFields): OrderCreateDto {
 		dedicated:       convertBitrix('transportDedicated', crmFields[ORDER.MACHINE]),
 		transportTypes:  crmFields[ORDER.TRANSPORT_TYPE]
 			                 ?.map((t: string) => convertBitrix('orderTransportType', t))
-	} as OrderCreateDto;
+	};
+
+	return { orderDto, destinationDtos };
 }
 
 /**

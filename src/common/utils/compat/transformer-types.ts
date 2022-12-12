@@ -537,7 +537,7 @@ export interface IOrderTransformer
 	 * @see IOrder.transportTypes
 	 * */
 	transport_types?: string[];
-	destinations?: IOrderDestinationTransformer[];
+	destinations?: IDestinationTransformer[];
 	/**
 	 * @see IOrder.driverDeferralConditions
 	 * */
@@ -571,9 +571,11 @@ export interface IOrderTransformer
 }
 
 /**
- * @see IOrderDestination
+ * @see IDestination
  * */
-export interface IOrderDestinationTransformer {
+export interface IDestinationTransformer
+	extends IModel,
+	        ITransformer {
 	point: string;
 	type: DestinationType;
 	address: string;
@@ -585,7 +587,7 @@ export interface IOrderDestinationTransformer {
 	comment?: string;
 	fulfilled?: boolean;
 	/**
-	 * @see IOrderDestination.shippingPhotoLinks
+	 * @see IDestination.shippingPhotoLinks
 	 * */
 	shipping_link?: string[];
 }

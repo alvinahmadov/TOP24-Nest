@@ -3,17 +3,17 @@ import {
 	Inject,
 	Injectable,
 	HttpStatus
-}                             from '@nestjs/common';
+}                                                 from '@nestjs/common';
 import {
 	BitrixUrl,
 	Bucket
-}                             from '@common/constants';
+}                                                 from '@common/constants';
 import {
 	OfferStatus,
 	OrderStage,
 	OrderStatus,
 	TransportStatus
-}                             from '@common/enums';
+}                                                 from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -25,7 +25,7 @@ import {
 	TDocumentMode,
 	TMergedEntities,
 	TMulterFile
-}                             from '@common/interfaces';
+}                                                 from '@common/interfaces';
 import {
 	buildBitrixRequestUrl,
 	renameMulterFiles,
@@ -34,25 +34,27 @@ import {
 	getTranslation,
 	transformTransportParameters,
 	renameMulterFile
-}                             from '@common/utils';
+}                                                 from '@common/utils';
 import {
 	Driver,
 	Order,
 	Transport
-}                             from '@models/index';
-import { EventsGateway }      from '@api/events';
-import { OrderRepository }    from '@repos/index';
+}                                                 from '@models/index';
+import { EventsGateway }                          from '@api/events';
+import { DestinationRepository, OrderRepository } from '@repos/index';
 import {
 	ListFilter,
 	OrderCreateDto,
 	OrderFilter,
 	OrderUpdateDto
-}                             from '@api/dto';
-import Service                from './service';
-import CargoCompanyService    from './cargo-company.service';
-import CargoCompanyInnService from './cargoinn-company.service';
-import DriverService          from './driver.service';
-import ImageFileService       from './image-file.service';
+}                                                 from '@api/dto';
+import Service                                    from './service';
+import CargoCompanyService                        from './cargo-company.service';
+import CargoCompanyInnService                     from './cargoinn-company.service';
+import DriverService                              from './driver.service';
+import ImageFileService                           from './image-file.service';
+import Destination                                from '@models/destination.entity';
+import { Op }                                     from 'sequelize';
 
 const ORDER_TRANSLATIONS = getTranslation('REST', 'ORDER');
 
@@ -69,6 +71,7 @@ export default class OrderService
 		NO_CRM_ORDER: { statusCode: HttpStatus.NOT_FOUND, message: 'Order doesn\'t have a crm id' }
 	};
 	private _gateway: EventsGateway;
+	private destinationRepo: DestinationRepository = new DestinationRepository();
 
 	constructor(
 		private readonly cargoService: CargoCompanyService,
@@ -397,10 +400,11 @@ export default class OrderService
 		if(!order)
 			return this.responses['NOT_FOUND'];
 
-		const destinations = order.destinations;
-		const index = destinations.findIndex(d => d.point === point);
+		let destination = await Destination.findOne(
+			{ where: { orderId: order.id, point } }
+		);
 
-		if(index >= 0) {
+		if(destination) {
 			const {
 				Location: shippingPhotoLinks
 			} = await this.imageFileService
@@ -412,23 +416,15 @@ export default class OrderService
 				fileUploaded = true;
 				message = formatArgs(ORDER_TRANSLATIONS['SHIPPING'], shippingPhotoLinks.join(','), point);
 
-				if(destinations[index].shippingPhotoLinks)
-					destinations[index].shippingPhotoLinks.push(...shippingPhotoLinks);
+				if(destination.shippingPhotoLinks)
+					destination.shippingPhotoLinks.push(...shippingPhotoLinks);
 				else
-					destinations[index].shippingPhotoLinks = shippingPhotoLinks;
+					destination.shippingPhotoLinks = shippingPhotoLinks;
 
-				destinations.forEach((destination, i) =>
-				                     {
-					                     if(i <= index) {
-						                     destination.fulfilled = true;
-					                     }
-				                     });
-				const { data: updOrder } = await this.update(order.id, { destinations });
+				await Destination.update({ fulfilled: true }, { where: { point: { [Op.lte]: point } } });
 
-				if(!updOrder)
-					return this.repository.getRecord('update');
-
-				order = updOrder;
+				await this.destinationRepo.update(destination.id, { shippingPhotoLinks: destination.shippingPhotoLinks });
+				order = await this.repository.get(order.id);
 			}
 
 			if(fileUploaded) {
@@ -460,37 +456,31 @@ export default class OrderService
 		if(!order)
 			return this.responses['NOT_FOUND'];
 
-		const destinations = order.destinations;
-		const dstIndex = destinations.findIndex(d => d.point === point);
+		const destination = await this.destinationRepo.getOrderDestination(order.id, { point });
 
-		if(dstIndex >= 0) {
-			const shippingLength = destinations[dstIndex].shippingPhotoLinks?.length;
+		if(destination) {
+			const shippingLength = destination.shippingPhotoLinks?.length;
 
 			if(0 < shippingLength) {
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
-					                      .deleteImageList(
-						                      destinations[dstIndex].shippingPhotoLinks
-					                      ) > 0;
+					                      .deleteImageList(destination.shippingPhotoLinks) > 0;
 					if(isDeleted)
-						destinations[dstIndex].shippingPhotoLinks = [];
+						destination.shippingPhotoLinks = [];
 				}
 				else {
 					if(shippingLength > index) {
-						const photoLink = destinations[dstIndex].shippingPhotoLinks[index];
-						destinations[dstIndex].shippingPhotoLinks.splice(index, 1);
+						const photoLink = destination.shippingPhotoLinks[index];
+						destination.shippingPhotoLinks.splice(index, 1);
 						isDeleted = await this.imageFileService.deleteImage(photoLink) > 0;
 					}
 				}
 
 				if(isDeleted) {
-					const { data: updOrder } = await this.update(order.id, { destinations });
-					if(!updOrder)
-						return this.repository.getRecord('update');
+					await this.destinationRepo.update(destination.id, destination);
 
 					message = ORDER_TRANSLATIONS['SHIPPING_DEL'];
-
-					order = updOrder;
+					order.destinations = await this.destinationRepo.getList({}, { orderId: order.id });
 				}
 			}
 

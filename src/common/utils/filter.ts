@@ -1,19 +1,23 @@
-import { MAX_FLOAT, MIN_FLOAT }                          from '@common/constants';
-import { loadingTypeToStr, OrderStage, TransportStatus } from '@common/enums';
+import { MAX_FLOAT, MIN_FLOAT } from '@common/constants';
+import {
+	loadingTypeToStr,
+	OrderStage,
+	TransportStatus
+}                               from '@common/enums';
 import {
 	ICompany,
 	ICompanyTransportFilter,
 	IDriverFilter,
 	IOrder,
 	ITransportFilter
-}                                                        from '@common/interfaces';
+}                               from '@common/interfaces';
 import {
 	min,
 	transformDriverTransports
-}                                                        from '@common/utils';
-import Driver                                            from '@models/driver.entity';
-import Order                                             from '@models/order.entity';
-import Transport                                         from '@models/transport.entity';
+}                               from '@common/utils';
+import Driver                   from '@models/driver.entity';
+import Order                    from '@models/order.entity';
+import Transport                from '@models/transport.entity';
 
 const debugTransportFilter = false;
 const debugDirectionFilter = false;

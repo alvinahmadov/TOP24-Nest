@@ -7,7 +7,7 @@ import {
 }                       from '@common/enums';
 import {
 	IOrder,
-	IOrderDestination,
+	IDestination,
 	IOrderFilter,
 	TUpdateAttribute
 }                       from '@common/interfaces';
@@ -49,7 +49,7 @@ export default class OrderUpdateDto
 	public dedicated?: string;
 
 	@ApiProperty(prop.destinations)
-	public destinations?: IOrderDestination[];
+	public destinations?: IDestination[];
 
 	@ApiProperty(prop.driverDeferralConditions)
 	public driverDeferralConditions?: string;

@@ -1,22 +1,22 @@
 import {
 	HttpStatus, Injectable,
 	Scope
-}                             from '@nestjs/common';
+}                                               from '@nestjs/common';
 import {
 	CARGO,
 	CARGOINN,
 	CRM,
 	ORDER,
 	TRANSPORT
-}                             from '@config/json';
-import { WhereClause }        from '@common/classes';
-import { BitrixUrl }          from '@common/constants';
+}                                               from '@config/json';
+import { WhereClause }                          from '@common/classes';
+import { BitrixUrl }                            from '@common/constants';
 import {
 	CompanyType,
 	OrderStage,
 	OrderStatus,
 	UserRole
-}                             from '@common/enums';
+}                                               from '@common/enums';
 import {
 	IApiResponses,
 	ICompany,
@@ -27,30 +27,31 @@ import {
 	TCRMResponse,
 	TOperationCount,
 	TUpdateAttribute
-}                             from '@common/interfaces';
+}                                               from '@common/interfaces';
 import {
 	formatArgs,
 	getCrm,
 	getTranslation,
 	isSuccessResponse,
 	orderFromBitrix
-}                             from '@common/utils';
+}                                               from '@common/utils';
 import {
 	Order,
 	Transport
-}                             from '@models/index';
-import { OrderCreateDto }     from '@api/dto';
-import { EventsGateway }      from '@api/events';
-import Service                from './service';
-import CargoCompanyService    from './cargo-company.service';
-import CargoCompanyInnService from './cargoinn-company.service';
-import OfferService           from './offer.service';
-import OrderService           from './order.service';
-import TransportService       from './transport.service';
+}                                               from '@models/index';
+import { DestinationCreateDto, OrderCreateDto } from '@api/dto';
+import { EventsGateway }                        from '@api/events';
+import Service                                  from './service';
+import CargoCompanyService                      from './cargo-company.service';
+import CargoCompanyInnService                   from './cargoinn-company.service';
+import OfferService                             from './offer.service';
+import OrderService                             from './order.service';
+import TransportService                         from './transport.service';
 import ORDER_LST_URL = BitrixUrl.ORDER_LST_URL;
 import ORDER_GET_URL = BitrixUrl.ORDER_GET_URL;
 import COMPANY_GET_URL = BitrixUrl.COMPANY_GET_URL;
 import CONTACT_GET_URL = BitrixUrl.CONTACT_GET_URL;
+import DestinationRepository                    from '@repos/dest.repository';
 
 const COMPANY_EVENT_TRANSLATION = getTranslation('EVENT', 'COMPANY');
 const DRIVER_EVENT_TRANSLATION = getTranslation('EVENT', 'DRIVER');
@@ -72,6 +73,7 @@ export default class BitrixService
 		NOT_FOUND_ORDER:     { statusCode: HttpStatus.NOT_FOUND, message: 'Order Not found ...' }
 	};
 	private _gateway: EventsGateway;
+	private destinationRepo: DestinationRepository = new DestinationRepository();
 
 	constructor(
 		protected readonly cargoService: CargoCompanyService,
@@ -98,7 +100,7 @@ export default class BitrixService
 	 * */
 	public async getOrders() {
 		const { result: bitrixOrderList } = await this.httpClient.get<TCRMResponse>(ORDER_LST_URL);
-		const crmOrders: Array<OrderCreateDto> = [];
+		const crmOrders: Array<{ orderDto: OrderCreateDto; destinationDtos: DestinationCreateDto[] }> = [];
 
 		if(bitrixOrderList !== undefined) {
 			if(Array.isArray(bitrixOrderList)) {
@@ -131,12 +133,12 @@ export default class BitrixService
 							}
 						}
 
-						const orderData = orderFromBitrix(crmItem);
+						const { orderDto: orderDto, destinationDtos } = orderFromBitrix(crmItem);
 
 						if(clientContact)
-							if(orderData && orderData.destinations?.length > 0)
-								orderData.destinations[0].contact = clientContact;
-						crmOrders.push(orderData);
+							if(orderDto && destinationDtos?.length > 0)
+								destinationDtos[0].contact = clientContact;
+						crmOrders.push({ orderDto, destinationDtos });
 					}
 				}
 			}
@@ -184,15 +186,18 @@ export default class BitrixService
 			if(
 				data &&
 				// Exclude new updated orders
-				!excludeCrmIds.find(o => o === data.crmId)
+				!excludeCrmIds.find(o => o === data.orderDto.crmId)
 			) {
-				let orderApiResponse = await this.orderService.getByCrmId(data.crmId);
+				let orderApiResponse = await this.orderService.getByCrmId(data.orderDto.crmId);
 				// Order from crm doesn't exist in
 				// local database then create it
 				if(!orderApiResponse.data) {
-					orderApiResponse = await this.orderService.create(data);
-					if(orderApiResponse) {
+					orderApiResponse = await this.orderService.create(data.orderDto);
+					/////////////
+					if(isSuccessResponse(orderApiResponse)) {
 						orderIds.push(orderApiResponse.data.id);
+						data.destinationDtos.forEach(d => d.orderId = orderApiResponse.data.id);
+						await this.destinationRepo.bulkCreate(data.destinationDtos);
 						++createdCount;
 					}
 				}
@@ -387,7 +392,7 @@ export default class BitrixService
 					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N'
 				) return { statusCode: 200, message: 'Invalid order source/stage' };
 
-				const orderData = orderFromBitrix(crmItem);
+				const { orderDto, destinationDtos } = orderFromBitrix(crmItem);
 
 				if(crmClientId > 0) {
 					const { result } = await this.httpClient.get<TCRMResponse>(
@@ -406,14 +411,14 @@ export default class BitrixService
 					}
 
 					if(clientContact) {
-						if(orderData && orderData.destinations?.length > 0)
-							orderData.destinations[0].contact = clientContact;
+						if(destinationDtos?.length > 0)
+							destinationDtos[0].contact = clientContact;
 					}
 				}
 
-				if(orderData.stage >= OrderStage.PAYMENT_RECEIVED) {
-					orderData.onPayment = false;
-					orderData.status = OrderStatus.FINISHED;
+				if(orderDto.stage >= OrderStage.PAYMENT_RECEIVED) {
+					orderDto.onPayment = false;
+					orderDto.status = OrderStatus.FINISHED;
 				}
 				let { data: order } = await this.orderService.getByCrmId(crmId);
 
@@ -422,7 +427,7 @@ export default class BitrixService
 						return this.orderService.update(order.id, { hasSent: false });
 					}
 
-					if(orderData.isCanceled) {
+					if(orderDto.isCanceled) {
 						if(order.driverId) {
 							await this.offerService.decline(order.id, order.driverId);
 						}
@@ -430,10 +435,20 @@ export default class BitrixService
 					}
 
 					const updateResponse = await this.orderService
-					                                 .update(order.id, { ...orderData, hasSent: true });
+					                                 .update(order.id, { ...orderDto, hasSent: true });
 
 					if(isSuccessResponse(updateResponse)) {
 						const order = updateResponse.data;
+						const repo = this.destinationRepo;
+
+						destinationDtos.forEach(dto => dto.orderId = order.id);
+						await Promise.all(
+							destinationDtos
+								.map(
+									dto => repo.bulkUpdate(dto, { point: dto.point, orderId: dto.orderId })
+								)
+						);
+
 						this.gateway.sendOrderEvent(
 							{
 								id:      order.id,
@@ -450,10 +465,13 @@ export default class BitrixService
 				}
 				else {
 					const createResponse = await this.orderService
-					                                 .create(orderData);
+					                                 .create(orderDto);
 
 					if(isSuccessResponse(createResponse)) {
 						const order = createResponse.data;
+						destinationDtos.forEach(d => d.orderId = order.id);
+						await this.destinationRepo.bulkCreate(destinationDtos);
+
 						this.gateway.sendOrderEvent(
 							{
 								id:      order.id,

@@ -2,6 +2,7 @@ import Admin           from './admin.entity';
 import Address         from './address.entity';
 import CargoCompany    from './cargo.entity';
 import CargoCompanyInn from './cargo-inn.entity';
+import Destination     from './destination.entity';
 import Driver          from './driver.entity';
 import GatewayEvent    from './gateway-event.entity';
 import Image           from './image.entity';
@@ -16,6 +17,7 @@ export {
 	Address,
 	CargoCompany,
 	CargoCompanyInn,
+	Destination,
 	Driver,
 	GatewayEvent,
 	Image,
@@ -27,18 +29,19 @@ export {
 };
 
 const MODELS = [
-  Admin,
-  Address,
-  CargoCompany,
-  CargoCompanyInn,
-  Driver,
-  GatewayEvent,
-  Image,
-  Offer,
-  Order,
-  Payment,
-  Transport,
-  User
+	Admin,
+	Address,
+	CargoCompany,
+	CargoCompanyInn,
+	Destination,
+	Driver,
+	GatewayEvent,
+	Image,
+	Offer,
+	Order,
+	Payment,
+	Transport,
+	User
 ].sort((a: any, b: any) => a.name.localeCompare(b.name));
 
 export default MODELS;

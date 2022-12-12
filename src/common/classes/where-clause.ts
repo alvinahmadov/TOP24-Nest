@@ -333,6 +333,32 @@ export default class WhereClause<T extends IModel> {
 		);
 	}
 
+	public period(
+		key: keyof T,
+		valueMin?: Date | string,
+		valueMax?: Date | string
+	): this {
+		return this._exec(
+			key,
+			() =>
+			{
+				if(valueMin === undefined && valueMax === undefined)
+					return;
+				const period: Date[] = [];
+				if(valueMin) {
+					period.push(typeof valueMin === 'string' ? new Date(valueMin) : valueMin);
+				}
+				if(valueMax) {
+					period.push(typeof valueMax === 'string' ? new Date(valueMax) : valueMax);
+				}
+
+				this._query[key] = { [Op.between]: period };
+				if(this.debug)
+					console.debug({ name: 'between', conj: this._conjunct, key, valueMin, valueMax });
+			}
+		);
+	}
+
 	/**
 	 * Check operator LESS THAN or IS NULL.
 	 *

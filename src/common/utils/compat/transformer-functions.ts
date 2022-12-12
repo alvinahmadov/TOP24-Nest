@@ -1,6 +1,6 @@
 import {
 	IApiResponse,
-	IModel
+	IModel, TGeoCoordinate
 }                            from '@common/interfaces';
 import * as attributes       from '@common/interfaces/attributes';
 import { isSuccessResponse } from '@common/utils';
@@ -8,6 +8,7 @@ import * as models           from '@models/index';
 import EntityModel           from '@models/entity-model';
 import * as transformers     from './transformer-types';
 import * as helpers          from './helpers';
+import { DestinationType }   from '@common/enums';
 
 function transformAddress(address: models.Address)
 	: transformers.IAddressTransformer {
@@ -270,23 +271,34 @@ export function transformToDriver(data: transformers.IDriverTransformer)
 	return null;
 }
 
-function transformDestinations(destinations: attributes.IOrderDestination[])
-	: transformers.IOrderDestinationTransformer[] {
+function transformDestinations(destinations: models.Destination[])
+	: transformers.IDestinationTransformer[] {
 	if(destinations) {
-		return destinations.map(
-			d =>
-			{
-				const {
-					shippingPhotoLinks: shipping_link,
-					...                 rest
-				} = d;
+		return destinations.map(transformDestination);
+	}
 
-				return {
-					...rest,
-					shipping_link
-				};
-			}
-		);
+	return null;
+}
+
+function transformDestination(destination: models.Destination)
+	: transformers.IDestinationTransformer {
+	if(destination) {
+		return {
+			id:            destination.getDataValue('id'),
+			point:         destination.getDataValue('point'),
+			type:          destination.getDataValue('type'),
+			address:       destination.getDataValue('address'),
+			coordinates:   destination.getDataValue('coordinates'),
+			date:          destination.getDataValue('date'),
+			contact:       destination.getDataValue('contact'),
+			phone:         destination.getDataValue('phone'),
+			distance:      destination.getDataValue('distance'),
+			comment:       destination.getDataValue('comment'),
+			fulfilled:     destination.getDataValue('fulfilled'),
+			shipping_link: destination.getDataValue('shippingPhotoLinks'),
+			createdAt:     destination.getDataValue('createdAt'),
+			updatedAt:     destination.getDataValue('updatedAt')
+		};
 	}
 
 	return null;
@@ -441,7 +453,7 @@ function transformOrder(order: models.Order)
 			height:                     order.getDataValue('height'),
 			palets:                     order.getDataValue('pallets'),
 			transport_types:            order.getDataValue('transportTypes'),
-			destinations:               transformDestinations(order.getDataValue('destinations')),
+			destinations:               transformDestinations(order.destinations),
 			driver_deferral_conditions: order.getDataValue('driverDeferralConditions'),
 			owner_deferral_conditions:  order.getDataValue('ownerDeferralConditions'),
 			dedicated_machine:          order.getDataValue('dedicated'),
@@ -609,6 +621,9 @@ export function transformEntity<T extends IModel, E extends EntityModel<T>>(
 	}
 	else if(entity instanceof models.CargoCompanyInn) {
 		transformedData = transformCargoCompanyInn(entity);
+	}
+	else if(entity instanceof models.Destination) {
+		transformedData = transformDestination(entity);
 	}
 	else if(entity instanceof models.Driver) {
 		transformedData = transformDriver(entity);

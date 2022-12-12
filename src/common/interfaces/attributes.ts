@@ -993,7 +993,7 @@ export interface IOrder
 	/**
 	 * Load/unload destination data for order.
 	 * */
-	destinations: IOrderDestination[];
+	destinations?: IDestination[];
 	/**
 	 * Filter cache data from admin.
 	 * */
@@ -1040,7 +1040,9 @@ export interface IOrder
 /**
  * Load/unload destination data for order.
  * */
-export interface IOrderDestination {
+export interface IDestination
+	extends IModel {
+	orderId?: string;
 	/**
 	 * Point of destination
 	 *

@@ -3,6 +3,7 @@ import AddressRepository         from './address.repository';
 import AdminRepository           from './admin.repository';
 import CargoCompanyRepository    from './cargo-company.repository';
 import CargoInnCompanyRepository from './cargoinn-company.repository';
+import DestinationRepository     from './dest.repository';
 import DriverRepository          from './driver.repository';
 import GatewayEventRepository    from './gateway-event.repository';
 import ImageRepository           from './image.repository';
@@ -18,6 +19,7 @@ export {
 	AddressRepository,
 	CargoCompanyRepository,
 	CargoInnCompanyRepository,
+	DestinationRepository,
 	DriverRepository,
 	GatewayEventRepository,
 	ImageRepository,

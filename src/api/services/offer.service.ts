@@ -1,9 +1,9 @@
-import { Op }              from 'sequelize';
+import { Op }            from 'sequelize';
 import {
 	Injectable,
 	HttpStatus
-}                          from '@nestjs/common';
-import env                 from '@config/env';
+}                        from '@nestjs/common';
+import env               from '@config/env';
 import {
 	DestinationType,
 	DriverStatus,
@@ -12,7 +12,7 @@ import {
 	OrderStage,
 	TransportStatus,
 	UserRole
-}                          from '@common/enums';
+}                        from '@common/enums';
 import {
 	IApiResponses,
 	ICompanyTransportFilter,
@@ -28,37 +28,40 @@ import {
 	TOfferTransportFilter,
 	TOfferDriver,
 	TSentOffer
-}                          from '@common/interfaces';
+}                        from '@common/interfaces';
 import {
 	checkTransportRequirements,
 	filterTransports,
 	formatArgs,
 	getTranslation,
 	isSuccessResponse
-}                          from '@common/utils';
+}                        from '@common/utils';
 import {
 	transformEntity,
 	IDriverTransformer,
 	IOrderTransformer,
 	ITransportTransformer
-}                          from '@common/utils/compat';
+}                        from '@common/utils/compat';
 import {
 	Driver,
 	Offer,
 	Order
-}                          from '@models/index';
-import { OfferRepository } from '@repos/index';
+}                        from '@models/index';
+import {
+	DestinationRepository,
+	OfferRepository
+}                        from '@repos/index';
 import {
 	OfferCreateDto,
 	OfferFilter,
 	OfferUpdateDto,
 	OrderFilter
-}                          from '@api/dto';
-import { EventsGateway }   from '@api/events';
-import Service             from './service';
-import DriverService       from './driver.service';
-import OrderService        from './order.service';
-import TransportService    from './transport.service';
+}                        from '@api/dto';
+import { EventsGateway } from '@api/events';
+import Service           from './service';
+import DriverService     from './driver.service';
+import OrderService      from './order.service';
+import TransportService  from './transport.service';
 
 const OFFER_TRANSLATIONS = getTranslation('REST', 'OFFER');
 const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
@@ -74,6 +77,7 @@ export default class OfferService
 		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: OFFER_TRANSLATIONS['NOT_FOUND'] }
 	};
 	private _gateway: EventsGateway;
+	private destinationRepo: DestinationRepository = new DestinationRepository();
 
 	constructor(
 		protected readonly driverService: DriverService,
@@ -827,7 +831,7 @@ export default class OfferService
 					status = OrderStatus.CANCELLED_BITRIX;
 
 				if(order) {
-					order.destinations.forEach(d => d.fulfilled = false);
+					await this.destinationRepo.bulkUpdate({ fulfilled: false }, { orderId: order.id });
 					this.orderService
 					    .update(order.id, {
 						    status,

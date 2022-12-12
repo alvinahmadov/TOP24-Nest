@@ -1,6 +1,7 @@
 import {
 	BelongsTo,
 	ForeignKey,
+	HasMany,
 	IsUUID,
 	Table
 }                                   from 'sequelize-typescript';
@@ -12,19 +13,17 @@ import {
 import { ApiProperty }              from '@nestjs/swagger';
 import { ORDER }                    from '@config/json';
 import {
-	DestinationType,
 	LoadingType,
 	OrderStage,
 	OrderStatus
 }                                   from '@common/enums';
-import { TupleScalar, UuidScalar }  from '@common/scalars';
+import { UuidScalar }               from '@common/scalars';
 import { Reference, TABLE_OPTIONS } from '@common/constants';
 import {
 	ICRMEntity,
 	Index,
 	IOrder,
 	IOrderFilter,
-	IOrderDestination,
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
@@ -43,70 +42,10 @@ import { convertBitrix }            from '@common/utils';
 import EntityModel                  from './entity-model';
 import CargoCompany                 from './cargo.entity';
 import CargoCompanyInn              from './cargo-inn.entity';
+import Destination                  from './destination.entity';
 import Driver                       from './driver.entity';
 
 const { order: prop } = entityConfig;
-
-@InterfaceType()
-export class OrderDestination
-	implements IOrderDestination {
-	/**
-	 * Name of the point (alphabet character)
-	 * */
-	point: string;
-
-	/**
-	 * Address of load/unload destination.
-	 * */
-	address: string;
-
-	/**
-	 * Type of destination
-	 * */
-	type: DestinationType;
-
-	/**
-	 * Geo coordinates of destination.
-	 * */
-	@Field(() => TupleScalar)
-	coordinates: TGeoCoordinate;
-
-	/**
-	 * Date of cargo load/unload.
-	 * */
-	date?: Date;
-
-	/**
-	 * Optional contact at destination.
-	 * */
-	contact?: string;
-
-	/**
-	 * Optional phone number of the contact at destination.
-	 * */
-	phone?: string;
-
-	/**
-	 * Distnace to the destination.
-	 * Active after take of order for implementation.
-	 * */
-	distance?: number;
-
-	/**
-	 * Optional comment about load/unload, cargo etc.
-	 * */
-	comment?: string;
-
-	/**
-	 * Optional order fulfillment
-	 * */
-	fulfilled?: boolean;
-
-	/**
-	 * Optional shipping document scan link.
-	 * */
-	shippingPhotoLinks?: string[];
-}
 
 @InterfaceType()
 export class OrderFilter
@@ -346,10 +285,6 @@ export default class Order
 	@FloatColumn()
 	bidPriceVat?: number;
 
-	@ApiProperty(prop.destinations)
-	@JsonbColumn()
-	destinations: OrderDestination[];
-
 	@ApiProperty(prop.filter)
 	@JsonbColumn()
 	filter?: OrderFilter;
@@ -388,6 +323,9 @@ export default class Order
 	@ApiProperty(prop.driver)
 	@BelongsTo(() => Driver, 'driverId')
 	driver?: Driver;
+
+	@HasMany(() => Destination, 'orderId')
+	destinations?: Destination[];
 
 	@VirtualColumn()
 	priority?: boolean;

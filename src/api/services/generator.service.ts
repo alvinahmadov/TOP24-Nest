@@ -1,25 +1,31 @@
-import { Injectable }                 from '@nestjs/common';
-import faker                          from '@faker-js/faker';
+import { Injectable }         from '@nestjs/common';
+import faker                  from '@faker-js/faker';
 import {
 	CompanyType,
 	companyTypeToStr,
 	TransportStatus
-}                                     from '@common/enums';
+}                             from '@common/enums';
 import {
 	IApiResponse,
 	ICompany,
 	IService
-}                                     from '@common/interfaces';
-import { formatArgs, getTranslation } from '@common/utils';
-import * as generator                 from '@common/utils/generators';
-import * as dto                       from '@api/dto';
-import CargoCompanyService            from './cargo-company.service';
-import CargoCompanyInnService         from './cargoinn-company.service';
-import DriverService                  from './driver.service';
-import ImageService                   from './image.service';
-import OrderService                   from './order.service';
-import PaymentService                 from './payment.service';
-import TransportService               from './transport.service';
+}                             from '@common/interfaces';
+import {
+	formatArgs,
+	getTranslation,
+	isSuccessResponse
+}                             from '@common/utils';
+import * as generator         from '@common/utils/generators';
+import Destination            from '@models/destination.entity';
+import Order                  from '@models/order.entity';
+import * as dto               from '@api/dto';
+import CargoCompanyService    from './cargo-company.service';
+import CargoCompanyInnService from './cargoinn-company.service';
+import DriverService          from './driver.service';
+import ImageService           from './image.service';
+import OrderService           from './order.service';
+import PaymentService         from './payment.service';
+import TransportService       from './transport.service';
 
 const TRANSLATIONS = getTranslation('REST', 'GENERATOR');
 
@@ -128,8 +134,29 @@ export default class GeneratorService
 	}
 
 	public async generateOrders(count?: number, maxDestination: number = 10) {
-		const generatedOrders = await generator.generateOrders(count, maxDestination);
-		const orders = await this.orderService.createAll(generatedOrders);
+		const orderDtos = await generator.generateOrders(count, maxDestination);
+		const orders: Array<Order> = await Promise.all(
+			orderDtos.map(
+				async dto =>
+				{
+					const destinations = dto.destinations;
+					dto.destinations = null;
+
+					const apiResponse = await this.orderService.create(dto);
+					if(isSuccessResponse(apiResponse)) {
+						const { data: order } = apiResponse;
+
+						for(const destination of destinations) {
+							destination.orderId = order.id;
+							const dest = await Destination.create(destination);
+							if(order.destinations) order.destinations.push(dest);
+						}
+						return order;
+					}
+					return null;
+				}
+			)
+		);
 		const message = formatArgs(TRANSLATIONS['ORDER'], orders?.length);
 		return {
 			statusCode: 201,

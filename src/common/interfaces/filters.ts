@@ -4,6 +4,7 @@ import {
 	IAdmin,
 	ICargoCompany,
 	ICargoCompanyInn,
+	IDestination,
 	IDriver,
 	IGatewayEvent,
 	IImage,
@@ -102,6 +103,15 @@ export interface ICargoCompanyInnFilter
 	extends IFilter,
 	        TModelFilter<ICargoCompanyInn> {}
 
+export interface IDestinationFilter
+	extends IFilter,
+	        TModelFilter<IDestination> {
+	fromDate?: Date | string;
+	toDate?: Date | string;
+	distanceMin?: number;
+	distanceMax?: number;
+}
+
 /**
  * Driver model filters
  *
@@ -184,7 +194,7 @@ export interface IOfferFilter
 	extends IFilter,
 	        TModelFilter<IOffer> {
 	driverIds?: string[];
-	orderIds?: string[]
+	orderIds?: string[];
 	orderStatuses?: OrderStatus[];
 	driverStatus?: DriverStatus;
 	statuses?: OfferStatus[];
