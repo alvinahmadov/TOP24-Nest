@@ -18,7 +18,6 @@ import {
 	ICompanyTransportFilter,
 	IDriverFilter,
 	IListFilter,
-	IOffer,
 	IOfferFilter,
 	IOrder,
 	IOrderGatewayData,
@@ -543,7 +542,7 @@ export default class OfferService
 		full?: boolean
 	): TAsyncApiResponse<TSentOffer> {
 		const { data: order } = await this.orderService.getById(orderId);
-		const prevOffers = await this.repository.getOrderDrivers(orderId);
+		const prevOffers = await this.repository.getList({ full: true }, { orderId });
 		let createCount = 0, updateCount = 0;
 		let offers: Offer[] = [];
 
@@ -555,12 +554,7 @@ export default class OfferService
 			};
 		}
 
-		const setOfferStatusToSent = (offer: any) =>
-		{
-			offer.status = OfferStatus.SENT;
-			return offer;
-		};
-
+		driverDataList.forEach(data => data.status = OfferStatus.SENT);
 		const driverIds = new Set<string>(driverDataList.map(d => d.driverId));
 
 		let driverOffers: TOfferDriver[] = Array
@@ -624,7 +618,7 @@ export default class OfferService
 		}
 
 		if(createCount > 0) {
-			const offers = await this.repository.bulkCreate(offersToCreate.map(setOfferStatusToSent));
+			const offers = await this.repository.bulkCreate(offersToCreate);
 			offers.forEach(
 				offer => this.gateway.sendDriverEvent(
 					{
