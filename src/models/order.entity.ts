@@ -427,7 +427,7 @@ export default class Order
 				const DESTINATION = ORDER.DESTINATIONS.find(({ NAME }) => NAME === destination.point);
 
 				if(DESTINATION) {
-					data.fields[DESTINATION.SHIPPING_LINK] = destination.shippingPhotoLinks;
+					data.fields[DESTINATION.SHIPPING_LINK] = [destination.shippingPhotoLinks];
 				}
 			}
 		}
