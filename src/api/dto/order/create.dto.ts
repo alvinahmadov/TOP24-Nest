@@ -115,6 +115,10 @@ export default class OrderCreateDto
 	@IsBoolean()
 	isFree?: boolean = true;
 
+	@ApiProperty(prop.isCurrent)
+	@IsBoolean()
+	isCurrent?: boolean = false;
+
 	@ApiProperty(prop.isCanceled)
 	@IsBoolean()
 	isCanceled?: boolean = false;
