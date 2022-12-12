@@ -339,7 +339,12 @@ export function buildBitrixRequestUrl(
 	const qBuilder = new ApiQuery(url, debug);
 	const writeMulti = (field: string, values: any[]) =>
 	{
-		for(const value of values) qBuilder.addQuery(`fields[${field}][]`, value);
+		for(const value of values) {
+			if(!Array.isArray(value))
+				qBuilder.addQuery(`fields[${field}][]`, value);
+			else
+				qBuilder.addQuery(`fields[${field}]`, value[0]);
+		}
 	};
 
 	if(id) qBuilder.addQuery('ID', String(id));
@@ -352,8 +357,10 @@ export function buildBitrixRequestUrl(
 			continue;
 		}
 
-		if(isArray)
+		if(isArray) {
+
 			writeMulti(field, fieldValue);
+		}
 		else {
 			if(fieldValue instanceof Date) {
 				const dateString = toCrmDate(fieldValue);
