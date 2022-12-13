@@ -1,6 +1,6 @@
 import {
 	IApiResponse,
-	IModel, TGeoCoordinate
+	IModel
 }                            from '@common/interfaces';
 import * as attributes       from '@common/interfaces/attributes';
 import { isSuccessResponse } from '@common/utils';
@@ -8,7 +8,6 @@ import * as models           from '@models/index';
 import EntityModel           from '@models/entity-model';
 import * as transformers     from './transformer-types';
 import * as helpers          from './helpers';
-import { DestinationType }   from '@common/enums';
 
 function transformAddress(address: models.Address)
 	: transformers.IAddressTransformer {
@@ -434,6 +433,7 @@ function transformOrder(order: models.Order)
 			stage:                      order.getDataValue('stage'),
 			is_open:                    order.getDataValue('isOpen'),
 			is_free:                    order.getDataValue('isFree'),
+			is_current:                 order.getDataValue('isCurrent'),
 			on_payment:                 order.getDataValue('onPayment'),
 			cancel_cause:               order.getDataValue('cancelCause'),
 			is_canceled:                order.getDataValue('isCanceled'),

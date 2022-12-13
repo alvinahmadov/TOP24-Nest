@@ -40,7 +40,7 @@ export default class OrderUpdateDto
 	public cargoinnId?: string;
 
 	@ApiProperty(prop.contractPhotoLink)
-	public contractPhotoLink?: string = null;
+	public contractPhotoLink?: string;
 
 	@ApiProperty(prop.date)
 	public date?: Date;

@@ -204,6 +204,7 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('isOpen', 'is_open')
 		.set('isFree', 'is_free')
 		.set('isBid', 'is_bid')
+		.set('isCurrent', 'is_current')
 		.set('onPayment', 'on_payment')
 		.set('isCanceled', 'is_canceled')
 		.set('cancelCause', 'cancel_cause')

@@ -480,6 +480,10 @@ export interface IOrderTransformer
 	 * */
 	is_free?: boolean;
 	/**
+	 * @see IOrder.isCurrent
+	 * */
+	is_current?: boolean;
+	/**
 	 * Is order on payment state.
 	 * */
 	on_payment?: boolean;
