@@ -13,6 +13,7 @@ import { formatPhone }        from '@common/utils';
 import {
 	CargoCompany,
 	CargoCompanyInn,
+	Destination,
 	Driver,
 	Image,
 	Order,
@@ -27,7 +28,10 @@ export default class DriverRepository
 	protected override include: Includeable[] = [
 		{ model: CargoCompany },
 		{ model: CargoCompanyInn },
-		{ model: Order },
+		{
+			model:   Order,
+			include: [{ model: Destination }]
+		},
 		{
 			model:   Transport,
 			include: [{ model: Image }]
@@ -114,7 +118,10 @@ export default class DriverRepository
 							model:   Transport,
 							include: [{ model: Image }]
 						},
-						{ model: Order }
+						{
+							model:   Order,
+							include: [{ model: Destination }]
+						}
 					] : []
 				}
 			),

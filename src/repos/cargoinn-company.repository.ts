@@ -12,6 +12,7 @@ import {
 import { convertBitrix }      from '@common/utils';
 import {
 	CargoCompanyInn,
+	Destination,
 	Driver,
 	Image,
 	Order,
@@ -34,7 +35,10 @@ export default class CargoInnCompanyRepository
 				}
 			]
 		},
-		{ model: Order },
+		{
+			model:   Order,
+			include: [{ model: Destination }]
+		},
 		{ model: Payment },
 		{
 			model:   Transport,
@@ -171,7 +175,12 @@ export default class CargoInnCompanyRepository
 									             .eq('payloadRegion', payloadRegion)
 									             .lte('payloadDate', payloadDate)
 										         .query,
-									include: [{ model: Order }]
+									include: [
+										{
+											model:   Order,
+											include: [{ model: Destination }]
+										}
+									]
 								},
 								{ model: Image }
 							]
