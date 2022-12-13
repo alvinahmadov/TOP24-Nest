@@ -164,14 +164,15 @@ export default class CargoCompanyRepository
 							order:   DEFAULT_SORT_ORDER,
 							include: [
 								{
-									model:   Driver,
-									where:   this.whereClause<IDriver>()
-									             .eq('isReady', true)
-									             .eq('payloadCity', payloadCity)
-									             .eq('payloadRegion', payloadRegion)
-									             .lte('payloadDate', payloadDate)
-										         .query,
-									include: [{ model: Order }]
+									model:    Driver,
+									where:    this.whereClause<IDriver>()
+									              .eq('isReady', true)
+									              .eq('payloadCity', payloadCity)
+									              .eq('payloadRegion', payloadRegion)
+									              .lte('payloadDate', payloadDate)
+										          .query,
+									required: false,
+									include:  [{ model: Order }]
 								},
 								{ model: Image }
 							]
