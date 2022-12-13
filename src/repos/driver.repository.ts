@@ -83,51 +83,67 @@ export default class DriverRepository
 		const conjunct: 'and' | 'or' | null = (strict === undefined || strict === true) ? 'and' : 'or';
 
 		return this.log(
-			() => this.model.findAll(
-				{
-					where:   hasTerm
-					         ? this.whereClause(conjunct)
-					               .eq('cargoId', rest?.cargoId)
-					               .eq('cargoinnId', rest?.cargoinnId)
-					               .eq('isReady', isReady)
-					               .lte('payloadDate', payloadDate)
-					               .in('status', statuses)
-						         .query
-					         : this.whereClause(conjunct)
-					               .eq('isReady', isReady)
-					               .in('phone', [rest?.phone, formatPhone(rest?.phone)])
-					               .iLike('name', name)
-					               .iLike('patronymic', patronymic)
-					               .iLike('lastName', lastName)
-					               .iLike('address', address)
-					               .iLike('registrationAddress', registrationAddress)
-					               .iLike('currentAddress', currentAddress)
-					               .lte('payloadDate', payloadDate)
-					               .in('status', statuses)
-					               .fromFilter(rest as IDriverFilter, 'eq')
-						         .query,
-					offset,
-					limit,
-					include: (!!full) ? [
-						{ model: CargoCompany },
-						{ model: CargoCompanyInn },
+			async() =>
+			{
+				const result = await this.model.findAll(
+					{
+						where:   hasTerm
+						         ? this.whereClause(conjunct)
+						               .eq('cargoId', rest?.cargoId)
+						               .eq('cargoinnId', rest?.cargoinnId)
+						               .eq('isReady', isReady)
+						               .lte('payloadDate', payloadDate)
+						               .in('status', statuses)
+							         .query
+						         : this.whereClause(conjunct)
+						               .eq('isReady', isReady)
+						               .in('phone', [rest?.phone, formatPhone(rest?.phone)])
+						               .iLike('name', name)
+						               .iLike('patronymic', patronymic)
+						               .iLike('lastName', lastName)
+						               .iLike('address', address)
+						               .iLike('registrationAddress', registrationAddress)
+						               .iLike('currentAddress', currentAddress)
+						               .lte('payloadDate', payloadDate)
+						               .in('status', statuses)
+						               .fromFilter(rest as IDriverFilter, 'eq')
+							         .query,
+						offset,
+						limit,
+						include: (!!full) ? [
+							{ model: CargoCompany },
+							{ model: CargoCompanyInn },
+							{
+								model:   Transport,
+								include: [{ model: Image }]
+							},
+							{ model: Order }
+						] : (withCompanyName ? [
+							{
+								model:      CargoCompany,
+								attributes: ['name', 'legalName', 'avatarLink']
+							},
+							{
+								model:      CargoCompanyInn,
+								attributes: ['name', 'patronymic', 'lastName', 'avatarLink']
+							}
+						] : [])
+					}
+				);
+
+				if(result && withCompanyName) {
+					result.forEach(
+						r =>
 						{
-							model:   Transport,
-							include: [{ model: Image }]
-						},
-						{ model: Order }
-					] : (withCompanyName ? [
-						{
-							model:      CargoCompany,
-							attributes: ['name', 'legalName', 'avatarLink']
-						},
-						{
-							model:      CargoCompanyInn,
-							attributes: ['name', 'patronymic', 'lastName', 'avatarLink']
+							r.name = r.companyName;
+							delete r.patronymic;
+							delete r.lastName;
 						}
-					] : [])
+					);
 				}
-			),
+
+				return result;
+			},
 			{ id: 'getList' },
 			{
 				listFilter,
