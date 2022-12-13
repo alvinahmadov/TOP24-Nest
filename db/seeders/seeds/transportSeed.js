@@ -39,9 +39,9 @@ const transportSeed = [
 		'loading_types': [
 			2
 		],
-		'osago_number': '873 73 33',
+		'osago_number': '000 0000000000',
 		'osago_expiry_date': '2026-07-12',
-		'diagnostics_number': 'T2Z1DF69UC',
+		'diagnostics_number': '00000000000000000000',
 		'diagnostics_expiry_date': '2023-09-22',
 		'info': 'Китайстое авто.',
 		'comments': 'Haval',
@@ -86,9 +86,9 @@ const transportSeed = [
 			1,
 			2
 		],
-		'osago_number': '154 14 88',
+		'osago_number': '000 0000000000',
 		'osago_expiry_date': '2025-02-24',
-		'diagnostics_number': '0000000000000000',
+		'diagnostics_number': '00000000000000000000',
 		'diagnostics_expiry_date': '2023-09-22',
 		'info': 'Легковое авто.',
 		'comments': '',
@@ -137,9 +137,9 @@ const transportSeed = [
 			1,
 			3
 		],
-		'osago_number': '263 22 94',
+		'osago_number': '000 0000000000',
 		'osago_expiry_date': '2024-05-23',
-		'diagnostics_number': '0000000000000000',
+		'diagnostics_number': '00000000000000000000',
 		'diagnostics_expiry_date': '2026-09-22',
 		'info': '',
 		'comments': '',
@@ -188,9 +188,9 @@ const transportSeed = [
 			1,
 			3
 		],
-		'osago_number': '263 22 94',
+		'osago_number': '000 0000000000',
 		'osago_expiry_date': '2024-05-23',
-		'diagnostics_number': '0000000000000000',
+		'diagnostics_number': '00000000000000000000',
 		'diagnostics_expiry_date': '2026-09-22',
 		'info': '',
 		'comments': '',
