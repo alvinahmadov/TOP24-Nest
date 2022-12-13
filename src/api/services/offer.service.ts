@@ -299,10 +299,36 @@ export default class OfferService
 
 	public async delete(id: string)
 		: TAsyncApiResponse<TAffectedRows> {
-		const offer = await this.repository.get(id);
+		const offer = await this.repository.get(id, true);
 
 		if(!offer)
 			return this.responses['NOT_FOUND'];
+
+		if(offer.driver) {
+			await this.driverService.update(offer.driverId, {
+				status:         0,
+				operation:      null,
+				currentPoint:   null,
+				currentAddress: null
+			});
+		}
+
+		if(offer.order) {
+			if(offer.order.contractPhotoLink)
+				await this.imageFileService.deleteImage(offer.order.contractPhotoLink);
+
+			await this.orderService.update(offer.orderId, {
+				cargoId:           null,
+				cargoinnId:        null,
+				driverId:          null,
+				contractPhotoLink: null,
+				isCurrent:         false,
+				isOpen:            true,
+				isFree:            true,
+				status:            OrderStatus.PENDING,
+				stage:             OrderStage.AGREED_OWNER
+			});
+		}
 
 		return {
 			statusCode: HttpStatus.OK,
