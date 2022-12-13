@@ -180,5 +180,5 @@ export function generateSerialNumber(format: number[]) {
 		result += data.toString().substring(start, format[i]) + ' ';
 		start = i + 1;
 	}
-	return result;
+	return result.trim();
 }
