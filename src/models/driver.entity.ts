@@ -266,13 +266,13 @@ export default class Driver
 	@ApiProperty(prop.companyName)
 	@VirtualColumn()
 	public get companyName(): string {
-		if(this.cargo) {
-			return this.cargo.fullName;
-		}
-		else if(this.cargoinn) {
-			return this.cargoinn.fullName;
-		}
-		else return this.fullName;
+		let fullName;
+		if(this.cargoId)
+			fullName = this.cargo?.fullName;
+		if(this.cargoinnId)
+			fullName = this.cargoinn?.fullName;
+
+		return fullName ?? this.fullName;
 	}
 
 	public toCrm(

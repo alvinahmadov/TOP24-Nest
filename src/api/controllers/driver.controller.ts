@@ -62,7 +62,7 @@ export default class DriverController
 		@Query() listFilter?: dto.ListFilter,
 		@Body(DriverFilterPipe) filter?: dto.DriverFilter
 	) {
-		const result = await this.driverService.getList(listFilter, filter, true);
+		const result = await this.driverService.getList(listFilter, filter);
 
 		return sendResponse(response, result);
 	}

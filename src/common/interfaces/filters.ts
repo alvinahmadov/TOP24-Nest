@@ -122,6 +122,7 @@ export interface IDriverFilter
 	        TModelFilter<IDriver> {
 	orderStatus?: OrderStatus;
 	statuses?: DriverStatus[];
+	withCompanyName?: boolean;
 }
 
 export interface IGatewayEventFilter

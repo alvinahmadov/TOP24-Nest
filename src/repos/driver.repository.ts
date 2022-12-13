@@ -64,6 +64,7 @@ export default class DriverRepository
 			name,
 			patronymic,
 			lastName,
+			withCompanyName = false,
 			registrationAddress,
 			currentAddress,
 			address,
@@ -115,7 +116,16 @@ export default class DriverRepository
 							include: [{ model: Image }]
 						},
 						{ model: Order }
-					] : []
+					] : (withCompanyName ? [
+						{
+							model:      CargoCompany,
+							attributes: ['name', 'legalName', 'avatarLink']
+						},
+						{
+							model:      CargoCompanyInn,
+							attributes: ['name', 'patronymic', 'lastName', 'avatarLink']
+						}
+					] : [])
 				}
 			),
 			{ id: 'getList' },
