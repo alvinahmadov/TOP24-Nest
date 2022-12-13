@@ -43,7 +43,10 @@ export default class OfferRepository
 		},
 		{
 			model:   Order,
-			include: [{ model: Driver }]
+			include: [
+				{ model: Destination },
+				{ model: Driver }
+			]
 		}
 	];
 
@@ -178,7 +181,10 @@ export default class OfferRepository
 							},
 							{
 								model:   Order,
-								include: [{ model: Driver }]
+								include: [
+									{ model: Destination },
+									{ model: Driver }
+								]
 							}
 						] : [],
 						limit
