@@ -1116,6 +1116,7 @@ export namespace NApiDescriptors {
 				}
 			}
 		},
+		delete:    {},
 		send:      {},
 		upd:       {},
 		sendList:  {

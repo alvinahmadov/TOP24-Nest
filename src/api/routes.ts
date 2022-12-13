@@ -396,6 +396,11 @@ export const routeConfig: TApiRouteList = {
 					method: RequestMethod.PUT,
 					api:    NApiDescriptors.offer.update
 				},
+				delete:    {
+					path:   ':id',
+					method: RequestMethod.DELETE,
+					api:    NApiDescriptors.offer.delete
+				},
 				send:      {
 					path:   ':orderId/:driverId',
 					method: RequestMethod.POST,

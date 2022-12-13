@@ -102,6 +102,19 @@ export default class OfferController
 		return sendResponse(response, result);
 	}
 
+	@ApiRoute(routes.delete, {
+		guards:   [AccessGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public override async delete(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.offerService.delete(id);
+
+		return sendResponse(response, result);
+	}
+
 	@ApiRoute(routes.driver, {
 		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
@@ -147,19 +160,6 @@ export default class OfferController
 
 		return response.status(result.statusCode)
 		               .send(result.data);
-	}
-
-	@ApiRoute(routes.delete, {
-		guards:   [AccessGuard],
-		statuses: [HttpStatus.OK]
-	})
-	public override async delete(
-		@Param('id', ParseUUIDPipe) id: string,
-		@Res() response: ex.Response
-	) {
-		const result = await this.offerService.delete(id);
-
-		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.accept, {
