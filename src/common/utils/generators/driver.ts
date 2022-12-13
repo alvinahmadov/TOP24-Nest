@@ -21,8 +21,8 @@ export async function generateDriver(companies: interfaces.ICompany[])
 	const lastName = faker.name.lastName('male');
 	const email = faker.internet.email();
 
-	const lat = () => Number(faker.address.latitude(65.0, 30.0, 5)),
-		lng = () => Number(faker.address.longitude(65.0, 30.0, 5));
+	const lat = () => Number(faker.address.latitude(60.0, 45.0, 5)),
+		lng = () => Number(faker.address.longitude(60.0, 45.0, 5));
 
 	const driver: dto.DriverCreateDto = {
 		cargoId:                     company.type === enums.CompanyType.ORG

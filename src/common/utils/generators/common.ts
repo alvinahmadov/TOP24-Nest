@@ -1,9 +1,10 @@
 import axios,
-{ AxiosRequestConfig } from 'axios';
-import faker           from '@faker-js/faker';
-import env             from '@config/env';
-import * as enums      from '@common/enums';
-import { Reference }   from '@common/constants';
+{ AxiosRequestConfig }            from 'axios';
+import faker                      from '@faker-js/faker';
+import env                        from '@config/env';
+import * as enums                 from '@common/enums';
+import { Reference }              from '@common/constants';
+import { addressFromCoordinates } from '@common/utils';
 
 /**@ignore*/
 const PORT = env.port;
@@ -34,9 +35,6 @@ export const RISK_CLASSES: string[] = Reference.RISK_CLASSES.map(riskClass => ri
 
 /**@ignore*/
 export const TRANSPORT_TYPES: string[] = Reference.TRANSPORT_TYPES.map(transportType => transportType.VALUE);
-
-/**@ignore*/
-export const BRANDS: string[] = Reference.TRANSPORT_BRANDS.map(brand => brand.VALUE);
 
 /**@ignore*/
 export const FIXTURES: string[] = Reference.FIXTURES.map(ef => ef.VALUE);
@@ -166,6 +164,13 @@ export function dateBetween(yearMin: number, yearMax: number): Date {
 /**@ignore*/
 export function generateAddress() {
 	return `${faker.address.country()}, ${faker.address.city()}, ${faker.address.streetAddress(true)}`;
+}
+
+export function generateAddressFromCoordinates(
+	latitude: number = 55.751244,
+	longitude: number = 37.618423
+) {
+	return addressFromCoordinates(latitude, longitude);
 }
 
 /**@ignore*/
