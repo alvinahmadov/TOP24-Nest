@@ -23,7 +23,6 @@ import {
 import {
 	CargoCompany,
 	CargoCompanyInn,
-	Destination,
 	Driver,
 	Image,
 	Offer,
@@ -43,10 +42,7 @@ export default class OfferRepository
 		},
 		{
 			model:   Order,
-			include: [
-				{ model: Destination },
-				{ model: Driver }
-			]
+			include: [{ model: Driver }]
 		}
 	];
 
@@ -104,10 +100,7 @@ export default class OfferRepository
 								}
 							]
 						},
-						{
-							model:   Order,
-							include: [{ model: Destination }]
-						}
+						{ model: Order }
 					]
 				}
 			),
@@ -181,10 +174,7 @@ export default class OfferRepository
 							},
 							{
 								model:   Order,
-								include: [
-									{ model: Destination },
-									{ model: Driver }
-								]
+								include: [{ model: Driver }]
 							}
 						] : [],
 						limit
@@ -296,9 +286,8 @@ export default class OfferRepository
 							]
 						},
 						{
-							model:   Order,
-							include: [{ model: Destination }],
-							order:   DEFAULT_SORT_ORDER
+							model: Order,
+							order: DEFAULT_SORT_ORDER
 						}
 					]
 				}
@@ -350,23 +339,22 @@ export default class OfferRepository
 						order,
 						include: [
 							{
-								model:   Order,
-								order:   DEFAULT_SORT_ORDER,
-								where:   this.whereClause<IOrder>('and')
-								             .eq('id', orderId)
-								             .nullOrEq('cargoId', rest?.cargoId)
-								             .nullOrEq('cargoinnId', rest?.cargoinnId)
-								             .between('weight', rest?.weightMin, rest?.weightMax)
-								             .between('volume', rest?.volumeMin, rest?.volumeMax)
-								             .between('length', rest?.lengthMin, rest?.lengthMax)
-								             .between('height', rest?.heightMin, rest?.heightMax)
-								             .between('pallets', 0, rest?.pallets)
-								             .gteOrNull('bidPrice', rest?.bidPrice)
-								             .lteOrNull('bidPriceVat', rest?.bidPriceVat)
-								             .in('status', orderStatuses)
-								             .fromFilter<IOrderFilter>(rest)
-									         .query,
-								include: [{ model: Destination }]
+								model: Order,
+								order: DEFAULT_SORT_ORDER,
+								where: this.whereClause<IOrder>('and')
+								           .eq('id', orderId)
+								           .nullOrEq('cargoId', rest?.cargoId)
+								           .nullOrEq('cargoinnId', rest?.cargoinnId)
+								           .between('weight', rest?.weightMin, rest?.weightMax)
+								           .between('volume', rest?.volumeMin, rest?.volumeMax)
+								           .between('length', rest?.lengthMin, rest?.lengthMax)
+								           .between('height', rest?.heightMin, rest?.heightMax)
+								           .between('pallets', 0, rest?.pallets)
+								           .gteOrNull('bidPrice', rest?.bidPrice)
+								           .lteOrNull('bidPriceVat', rest?.bidPriceVat)
+								           .in('status', orderStatuses)
+								           .fromFilter<IOrderFilter>(rest)
+									       .query
 							},
 							{
 								model:    Driver,

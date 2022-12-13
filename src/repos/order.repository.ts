@@ -15,7 +15,6 @@ import {
 import {
 	CargoCompany,
 	CargoCompanyInn,
-	Destination,
 	Driver,
 	Image,
 	Order,
@@ -54,7 +53,6 @@ export default class OrderRepository
 				{ model: Driver }
 			]
 		},
-		{ model: Destination },
 		{
 			model:   Driver,
 			include: [{ model: Transport }]
@@ -78,7 +76,7 @@ export default class OrderRepository
 			() => this.model.findOne(
 				{
 					where:   { id },
-					include: full ? this.include : [{ model: Destination }]
+					include: full ? this.include : []
 				}
 			),
 			{ id: 'get' },
@@ -148,7 +146,7 @@ export default class OrderRepository
 						offset,
 						order,
 						limit,
-						include: full ? this.include : [{ model: Destination }]
+						include: full ? this.include : []
 					}
 				);
 			},
@@ -184,7 +182,6 @@ export default class OrderRepository
 						               .query,
 					order:         DEFAULT_SORT_ORDER,
 					include:       [
-						{ model: Destination },
 						{
 							model:   Driver,
 							include: [
@@ -237,7 +234,7 @@ export default class OrderRepository
 							         .query,
 						offset,
 						limit,
-						include: full ? this.include : [{ model: Destination }]
+						include: full ? this.include : []
 					}
 				);
 			},
