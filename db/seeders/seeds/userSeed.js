@@ -19,7 +19,7 @@ const userSeed = [
 	},
 	{
 		'id': 'c1b1ff80-7ade-11ed-977d-27f3592438f0',
-		'phone': '+7 999 000 01 00',
+		'phone': '+7 999 000 00 02',
 		'role': 1,
 		'confirmed': true,
 		'created_at': now,
@@ -27,7 +27,7 @@ const userSeed = [
 	},
 	{
 		'id': '5251c37c-7adf-11ed-be7d-d76f5ee67155',
-		'phone': '+7 999 000 02 00',
+		'phone': '+7 999 000 00 03',
 		'role': 1,
 		'confirmed': true,
 		'created_at': now,
