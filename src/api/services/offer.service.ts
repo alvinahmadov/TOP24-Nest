@@ -397,8 +397,8 @@ export default class OfferService
 					                     : offer.order.get({ plain: true, clone: false });
 
 				                     if(offer.orderStatus === OrderStatus.ACCEPTED) {
-					                     order.status = isCurrent ? offer.orderStatus
-					                                              : order.status = OrderStatus.PROCESSING;
+					                     order.status = isCurrent ? OrderStatus.PROCESSING
+					                                              : OrderStatus.ACCEPTED;
 				                     }
 
 				                     if(inAcceptedRange(offer))
