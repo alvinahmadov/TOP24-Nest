@@ -1,4 +1,7 @@
-import { Includeable }        from 'sequelize';
+import {
+	FindAttributeOptions,
+	Includeable
+}                             from 'sequelize';
 import { DEFAULT_SORT_ORDER } from '@common/constants';
 import {
 	OrderStatus,
@@ -169,6 +172,7 @@ export default class OrderRepository
 			stages,
 			onPayment
 		} = filter ?? {};
+		const attributes: FindAttributeOptions = ['fullName', 'avatarLink'];
 
 		return this.log(
 			() => this.model.findOne(
@@ -185,6 +189,8 @@ export default class OrderRepository
 						{
 							model:   Driver,
 							include: [
+								{ model: CargoCompany, attributes },
+								{ model: CargoCompanyInn, attributes },
 								{
 									model:   Transport,
 									where:   this.whereClause<ITransport>()

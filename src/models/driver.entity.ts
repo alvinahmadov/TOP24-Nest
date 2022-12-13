@@ -267,13 +267,10 @@ export default class Driver
 	@VirtualColumn()
 	public get companyName(): string {
 		if(this.cargo) {
-			return this.cargo.name;
+			return this.cargo.fullName;
 		}
 		else if(this.cargoinn) {
-			const surname = this.cargoinn.lastName ? `${this.cargoinn.lastName}` : '';
-			const name = this.cargoinn.name ? ` ${this.cargoinn.name[0]}.` : '';
-			const middleName = this.cargoinn.patronymic ? ` ${this.cargoinn.patronymic[0]}.` : '';
-			return `${surname}${middleName}${name}`;
+			return this.cargoinn.fullName;
 		}
 		else return this.fullName;
 	}

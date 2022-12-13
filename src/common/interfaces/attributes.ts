@@ -350,6 +350,12 @@ export interface ICompany
 	 * */
 	readonly role?: UserRole;
 	readonly userPhone?: string;
+	/**
+	 * Full formatted name of the company.
+	 * For IE and PI types it is individual's personal name, 
+	 * for organization it is legal name.
+	 * */
+	readonly fullName?: string;
 }
 
 /**

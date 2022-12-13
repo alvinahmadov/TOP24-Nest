@@ -212,14 +212,25 @@ export default class CargoCompanyInn
 	@BelongsTo(() => User, 'userId')
 	user: User;
 
+	@ApiProperty(prop.role)
 	@VirtualColumn()
 	public get role(): UserRole {
 		return this.user?.role ?? UserRole.CARGO;
 	}
 
+	@ApiProperty(prop.userPhone)
 	@VirtualColumn()
 	public get userPhone(): string {
 		return this.user?.phone;
+	}
+	
+	@ApiProperty(prop.fullName)
+	@VirtualColumn()
+	public get fullName(): string {
+		const lastName = this.lastName ? `${this.lastName}` : '';
+		const patronymic = this.patronymic ? ` ${this.patronymic[0]}.` : '';
+		const name = this.name ? ` ${this.name[0]}.` : '';
+		return `${lastName}${patronymic}${name}`;
 	}
 
 	public toCrm = (): TCRMData =>

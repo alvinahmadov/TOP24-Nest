@@ -277,12 +277,22 @@ export default class OrderService
 					}
 				}
 			}
+
+			if(driver.cargo || driver.cargoinn) {
+				const companyKey = driver.cargoId ? 'cargo' : 'cargoinn';
+				driver.avatarLink = driver[companyKey].avatarLink;
+				driver.name = driver[companyKey].fullName;
+
+				delete driver.patronymic;
+				delete driver.lastName;
+			}
+
 			result.driver = driver;
 
 			if(!driver.currentPoint)
 				result.driver.currentPoint = 'A';
-			if(driver.isReady)
-				result.driver.status = 1;
+			// if(driver.isReady)
+			// 	result.driver.status = 1;
 			const orderResponse = await this.getById(order.id, false);
 			result.order = filterOrders(orderResponse?.data) as Order;
 		}

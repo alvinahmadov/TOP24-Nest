@@ -233,6 +233,12 @@ export default class CargoCompany
 		return this.user?.phone;
 	}
 
+	@ApiProperty(prop.fullName)
+	@VirtualColumn()
+	public get fullName(): string {
+		return this.legalName ?? this.name;
+	}
+
 	public readonly toCrm = (): TCRMData =>
 	{
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
