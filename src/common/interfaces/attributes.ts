@@ -39,6 +39,45 @@ export interface IModel {
 	updatedAt: Date;
 }
 
+export interface IPassportData {
+	/**
+	 * Passport Serial Number.
+	 *
+	 * @example
+	 * 4218 555555
+	 * */
+	passportSerialNumber: string;
+	/**
+	 * Code of subdivision of passport given place.
+	 * */
+	passportSubdivisionCode: string;
+	/**
+	 * Passport given date.
+	 *
+	 * @example
+	 * 22.09.2015
+	 * */
+	passportGivenDate: Date;
+	/**
+	 * Passport issued place.
+	 *
+	 * @example
+	 * УМВД России по Липецкой области
+	 * */
+	passportIssuedBy: string;
+	/**
+	 * Given address in the passport.
+	 *
+	 * @example
+	 * Москва, 117312, ул. Вавилова, д. 19
+	 * */
+	passportRegistrationAddress: string;
+	/**
+	 * URL of passport scan image
+	 * */
+	passportPhotoLink?: string;
+}
+
 export interface IUser
 	extends IModel {
 	/**
@@ -172,45 +211,6 @@ export interface IAddress
 	 * City's center longitude.
 	 * */
 	longitude?: number;
-}
-
-export interface IPassportData {
-	/**
-	 * Passport Serial Number.
-	 *
-	 * @example
-	 * 4218 555555
-	 * */
-	passportSerialNumber: string;
-	/**
-	 * Code of subdivision of passport given place.
-	 * */
-	passportSubdivisionCode: string;
-	/**
-	 * Passport given date.
-	 *
-	 * @example
-	 * 22.09.2015
-	 * */
-	passportGivenDate: Date;
-	/**
-	 * Passport issued place.
-	 *
-	 * @example
-	 * УМВД России по Липецкой области
-	 * */
-	passportIssuedBy: string;
-	/**
-	 * Given address in the passport.
-	 *
-	 * @example
-	 * Москва, 117312, ул. Вавилова, д. 19
-	 * */
-	passportRegistrationAddress: string;
-	/**
-	 * URL of passport scan image
-	 * */
-	passportPhotoLink?: string;
 }
 
 /**
@@ -493,6 +493,81 @@ export interface ICargoCompanyInn
 	 * Selfie with passport image link.
 	 * */
 	passportSelfieLink?: string;
+}
+
+/**
+ * Load/unload destination data for order.
+ * */
+export interface IDestination
+	extends IModel {
+	orderId?: string;
+	/**
+	 * Point of destination
+	 *
+	 * @example
+	 * A
+	 * B
+	 * ...
+	 * Z
+	 * */
+	point: string;
+	/**
+	 * Physical address of destination.
+	 * */
+	address: string;
+	/**
+	 * Geolocation coordinates of destination point in form of [latitude, longitude].
+	 *
+	 * @example
+	 * [37.617617, 55.755799]
+	 * */
+	coordinates: TGeoCoordinate;
+	/**
+	 * Type of the destination.
+	 * Loading the cargo, unloading the cargo, or both for more cargos in destination.
+	 *
+	 * */
+	type: DestinationType;
+	/**
+	 * Date of arrival for cargo to the destination point.
+	 *
+	 * @example
+	 * 01.01.2023
+	 * */
+	date?: Date;
+	/**
+	 * Contact person on destination point.
+	 *
+	 * @example
+	 * Иван Алексеевич Яров.
+	 * */
+	contact?: string;
+	/**
+	 * Phone number of contact on destination point.
+	 * */
+	phone?: string;
+	/**
+	 * Distance to destination point from driver.
+	 * Calculated automatically in the backend in kilometers.
+	 *
+	 * @readonly
+	 * */
+	distance?: number;
+	/**
+	 * Comment for destination point.
+	 *
+	 * @example
+	 * Не раньше обеда.
+	 * */
+	comment?: string;
+	/**
+	 * Destination point is passed by driver after fulfillment.
+	 * */
+	fulfilled?: boolean;
+	/**
+	 * Link to the uploaded after fulfillment photo of the shipping documents.
+	 * */
+	shippingPhotoLinks?: string[];
 }
 
 /**
@@ -1038,81 +1113,6 @@ export interface IOrder
 }
 
 /**
- * Load/unload destination data for order.
- * */
-export interface IDestination
-	extends IModel {
-	orderId?: string;
-	/**
-	 * Point of destination
-	 *
-	 * @example
-	 * A
-	 * B
-	 * ...
-	 * Z
-	 * */
-	point: string;
-	/**
-	 * Physical address of destination.
-	 * */
-	address: string;
-	/**
-	 * Geolocation coordinates of destination point in form of [latitude, longitude].
-	 *
-	 * @example
-	 * [37.617617, 55.755799]
-	 * */
-	coordinates: TGeoCoordinate;
-	/**
-	 * Type of the destination.
-	 * Loading the cargo, unloading the cargo, or both for more cargos in destination.
-	 *
-	 * */
-	type: DestinationType;
-	/**
-	 * Date of arrival for cargo to the destination point.
-	 *
-	 * @example
-	 * 01.01.2023
-	 * */
-	date?: Date;
-	/**
-	 * Contact person on destination point.
-	 *
-	 * @example
-	 * Иван Алексеевич Яров.
-	 * */
-	contact?: string;
-	/**
-	 * Phone number of contact on destination point.
-	 * */
-	phone?: string;
-	/**
-	 * Distance to destination point from driver.
-	 * Calculated automatically in the backend in kilometers.
-	 *
-	 * @readonly
-	 * */
-	distance?: number;
-	/**
-	 * Comment for destination point.
-	 *
-	 * @example
-	 * Не раньше обеда.
-	 * */
-	comment?: string;
-	/**
-	 * Destination point is passed by driver after fulfillment.
-	 * */
-	fulfilled?: boolean;
-	/**
-	 * Link to the uploaded after fulfillment photo of the shipping documents.
-	 * */
-	shippingPhotoLinks?: string[];
-}
-
-/**
  * Payment interface.
  * */
 export interface IPayment
@@ -1381,11 +1381,3 @@ export type TSentOffer = {
 }
 
 export type TOfferDriver = Omit<TCreationAttribute<IOffer>, 'orderId'>;
-
-// noinspection JSUnusedGlobalSymbols
-export type TOfferTransport = Pick<IOffer, 'bidPrice' |
-                                           'bidPriceVat' |
-                                           'bidComment'> & ITransport;
-
-// noinspection JSUnusedGlobalSymbols
-export type TOfferOrder = IOrder & { transports: string[] };
