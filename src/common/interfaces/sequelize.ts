@@ -72,8 +72,8 @@ export const IntArrayColumn = (options: TColumnOptions = {}): Function =>
 export const FloatColumn = (options: Omit<TColumnOptions, 'validate'> = {}): Function =>
 	MergeColumnOptions({ type: DataType.FLOAT, validate: { isFloat: true } }, options);
 
-export const DoubleArrayColumn = (options: Omit<TColumnOptions, 'validate'> = {}): Function =>
-	MergeColumnOptions({ type: DataType.ARRAY(DataType.DOUBLE) }, options);
+export const RealArrayColumn = (options: Omit<TColumnOptions, 'validate'> = {}): Function =>
+	MergeColumnOptions({ type: DataType.ARRAY(DataType.REAL) }, options);
 
 export const BooleanColumn = (options: TColumnOptions = {}): Function =>
 	MergeColumnOptions({ type: DataType.BOOLEAN }, options);
