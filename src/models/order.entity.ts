@@ -1,5 +1,6 @@
 import {
 	BelongsTo,
+	DefaultScope,
 	ForeignKey,
 	HasMany,
 	IsUUID,
@@ -44,8 +45,19 @@ import CargoCompany                 from './cargo.entity';
 import CargoCompanyInn              from './cargo-inn.entity';
 import Destination                  from './destination.entity';
 import Driver                       from './driver.entity';
+import { FindOptions }              from 'sequelize';
 
 const { order: prop } = entityConfig;
+
+const scopeOptions: FindOptions = {
+	include: [
+		{
+			model:    Destination,
+			order:    [['point', 'created_at']],
+			separate: true
+		}
+	]
+};
 
 @InterfaceType()
 export class OrderFilter
@@ -129,6 +141,7 @@ export class OrderFilter
  * @extends EntityModel
  * */
 @ObjectType()
+@DefaultScope(() => scopeOptions)
 @Table(TABLE_OPTIONS)
 export default class Order
 	extends EntityModel<IOrder>
