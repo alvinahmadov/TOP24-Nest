@@ -131,15 +131,22 @@ export default class DriverRepository
 					}
 				);
 
-				if(result && withCompanyName) {
-					result.forEach(
-						r =>
-						{
-							r.name = r.companyName;
-							delete r.patronymic;
-							delete r.lastName;
-						}
-					);
+				if(result) {
+					if(withCompanyName) {
+						result.forEach(r =>
+						               {
+							               r.name = r.companyName;
+							               delete r.patronymic;
+							               delete r.lastName;
+						               });
+					}
+					result.forEach(r =>
+					               {
+						               if(!r.avatarLink) {
+							               r.avatarLink = r.cargo?.avatarLink ??
+							                              r.cargoinn?.avatarLink;
+						               }
+					               });
 				}
 
 				return result;
