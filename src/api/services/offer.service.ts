@@ -364,16 +364,16 @@ export default class OfferService
 		                     .map(
 			                     (offer) =>
 			                     {
+				                     const isCurrent = offer.order.isCurrent;
 				                     let order: IOrderTransformer | IOrder =
 					                     env.api.compatMode
 					                     ? <IOrderTransformer>transformEntity(offer.order)
 					                     : offer.order.get({ plain: true, clone: false });
 
-				                     if(offer.orderStatus === OrderStatus.ACCEPTED)
-					                     if((<any>order)[env.api.compatMode ? 'is_current' : 'isCurrent']) {
-						                     order.status = offer.orderStatus;
-					                     }
-					                     else order.status = OrderStatus.PROCESSING;
+				                     if(offer.orderStatus === OrderStatus.ACCEPTED) {
+					                     order.status = isCurrent ? offer.orderStatus
+					                                              : order.status = OrderStatus.PROCESSING;
+				                     }
 
 				                     if(inAcceptedRange(offer))
 					                     order.priority = priorityCounter++ === 0;
