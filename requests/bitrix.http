@@ -21,3 +21,15 @@ Content-Type: application/json
 // @no-cookie-jar
 DELETE {{api}}/bitrix/order/{{crmId}}
 Content-Type: application/json
+
+### Test webhook from bitrix
+// @no-log
+// @no-cookie-jar
+POST {{api}}/bitrix/webhook
+Content-Type: application/json
+
+{
+		"event": "ONCRMDEALUPDATE",
+		"data": { "FIELDS": { "ID": "{{crmId}}" } },
+		"ts": "256325654982"
+}
