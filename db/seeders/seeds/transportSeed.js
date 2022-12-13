@@ -1,10 +1,12 @@
+const { driverSeed } = require('./driverSeed');
+
 const now = new Date();
 
 const transportSeed = [
 	{
 		'id': '2121353a-7ae4-11ed-aa3e-a3275990f5ba',
-		'cargo_id': '00da494a-7ad7-11ed-8613-e757132d41a7',
-		'driver_id': 'cc00e758-7ae3-11ed-b003-8f261a76559a',
+		'driver_id': driverSeed[0].id,
+		'cargo_id': driverSeed[0].cargo_id,
 		'status': 1,
 		'type': 'Цельнометаллический',
 		'fixtures': [
@@ -48,8 +50,8 @@ const transportSeed = [
 	},
 	{
 		'id': 'fb2491bc-7ae6-11ed-951e-4f8266dbee86',
-		'driver_id': 'e7bae7b4-7ae3-11ed-8994-13943af5ef1d',
-		'cargo_id': '2285cd58-7ad7-11ed-9d18-b7e60aa3dcc7',
+		'driver_id': driverSeed[1].id,
+		'cargo_id': driverSeed[1].cargo_id,
 		'status': 1,
 		'type': 'Контейнер 40фт',
 		'fixtures': [
@@ -95,8 +97,8 @@ const transportSeed = [
 	},
 	{
 		'id': '11736384-7ae8-11ed-9a6b-5fdfc4b36327',
-		'driver_id': '043b0c84-7ae4-11ed-8cea-2b631f050ef4',
-		'cargoinn_id': '33b285ea-7ad7-11ed-8876-af1a703eb020',
+		'driver_id': driverSeed[2].id,
+		'cargoinn_id': driverSeed[2].cargoinn_id,
 		'status': 1,
 		'type': 'Манипулятор',
 		'fixtures': [
@@ -146,8 +148,8 @@ const transportSeed = [
 	},
 	{
 		'id': '949f74f2-7aeb-11ed-85a0-9711b8cc5896',
-		'driver_id': '0c5fe484-7ae4-11ed-bc53-fb65e098db93',
-		'cargoinn_id': '4482a652-7ad7-11ed-9f62-cb2ef5ae9c5f',
+		'driver_id': driverSeed[3].id,
+		'cargoinn_id': driverSeed[3].cargoinn_id,
 		'status': 1,
 		'type': 'Манипулятор',
 		'fixtures': [

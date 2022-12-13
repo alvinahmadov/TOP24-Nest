@@ -1,9 +1,12 @@
+const { userSeed } = require('./userSeed');
+
 const now = new Date();
 
 const companyInnSeed = [
 	{
 		'id': '33b285ea-7ad7-11ed-8876-af1a703eb020',
-		'user_id': 'c1b1ff80-7ade-11ed-977d-27f3592438f0',
+		'user_id': userSeed[2].id,
+		'phone': userSeed[2].phone,
 		'type': 1,
 		'name': 'Сергей',
 		'patronymic': 'Викторович',
@@ -20,19 +23,18 @@ const companyInnSeed = [
 		'address': 'Россия, Калужская обл., г. Обнинск, 249030',
 		'postal_address': 'Россия, Калужская обл., г. Таруса, 249100',
 		'actual_address': 'Россия, Калининградская обл., г. Приморск, 238510',
-		'phone': '+7 999 000 01 00',
 		'email': 'sergey.polansk@yandex.ru',
 		'created_at': now,
 		'updated_at': now
 	},
 	{
 		'id': '4482a652-7ad7-11ed-9f62-cb2ef5ae9c5f',
-		'user_id': '5251c37c-7adf-11ed-be7d-d76f5ee67155',
+		'user_id': userSeed[3].id,
+		'phone': userSeed[3].phone,
 		'name': 'Артем',
 		'patronymic': 'Федорович',
 		'last_name': 'Галак',
 		'birth_date': '1991-05-23',
-		'phone': '+7 999 000 02 00',
 		'taxpayer_number': '000000000000',
 		'type': 2,
 		'passport_serial_number': '000000000000',

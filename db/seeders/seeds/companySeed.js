@@ -1,9 +1,12 @@
+const { userSeed } = require('./userSeed');
+
 const now = new Date();
 
 const companySeed = [
 	{
 		'id': '00da494a-7ad7-11ed-8613-e757132d41a7',
-		'user_id': '4149aa0a-7ade-11ed-8cff-0f283e4e376a',
+		'user_id': userSeed[0].id,
+		'phone': userSeed[0].phone,
 		'type': 0,
 		'name': 'Карго Сервис',
 		'legal_name': 'ООО "КаргоСервис"',
@@ -18,7 +21,6 @@ const companySeed = [
 		'legal_address': 'Россия, Брянская область, г. Брянск, ул. Ленина, 241000',
 		'postal_address': 'Россия, Брянская обл., г. Клинцы, 243140',
 		'director': 'Валерий Громов',
-		'phone': '+7 999 000 00 00',
 		'email': 'cargo.services@ya.ru',
 		'payment_type': 'Без НДС',
 		'created_at': now,
@@ -26,7 +28,8 @@ const companySeed = [
 	},
 	{
 		'id': '2285cd58-7ad7-11ed-9d18-b7e60aa3dcc7',
-		'user_id': 'b46adfc2-7ade-11ed-bc0d-b7cb648663c4',
+		'user_id': userSeed[1].id,
+		'phone': userSeed[1].phone,
 		'type': 0,
 		'taxpayer_number': '749823047628',
 		'name': 'Веселый Перевозчик',
@@ -43,7 +46,6 @@ const companySeed = [
 		'director': 'Игорь Саратов',
 		'email': 'happy-cargo@ya.ru',
 		'payment_type': 'Наличными',
-		'phone': '+7 999 000 00 01',
 		'created_at': now,
 		'updated_at': now
 	}
