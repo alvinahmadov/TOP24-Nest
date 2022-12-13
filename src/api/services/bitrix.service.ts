@@ -39,6 +39,7 @@ import {
 	Order,
 	Transport
 }                                               from '@models/index';
+import { DestinationRepository }                from '@repos/index';
 import { DestinationCreateDto, OrderCreateDto } from '@api/dto';
 import { EventsGateway }                        from '@api/events';
 import Service                                  from './service';
@@ -51,7 +52,6 @@ import ORDER_LST_URL = BitrixUrl.ORDER_LST_URL;
 import ORDER_GET_URL = BitrixUrl.ORDER_GET_URL;
 import COMPANY_GET_URL = BitrixUrl.COMPANY_GET_URL;
 import CONTACT_GET_URL = BitrixUrl.CONTACT_GET_URL;
-import DestinationRepository                    from '@repos/dest.repository';
 
 const COMPANY_EVENT_TRANSLATION = getTranslation('EVENT', 'COMPANY');
 const DRIVER_EVENT_TRANSLATION = getTranslation('EVENT', 'DRIVER');

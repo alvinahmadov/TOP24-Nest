@@ -2,7 +2,7 @@ import OrderCreateDto from './create.dto';
 import {
 	DestinationCreateDto,
 	DestinationUpdateDto
-}                     from './dest.dto';
+}                     from './destination.dto';
 import OrderUpdateDto from './update.dto';
 import OrderFilter    from './filter.dto';
 
