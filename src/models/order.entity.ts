@@ -53,7 +53,7 @@ const scopeOptions: FindOptions = {
 	include: [
 		{
 			model:    Destination,
-			order:    [['point', 'created_at']],
+			order:    ['point', 'created_at'],
 			separate: true
 		}
 	]
