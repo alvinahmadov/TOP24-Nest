@@ -44,8 +44,7 @@ export default class DestinationRepository
 			return [];
 
 		const {
-			from: offset,
-			full = false,
+			from:  offset,
 			count: limit
 		} = listFilter ?? {};
 		const {
@@ -58,20 +57,19 @@ export default class DestinationRepository
 		return this.log(
 			() => this.model.findAll(
 				{
-					where:   this.whereClause('and')
-					             .eq('orderId', rest?.orderId)
-					             .eq('point', rest?.point)
-					             .eq('fulfilled', rest?.fulfilled)
-					             .eq('date', rest?.date)
-					             .period('date', fromDate, toDate)
-					             .between('distance', distanceMin, distanceMax)
-					             .iLike('contact', rest?.contact)
-					             .fromFilter<IDestinationFilter>(rest, 'eq')
-						         .query,
+					where: this.whereClause('and')
+					           .eq('orderId', rest?.orderId)
+					           .eq('point', rest?.point)
+					           .eq('fulfilled', rest?.fulfilled)
+					           .eq('date', rest?.date)
+					           .period('date', fromDate, toDate)
+					           .between('distance', distanceMin, distanceMax)
+					           .iLike('contact', rest?.contact)
+					           .fromFilter<IDestinationFilter>(rest, 'eq')
+						       .query,
 					offset,
 					order,
-					limit,
-					include: full ? this.include : [{ model: Destination }]
+					limit
 				}
 			),
 			{ id: 'getList' },
