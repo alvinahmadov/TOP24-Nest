@@ -394,26 +394,19 @@ export default class OfferService
 		                     .map(
 			                     (offer) =>
 			                     {
-				                     const { order } = offer;
-
-				                     if(offers.length > 1) {
-					                     if(order.stage === OrderStage.SIGNED_DRIVER &&
-					                        offer.orderStatus < OrderStatus.PROCESSING) {
-						                     order.contractPhotoLink = null;
-					                     }
-				                     }
+				                     let { order, orderStatus } = offer;
 
 				                     if(
 					                     order.stage === OrderStage.SIGNED_DRIVER &&
-					                     offer.orderStatus === OrderStatus.ACCEPTED
+					                     orderStatus === OrderStatus.ACCEPTED
 				                     ) {
 					                     order.status = OrderStatus.ACCEPTED;
 					                     offer.orderStatus = OrderStatus.PROCESSING;
 				                     }
-				                     else if(offer.orderStatus === OrderStatus.ACCEPTED) {
+				                     else if(orderStatus === OrderStatus.ACCEPTED) {
 					                     order.status = OrderStatus.PROCESSING;
 				                     }
-				                     else order.status = offer.orderStatus;
+				                     else order.status = orderStatus;
 
 				                     if(inAcceptedRange(offer))
 					                     order.priority = priorityCounter++ === 0;
