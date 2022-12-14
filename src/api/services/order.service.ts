@@ -9,6 +9,7 @@ import {
 	Bucket
 }                                                 from '@common/constants';
 import {
+	DriverStatus,
 	OfferStatus,
 	OrderStage,
 	OrderStatus,
@@ -549,7 +550,12 @@ export default class OrderService
 					if(order.contractPhotoLink) {
 						await this.imageFileService.deleteImage(order.contractPhotoLink);
 					}
-					order = await this.repository.update(id, { contractPhotoLink, stage: OrderStage.SIGNED_DRIVER });
+					order = await this.repository.update(id, {
+						contractPhotoLink,
+						status:    OrderStatus.PENDING,
+						stage:     OrderStage.SIGNED_DRIVER,
+						isCurrent: true
+					});
 				}
 			}
 			else if(mode === 'payment') {
