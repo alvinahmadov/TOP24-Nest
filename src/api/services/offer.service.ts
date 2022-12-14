@@ -398,6 +398,12 @@ export default class OfferService
 				                     if(offer.orderStatus === OrderStatus.ACCEPTED) {
 					                     order.status = OrderStatus.PROCESSING;
 				                     }
+				                     else if(
+					                     offer.order.stage === OrderStage.SIGNED_DRIVER &&
+					                     offer.order.status === OrderStatus.PENDING
+				                     ) {
+					                     order.status = OrderStatus.ACCEPTED;
+				                     }
 				                     else order.status = offer.orderStatus;
 
 				                     if(inAcceptedRange(offer))
@@ -735,18 +741,21 @@ export default class OfferService
 							UserRole.CARGO
 						);
 					}
-
+					// Driver not uploaded agreement yet
 					if(!offer.order.isCurrent) {
+						// Approve driver and set isCurrent true
 						await this.approveDriver(orderId, driverId);
 					}
 					else {
-						if(offer.order.stage >= OrderStage.SIGNED_DRIVER)
+						// The Driver uploaded agreement and approved for confirmation
+						if(offer.order.stage === OrderStage.SIGNED_DRIVER)
 							await this.confirmDriver(orderId, driverId, offer);
 						else return {
 							statusCode: HttpStatus.OK,
 							message:    'Driver not signed document yet!'
 						};
 					}
+					
 					offer = await this.repository.update(
 						offer.id,
 						{
@@ -777,7 +786,6 @@ export default class OfferService
 		orderId: string,
 		driverId: string
 	) {
-
 		await this.driverService.update(
 			driverId, {
 				status:       DriverStatus.NONE,
