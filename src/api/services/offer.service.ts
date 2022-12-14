@@ -394,11 +394,8 @@ export default class OfferService
 					                     order.stage === OrderStage.SIGNED_DRIVER &&
 					                     orderStatus === OrderStatus.ACCEPTED
 				                     ) {
-					                     order.status = OrderStatus.ACCEPTED;
+					                     order.status = orderStatus;
 					                     offer.orderStatus = OrderStatus.PROCESSING;
-				                     }
-				                     else if(orderStatus === OrderStatus.ACCEPTED) {
-					                     order.status = OrderStatus.PROCESSING;
 				                     }
 				                     else order.status = orderStatus;
 
@@ -695,17 +692,13 @@ export default class OfferService
 		role?: UserRole
 	): TAsyncApiResponse<Offer> {
 		let offer = await this.repository.getByAssociation(orderId, driverId);
-
+		console.debug(role);
 		if(offer) {
-			if(
-				offer.orderStatus === OrderStatus.CANCELLED &&
-				role <= UserRole.CARGO
-			) return this.responses['ACCEPTED'];
 			if(offer.status === OfferStatus.RESPONDED) {
-				if(
-					offer.order?.status < OrderStatus.PROCESSING &&
-					offer.driver?.isReady === true
-				) {
+				if((
+					   offer.order?.status < OrderStatus.PROCESSING ||
+					   offer.order?.status === OrderStatus.CANCELLED
+				   ) && offer.driver?.isReady === true) {
 					if(offer.driver) {
 						const { driver } = offer;
 						if(
@@ -761,13 +754,13 @@ export default class OfferService
 						message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
 					};
 				}
-				else
-					return {
-						statusCode: HttpStatus.OK,
-						data:       offer,
-						message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
-					};
 			}
+
+			return {
+				statusCode: HttpStatus.OK,
+				data:       offer,
+				message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
+			};
 		}
 
 		return this.responses['NOT_FOUND'];
@@ -869,6 +862,7 @@ export default class OfferService
 					status = OrderStatus.CANCELLED_BITRIX;
 
 				if(order) {
+					const stage = order.stage;
 					await this.destinationRepo.bulkUpdate({ fulfilled: false }, { orderId: order.id });
 
 					await this.orderService.deleteDocuments(order.id, 'contract');
@@ -878,7 +872,9 @@ export default class OfferService
 						    status,
 						    isOpen:            true,
 						    isFree:            true,
+						    isCurrent:         false,
 						    cancelCause:       reason ?? '',
+						    stage,
 						    contractPhotoLink: null
 					    })
 					    .then(({ data: order }) =>
