@@ -34,6 +34,8 @@ const TRANSLATIONS = getTranslation('FAIL');
 const COMPANY_TRANSLATIONS = getTranslation('REST', 'COMPANY');
 const USER_TRANSLATIONS = getTranslation('REST', 'ADMIN');
 
+const authWithoutCode = false;
+
 @Injectable()
 export default class AuthService
 	extends StaticService
@@ -90,7 +92,7 @@ export default class AuthService
 
 			if(user) {
 				if(code) {
-					if(user.verify === code) {
+					if(user.verify === code || authWithoutCode) {
 						const { id } = user;
 
 						const company = user.cargoCompanies.find(c => c.isDefault) ??
