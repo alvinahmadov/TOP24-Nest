@@ -418,6 +418,7 @@ export default class OfferService
 						                     ? <IOrderTransformer>transformEntity(order)
 						                     : offer.order.get({ plain: true, clone: false })
 					                     ),
+					                     priority: offer.order.priority,
 					                     [offerStatusKey]: offer.status,
 					                     transports:       offer.transports
 				                     };
