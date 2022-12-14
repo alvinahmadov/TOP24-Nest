@@ -429,7 +429,7 @@ export default class BitrixService
 
 					if(orderDto.isCanceled) {
 						if(order.driverId) {
-							await this.offerService.decline(order.id, order.driverId);
+							await this.offerService.declineOffer(order.id, order.driverId);
 						}
 						await this.offerService.cancel(order.id, order.crmId);
 					}
