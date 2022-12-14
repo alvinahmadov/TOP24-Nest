@@ -287,7 +287,7 @@ export default class Driver
 		data.fields[DRIVER.EMAIL] = this.email;
 		data.fields[DRIVER.PHONE] = this.phone;
 		data.fields[DRIVER.INN] = this.taxpayerNumber;
-		data.fields[DRIVER.DIRECTIONS] = directions.join();
+		data.fields[DRIVER.DIRECTIONS] = directions?.join();
 		data.fields[DRIVER.ADDRESS] = this.address;
 		data.fields[DRIVER.PASSPORT.GIVEN_DATE] = this.passportGivenDate;
 		data.fields[DRIVER.PASSPORT.ISSUED_BY] = this.passportIssuedBy;
