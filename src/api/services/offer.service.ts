@@ -19,7 +19,6 @@ import {
 	IDriverFilter,
 	IListFilter,
 	IOfferFilter,
-	IOrder,
 	IOrderGatewayData,
 	IService,
 	ITransportFilter,
@@ -395,13 +394,9 @@ export default class OfferService
 		                     .map(
 			                     (offer) =>
 			                     {
-				                     let order: IOrderTransformer | IOrder =
-					                     env.api.compatMode
-					                     ? <IOrderTransformer>transformEntity(offer.order)
-					                     : offer.order.get({ plain: true, clone: false });
-
+				                     const { order } = offer;
 				                     if(
-					                     offer.order.stage === OrderStage.SIGNED_DRIVER &&
+					                     order.stage === OrderStage.SIGNED_DRIVER &&
 					                     offer.orderStatus === OrderStatus.ACCEPTED
 				                     ) {
 					                     order.status = OrderStatus.ACCEPTED;
@@ -412,13 +407,24 @@ export default class OfferService
 				                     }
 				                     else order.status = offer.orderStatus;
 
+				                     if(offers.length > 1) {
+					                     if(order.stage === OrderStage.SIGNED_DRIVER &&
+					                        order.status < OrderStatus.PROCESSING) {
+						                     order.contractPhotoLink = null;
+					                     }
+				                     }
+
 				                     if(inAcceptedRange(offer))
 					                     order.priority = priorityCounter++ === 0;
 				                     else
 					                     order.priority = false;
 
 				                     return {
-					                     ...order,
+					                     ...(
+						                     env.api.compatMode
+						                     ? <IOrderTransformer>transformEntity(order)
+						                     : offer.order.get({ plain: true, clone: false })
+					                     ),
 					                     [offerStatusKey]: offer.status,
 					                     transports:       offer.transports
 				                     };
