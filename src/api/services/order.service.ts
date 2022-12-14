@@ -9,7 +9,6 @@ import {
 	Bucket
 }                                                 from '@common/constants';
 import {
-	DriverStatus,
 	OfferStatus,
 	OrderStage,
 	OrderStatus,
