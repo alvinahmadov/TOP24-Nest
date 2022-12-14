@@ -316,6 +316,10 @@ export default class OfferService
 		if(offer.order) {
 			if(offer.order.contractPhotoLink)
 				await this.imageFileService.deleteImage(offer.order.contractPhotoLink);
+			if(offer.order.paymentPhotoLinks?.length > 0)
+				await this.imageFileService.deleteImageList(offer.order.paymentPhotoLinks);
+			if(offer.order.receiptPhotoLinks?.length > 0)
+				await this.imageFileService.deleteImageList(offer.order.receiptPhotoLinks);
 
 			await this.orderService.update(offer.orderId, {
 				cargoId:           null,
@@ -395,14 +399,15 @@ export default class OfferService
 					                     ? <IOrderTransformer>transformEntity(offer.order)
 					                     : offer.order.get({ plain: true, clone: false });
 
-				                     if(offer.orderStatus === OrderStatus.ACCEPTED) {
-					                     order.status = OrderStatus.PROCESSING;
-				                     }
-				                     else if(
+				                     if(
 					                     offer.order.stage === OrderStage.SIGNED_DRIVER &&
-					                     offer.order.status === OrderStatus.PENDING
+					                     offer.order.status <= OrderStatus.ACCEPTED
 				                     ) {
 					                     order.status = OrderStatus.ACCEPTED;
+					                     offer.orderStatus = OrderStatus.PROCESSING;
+				                     }
+				                     if(offer.orderStatus === OrderStatus.ACCEPTED) {
+					                     order.status = OrderStatus.PROCESSING;
 				                     }
 				                     else order.status = offer.orderStatus;
 
@@ -679,7 +684,7 @@ export default class OfferService
 				stage:  order.stage,
 				point:  order.destinations
 				             .filter(d => !d.fulfilled)[0]
-					        ?.point
+					        ?.point ?? 'A'
 			}
 		);
 
@@ -751,7 +756,7 @@ export default class OfferService
 						if(offer.order.stage === OrderStage.SIGNED_DRIVER)
 							await this.confirmDriver(orderId, driverId, offer);
 						else return {
-							statusCode: HttpStatus.OK,
+							statusCode: HttpStatus.BAD_REQUEST,
 							message:    'Driver not signed document yet!'
 						};
 					}
@@ -782,7 +787,7 @@ export default class OfferService
 		return this.responses['NOT_FOUND'];
 	}
 
-	private async approveDriver(
+	public async approveDriver(
 		orderId: string,
 		driverId: string
 	) {
@@ -793,7 +798,6 @@ export default class OfferService
 				operation:    null
 			});
 
-		await this.orderService.deleteDocuments(orderId, 'contract');
 		await this.orderService.update(orderId, {
 			isCurrent: true,
 			status:    OrderStatus.PENDING,
