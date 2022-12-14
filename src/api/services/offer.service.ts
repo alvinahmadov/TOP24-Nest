@@ -736,8 +736,8 @@ export default class OfferService
 						);
 					}
 
-					if(!offer.order.isCurrent)
-						await this.approveDriver(orderId, driverId);
+					if(!offer.order.isCurrent || offer.order.stage < OrderStage.SIGNED_DRIVER)
+						await this.approveDriver(orderId, driverId, offer);
 					else
 						await this.confirmDriver(orderId, driverId, offer);
 
@@ -769,8 +769,10 @@ export default class OfferService
 
 	private async approveDriver(
 		orderId: string,
-		driverId: string
+		driverId: string,
+		offer: Offer
 	) {
+
 		await this.driverService.update(
 			driverId, {
 				status:       DriverStatus.NONE,
@@ -779,7 +781,8 @@ export default class OfferService
 			});
 
 		await this.orderService.deleteDocuments(orderId, 'contract');
-		await this.orderService.update(orderId, { isCurrent: true });
+		await this.orderService.update(orderId, { isCurrent: true, status: OrderStatus.ACCEPTED });
+		await this.repository.update(offer.id, { orderStatus: 0 });
 	}
 
 	private async confirmDriver(
