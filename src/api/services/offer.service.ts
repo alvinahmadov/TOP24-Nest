@@ -406,7 +406,7 @@ export default class OfferService
 					                     order.status = OrderStatus.ACCEPTED;
 					                     offer.orderStatus = OrderStatus.PROCESSING;
 				                     }
-				                     if(offer.orderStatus === OrderStatus.ACCEPTED) {
+				                     else if(offer.orderStatus === OrderStatus.ACCEPTED) {
 					                     order.status = OrderStatus.PROCESSING;
 				                     }
 				                     else order.status = offer.orderStatus;
