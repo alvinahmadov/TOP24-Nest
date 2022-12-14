@@ -179,11 +179,6 @@ export default class OfferService
 									},
 									UserRole.CARGO
 								);
-
-								return {
-									statusCode: 403,
-									message
-								};
 							}
 						}
 					}
@@ -197,11 +192,6 @@ export default class OfferService
 							},
 							UserRole.CARGO
 						);
-
-						return {
-							statusCode: 403,
-							message
-						};
 					}
 				}
 			}
@@ -364,7 +354,8 @@ export default class OfferService
 		const { data: transports } = await this.transportService.getList({}, { driverId });
 		const offerStatusKey = env.api.compatMode ? 'offer_status' : 'offerStatus';
 		let priorityCounter = 0;
-		const inAcceptedRange = (offer: Offer) => offer.orderStatus === OrderStatus.PROCESSING;
+		const isProcessing = (offer: Offer) => offer.orderStatus <= OrderStatus.PROCESSING;
+		const today = new Date();
 
 		const activeTransport = transports?.find(t => t.status === TransportStatus.ACTIVE && !t.isTrailer);
 
@@ -380,22 +371,21 @@ export default class OfferService
 		                             })
 		                     .sort((offer1, offer2) =>
 		                           {
-			                           const date1 = offer1.order.destinations[0].date,
-				                           date2 = offer2.order.destinations[0].date;
-			                           // check both offers has same
-			                           // accepted status
-			                           if(inAcceptedRange(offer1) && inAcceptedRange(offer2)) {
-				                           if(date1 > date2) return 1;
-				                           else if(date1 < date2) return -1;
+			                           const date1 = offer1.order.destinations[0].date;
+			                           const date2 = offer2.order.destinations[0].date;
+
+			                           if(isProcessing(offer1) && isProcessing(offer2)) {
+				                           return date1.valueOf() - date2.valueOf();
 			                           }
 			                           return 0;
 		                           })
+		                     .filter(offer => offer.order.destinations[0].date >= today)
 		                     .map(
-			                     (offer, i) =>
+			                     (offer) =>
 			                     {
 				                     let { order, orderStatus } = offer;
 
-				                     if((inAcceptedRange(offer) || order.isCurrent) && i === 0)
+				                     if(isProcessing(offer) || order.isCurrent)
 					                     order.priority = priorityCounter++ === 0;
 				                     else
 					                     order.priority = false;
@@ -418,7 +408,7 @@ export default class OfferService
 						                     ? <IOrderTransformer>transformEntity(order)
 						                     : offer.order.get({ plain: true, clone: false })
 					                     ),
-					                     priority: offer.order.priority,
+					                     priority:         offer.order.priority,
 					                     [offerStatusKey]: offer.status,
 					                     transports:       offer.transports
 				                     };
@@ -731,7 +721,6 @@ export default class OfferService
 								},
 								UserRole.CARGO
 							);
-							return this.responses['ACCEPTED'];
 						}
 
 						this.gateway.sendDriverEvent(
@@ -756,10 +745,6 @@ export default class OfferService
 						// The Driver uploaded agreement and approved for confirmation
 						if(offer.order.stage === OrderStage.SIGNED_DRIVER)
 							await this.confirmDriver(orderId, driverId, offer);
-						else return {
-							statusCode: HttpStatus.BAD_REQUEST,
-							message:    'Driver not signed document yet!'
-						};
 					}
 
 					offer = await this.repository.update(
@@ -794,9 +779,13 @@ export default class OfferService
 	) {
 		await this.driverService.update(
 			driverId, {
-				status:       DriverStatus.NONE,
-				currentPoint: null,
-				operation:    null
+				status:       DriverStatus.ON_POINT,
+				currentPoint: 'A',
+				operation:    {
+					type:     DestinationType.LOAD,
+					loaded:   false,
+					unloaded: false
+				}
 			});
 
 		await this.orderService.update(orderId, {
@@ -881,12 +870,16 @@ export default class OfferService
 
 				if(order) {
 					await this.destinationRepo.bulkUpdate({ fulfilled: false }, { orderId: order.id });
+
+					await this.orderService.deleteDocuments(order.id, 'contract');
+
 					this.orderService
 					    .update(order.id, {
 						    status,
-						    isOpen:      true,
-						    isFree:      true,
-						    cancelCause: reason ?? ''
+						    isOpen:            true,
+						    isFree:            true,
+						    cancelCause:       reason ?? '',
+						    contractPhotoLink: null
 					    })
 					    .then(({ data: order }) =>
 					          {
