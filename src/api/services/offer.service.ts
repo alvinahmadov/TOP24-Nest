@@ -398,6 +398,7 @@ export default class OfferService
 				                     if(offer.orderStatus === OrderStatus.ACCEPTED) {
 					                     order.status = OrderStatus.PROCESSING;
 				                     }
+				                     else order.status = offer.orderStatus;
 
 				                     if(inAcceptedRange(offer))
 					                     order.priority = priorityCounter++ === 0;
