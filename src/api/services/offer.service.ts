@@ -391,9 +391,14 @@ export default class OfferService
 			                           return 0;
 		                           })
 		                     .map(
-			                     (offer) =>
+			                     (offer, i) =>
 			                     {
 				                     let { order, orderStatus } = offer;
+
+				                     if((inAcceptedRange(offer) || order.isCurrent) && i === 0)
+					                     order.priority = priorityCounter++ === 0;
+				                     else
+					                     order.priority = false;
 
 				                     if(
 					                     order.stage === OrderStage.SIGNED_DRIVER &&
@@ -406,11 +411,6 @@ export default class OfferService
 					                     order.status = OrderStatus.PROCESSING;
 				                     }
 				                     else order.status = orderStatus;
-
-				                     if(inAcceptedRange(offer))
-					                     order.priority = priorityCounter++ === 0;
-				                     else
-					                     order.priority = false;
 
 				                     return {
 					                     ...(
