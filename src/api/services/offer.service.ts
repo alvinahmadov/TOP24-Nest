@@ -704,6 +704,7 @@ export default class OfferService
 		role?: UserRole
 	): TAsyncApiResponse<Offer> {
 		let offer = await this.repository.getByAssociation(orderId, driverId);
+		let driverIsOnProcess: boolean = false;
 
 		if(offer) {
 			if(
@@ -721,17 +722,7 @@ export default class OfferService
 							driver.order &&
 							(driver.order.id !== offer.orderId &&
 							driver.order.status === OrderStatus.PROCESSING)
-						) {
-							this.gateway.sendDriverEvent(
-								{
-									id:      driverId,
-									source:  'offer',
-									message: EVENT_DRIVER_TRANSLATIONS['HAS_EXISTING']
-								},
-								UserRole.CARGO
-							);
-							return this.responses['ACCEPTED'];
-						}
+						) driverIsOnProcess = true;
 
 						this.gateway.sendDriverEvent(
 							{
@@ -753,10 +744,10 @@ export default class OfferService
 					}
 					else {
 						// The Driver uploaded agreement and approved for confirmation
-						if(offer.order.stage === OrderStage.SIGNED_DRIVER)
+						if(offer.order.stage === OrderStage.SIGNED_DRIVER && !driverIsOnProcess)
 							await this.confirmDriver(orderId, driverId, offer);
 						else return {
-							statusCode: HttpStatus.BAD_REQUEST,
+							statusCode: HttpStatus.OK,
 							message:    'Driver not signed document yet!'
 						};
 					}
@@ -764,7 +755,8 @@ export default class OfferService
 					offer = await this.repository.update(
 						offer.id,
 						{
-							orderStatus: OrderStatus.PROCESSING,
+							orderStatus: !driverIsOnProcess ? OrderStatus.PROCESSING
+							                                : OrderStatus.ACCEPTED,
 							status:      OfferStatus.RESPONDED
 						}
 					);
