@@ -395,6 +395,14 @@ export default class OfferService
 			                     (offer) =>
 			                     {
 				                     const { order } = offer;
+
+				                     if(offers.length > 1) {
+					                     if(order.stage === OrderStage.SIGNED_DRIVER &&
+					                        offer.orderStatus < OrderStatus.PROCESSING) {
+						                     order.contractPhotoLink = null;
+					                     }
+				                     }
+
 				                     if(
 					                     order.stage === OrderStage.SIGNED_DRIVER &&
 					                     offer.orderStatus === OrderStatus.ACCEPTED
@@ -406,13 +414,6 @@ export default class OfferService
 					                     order.status = OrderStatus.PROCESSING;
 				                     }
 				                     else order.status = offer.orderStatus;
-
-				                     if(offers.length > 1) {
-					                     if(order.stage === OrderStage.SIGNED_DRIVER &&
-					                        order.status < OrderStatus.PROCESSING) {
-						                     order.contractPhotoLink = null;
-					                     }
-				                     }
 
 				                     if(inAcceptedRange(offer))
 					                     order.priority = priorityCounter++ === 0;
