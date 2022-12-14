@@ -679,7 +679,7 @@ export default class OfferService
 				stage:  order.stage,
 				point:  order.destinations
 				             .filter(d => !d.fulfilled)[0]
-					        .point
+					        ?.point
 			}
 		);
 
@@ -755,7 +755,7 @@ export default class OfferService
 							message:    'Driver not signed document yet!'
 						};
 					}
-					
+
 					offer = await this.repository.update(
 						offer.id,
 						{
@@ -855,7 +855,7 @@ export default class OfferService
 		);
 	}
 
-	public async decline(
+	public async declineOffer(
 		orderId: string,
 		driverId: string,
 		reason?: string,
@@ -934,6 +934,7 @@ export default class OfferService
 							bidPrice:    null,
 							bidPriceVat: null,
 							orderStatus: status,
+							status:      OfferStatus.CANCELLED,
 							bidComment:  reason ?? ''
 						}
 					)
