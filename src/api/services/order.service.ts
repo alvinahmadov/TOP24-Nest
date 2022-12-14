@@ -597,6 +597,11 @@ export default class OrderService
 		}
 
 		if(fileUploaded) {
+			if(
+				order.paymentPhotoLinks?.length > 0 &&
+				order.receiptPhotoLinks?.length > 0
+			) order = await this.repository.update(id, { stage: OrderStage.DOCUMENT_SENT });
+
 			this.send(order.id)
 			    .then(() => this.gateway.sendOrderEvent({ id, message }))
 			    .catch(console.error);
