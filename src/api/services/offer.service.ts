@@ -401,7 +401,7 @@ export default class OfferService
 
 				                     if(
 					                     offer.order.stage === OrderStage.SIGNED_DRIVER &&
-					                     offer.order.status <= OrderStatus.ACCEPTED
+					                     offer.orderStatus === OrderStatus.ACCEPTED
 				                     ) {
 					                     order.status = OrderStatus.ACCEPTED;
 					                     offer.orderStatus = OrderStatus.PROCESSING;
