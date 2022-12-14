@@ -292,17 +292,10 @@ export default class CargoCompanyInnService
 		companies.forEach(
 			company =>
 			{
-				company.transports.forEach(
-					({ driver }) =>
-					{
-						if(!driver.avatarLink)
-							driver.avatarLink = company.avatarLink;
-
-						driver.name = company.fullName;
-						delete driver.patronymic;
-						delete driver.lastName;
-					}
-				);
+				company.transports
+				       .forEach(
+					       ({ driver }) => { if(!driver.avatarLink) driver.avatarLink = company.avatarLink; }
+				       );
 
 				transports.push(
 					...company.transports

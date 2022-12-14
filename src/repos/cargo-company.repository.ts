@@ -172,7 +172,13 @@ export default class CargoCompanyRepository
 									              .lte('payloadDate', payloadDate)
 										          .query,
 									required: false,
-									include:  [{ model: Order }]
+									include:  [
+										{
+											model:      CargoCompany,
+											attributes: ['name', 'legalName']
+										},
+										{ model: Order }
+									]
 								},
 								{ model: Image }
 							]
