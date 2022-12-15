@@ -352,7 +352,7 @@ export interface ICompany
 	readonly userPhone?: string;
 	/**
 	 * Full formatted name of the company.
-	 * For IE and PI types it is individual's personal name, 
+	 * For IE and PI types it is individual's personal name,
 	 * for organization it is legal name.
 	 * */
 	readonly fullName?: string;
@@ -1079,7 +1079,7 @@ export interface IOrder
 	 * Filter cache data from admin.
 	 * */
 	filter?: IOrderFilter;
-	priority?: boolean;
+	readonly priority?: boolean;
 	/**
 	 * Driver's deferral conditions for order execution.
 	 *
@@ -1378,6 +1378,7 @@ export type TMergedEntities = {
 	order?: IOrder;
 	driver?: IDriver;
 	transport?: ITransport;
+	[k: string]: any;
 };
 
 export type TSentOffer = {

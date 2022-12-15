@@ -385,9 +385,9 @@ export default class OfferService
 				                     let { order, orderStatus } = offer;
 
 				                     if(isProcessing(offer) || order.isCurrent)
-					                     order.priority = priorityCounter++ === 0;
+					                     order.isCurrent = priorityCounter++ === 0;
 				                     else
-					                     order.priority = false;
+					                     order.isCurrent = false;
 
 				                     if(
 					                     order.stage === OrderStage.SIGNED_DRIVER &&

@@ -341,7 +341,9 @@ export default class Order
 	destinations?: Destination[];
 
 	@VirtualColumn()
-	priority?: boolean;
+	public get priority(): boolean {
+		return this.isCurrent;
+	}
 
 	public readonly toCrm = (
 		cargoCrmId: number,
