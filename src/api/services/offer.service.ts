@@ -53,7 +53,8 @@ import {
 	OfferCreateDto,
 	OfferFilter,
 	OfferUpdateDto,
-	OrderFilter
+	OrderFilter,
+	OrderUpdateDto
 }                        from '@api/dto';
 import { EventsGateway } from '@api/events';
 import Service           from './service';
@@ -197,40 +198,44 @@ export default class OfferService
 		}
 
 		if(order) {
-			if(dto.orderStatus > OrderStatus.ACCEPTED) {
-				this.orderService.update(
-					order.id,
-					{ status: dto.orderStatus }
-				).then(
-					({ data: uOrder }) =>
-					{
-						if(uOrder) {
-							this.gateway.sendDriverEvent(
-								{
-									id:      driverId,
-									source:  'offer',
-									message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], uOrder?.crmId?.toString())
-								},
-								UserRole.CARGO
-							);
+			const orderUpdateDto: OrderUpdateDto = {
+				status: dto.orderStatus
+			};
+			if(dto.orderStatus === OrderStatus.FINISHED)
+				orderUpdateDto.isCurrent = false;
 
-							this.gateway.sendOrderEvent(
-								{
-									id:      uOrder.id,
-									stage:   uOrder.stage,
-									status:  uOrder.status,
-									source:  'offer',
-									message: formatArgs(
-										EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
-										order.crmId?.toString() ?? '',
-										driver.fullName
-									)
-								},
-								UserRole.ADMIN
-							);
-						}
-					}
-				);
+			if(OrderStatus.ACCEPTED < dto.orderStatus) {
+				this.orderService.update(order.id, orderUpdateDto)
+				    .then(
+					    ({ data: uOrder }) =>
+					    {
+						    if(uOrder) {
+							    this.gateway.sendDriverEvent(
+								    {
+									    id:      driverId,
+									    source:  'offer',
+									    message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], uOrder?.crmId?.toString())
+								    },
+								    UserRole.CARGO
+							    );
+
+							    this.gateway.sendOrderEvent(
+								    {
+									    id:      uOrder.id,
+									    stage:   uOrder.stage,
+									    status:  uOrder.status,
+									    source:  'offer',
+									    message: formatArgs(
+										    EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
+										    order.crmId?.toString() ?? '',
+										    driver.fullName
+									    )
+								    },
+								    UserRole.ADMIN
+							    );
+						    }
+					    }
+				    );
 			}
 		}
 
@@ -730,7 +735,7 @@ export default class OfferService
 							UserRole.CARGO
 						);
 					}
-					
+
 					this.confirmDriver(orderId, driverId, offer)
 					    .then((confirmed) => console.log(`Driver is ${!confirmed ? 'not' : ''} confirmed!`))
 					    .catch(console.error);
