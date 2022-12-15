@@ -908,7 +908,7 @@ export default class OfferService
 						}
 					);
 
-					if(orders && orders.length > 0) {
+					if(orders && orders.length > 1) {
 						driverDto.status = DriverStatus.ON_POINT;
 						driverDto.currentPoint = 'A';
 					}
