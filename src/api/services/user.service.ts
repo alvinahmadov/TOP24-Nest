@@ -43,10 +43,11 @@ export default class UserService
 	 * @description Get specified by id user
 	 *
 	 * @param {string} id Id of user to get
+	 * @param {boolean} full Include associated modesl
 	 * */
-	public async getById(id: string)
+	public async getById(id: string, full?: boolean)
 		: TAsyncApiResponse<User> {
-		const user = await this.repository.get(id);
+		const user = await this.repository.get(id, full);
 
 		if(!user)
 			return this.responses['NOT_FOUND'];
@@ -58,9 +59,9 @@ export default class UserService
 		};
 	}
 
-	public async getByPhone(phone: string)
+	public async getByPhone(phone: string, full?: boolean)
 		: TAsyncApiResponse<User> {
-		const user = await this.repository.getByPhone(phone, true);
+		const user = await this.repository.getByPhone(phone, full);
 
 		if(!user)
 			return this.responses['NOT_FOUND'];
