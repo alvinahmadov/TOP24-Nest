@@ -133,6 +133,7 @@ export default class OfferRepository
 			transportStatus,
 			hasComment,
 			orderStatuses,
+			isCurrent,
 			statuses,
 			...rest
 		} = filter ?? {};
@@ -174,6 +175,9 @@ export default class OfferRepository
 							},
 							{
 								model:   Order,
+								where:   this.whereClause<IOrder>()
+								             .eq('isCurrent', isCurrent)
+									         .query,
 								include: [{ model: Driver }]
 							}
 						] : [],
