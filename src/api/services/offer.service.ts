@@ -358,8 +358,8 @@ export default class OfferService
 		const { data: transports } = await this.transportService.getList({}, { driverId });
 		const offerStatusKey = env.api.compatMode ? 'offer_status' : 'offerStatus';
 		let priorityCounter = 0;
-		const isProcessing = (offer: Offer) => offer.orderStatus <= OrderStatus.PROCESSING;
-		const today = new Date();
+		const isProcessing = (offer: Offer) => offer.orderStatus === OrderStatus.PROCESSING;
+		const date = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
 		const activeTransport = transports?.find(t => t.status === TransportStatus.ACTIVE && !t.isTrailer);
 
@@ -383,7 +383,7 @@ export default class OfferService
 			                           }
 			                           return 0;
 		                           })
-		                     .filter(offer => offer.order.destinations[0].date >= today)
+		                     .filter(offer => offer.order.destinations[0].date >= date)
 		                     .map(
 			                     (offer) =>
 			                     {
@@ -413,7 +413,7 @@ export default class OfferService
 						                     ? <IOrderTransformer>transformEntity(order)
 						                     : offer.order.get({ plain: true, clone: false })
 					                     ),
-					                     priority:         offer.order.priority,
+					                     priority:         order.priority,
 					                     [offerStatusKey]: offer.status,
 					                     transports:       offer.transports
 				                     };
