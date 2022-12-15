@@ -308,7 +308,7 @@ export default class OfferService
 			if(offer.order.receiptPhotoLinks?.length > 0)
 				await this.imageFileService.deleteImageList(offer.order.receiptPhotoLinks);
 
-			await this.orderService.update(offer.orderId, {
+			this.orderService.update(offer.orderId, {
 				cargoId:           null,
 				cargoinnId:        null,
 				driverId:          null,
@@ -318,7 +318,9 @@ export default class OfferService
 				isFree:            true,
 				status:            OrderStatus.PENDING,
 				stage:             OrderStage.AGREED_OWNER
-			});
+			})
+			    .then(({ data: o }) => this.orderService.send(o.id))
+			    .catch(console.error);
 		}
 
 		return {
