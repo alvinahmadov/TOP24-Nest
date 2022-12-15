@@ -18,7 +18,6 @@ import {
 	FilesInterceptor
 }                              from '@nestjs/platform-express';
 import {
-	DriverStatus,
 	OfferStatus,
 	OrderStatus,
 	UserRole
@@ -253,61 +252,47 @@ export default class OrderController
 			const { data: order } = apiResponse;
 
 			if(order.isCurrent) {
-				const { data: drivers } = await this.offerService.getOrderDrivers(
-					id,
-					{},
+				const { data: offers } = await this.offerService.getList(
+					{ full: true },
 					{
-						isReady:      true,
-						driverStatus: DriverStatus.NONE
+						orderId:     id,
+						status:      OfferStatus.RESPONDED,
+						orderStatus: OrderStatus.PROCESSING,
+						isCurrent:   true
 					}
 				);
 
-				for(const driver of drivers) {
-					const { data: offers } = await this.offerService.getList(
-						{},
+				for(const offer of offers) {
+					this.offerService
+					    .confirmDriver(offer.orderId, offer.driverId, offer)
+					    .then((confirmed) => console.log(`Driver is ${!confirmed ? 'not' : ''} confirmed!`))
+					    .catch(console.error);
+
+					await this.offerService.updateAll(
 						{
-							orderId:     id,
-							driverId:    driver.id,
-							status:      OfferStatus.RESPONDED,
-							orderStatus: OrderStatus.PROCESSING,
-							isCurrent:   true
+							status:      OfferStatus.DECLINED,
+							orderStatus: OrderStatus.CANCELLED_BITRIX
+						},
+						{
+							[Op.and]: [
+								{ id: { [Op.eq]: offer.id } },
+								{ orderId: { [Op.eq]: id } },
+								{ driverId: { [Op.ne]: offer.driverId } }
+							]
+						}
+					).then(
+						// then emit message for unselected drivers.
+						([, offers]) =>
+						{
+							offers.forEach(o => this.gateway.sendDriverEvent(
+								{
+									id:      o.driverId,
+									message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], order.crmId?.toString())
+								},
+								UserRole.CARGO
+							));
 						}
 					);
-
-					for(const offer of offers) {
-						offer.order = order;
-						offer.driver = driver;
-						
-						this.offerService.confirmDriver(id, driver.id, offer)
-						    .then((confirmed) => console.log(`Driver is ${!confirmed ? 'not' : ''} confirmed!`))
-						    .catch(console.error);
-
-						await this.offerService.updateAll(
-							{
-								status:      OfferStatus.DECLINED,
-								orderStatus: OrderStatus.CANCELLED_BITRIX
-							},
-							{
-								[Op.and]: [
-									{ id: { [Op.eq]: offer.id } },
-									{ orderId: { [Op.eq]: id } },
-									{ driverId: { [Op.ne]: offer.driverId } }
-								]
-							}
-						).then(
-							// then emit message for unselected drivers.
-							([, offers]) =>
-							{
-								offers.forEach(o => this.gateway.sendDriverEvent(
-									{
-										id:      o.driverId,
-										message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], order.crmId?.toString())
-									},
-									UserRole.CARGO
-								));
-							}
-						);
-					}
 				}
 			}
 		}

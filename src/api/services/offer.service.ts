@@ -398,6 +398,9 @@ export default class OfferService
 				                     }
 				                     else order.status = orderStatus;
 
+				                     if(order.priority)
+					                     this.orderService.update(order.id, { isCurrent: true });
+
 				                     return {
 					                     ...(
 						                     env.api.compatMode
@@ -727,12 +730,10 @@ export default class OfferService
 						);
 					}
 					// Driver not uploaded agreement yet
-					if(!offer.order.isCurrent) {
-						// Approve driver and set isCurrent true
-						this.approveDriver(orderId, driverId)
-						    .then(() => console.log('Driver is approved!'))
-						    .catch(console.error);
-					}
+					// Approve driver and set isCurrent
+					this.approveDriver(orderId, driverId)
+					    .then(() => console.log('Driver is approved!'))
+					    .catch(console.error);
 
 					offer = await this.repository.update(
 						offer.id,
@@ -770,9 +771,8 @@ export default class OfferService
 		});
 
 		await this.orderService.update(orderId, {
-			isCurrent: true,
-			status:    OrderStatus.ACCEPTED,
-			stage:     OrderStage.AGREED_OWNER
+			status: OrderStatus.ACCEPTED,
+			stage:  OrderStage.AGREED_OWNER
 		});
 	}
 
@@ -781,14 +781,6 @@ export default class OfferService
 		driverId: string,
 		offer: Offer
 	): Promise<boolean> {
-		const { data: currentOrders } = await this.orderService.getList(
-			{},
-			{ isCurrent: true, driverId, status: OrderStatus.PROCESSING }
-		);
-		if(currentOrders.length > 1) {
-			return false;
-		}
-
 		const orderTitle = offer.order?.crmId?.toString() ?? '';
 
 		await this.driverService.update(driverId, {
@@ -807,7 +799,6 @@ export default class OfferService
 				driverId:    driverId,
 				isFree:      false,
 				isOpen:      false,
-				isCurrent:   true,
 				isCanceled:  false,
 				hasProblem:  false,
 				bidPrice:    offer.bidPrice,
@@ -899,7 +890,7 @@ export default class OfferService
 
 					let { data: orders } = await this.orderService.getList(
 						{}, {
-							
+
 							driverId,
 							statuses: [
 								OrderStatus.ACCEPTED,

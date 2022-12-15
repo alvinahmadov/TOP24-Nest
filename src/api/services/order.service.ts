@@ -569,7 +569,7 @@ export default class OrderService
 					}
 					order = await this.repository.update(id, {
 						contractPhotoLink,
-						status:    OrderStatus.PENDING,
+						status:    OrderStatus.ACCEPTED,
 						stage:     OrderStage.SIGNED_DRIVER,
 						isCurrent: true
 					});
