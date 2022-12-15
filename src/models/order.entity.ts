@@ -372,15 +372,15 @@ export default class Order
 		data.fields[ORDER.IS_OPEN] = this.isOpen ? 'Y' : 'N';
 		data.fields[ORDER.IS_FREE] = this.isFree ? 'Y' : 'N';
 		data.fields[ORDER.CANCEL_CAUSE] = this.cancelCause || '';
-		data.fields[ORDER.LINK.PAYMENT] = this.paymentPhotoLinks || '';
+		data.fields[ORDER.LINK.PAYMENT] = this.paymentPhotoLinks?.join(', ');
+		data.fields[ORDER.LINK.RECEIPT] = this.receiptPhotoLinks?.join(', ');
 		data.fields[ORDER.LINK.CONTRACT] = this.contractPhotoLink || '';
-		data.fields[ORDER.LINK.RECEIPT] = this.receiptPhotoLinks || '';
 		if(this.destinations) {
 			for(const destination of this.destinations) {
 				const DESTINATION = ORDER.DESTINATIONS.find(({ NAME }) => NAME === destination.point);
 
 				if(DESTINATION) {
-					data.fields[DESTINATION.SHIPPING_LINK] = [destination.shippingPhotoLinks];
+					data.fields[DESTINATION.SHIPPING_LINK] = destination.shippingPhotoLinks?.join(', ');
 				}
 			}
 		}
