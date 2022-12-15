@@ -85,12 +85,24 @@ export default class DriverService
 	 * */
 	public async getList(
 		listFilter: ListFilter,
-		filter: DriverFilter = {},
+		filter: DriverFilter = {}
 	): Promise<IApiResponse<Driver[]>> {
 		const { full = false } = listFilter;
 
 		const data = await this.repository.getList(listFilter, filter);
 		const message = formatArgs(TRANSLATIONS['LIST'], data?.length);
+
+		if(listFilter?.full) {
+			data.forEach(driver =>
+			             {
+				             if(!driver.avatarLink) {
+					             if(driver.cargo)
+						             driver.avatarLink = driver.cargo.avatarLink;
+					             else if(driver.cargoinn)
+						             driver.avatarLink = driver.cargoinn.avatarLink;
+				             }
+			             });
+		}
 
 		return {
 			statusCode: HttpStatus.OK,
@@ -111,6 +123,15 @@ export default class DriverService
 
 		if(!driver)
 			return this.responses['NOT_FOUND'];
+
+		if(full) {
+			if(!driver.avatarLink) {
+				if(driver.cargo)
+					driver.avatarLink = driver.cargo.avatarLink;
+				else if(driver.cargoinn)
+					driver.avatarLink = driver.cargoinn.avatarLink;
+			}
+		}
 
 		return {
 			statusCode: HttpStatus.OK,
