@@ -418,6 +418,7 @@ export default class BitrixService
 
 				if(orderDto.stage >= OrderStage.PAYMENT_RECEIVED) {
 					orderDto.onPayment = false;
+					orderDto.isCurrent = false;
 					orderDto.status = OrderStatus.FINISHED;
 				}
 				let { data: order } = await this.orderService.getByCrmId(crmId);
