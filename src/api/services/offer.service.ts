@@ -399,11 +399,6 @@ export default class OfferService
 				                     else order.status = orderStatus;
 
 				                     if(order.priority) {
-					                     if(
-						                     order.stage === OrderStage.SIGNED_DRIVER &&
-						                     order.status === OrderStatus.ACCEPTED
-					                     ) this.confirmDriver(order.id, driverId, offer);
-
 					                     this.orderService.update(order.id, { isCurrent: true });
 				                     }
 
@@ -735,15 +730,9 @@ export default class OfferService
 							UserRole.CARGO
 						);
 					}
-					// Driver not uploaded agreement yet
-					// Approve driver and set isCurrent
-					this.orderService.update(orderId, {
-						status:     OrderStatus.ACCEPTED,
-						stage:      OrderStage.AGREED_OWNER,
-						driverId:   driverId,
-						cargoId:    offer.driver?.cargoId,
-						cargoinnId: offer.driver?.cargoinnId
-					}).then(() => console.log('Driver is approved!'))
+					
+					this.confirmDriver(orderId, driverId, offer)
+					    .then((confirmed) => console.log(`Driver is ${!confirmed ? 'not' : ''} confirmed!`))
 					    .catch(console.error);
 
 					offer = await this.repository.update(
