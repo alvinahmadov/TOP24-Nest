@@ -738,8 +738,11 @@ export default class OfferService
 					// Driver not uploaded agreement yet
 					// Approve driver and set isCurrent
 					this.orderService.update(orderId, {
-						status: OrderStatus.ACCEPTED,
-						stage:  OrderStage.AGREED_OWNER
+						status:     OrderStatus.ACCEPTED,
+						stage:      OrderStage.AGREED_OWNER,
+						driverId:   driverId,
+						cargoId:    offer.driver?.cargoId,
+						cargoinnId: offer.driver?.cargoinnId
 					}).then(() => console.log('Driver is approved!'))
 					    .catch(console.error);
 
