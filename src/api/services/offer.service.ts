@@ -384,7 +384,7 @@ export default class OfferService
 			                     {
 				                     let { order, orderStatus } = offer;
 
-				                     if(isProcessing(offer) || order.isCurrent)
+				                     if(isProcessing(offer))
 					                     order.isCurrent = priorityCounter++ === 0;
 				                     else
 					                     order.isCurrent = false;
@@ -398,8 +398,18 @@ export default class OfferService
 				                     }
 				                     else order.status = orderStatus;
 
-				                     if(order.priority)
-					                     this.orderService.update(order.id, { isCurrent: true });
+				                     if(order.priority) {
+					                     let updateDto: any = {
+						                     isCurrent: true,
+						                     status:    order.status
+					                     };
+					                     if(
+						                     order.stage === OrderStage.SIGNED_DRIVER &&
+						                     order.status === OrderStatus.ACCEPTED
+					                     ) updateDto.status = OrderStatus.PROCESSING;
+
+					                     this.orderService.update(order.id, updateDto);
+				                     }
 
 				                     return {
 					                     ...(
