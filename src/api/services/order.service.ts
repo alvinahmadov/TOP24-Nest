@@ -589,7 +589,6 @@ export default class OrderService
 
 					order = await this.repository.update(id, {
 						onPayment:         true,
-						isCurrent:         false,
 						paymentPhotoLinks: order.paymentPhotoLinks,
 						stage:             OrderStage.PAYMENT_FORMED
 					});
@@ -612,7 +611,6 @@ export default class OrderService
 						order.receiptPhotoLinks = receiptPhotoLinks;
 
 					order = await this.repository.update(id, {
-						isCurrent:         false,
 						receiptPhotoLinks: order.receiptPhotoLinks
 					});
 				}
