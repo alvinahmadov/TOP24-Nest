@@ -16,6 +16,9 @@ export default class RedisIoAdapter
 		const pubClient = createClient({ url: `redis://${env.redis.host}:${env.redis.port}` });
 		const subClient = pubClient.duplicate();
 
+		pubClient.on('error', (err) => console.error('Redis pubClient error: ', err));
+		subClient.on('error', (err) => console.error('Redis subClient error: ', err));
+
 		await Promise.all([pubClient.connect(), subClient.connect()]);
 		this.adapterConstructor = createAdapter(pubClient, subClient);
 	}
