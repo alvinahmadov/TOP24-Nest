@@ -48,6 +48,7 @@ services:
     volumes:
       - ./deploy/nginx/top24.conf:/etc/nginx/conf.d/default.conf
       - root_node_modules:/srv/app/node_modules
+      - migrations:/srv/app/db/migrations
       - docs:/srv/app/docs
     ports:
       - "8080:8080"
@@ -64,4 +65,5 @@ volumes:
   redis:
   postgres_data:
   root_node_modules:
+  migrations:
   docs:
