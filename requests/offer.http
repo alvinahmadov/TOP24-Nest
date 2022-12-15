@@ -1,9 +1,13 @@
 ### Get list of order offers
+// @no-cookie-jar
 GET {{api}}/offer?full=true
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Get list of filtered order offers
+> {% client.global.set("offerId", response.body[0]['id']) %}
+
+### Get list of filtered order offers 
+// @no-cookie-jar
 POST {{api}}/offer/filter?full=true
 Authorization: {{accessToken}}
 Content-Type: application/json
@@ -13,26 +17,31 @@ Content-Type: application/json
 }
 
 ### Get offer
+// @no-cookie-jar
 GET {{api}}/offer/{{offerId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Delete offer
+### Delete offer and reset order and driver data
+// @no-cookie-jar
 DELETE {{api}}/offer/{{offerId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Accept an offer by driver
+### Choose a driver for order implementation
+// @no-cookie-jar
 PATCH {{api}}/offer/accept/{{orderId}}/{{driverId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Decline an offer by driver
+// @no-cookie-jar
 PATCH {{api}}/offer/decline/{{orderId}}/{{driverId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Update offer data
+// @no-cookie-jar
 PUT {{api}}/offer/{{orderId}}/{{driverId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
@@ -41,17 +50,20 @@ Content-Type: application/json
     "orderStatus": 1
 }
 
-### Get offer assigned drivers
+### Get orders of assigned offers to specific driver
+// @no-cookie-jar
 POST {{api}}/offer/driver/{{driverId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Get offer assigned orders
+// @no-cookie-jar
 POST {{api}}/offer/order/{{orderId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Get offer assigned transports
+// @no-cookie-jar
 POST {{api}}/offer/transport/{{orderId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
@@ -62,16 +74,13 @@ Content-Type: application/json
 }
 
 ### Associate driver with order
+// @no-cookie-jar
 POST {{api}}/offer/{{orderId}}/{{driverId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Associate drivers with order
-POST {{api}}/offer/drivers/{{driverId}}
-Authorization: {{accessToken}}
-Content-Type: application/json
-
-### Associate drivers with order
+// @no-cookie-jar
 POST {{api}}/offer/drivers/{{orderId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
@@ -79,10 +88,7 @@ Content-Type: application/json
 {
 	"drivers": [
 		{
-			"driverId": ""
-		},
-		{
-			"driverId": ""
+			"driverId": "{{driverId}}"
 		}
 	]
 }
