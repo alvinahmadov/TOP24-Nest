@@ -198,14 +198,8 @@ export default class OfferService
 		}
 
 		if(order) {
-			const orderUpdateDto: OrderUpdateDto = {
-				status: dto.orderStatus
-			};
-			if(dto.orderStatus === OrderStatus.FINISHED)
-				orderUpdateDto.isCurrent = false;
-
 			if(OrderStatus.ACCEPTED < dto.orderStatus) {
-				this.orderService.update(order.id, orderUpdateDto)
+				this.orderService.update(order.id, { status: dto.orderStatus })
 				    .then(
 					    ({ data: uOrder }) =>
 					    {
