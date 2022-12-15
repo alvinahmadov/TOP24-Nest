@@ -271,6 +271,19 @@ export default class OfferService
 		if(dto.orderStatus === OrderStatus.ACCEPTED)
 			dto.status = OfferStatus.RESPONDED;
 
+		if(dto.orderStatus === OrderStatus.FINISHED) {
+			await this.driverService.update(driverId, {
+				status:       DriverStatus.ON_WAY,
+				operation:    {
+					type:     DestinationType.LOAD,
+					loaded:   false,
+					unloaded: false,
+					uploaded: false
+				},
+				currentPoint: 'A'
+			});
+		}
+
 		const result = await this.repository.update(offer.id, dto);
 
 		if(result)
