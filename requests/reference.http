@@ -1,39 +1,77 @@
 ### Get addresses
-GET {{api}}/reference/address?from=0&count=10
+// @no-cookie-jar
+GET {{api}}/reference/address?regions=1&search=М
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Search by some word
-GET {{api}}/reference/address?search={{addressTerm}}&full=true
+// @no-cookie-jar
+GET {{api}}/reference/address?search={{addressTerm}}&full=true&provider=osm
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Get payloads
+### Get address data by nearest location coordinates
+// @no-cookie-jar
+POST {{api}}/reference/address/location
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"latitude": 55.81245949915643,
+	"longitude": 37.613395053364286,
+	"distance": 60
+}
+
+### Get transport extra fixtures
+// @no-cookie-jar
 GET {{api}}/reference/fixtures
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Get loading types
+### Get transport loading types
+// @no-cookie-jar
 GET {{api}}/reference/loading_types
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Get payloads
+### Get transport payloads
+// @no-cookie-jar
 GET {{api}}/reference/payloads
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Get payloads
+// @no-cookie-jar
 GET {{api}}/reference/payment_types
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Get risk classes
+// @no-cookie-jar
 GET {{api}}/reference/risk_classes
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Search by some word
-GET {{api}}/reference/transport_types
+// @no-cookie-jar
+GET {{api}}/reference/auto_types
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Search by some word
+// @no-cookie-jar
+GET {{api}}/reference/brands
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get all transport models
+// @no-cookie-jar
+GET {{api}}/reference/models
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Get transport brand model by brand id or value
+// @no-cookie-jar
+GET {{api}}/reference/models/1000
 Authorization: {{accessToken}}
 Content-Type: application/json
