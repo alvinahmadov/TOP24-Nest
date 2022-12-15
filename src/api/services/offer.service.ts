@@ -737,8 +737,10 @@ export default class OfferService
 					}
 					// Driver not uploaded agreement yet
 					// Approve driver and set isCurrent
-					this.approveDriver(orderId, driverId)
-					    .then(() => console.log('Driver is approved!'))
+					this.orderService.update(orderId, {
+						status: OrderStatus.ACCEPTED,
+						stage:  OrderStage.AGREED_OWNER
+					}).then(() => console.log('Driver is approved!'))
 					    .catch(console.error);
 
 					offer = await this.repository.update(
@@ -765,21 +767,6 @@ export default class OfferService
 		}
 
 		return this.responses['NOT_FOUND'];
-	}
-
-	public async approveDriver(
-		orderId: string,
-		driverId: string
-	) {
-		await this.driverService.update(driverId, {
-			status:       DriverStatus.ON_WAY,
-			currentPoint: 'A'
-		});
-
-		await this.orderService.update(orderId, {
-			status: OrderStatus.ACCEPTED,
-			stage:  OrderStage.AGREED_OWNER
-		});
 	}
 
 	public async confirmDriver(
