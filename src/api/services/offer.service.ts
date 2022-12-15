@@ -399,16 +399,12 @@ export default class OfferService
 				                     else order.status = orderStatus;
 
 				                     if(order.priority) {
-					                     let updateDto: any = {
-						                     isCurrent: true,
-						                     status:    order.status
-					                     };
 					                     if(
 						                     order.stage === OrderStage.SIGNED_DRIVER &&
 						                     order.status === OrderStatus.ACCEPTED
-					                     ) updateDto.status = OrderStatus.PROCESSING;
+					                     ) this.confirmDriver(order.id, driverId, offer);
 
-					                     this.orderService.update(order.id, updateDto);
+					                     this.orderService.update(order.id, { isCurrent: true });
 				                     }
 
 				                     return {
