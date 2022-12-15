@@ -43,8 +43,7 @@ import {
 }                        from '@common/utils/compat';
 import {
 	Driver,
-	Offer,
-	Order
+	Offer
 }                        from '@models/index';
 import {
 	DestinationRepository,
@@ -394,7 +393,7 @@ export default class OfferService
 					                     order.stage === OrderStage.SIGNED_DRIVER &&
 					                     orderStatus === OrderStatus.ACCEPTED
 				                     ) {
-					                     order.status = orderStatus;
+					                     order.status = OrderStatus.ACCEPTED;
 					                     offer.orderStatus = OrderStatus.PROCESSING;
 				                     }
 				                     else order.status = orderStatus;
@@ -436,15 +435,13 @@ export default class OfferService
 		listFilter: IListFilter,
 		filter?: TOfferTransportFilter
 	): TAsyncApiResponse<any[]> {
-		const transports: any[] = [];
+		const transportData: any[] = [];
 		//Temporary fix
-		if(filter.orderStatus === 1) {
+		if(filter.orderStatus === OrderStatus.ACCEPTED) {
 			filter.orderStatuses = [
 				OrderStatus.ACCEPTED,
 				OrderStatus.PROCESSING
 			];
-			if(!filter.orderStatuses.includes(filter.orderStatus))
-				filter.orderStatuses.push(filter.orderStatus);
 			// filter.offerStatuses = [OfferStatus.CANCELLED];
 			delete filter.orderStatus;
 		}
@@ -474,7 +471,7 @@ export default class OfferService
 					if(!driver.currentPoint) driver.currentPoint = 'A';
 					const getOptions = { plain: true, clone: false };
 
-					transports.push(
+					transportData.push(
 						...mainTransports
 							.map(
 								transport =>
@@ -533,8 +530,8 @@ export default class OfferService
 
 		return {
 			statusCode: HttpStatus.OK,
-			data:       transports,
-			message:    formatArgs(OFFER_TRANSLATIONS['TRANSPORTS'], transports.length)
+			data:       transportData,
+			message:    formatArgs(OFFER_TRANSLATIONS['TRANSPORTS'], transportData.length)
 		};
 	}
 
@@ -732,12 +729,9 @@ export default class OfferService
 					// Driver not uploaded agreement yet
 					if(!offer.order.isCurrent) {
 						// Approve driver and set isCurrent true
-						await this.approveDriver(orderId, driverId);
-					}
-					else {
-						// The Driver uploaded agreement and approved for confirmation
-						if(offer.order.stage === OrderStage.SIGNED_DRIVER)
-							await this.confirmDriver(orderId, driverId, offer);
+						this.approveDriver(orderId, driverId)
+						    .then(() => console.log('Driver is approved!'))
+						    .catch(console.error);
 					}
 
 					offer = await this.repository.update(
@@ -770,39 +764,36 @@ export default class OfferService
 		orderId: string,
 		driverId: string
 	) {
-		await this.driverService.update(
-			driverId, {
-				status:       DriverStatus.ON_POINT,
-				currentPoint: 'A',
-				operation:    {
-					type:     DestinationType.LOAD,
-					loaded:   false,
-					unloaded: false
-				}
-			});
-
+		await this.driverService.update(driverId, {
+			status:       DriverStatus.ON_WAY,
+			currentPoint: 'A'
+		});
+		
 		await this.orderService.update(orderId, {
 			isCurrent: true,
-			status:    OrderStatus.PENDING,
+			status:    OrderStatus.PROCESSING,
 			stage:     OrderStage.AGREED_OWNER
 		});
 	}
 
-	private async confirmDriver(
+	public async confirmDriver(
 		orderId: string,
 		driverId: string,
 		offer: Offer
-	) {
+	): Promise<boolean> {
+		if(!offer.order?.isCurrent)
+			return false;
+
 		const orderTitle = offer.order?.crmId?.toString() ?? '';
 
 		await this.driverService.update(driverId, {
 			status:       DriverStatus.ON_WAY,
-			currentPoint: 'A',
 			operation:    {
 				type:     DestinationType.LOAD,
 				loaded:   false,
 				unloaded: false
-			}
+			},
+			currentPoint: 'A'
 		});
 
 		this.orderService.update(
@@ -836,10 +827,13 @@ export default class OfferService
 					);
 					this.orderService
 					    .send(offer.orderId)
+					    .then(({ data }) => console.log('Order crm updated ' + data))
 					    .catch(console.error);
 				}
 			}
 		);
+
+		return true;
 	}
 
 	public async declineOffer(
@@ -849,32 +843,26 @@ export default class OfferService
 		role?: UserRole
 	): TAsyncApiResponse<Offer> {
 		const offer = await this.repository.getByAssociation(orderId, driverId);
-		const driverStatus = DriverStatus.NONE;
-		let status = role < UserRole.CARGO ? OrderStatus.PENDING
-		                                   : OrderStatus.CANCELLED;
+		const status = role < UserRole.CARGO ? OrderStatus.PENDING
+		                                     : OrderStatus.CANCELLED;
 
 		if(offer) {
 			if(offer.orderStatus < OrderStatus.CANCELLED) {
-				let order: Order = offer.order;
-				let driver: Driver = offer.driver;
-
-				if(order.isCanceled)
-					status = OrderStatus.CANCELLED_BITRIX;
+				let { driver, order } = offer;
 
 				if(order) {
-					const stage = order.stage;
 					await this.destinationRepo.bulkUpdate({ fulfilled: false }, { orderId: order.id });
 
 					await this.orderService.deleteDocuments(order.id, 'contract');
 
 					this.orderService
 					    .update(order.id, {
-						    status,
+						    status:            !order.isCanceled ? status
+						                                         : OrderStatus.CANCELLED_BITRIX,
 						    isOpen:            true,
 						    isFree:            true,
 						    isCurrent:         false,
 						    cancelCause:       reason ?? '',
-						    stage,
 						    contractPhotoLink: null
 					    })
 					    .then(({ data: order }) =>
@@ -885,7 +873,11 @@ export default class OfferService
 									          id:      order.id,
 									          status:  order.status,
 									          stage:   order.stage,
-									          message: `Водитель '${driver?.fullName}' отказался от сделки '№${order.number}'.`
+									          message: formatArgs(
+										          EVENT_ORDER_TRANSLATIONS['CANCELLED_DRIVER'],
+										          driver?.fullName,
+										          order?.crmId
+									          )
 								          }
 							          );
 						          }
@@ -894,26 +886,46 @@ export default class OfferService
 				}
 
 				if(driver) {
-					this.driverService.update(
-						driverId, {
-							status:         driverStatus,
-							currentPoint:   '',
-							currentAddress: ''
+					const driverDto = {
+						status:         DriverStatus.NONE,
+						currentPoint:   '',
+						currentAddress: ''
+					};
+
+					let { data: orders } = await this.orderService.getList(
+						{}, {
+							driverId,
+							statuses: [
+								OrderStatus.ACCEPTED,
+								OrderStatus.PROCESSING
+							]
 						}
-					).then(
-						({ data: driver }) =>
-						{
-							if(driver)
-								this.gateway.sendDriverEvent(
-									{
-										id:      driver.id,
-										status:  driver.status,
-										message: formatArgs(EVENT_DRIVER_TRANSLATIONS['DECLINE'], order.crmId?.toString() ?? 0)
-									},
-									UserRole.CARGO
-								);
-						}
-					).catch(r => console.error(r));
+					);
+
+					if(orders &&
+					   orders.length > 0 &&
+					   orders.findIndex(o => o.id === orderId) < 0) {
+						driverDto.status = DriverStatus.ON_POINT;
+						driverDto.currentPoint = 'A';
+					}
+
+					this.driverService
+					    .update(driverId, driverDto)
+					    .then(
+						    ({ data: driver }) =>
+						    {
+							    if(driver)
+								    this.gateway.sendDriverEvent(
+									    {
+										    id:      driver.id,
+										    status:  driver.status,
+										    message: formatArgs(EVENT_DRIVER_TRANSLATIONS['DECLINE'], order.crmId?.toString() ?? 0)
+									    },
+									    UserRole.CARGO
+								    );
+						    }
+					    )
+					    .catch(r => console.error(r));
 				}
 
 				this.orderService
