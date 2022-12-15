@@ -149,6 +149,21 @@ export default class OrderService
 		const data = await this.repository.getList(listFilter, filter);
 		const orders = filterOrders(data) as Order[];
 
+		// Temp fix for web
+		if(orders) {
+			if(filter && filter.statuses)
+				orders.forEach(
+					order =>
+					{
+						if(
+							order.status === OrderStatus.CANCELLED ||
+							order.stage >= 4
+						)
+							order.stage = 4;
+					}
+				);
+		}
+
 		return {
 			statusCode: HttpStatus.OK,
 			data:       orders,
