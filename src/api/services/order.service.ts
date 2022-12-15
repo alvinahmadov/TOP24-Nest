@@ -569,9 +569,8 @@ export default class OrderService
 					}
 					order = await this.repository.update(id, {
 						contractPhotoLink,
-						status:    OrderStatus.ACCEPTED,
-						stage:     OrderStage.SIGNED_DRIVER,
-						isCurrent: true
+						status: OrderStatus.ACCEPTED,
+						stage:  OrderStage.SIGNED_DRIVER
 					});
 				}
 			}
@@ -593,6 +592,7 @@ export default class OrderService
 
 					order = await this.repository.update(id, {
 						onPayment:         true,
+						isCurrent:         false,
 						paymentPhotoLinks: order.paymentPhotoLinks,
 						stage:             OrderStage.PAYMENT_FORMED
 					});
@@ -614,7 +614,10 @@ export default class OrderService
 					else
 						order.receiptPhotoLinks = receiptPhotoLinks;
 
-					order = await this.repository.update(id, { receiptPhotoLinks: order.receiptPhotoLinks });
+					order = await this.repository.update(id, {
+						isCurrent:         false,
+						receiptPhotoLinks: order.receiptPhotoLinks
+					});
 				}
 			}
 		}
