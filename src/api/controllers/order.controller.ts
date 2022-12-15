@@ -275,10 +275,13 @@ export default class OrderController
 					);
 
 					for(const offer of offers) {
+						offer.order = order;
+						offer.driver = driver;
+						
 						this.offerService.confirmDriver(id, driver.id, offer)
 						    .then((confirmed) => console.log(`Driver is ${!confirmed ? 'not' : ''} confirmed!`))
 						    .catch(console.error);
-						
+
 						await this.offerService.updateAll(
 							{
 								status:      OfferStatus.DECLINED,
