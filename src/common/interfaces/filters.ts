@@ -200,6 +200,7 @@ export interface IOfferFilter
 	driverStatus?: DriverStatus;
 	statuses?: OfferStatus[];
 	transportStatus?: TransportStatus;
+	isCurrent?: boolean;
 	hasComment?: boolean;
 	hasBid?: boolean;
 }
