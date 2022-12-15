@@ -592,6 +592,7 @@ export interface IDriverOperation {
 	 * The payload is loaded.
 	 * */
 	loaded?: boolean;
+	uploaded?: boolean;
 }
 
 /**

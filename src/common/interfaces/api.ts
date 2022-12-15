@@ -71,7 +71,7 @@ export type TCRMResponse = {
 	};
 }
 
-export type TDocumentMode = 'payment' | 'contract' | 'receipt';
+export type TDocumentMode = 'payment' | 'contract' | 'receipt' | string;
 
 /**@ignore*/
 export type TFormat = 'url' |

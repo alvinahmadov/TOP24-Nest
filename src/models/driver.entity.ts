@@ -50,6 +50,7 @@ export class DriverOperation
 	type: DestinationType;
 	unloaded?: boolean;
 	loaded?: boolean;
+	uploaded?: boolean;
 }
 
 /**
