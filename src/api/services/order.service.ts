@@ -1,19 +1,20 @@
+import { Op }                 from 'sequelize';
 import {
 	forwardRef,
 	Inject,
 	Injectable,
 	HttpStatus
-}                                                 from '@nestjs/common';
+}                             from '@nestjs/common';
 import {
 	BitrixUrl,
 	Bucket
-}                                                 from '@common/constants';
+}                             from '@common/constants';
 import {
 	OfferStatus,
 	OrderStage,
 	OrderStatus,
 	TransportStatus
-}                                                 from '@common/enums';
+}                             from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -25,7 +26,7 @@ import {
 	TDocumentMode,
 	TMergedEntities,
 	TMulterFile
-}                                                 from '@common/interfaces';
+}                             from '@common/interfaces';
 import {
 	buildBitrixRequestUrl,
 	renameMulterFiles,
@@ -34,27 +35,29 @@ import {
 	getTranslation,
 	transformTransportParameters,
 	renameMulterFile
-}                                                 from '@common/utils';
+}                             from '@common/utils';
 import {
+	Destination,
 	Driver,
 	Order,
 	Transport
-}                                                 from '@models/index';
-import { EventsGateway }                          from '@api/events';
-import { DestinationRepository, OrderRepository } from '@repos/index';
+}                             from '@models/index';
+import { EventsGateway }      from '@api/events';
+import {
+	DestinationRepository,
+	OrderRepository
+}                             from '@repos/index';
 import {
 	ListFilter,
 	OrderCreateDto,
 	OrderFilter,
 	OrderUpdateDto
-}                                                 from '@api/dto';
-import Service                                    from './service';
-import CargoCompanyService                        from './cargo-company.service';
-import CargoCompanyInnService                     from './cargoinn-company.service';
-import DriverService                              from './driver.service';
-import ImageFileService                           from './image-file.service';
-import Destination                                from '@models/destination.entity';
-import { Op }                                     from 'sequelize';
+}                             from '@api/dto';
+import Service                from './service';
+import CargoCompanyService    from './cargo-company.service';
+import CargoCompanyInnService from './cargoinn-company.service';
+import DriverService          from './driver.service';
+import ImageFileService       from './image-file.service';
 
 const ORDER_TRANSLATIONS = getTranslation('REST', 'ORDER');
 
@@ -605,7 +608,12 @@ export default class OrderService
 			if(
 				order.paymentPhotoLinks?.length > 0 &&
 				order.receiptPhotoLinks?.length > 0
-			) order = await this.repository.update(id, { stage: OrderStage.DOCUMENT_SENT });
+			) {
+				order.stage = OrderStage.DOCUMENT_SENT;
+				order.save({ fields: ['stage'] })
+				     .then(o => console.log(`Documents for ${mode} photos for order '${o.id}' uploaded`))
+				     .catch(console.error);
+			}
 
 			this.send(order.id)
 			    .then(() => this.gateway.sendOrderEvent({ id, message }))
@@ -634,7 +642,23 @@ export default class OrderService
 		if(!order)
 			return this.responses['NOT_FOUND'];
 
-		if(mode === 'payment') {
+		if(mode === 'contract') {
+			if(order.contractPhotoLink) {
+				if(deleteAll) {
+					isDeleted = await this.imageFileService.deleteImage(order.contractPhotoLink) > 0;
+				}
+
+				if(isDeleted) {
+					order.stage = OrderStage.AGREED_OWNER;
+					order.contractPhotoLink = null;
+
+					order.save({ fields: ['contractPhotoLink', 'stage'] })
+					     .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
+					     .catch(console.error);
+				}
+			}
+		}
+		else if(mode === 'payment') {
 			if(order.paymentPhotoLinks) {
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
@@ -649,7 +673,9 @@ export default class OrderService
 				if(isDeleted) {
 					order.paymentPhotoLinks = photoLinks;
 					order.onPayment = false;
-					await order.save({ fields: ['paymentPhotoLinks', 'onPayment'] });
+					order.save({ fields: ['paymentPhotoLinks', 'onPayment'] })
+					     .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
+					     .catch(console.error);
 				}
 			}
 		}
@@ -667,20 +693,9 @@ export default class OrderService
 
 				if(isDeleted) {
 					order.receiptPhotoLinks = photoLinks;
-					await order.save({ fields: ['receiptPhotoLinks'] });
-				}
-			}
-		}
-		else if(mode === 'contract') {
-			if(order.contractPhotoLink) {
-				if(deleteAll) {
-					isDeleted = await this.imageFileService.deleteImage(order.contractPhotoLink) > 0;
-				}
-
-				if(isDeleted) {
-					order.stage = OrderStage.AGREED_OWNER;
-					order.contractPhotoLink = null;
-					await order.save({ fields: ['contractPhotoLink', 'stage'] });
+					order.save({ fields: ['receiptPhotoLinks'] })
+					     .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
+					     .catch(console.error);
 				}
 			}
 		}
@@ -689,24 +704,5 @@ export default class OrderService
 			statusCode: HttpStatus.OK,
 			data:       order
 		};
-	}
-
-	// noinspection JSUnusedLocalSymbols
-	private async setNextOrderForCompletion(driverId: string) {
-		const nextOrder = await this.repository.getDriverAssignedOrders(
-			driverId,
-			{
-				statuses: [
-					OrderStatus.ACCEPTED,
-					OrderStatus.PROCESSING
-				],
-				stages:   [
-					OrderStage.AGREED_LOGIST,
-					OrderStage.AGREED_OWNER
-				]
-			}
-		);
-
-		console.debug(nextOrder.get({ plain: true }));
 	}
 }
