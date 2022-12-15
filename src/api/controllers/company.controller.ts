@@ -1,4 +1,5 @@
 import * as ex                 from 'express';
+import { validate as isUuid }  from 'uuid';
 import {
 	Body,
 	Controller,
@@ -63,10 +64,10 @@ import {
 	CargoCompanyInnService,
 	CargoCompanyService,
 	OfferService,
-	PaymentService
+	PaymentService,
+	UserService
 }                              from '@api/services';
 import BaseController          from './controller';
-import { validate as isUuid }  from 'uuid';
 import AddressService          from '../services/address.service';
 
 const { path, tag, routes } = getRouteConfig('company');
@@ -83,7 +84,8 @@ export default class CompanyController
 		private readonly cargoService: CargoCompanyService,
 		private readonly cargoInnService: CargoCompanyInnService,
 		private readonly offerService: OfferService,
-		private readonly paymentService: PaymentService
+		private readonly paymentService: PaymentService,
+		private readonly userService: UserService
 	) {
 		super();
 	}
@@ -321,33 +323,40 @@ export default class CompanyController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK]
 	})
-	public async getUser(
-		@Param('id') companyId: string,
+	public async getUserCompanies(
+		@Param('id') companyIdOrPhone: string,
 		@Res() response: ex.Response
 	) {
-		let result: { statusCode: number, data?: User };
-		const fun = async(id: string, service: CargoCompanyService | CargoCompanyInnService) =>
-		{
-			const { data: company } = await service.getById(id);
-			if(company) {
-				const { user } = company;
-				if(user) {
-					return {
-						statusCode: 200,
-						data:       user
-					};
-				}
+		const companies: ICompany[] = [];
+		let user: User;
+
+		if(isUuid(companyIdOrPhone)) {
+			const companyResponse = await this.getCompany(companyIdOrPhone);
+			if(isSuccessResponse(companyResponse)) {
+				const { data: company } = companyResponse;
+				const userResponse = await this.userService.getById(company.userId, true);
+				user = userResponse.data;
 			}
-			return null;
-		};
+			else return sendResponse(response, companyResponse);
+		}
+		else {
+			const userResponse = await this.userService.getByPhone(companyIdOrPhone, true);
 
-		result = await fun(companyId, this.cargoService);
-
-		if(!result) {
-			result = await fun(companyId, this.cargoInnService);
+			if(isSuccessResponse(userResponse)) {
+				user = userResponse.data;
+			}
+			else return sendResponse(response, { statusCode: 400, message: 'User not found!' });
 		}
 
-		return sendResponse(response, result);
+		companies.push(
+			...user.cargoCompanies,
+			...user.cargoInnCompanies
+		);
+
+		return sendResponse(response, {
+			statusCode: 200,
+			data:       companies
+		});
 	}
 
 	@ApiRoute(routes.send, {
