@@ -295,19 +295,11 @@ export default class OrderService
 					}
 				}
 			}
-			
-			const orderResponse = await this.getById(order.id, false);
-			result.order = filterOrders(orderResponse?.data) as Order;
 
 			if(driver.cargo || driver.cargoinn) {
 				const companyKey = driver.cargoId ? 'cargo' : 'cargoinn';
 				driver.avatarLink = driver[companyKey].avatarLink;
 				driver.name = driver[companyKey].fullName;
-				result.order.cargoId = driver.cargoId;
-				result.order.cargoinnId = driver.cargoinnId;
-				
-				if(order.stage === OrderStage.SIGNED_DRIVER && order.status === OrderStatus.ACCEPTED)
-					result.order.status = OrderStatus.PROCESSING
 
 				delete driver.patronymic;
 				delete driver.lastName;
@@ -317,6 +309,8 @@ export default class OrderService
 
 			if(!driver.currentPoint)
 				result.driver.currentPoint = 'A';
+			const orderResponse = await this.getById(order.id, false);
+			result.order = filterOrders(orderResponse?.data) as Order;
 		}
 
 		return {
