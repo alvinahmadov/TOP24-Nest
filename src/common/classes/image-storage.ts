@@ -275,7 +275,6 @@ export class ExternalObjectStorage
 		const params = this.prepare(file);
 		const s3 = this.s3;
 
-		console.log({ params });
 		if(this.debug)
 			this.logObject('S3 Upload parameters:', params);
 
