@@ -82,7 +82,6 @@ export default class DriverService
 	 *
 	 * @param {ListFilter} listFilter Filter for range and data fullness
 	 * @param {DriverFilter} filter Field filters for company driver
-	 * @param {Boolean} debug Temporary fix for not showing active drivers
 	 * */
 	public async getList(
 		listFilter: ListFilter,
