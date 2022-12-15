@@ -53,8 +53,7 @@ import {
 	OfferCreateDto,
 	OfferFilter,
 	OfferUpdateDto,
-	OrderFilter,
-	OrderUpdateDto
+	OrderFilter
 }                        from '@api/dto';
 import { EventsGateway } from '@api/events';
 import Service           from './service';
