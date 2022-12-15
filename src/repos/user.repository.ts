@@ -1,8 +1,11 @@
 import { Includeable }        from 'sequelize';
+import { DEFAULT_SORT_ORDER } from '@common/constants';
 import {
 	IUser,
 	IRepository,
-	IRepositoryOptions, IListFilter, TModelFilter, IUserFilter
+	IRepositoryOptions,
+	IListFilter,
+	IUserFilter
 }                             from '@common/interfaces';
 import {
 	CargoCompany,
@@ -15,7 +18,6 @@ import {
 	User
 }                             from '@models/index';
 import GenericRepository      from './generic';
-import { DEFAULT_SORT_ORDER } from '@common/constants';
 
 export default class UserRepository
 	extends GenericRepository<User, IUser>
