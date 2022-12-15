@@ -768,10 +768,10 @@ export default class OfferService
 			status:       DriverStatus.ON_WAY,
 			currentPoint: 'A'
 		});
-		
+
 		await this.orderService.update(orderId, {
 			isCurrent: true,
-			status:    OrderStatus.PROCESSING,
+			status:    OrderStatus.ACCEPTED,
 			stage:     OrderStage.AGREED_OWNER
 		});
 	}
@@ -781,8 +781,13 @@ export default class OfferService
 		driverId: string,
 		offer: Offer
 	): Promise<boolean> {
-		if(!offer.order?.isCurrent)
+		const { data: currentOrders } = await this.orderService.getList(
+			{},
+			{ isCurrent: true, driverId, status: OrderStatus.PROCESSING }
+		);
+		if(currentOrders.length > 1) {
 			return false;
+		}
 
 		const orderTitle = offer.order?.crmId?.toString() ?? '';
 
@@ -894,6 +899,7 @@ export default class OfferService
 
 					let { data: orders } = await this.orderService.getList(
 						{}, {
+							
 							driverId,
 							statuses: [
 								OrderStatus.ACCEPTED,
@@ -902,9 +908,7 @@ export default class OfferService
 						}
 					);
 
-					if(orders &&
-					   orders.length > 0 &&
-					   orders.findIndex(o => o.id === orderId) < 0) {
+					if(orders && orders.length > 0) {
 						driverDto.status = DriverStatus.ON_POINT;
 						driverDto.currentPoint = 'A';
 					}
