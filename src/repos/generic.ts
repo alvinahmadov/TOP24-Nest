@@ -22,6 +22,7 @@ import {
 	TModelFilter,
 	TUpdateAttribute
 }                             from '@common/interfaces';
+import { UpdateOptions }      from 'sequelize/types/model';
 
 /**@ignore*/
 type TResponseKey = 'create' | 'update' | 'delete' | string;
@@ -201,15 +202,19 @@ export class GenericRepository<M extends Model, Attribute extends IModel>
 	 *
 	 * @param id {String!} Id of the item to update.
 	 * @param dto {TUpdateAttribute} DTO to update from.
+	 * @param options {UpdateOptions} Update options.
 	 * */
 	public async update(
 		id: string,
-		dto: TUpdateAttribute<Attribute>
+		dto: TUpdateAttribute<Attribute>,
+		options?: UpdateOptions<Attribute>
 	): Promise<M | null> {
 		return this.log(
 			async() =>
 			{
-				const result = await this.model.update(<any>dto, <any>{ where: { id }, returning: true });
+				const result = await this.model.update<any>(
+					dto, 
+					<any>{ where: { id }, returning: true, ...(options ?? {}) });
 				return result[0] > 0 ? result[1][0] : null;
 			},
 			{ id: 'update' },
