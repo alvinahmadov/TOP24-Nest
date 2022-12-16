@@ -257,9 +257,10 @@ function parseDestination(crmFields: TCRMFields): Promise<DestinationCreateDto[]
 					const crmDestElement = ORDER.DESTINATIONS[i];
 					addDestElement(i, crmDestElement);
 				}
-				return resolve(destinations);
+				resolve(destinations);
 			} catch(e) {
-				return reject(e);
+				console.error(e);
+				reject(e);
 			}
 		}
 	);
