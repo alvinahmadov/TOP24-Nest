@@ -29,7 +29,6 @@ export class DestinationCreateDto
 	@IsString()
 	address: string;
 
-	@IsArray()
 	coordinates: TGeoCoordinate;
 
 	@IsString()
@@ -65,7 +64,6 @@ export class DestinationUpdateDto
 	@IsString()
 	contact?: string;
 
-	@IsArray()
 	coordinates?: TGeoCoordinate;
 
 	@IsDate()

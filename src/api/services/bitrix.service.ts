@@ -133,7 +133,7 @@ export default class BitrixService
 							}
 						}
 
-						const { orderDto: orderDto, destinationDtos } = orderFromBitrix(crmItem);
+						const { orderDto: orderDto, destinationDtos } = await orderFromBitrix(crmItem);
 
 						if(clientContact)
 							if(orderDto && destinationDtos?.length > 0)
@@ -392,7 +392,7 @@ export default class BitrixService
 					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N'
 				) return { statusCode: 200, message: 'Invalid order source/stage' };
 
-				const { orderDto, destinationDtos } = orderFromBitrix(crmItem);
+				const { orderDto, destinationDtos } = await orderFromBitrix(crmItem);
 
 				if(crmClientId > 0) {
 					const { result } = await this.httpClient.get<TCRMResponse>(

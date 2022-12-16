@@ -202,60 +202,67 @@ function convertBitrixDest<V, R>(
 	return result;
 }
 
-function parseDestination(crmFields: TCRMFields): DestinationCreateDto[] {
-	const destinations: DestinationCreateDto[] = [];
-
-	const addDestElement = (index: number, crmElement: TCrmOrderDestination) =>
-	{
-		const shippingLinkList: string[] = crmFields[ORDER.LINK.SHIPPING];
-
-		if(crmFields[crmElement['ADDRESS']] !== undefined) {
-			const { address, coordinates } = splitAddress(crmFields[crmElement['ADDRESS']]);
-			if(address === '' || coordinates === null)
-				return;
-
-			const name = crmElement['NAME'];
-			let dType: DestinationType;
-			if(index === 0 || name === 'A') {
-				dType = DestinationType.LOAD;
-			}
-			else {
-				dType = convertBitrixDest<string, number>(name, crmFields[crmElement['TYPE']], true)
-				        ?? DestinationType.COMBINED;
-			}
-			const date: Date = dateValidator(crmFields[crmElement['DATE']]),
-				contact: string = crmFields[crmElement['CONTACT']] || null,
-				phone: string = crmFields[crmElement['PHONE']] || null,
-				comment: string = crmFields[crmElement['COMMENT']] || null,
-				shippingPhotoLinks: string[] = (shippingLinkList?.length > 0 &&
-				                                index < shippingLinkList.length)
-				                               ? shippingLinkList :
-				                               [];
-			destinations.push(
+function parseDestination(crmFields: TCRMFields): Promise<DestinationCreateDto[]> {
+	return new Promise<DestinationCreateDto[]>(
+		(resolve, reject) =>
+		{
+			const destinations: DestinationCreateDto[] = [];
+			try {
+				const addDestElement = (index: number, crmElement: TCrmOrderDestination) =>
 				{
-					orderId:   null,
-					point:     name,
-					type:      dType,
-					address,
-					coordinates,
-					date,
-					contact,
-					phone,
-					comment,
-					distance:  null,
-					fulfilled: false,
-					shippingPhotoLinks
+					const shippingLinkList: string[] = crmFields[ORDER.LINK.SHIPPING];
+
+					if(crmFields[crmElement['ADDRESS']] !== undefined) {
+						const { address, coordinates } = splitAddress(crmFields[crmElement['ADDRESS']]);
+						if(address === '' || coordinates === null)
+							return;
+
+						const name = crmElement['NAME'];
+						let dType: DestinationType;
+						if(index === 0 || name === 'A') {
+							dType = DestinationType.LOAD;
+						}
+						else {
+							dType = convertBitrixDest<string, number>(name, crmFields[crmElement['TYPE']], true)
+							        ?? DestinationType.COMBINED;
+						}
+						const date: Date = dateValidator(crmFields[crmElement['DATE']]),
+							contact: string = crmFields[crmElement['CONTACT']] || null,
+							phone: string = crmFields[crmElement['PHONE']] || null,
+							comment: string = crmFields[crmElement['COMMENT']] || null,
+							shippingPhotoLinks: string[] = (shippingLinkList?.length > 0 &&
+							                                index < shippingLinkList.length)
+							                               ? shippingLinkList :
+							                               [];
+						destinations.push(
+							{
+								orderId:   null,
+								point:     name,
+								type:      dType,
+								address,
+								coordinates,
+								date,
+								contact,
+								phone,
+								comment,
+								distance:  null,
+								fulfilled: false,
+								shippingPhotoLinks
+							}
+						);
+					}
+				};
+
+				for(let i = 0; i < ORDER.DESTINATIONS.length; ++i) {
+					const crmDestElement = ORDER.DESTINATIONS[i];
+					addDestElement(i, crmDestElement);
 				}
-			);
+				return resolve(destinations);
+			} catch(e) {
+				return reject(e);
+			}
 		}
-	};
-
-	for(let i = 0; i < ORDER.DESTINATIONS.length; ++i) {
-		const crmDestElement = ORDER.DESTINATIONS[i];
-		addDestElement(i, crmDestElement);
-	}
-
-	return destinations;
+	);
 }
 
 export function getCrm(data: TCRMFields | string | boolean): TCRMFields {
@@ -384,14 +391,14 @@ export function buildBitrixRequestUrl(
 	return qBuilder.query;
 }
 
-export function orderFromBitrix(crmFields: TCRMFields): {
+export async function orderFromBitrix(crmFields: TCRMFields): Promise<{
 	orderDto: OrderCreateDto;
 	destinationDtos: DestinationCreateDto[]
-} {
+}> {
 	if(!crmFields[ORDER.ID] || !crmFields[ORDER.ID].length)
 		return null;
 	const crmId = Number(crmFields[ORDER.ID]);
-	const destinationDtos = parseDestination(crmFields);
+	const destinationDtos = await parseDestination(crmFields);
 	const isCanceled = typeFromCrm(crmFields[ORDER.IS_CANCELED], false);
 	const stage: number = convertBitrix('orderStage', crmFields[ORDER.STAGE], true, true)
 	                      ?? OrderStage.NEW;
