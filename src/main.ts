@@ -26,7 +26,7 @@ import { CustomLogger }           from '@common/utils';
 import env                        from '@config/env';
 import * as mo                    from '@models/index';
 import * as dto                   from '@api/dto';
-import { RedisIoAdapter }         from '@api/events';
+import { RedisIoAdapter }         from '@api/notifications';
 import {
 	getRouteConfig,
 	TApiRouteList
