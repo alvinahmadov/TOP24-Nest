@@ -84,6 +84,11 @@ export interface IEnvironment {
 		key: string;
 		token: string;
 	};
+	firebase:         {
+		projectId:   string;
+		privateKey:  string;
+		clientEmail?: string;
+	};
 	objectStorage?: {
 		readonly type?: TObjectStorageType;
 		auth: TObjectStorageAuth;
