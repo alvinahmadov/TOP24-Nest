@@ -1,8 +1,8 @@
-import { FirebaseModule }       from 'nestjs-firebase';
-import { Module }               from '@nestjs/common';
-import { NotificationsGateway } from '@api/notifications';
-import AuthModule               from './auth.module';
-import env                      from '../../config/env';
+import { FirebaseModule }      from 'nestjs-firebase';
+import { Module }              from '@nestjs/common';
+import { NotificationGateway } from '@api/notifications';
+import AuthModule              from './auth.module';
+import env                     from '../../config/env';
 
 @Module({
 	        imports:   [
@@ -15,7 +15,7 @@ import env                      from '../../config/env';
 			                               }
 		                               })
 	        ],
-	        providers: [NotificationsGateway],
-	        exports:   [NotificationsGateway]
+	        providers: [NotificationGateway],
+	        exports:   [NotificationGateway]
         })
-export default class NotificationsModule {}
+export default class NotificationModule {}
