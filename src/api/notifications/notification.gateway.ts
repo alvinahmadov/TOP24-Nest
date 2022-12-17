@@ -3,6 +3,11 @@ import {
 	Socket
 }                              from 'socket.io';
 import {
+	FirebaseAdmin,
+	InjectFirebaseAdmin
+}                              from 'nestjs-firebase';
+import { UserRecord }          from 'firebase-admin/lib/auth/user-record';
+import {
 	ConnectedSocket,
 	MessageBody,
 	OnGatewayConnection,
@@ -26,67 +31,90 @@ import { UserRole }            from '@common/enums';
 import {
 	ICargoGatewayData,
 	IDriverGatewayData,
+	IModel,
 	IOrderGatewayData,
 	IServerEvents,
 	IUserPayload
 }                              from '@common/interfaces';
 import { socketAuthExtractor } from '@common/utils';
 import {
+	Admin,
+	EntityModel,
+	User
+}                              from '@models/index';
+import {
 	AdminRepository,
-	CargoCompanyRepository,
-	CargoInnCompanyRepository,
-	GatewayEventRepository
+	GatewayEventRepository,
+	UserRepository
 }                              from '@repos/index';
 import {
 	CargoMessageBodyPipe,
 	DriverMessageBodyPipe,
 	OrderMessageBodyPipe
 }                              from '@api/pipes';
-import { Admin }               from '@models/index';
-import { AuthService }         from '@api/services';
-import * as guards             from '@api/security/guards';
+import {
+	CargoGuard,
+	LogistGuard
+}                              from '@api/security';
+import AuthService             from '../security/auth.service';
+
+type TUserInfo = { phone?: string; fullName: string };
+const useFirebase: boolean = false;
 
 @WebSocketGateway(SOCKET_OPTIONS)
 @Injectable()
-export default class EventsGateway
+export default class NotificationGateway
 	implements OnGatewayConnection,
 	           OnGatewayDisconnect {
 	@WebSocketServer()
 	public server: IOServer<any, IServerEvents, any, IUserPayload>;
 
-	private readonly logger: Logger = new Logger(EventsGateway.name, { timestamp: true });
+	private static readonly users: Map<string, UserRecord> = new Map<string, UserRecord>();
+
+	private readonly logger: Logger = new Logger(NotificationGateway.name, { timestamp: true });
 	private readonly adminRepo: AdminRepository = new AdminRepository({ log: false });
-	private readonly cargoRepo: CargoCompanyRepository = new CargoCompanyRepository({ log: false });
-	private readonly cargoInnRepo: CargoInnCompanyRepository = new CargoInnCompanyRepository({ log: false });
+	private readonly userRepo: UserRepository = new UserRepository({ log: false });
 	private readonly eventsRepo: GatewayEventRepository = new GatewayEventRepository({ log: true });
 
 	constructor(
-		protected readonly authService: AuthService
+		protected readonly authService: AuthService,
+		@InjectFirebaseAdmin()
+		private readonly firebase: FirebaseAdmin
 	) {}
 
 	public async handleConnection(
 		@ConnectedSocket() client: Socket
 	) {
 		const token = socketAuthExtractor(client);
+
 		if(token) {
 			let { id, role, reff } = await this.authService.validateAsync(token);
-			const item = await this.cargoRepo.get(id, true) ||
-			             await this.cargoInnRepo.get(id, true) ||
+			const user = await this.userRepo.get(id, true) ||
 			             await this.adminRepo.get(id);
-			if(item) {
-				if(item instanceof Admin) {
+			if(user) {
+				if(user instanceof Admin) {
 					if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
 						client.data = { id, role, reff };
 						client.join(id);
 					}
 				}
-				else {
+				else if(user instanceof User) {
 					if(role === UserRole.CARGO) {
 						client.data = { id, role, reff };
 						client.join(id);
+						const company = user.company;
 
-						item.drivers
-						    .forEach(d => client.join(d.id));
+						if(company && useFirebase) {
+							await this.createAuthUser(company);
+							company?.drivers
+							       ?.forEach(
+								       driver =>
+								       {
+									       client.join(driver.id);
+									       this.createAuthUser(driver);
+								       }
+							       );
+						}
 					}
 				}
 				return;
@@ -109,9 +137,9 @@ export default class EventsGateway
 		client.disconnect(true);
 	}
 
-	@UseGuards(guards.AdminGuard, guards.CargoGuard)
+	@UseGuards(CargoGuard)
 	@SubscribeMessage(CARGO_EVENT)
-	public sendCargoEvent(
+	public sendCargoNotification(
 		@MessageBody(CargoMessageBodyPipe) data: ICargoGatewayData,
 		save: boolean = true
 	) {
@@ -122,9 +150,9 @@ export default class EventsGateway
 			    .catch(e => console.error(e));
 	}
 
-	@UseGuards(guards.AdminGuard, guards.LogistGuard)
+	@UseGuards(CargoGuard)
 	@SubscribeMessage(DRIVER_EVENT)
-	public sendDriverEvent(
+	public sendDriverNotification(
 		@MessageBody(DriverMessageBodyPipe) data: IDriverGatewayData,
 		role: UserRole,
 		save: boolean = true
@@ -137,6 +165,19 @@ export default class EventsGateway
 		}
 		if(role === UserRole.CARGO) {
 			sent = this.server.to(data.id).emit(DRIVER_EVENT, data);
+
+			const user = NotificationGateway.users.get(data.id);
+
+			if(user && useFirebase) {
+				this.firebase
+				    .messaging
+				    .sendToTopic(user.uid, { data: { message: data.message } })
+				    .then(console.info)
+				    .catch(console.error);
+			}
+			else {
+				console.log('No driver ' + data.id + ' in users.');
+			}
 		}
 
 		if(sent && save)
@@ -145,9 +186,9 @@ export default class EventsGateway
 			    .catch(e => console.error(e));
 	};
 
-	@UseGuards(guards.AdminGuard, guards.LogistGuard)
+	@UseGuards(LogistGuard)
 	@SubscribeMessage(ORDER_EVENT)
-	public sendOrderEvent(
+	public sendOrderNotification(
 		@MessageBody(OrderMessageBodyPipe) data: IOrderGatewayData,
 		role?: UserRole,
 		save: boolean = true
@@ -165,5 +206,40 @@ export default class EventsGateway
 			this.eventsRepo
 			    .create({ eventName: DRIVER_EVENT, eventData: data, hasSeen: false })
 			    .catch(e => console.error(e));
+	}
+
+	private async createAuthUser<T extends IModel,
+		E extends EntityModel<T> &
+		          TUserInfo>(user?: E)
+		: Promise<void> {
+		if(!user)
+			return;
+
+		const authUser: UserRecord = {
+			uid:           user?.id,
+			phoneNumber:   user?.phone,
+			displayName:   user?.fullName,
+			disabled:      false,
+			emailVerified: true,
+			metadata:      undefined,
+			providerData:  [],
+			toJSON(): object {
+				return user.get({ plain: true });
+			}
+		};
+
+		// await this.firebase.auth.createUser(
+		// 	{
+		// 		uid:           user?.id,
+		// 		phoneNumber:   user?.phone,
+		// 		displayName:   user?.fullName,
+		// 		disabled:      false,
+		// 		emailVerified: true
+		// 	}
+		// );
+
+		if(authUser) {
+			NotificationGateway.users.set(authUser.uid, authUser);
+		}
 	}
 }
