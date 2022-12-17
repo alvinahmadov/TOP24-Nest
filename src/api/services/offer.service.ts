@@ -1,9 +1,9 @@
-import { Op }                   from 'sequelize';
+import { Op }                  from 'sequelize';
 import {
 	Injectable,
 	HttpStatus
-}                               from '@nestjs/common';
-import env                      from '@config/env';
+}                              from '@nestjs/common';
+import env                     from '@config/env';
 import {
 	DestinationType,
 	DriverStatus,
@@ -12,7 +12,7 @@ import {
 	OrderStage,
 	TransportStatus,
 	UserRole
-}                               from '@common/enums';
+}                              from '@common/enums';
 import {
 	IApiResponses,
 	ICompanyTransportFilter,
@@ -27,28 +27,28 @@ import {
 	TOfferTransportFilter,
 	TOfferDriver,
 	TSentOffer
-}                               from '@common/interfaces';
+}                              from '@common/interfaces';
 import {
 	checkTransportRequirements,
 	filterTransports,
 	formatArgs,
 	getTranslation,
 	isSuccessResponse
-}                               from '@common/utils';
+}                              from '@common/utils';
 import {
 	transformEntity,
 	IDriverTransformer,
 	IOrderTransformer,
 	ITransportTransformer
-}                               from '@common/utils/compat';
+}                              from '@common/utils/compat';
 import {
 	Driver,
 	Offer
-}                               from '@models/index';
+}                              from '@models/index';
 import {
 	DestinationRepository,
 	OfferRepository
-}                               from '@repos/index';
+}                              from '@repos/index';
 import {
 	OfferCreateDto,
 	OfferFilter,
@@ -57,9 +57,9 @@ import {
 }                              from '@api/dto';
 import { NotificationGateway } from '@api/notifications';
 import Service                 from './service';
-import DriverService            from './driver.service';
-import OrderService             from './order.service';
-import TransportService         from './transport.service';
+import DriverService           from './driver.service';
+import OrderService            from './order.service';
+import TransportService        from './transport.service';
 
 const OFFER_TRANSLATIONS = getTranslation('REST', 'OFFER');
 const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
@@ -85,7 +85,7 @@ export default class OfferService
 		super();
 		this.repository = new OfferRepository();
 	}
-	
+
 	public async getById(id: string, full?: boolean)
 		: TAsyncApiResponse<Offer> {
 		const offer = await this.repository.get(id, full);
@@ -658,16 +658,17 @@ export default class OfferService
 
 		if(createCount > 0) {
 			const offers = await this.repository.bulkCreate(offersToCreate);
-			offers.forEach(
-				offer => this.gateway.sendDriverNotification(
-					{
-						id:      offer.driverId,
-						source:  'offer',
-						message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order.crmId?.toString())
-					},
-					UserRole.CARGO
-				)
-			);
+			if(offers?.length === offersToCreate.length)
+				offers.forEach(
+					offer => this.gateway.sendDriverNotification(
+						{
+							id:      offer.driverId,
+							source:  'offer',
+							message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order.crmId?.toString())
+						},
+						UserRole.CARGO
+					)
+				);
 		}
 
 		offers = await this.repository.getOrderDrivers(orderId, { full: full === undefined ? true : full });
