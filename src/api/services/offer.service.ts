@@ -1,9 +1,9 @@
-import { Op }            from 'sequelize';
+import { Op }                   from 'sequelize';
 import {
 	Injectable,
 	HttpStatus
-}                        from '@nestjs/common';
-import env               from '@config/env';
+}                               from '@nestjs/common';
+import env                      from '@config/env';
 import {
 	DestinationType,
 	DriverStatus,
@@ -12,7 +12,7 @@ import {
 	OrderStage,
 	TransportStatus,
 	UserRole
-}                        from '@common/enums';
+}                               from '@common/enums';
 import {
 	IApiResponses,
 	ICompanyTransportFilter,
@@ -27,39 +27,39 @@ import {
 	TOfferTransportFilter,
 	TOfferDriver,
 	TSentOffer
-}                        from '@common/interfaces';
+}                               from '@common/interfaces';
 import {
 	checkTransportRequirements,
 	filterTransports,
 	formatArgs,
 	getTranslation,
 	isSuccessResponse
-}                        from '@common/utils';
+}                               from '@common/utils';
 import {
 	transformEntity,
 	IDriverTransformer,
 	IOrderTransformer,
 	ITransportTransformer
-}                        from '@common/utils/compat';
+}                               from '@common/utils/compat';
 import {
 	Driver,
 	Offer
-}                        from '@models/index';
+}                               from '@models/index';
 import {
 	DestinationRepository,
 	OfferRepository
-}                        from '@repos/index';
+}                               from '@repos/index';
 import {
 	OfferCreateDto,
 	OfferFilter,
 	OfferUpdateDto,
 	OrderFilter
-}                        from '@api/dto';
-import { EventsGateway } from '@api/events';
-import Service           from './service';
-import DriverService     from './driver.service';
-import OrderService      from './order.service';
-import TransportService  from './transport.service';
+}                              from '@api/dto';
+import { NotificationGateway } from '@api/notifications';
+import Service                 from './service';
+import DriverService            from './driver.service';
+import OrderService             from './order.service';
+import TransportService         from './transport.service';
 
 const OFFER_TRANSLATIONS = getTranslation('REST', 'OFFER');
 const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
@@ -74,24 +74,18 @@ export default class OfferService
 		DECLINED:  { statusCode: HttpStatus.BAD_REQUEST, message: OFFER_TRANSLATIONS['DECLINED'] },
 		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: OFFER_TRANSLATIONS['NOT_FOUND'] }
 	};
-	private _gateway: EventsGateway;
 	private destinationRepo: DestinationRepository = new DestinationRepository();
 
 	constructor(
 		protected readonly driverService: DriverService,
 		protected readonly orderService: OrderService,
-		protected readonly transportService: TransportService
+		protected readonly transportService: TransportService,
+		private readonly gateway: NotificationGateway
 	) {
 		super();
 		this.repository = new OfferRepository();
 	}
-
-	public set gateway(gateway: EventsGateway) {
-		this._gateway = gateway;
-	}
-
-	public get gateway(): EventsGateway { return this._gateway;}
-
+	
 	public async getById(id: string, full?: boolean)
 		: TAsyncApiResponse<Offer> {
 		const offer = await this.repository.get(id, full);
@@ -171,7 +165,7 @@ export default class OfferService
 							) {
 								const message = formatArgs(EVENT_DRIVER_TRANSLATIONS['NO_MATCH'], messageObj.message);
 
-								this.gateway.sendDriverEvent(
+								this.gateway.sendDriverNotification(
 									{
 										id: driverId,
 										message
@@ -184,7 +178,7 @@ export default class OfferService
 					else {
 						const message = OFFER_TRANSLATIONS['ACCEPTED'];
 
-						this.gateway.sendDriverEvent(
+						this.gateway.sendDriverNotification(
 							{
 								id: driverId,
 								message
@@ -203,7 +197,7 @@ export default class OfferService
 					    ({ data: uOrder }) =>
 					    {
 						    if(uOrder) {
-							    this.gateway.sendDriverEvent(
+							    this.gateway.sendDriverNotification(
 								    {
 									    id:      driverId,
 									    source:  'offer',
@@ -212,7 +206,7 @@ export default class OfferService
 								    UserRole.CARGO
 							    );
 
-							    this.gateway.sendOrderEvent(
+							    this.gateway.sendOrderNotification(
 								    {
 									    id:      uOrder.id,
 									    stage:   uOrder.stage,
@@ -265,7 +259,7 @@ export default class OfferService
 				}
 			}
 
-			this.gateway.sendOrderEvent(eventObject, UserRole.LOGIST);
+			this.gateway.sendOrderNotification(eventObject, UserRole.LOGIST);
 		}
 
 		if(dto.orderStatus === OrderStatus.ACCEPTED)
@@ -665,7 +659,7 @@ export default class OfferService
 		if(createCount > 0) {
 			const offers = await this.repository.bulkCreate(offersToCreate);
 			offers.forEach(
-				offer => this.gateway.sendDriverEvent(
+				offer => this.gateway.sendDriverNotification(
 					{
 						id:      offer.driverId,
 						source:  'offer',
@@ -678,7 +672,7 @@ export default class OfferService
 
 		offers = await this.repository.getOrderDrivers(orderId, { full: full === undefined ? true : full });
 
-		this.gateway.sendOrderEvent(
+		this.gateway.sendOrderNotification(
 			{
 				id:     order.id,
 				source: 'offer',
@@ -720,7 +714,7 @@ export default class OfferService
 							(driver.order.id !== offer.orderId &&
 							driver.order.status === OrderStatus.PROCESSING)
 						) {
-							this.gateway.sendDriverEvent(
+							this.gateway.sendDriverNotification(
 								{
 									id:      driverId,
 									source:  'offer',
@@ -730,7 +724,7 @@ export default class OfferService
 							);
 						}
 
-						this.gateway.sendDriverEvent(
+						this.gateway.sendDriverNotification(
 							{
 								id:             driver.id,
 								status:         driver.status,
@@ -810,7 +804,7 @@ export default class OfferService
 			({ data: order }) =>
 			{
 				if(order) {
-					this.gateway.sendOrderEvent(
+					this.gateway.sendOrderNotification(
 						{
 							id:      orderId,
 							status:  order.status,
@@ -862,7 +856,7 @@ export default class OfferService
 					    .then(({ data: order }) =>
 					          {
 						          if(order) {
-							          this.gateway.sendOrderEvent(
+							          this.gateway.sendOrderNotification(
 								          {
 									          id:      order.id,
 									          status:  order.status,
@@ -908,7 +902,7 @@ export default class OfferService
 						    ({ data: driver }) =>
 						    {
 							    if(driver)
-								    this.gateway.sendDriverEvent(
+								    this.gateway.sendDriverNotification(
 									    {
 										    id:      driver.id,
 										    status:  driver.status,
@@ -953,7 +947,7 @@ export default class OfferService
 		const offers = await this.repository.getOrderDrivers(orderId);
 		offers.forEach(
 			(offer) =>
-				this.gateway.sendDriverEvent(
+				this.gateway.sendDriverNotification(
 					{
 						id:      offer.driverId,
 						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmId.toString())
