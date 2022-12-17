@@ -11,7 +11,7 @@ import {
 	IUserPayload
 }                               from '@common/interfaces';
 import { requestAuthExtractor } from '@common/utils';
-import { AuthService }          from '@api/services';
+import AuthService              from '../auth.service';
 
 @Injectable()
 export class AccessGuard
