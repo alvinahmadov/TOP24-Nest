@@ -41,7 +41,7 @@ import {
 }                                               from '@models/index';
 import { DestinationRepository }                from '@repos/index';
 import { DestinationCreateDto, OrderCreateDto } from '@api/dto';
-import { EventsGateway }                        from '@api/events';
+import { NotificationGateway }                  from '@api/notifications';
 import Service                                  from './service';
 import CargoCompanyService                      from './cargo-company.service';
 import CargoCompanyInnService                   from './cargoinn-company.service';
@@ -72,7 +72,6 @@ export default class BitrixService
 		NOT_FOUND_TRANSPORT: { statusCode: HttpStatus.NOT_FOUND, message: 'Transport Not found ...' },
 		NOT_FOUND_ORDER:     { statusCode: HttpStatus.NOT_FOUND, message: 'Order Not found ...' }
 	};
-	private _gateway: EventsGateway;
 	private destinationRepo: DestinationRepository = new DestinationRepository();
 
 	constructor(
@@ -80,16 +79,11 @@ export default class BitrixService
 		protected readonly cargoInnService: CargoCompanyInnService,
 		protected readonly orderService: OrderService,
 		protected readonly offerService: OfferService,
-		protected readonly transportService: TransportService
+		protected readonly transportService: TransportService,
+		private readonly gateway: NotificationGateway
 	) {
 		super();
 	}
-
-	public set gateway(gateway: EventsGateway) {
-		this._gateway = gateway;
-	}
-
-	public get gateway(): EventsGateway { return this._gateway;}
 
 	/**
 	 * Fetch orders from bitrix
@@ -284,7 +278,7 @@ export default class BitrixService
 					await cargo.save({ fields: ['confirmed'] })
 					           .then((res) =>
 					                 {
-						                 this.gateway.sendCargoEvent(
+						                 this.gateway.sendCargoNotification(
 							                 {
 								                 id:     res.id,
 								                 event:  'cargo',
@@ -308,7 +302,7 @@ export default class BitrixService
 					await cargoinn.save({ fields: ['confirmed'] })
 					              .then((res) =>
 					                    {
-						                    this.gateway.sendCargoEvent(
+						                    this.gateway.sendCargoNotification(
 							                    {
 								                    id:     res.id,
 								                    event:  'cargo',
@@ -345,7 +339,7 @@ export default class BitrixService
 				await transport.save({ fields: ['confirmed'] })
 				               .then(() =>
 				                     {
-					                     this.gateway.sendDriverEvent(
+					                     this.gateway.sendDriverNotification(
 						                     {
 							                     id:     transport.driverId,
 							                     source: 'bitrix',
@@ -449,18 +443,6 @@ export default class BitrixService
 									dto => repo.bulkUpdate(dto, { point: dto.point, orderId: dto.orderId })
 								)
 						);
-
-						this.gateway.sendOrderEvent(
-							{
-								id:      order.id,
-								source:  'bitrix',
-								status:  order.status,
-								stage:   order.stage,
-								message: `Обновлены данные заказа ${order.title}!`
-							},
-							UserRole.LOGIST,
-							false
-						);
 					}
 					return updateResponse;
 				}
@@ -472,18 +454,6 @@ export default class BitrixService
 						const order = createResponse.data;
 						destinationDtos.forEach(d => d.orderId = order.id);
 						await this.destinationRepo.bulkCreate(destinationDtos);
-
-						this.gateway.sendOrderEvent(
-							{
-								id:      order.id,
-								source:  'bitrix',
-								status:  order.status,
-								stage:   order.stage,
-								message: `Появился новый заказ '${order.title}'!`
-							},
-							UserRole.LOGIST,
-							false
-						);
 					}
 					return createResponse;
 				}
@@ -507,7 +477,6 @@ export default class BitrixService
 		const { data: order } = await this.orderService.getByCrmId(crmId);
 		if(order) {
 			const { data: { affectedCount } } = await this.orderService.delete(order.id);
-			if(affectedCount > 0) this.gateway.sendOrderEvent({ id: order.id, status: -1 });
 			return {
 				statusCode: 200,
 				data:       { affectedCount },
