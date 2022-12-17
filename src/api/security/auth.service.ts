@@ -28,7 +28,7 @@ import {
 	CargoInnCompanyRepository,
 	UserRepository
 }                        from '@repos/index';
-import { StaticService } from './service';
+import { StaticService } from '../services/service';
 
 const TRANSLATIONS = getTranslation('FAIL');
 const COMPANY_TRANSLATIONS = getTranslation('REST', 'COMPANY');
