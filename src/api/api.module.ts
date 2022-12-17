@@ -14,7 +14,6 @@ import {
 import env                from '@config/env';
 import {
 	AuthModule,
-	EventsModule,
 	GQLModule,
 	RESTModule
 }                         from '@api/modules';
@@ -32,9 +31,6 @@ const imports: Array<Type | DynamicModule | Promise<DynamicModule> | ForwardRefe
 	RESTModule,
 	RouterModule.register(REST_ROUTES)
 ];
-
-if(env.app.enableEvents)
-	imports.push(EventsModule);
 
 if(env.app.enableGraphql)
 	imports.push(GQLModule);
