@@ -53,9 +53,23 @@ export function fileExt(file: { mimetype?: string }) {
 	return 'jpeg';
 }
 
+export function getUniqueArray(...arrays: any[][]) {
+	let result: Array<any> = [];
+
+	for(const array of arrays) {
+		if(array)
+			result = Array.from(new Set<any>(
+				...array,
+				...result
+			));
+	}
+
+	return result;
+}
+
 export function renameMulterFile(file: TMulterFile, ...args: string[]): TMulterFile {
 	const { originalname: name, ...rest } = file;
-	const fileName = uuid();
+	const fileName = uuid({ random: rest.buffer });
 	return {
 		originalname: path.join(...args, `${fileName.toUpperCase()}.${fileExt({ mimetype: rest.mimetype })}`),
 		...rest
