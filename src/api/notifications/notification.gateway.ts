@@ -117,6 +117,7 @@ export default class NotificationGateway
 						}
 					}
 				}
+				this.logger.log(`Client '${client.id}' connected.`);
 				return;
 			}
 			else {
