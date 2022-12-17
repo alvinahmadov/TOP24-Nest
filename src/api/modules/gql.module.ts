@@ -1,13 +1,13 @@
-import { join }       from 'path';
-import { Module }     from '@nestjs/common';
+import { join }            from 'path';
+import { Module }          from '@nestjs/common';
 import {
 	ApolloDriver,
 	ApolloDriverConfig
-}                     from '@nestjs/apollo';
+}                          from '@nestjs/apollo';
 import {
 	GraphQLModule,
 	registerEnumType
-}                     from '@nestjs/graphql';
+}                          from '@nestjs/graphql';
 import {
 	CompanyType,
 	DestinationType,
@@ -18,16 +18,16 @@ import {
 	OrderStatus,
 	TransportStatus,
 	UserRole
-}                     from '@common/enums';
+}                          from '@common/enums';
 import {
 	DateScalar,
 	TupleScalar,
 	UuidScalar
-}                     from '@common/scalars';
-import RESOLVERS      from '@api/resolvers';
-import AuthModule     from './auth.module';
-import ServicesModule from './services.module';
-import EventsModule   from './events.module';
+}                          from '@common/scalars';
+import RESOLVERS           from '@api/resolvers';
+import AuthModule          from './auth.module';
+import NotificationsModule from './notification.module';
+import ServicesModule      from './services.module';
 
 registerEnumType(CompanyType, {
 	name:        'CompanyType',
@@ -106,7 +106,7 @@ registerEnumType(UserRole, {
 @Module({
 	        imports:   [
 		        AuthModule,
-		        EventsModule,
+		        NotificationsModule,
 		        ServicesModule,
 		        GraphQLModule.forRoot<ApolloDriverConfig>(
 			        {
