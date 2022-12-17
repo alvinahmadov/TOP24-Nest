@@ -64,10 +64,4 @@ export default class AppController {
 		const filepath = join(__dirname + AGREEMENT_PDF_PATH);
 		return response.sendFile(filepath, (err) => console.debug(err));
 	}
-
-	@Post('reset')
-	public async reset(@Res() response: ex.Response) {
-		const result = await this.appService.reset();
-		return response.status(result.status).send(result);
-	}
 }
