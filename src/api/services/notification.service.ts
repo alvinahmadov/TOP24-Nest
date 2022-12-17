@@ -16,7 +16,7 @@ import {
 import Service                    from './service';
 
 @Injectable()
-export default class EventService
+export default class NotificationService
 	extends Service<GatewayEvent, GatewayEventRepository>
 	implements IService {
 	public override readonly responses: IApiResponses<null> = {
