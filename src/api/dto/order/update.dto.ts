@@ -42,6 +42,12 @@ export default class OrderUpdateDto
 	@ApiProperty(prop.contractPhotoLink)
 	public contractPhotoLink?: string;
 
+	@ApiProperty(prop.paymentPhotoLinks)
+	public paymentPhotoLinks?: string[];
+
+	@ApiProperty(prop.receiptPhotoLinks)
+	public receiptPhotoLinks?: string[];
+
 	@ApiProperty(prop.date)
 	public date?: Date;
 
