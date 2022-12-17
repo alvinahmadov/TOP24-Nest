@@ -1,3 +1,4 @@
+import { Op }                        from 'sequelize';
 import { HttpStatus, Injectable }    from '@nestjs/common';
 import { BitrixUrl }                 from '@common/constants';
 import { AxiosStatic }               from '@common/classes';
@@ -35,7 +36,6 @@ import ImageFileService              from './image-file.service';
 import PaymentService                from './payment.service';
 import TransportService              from './transport.service';
 import UserService                   from './user.service';
-import { Op }                        from 'sequelize';
 
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
 

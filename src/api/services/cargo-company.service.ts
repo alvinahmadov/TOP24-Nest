@@ -55,8 +55,8 @@ export default class CargoCompanyService
 	};
 
 	constructor(
-		protected readonly paymentsService: PaymentService,
 		protected readonly imageFileService: ImageFileService,
+		protected readonly paymentsService: PaymentService,
 		protected readonly transportService: TransportService,
 		protected readonly userService: UserService
 	) {
