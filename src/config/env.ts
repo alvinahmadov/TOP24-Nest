@@ -64,6 +64,11 @@ const env: IEnvironment = {
 		key:     parser.str('BITRIX_KEY'),
 		token:   parser.str('BITRIX_TOKEN')
 	},
+	firebase:         {
+		projectId:   parser.str('FIREBASE_PROJECT_ID'),
+		privateKey:  parser.str('FIREBASE_PRIVATE_KEY'),
+		clientEmail: parser.str('FIREBASE_CLIENT_EMAIL')
+	},
 	objectStorage:    {
 		type:     useLocalStorage ? 'local' : 'external',
 		auth:     {

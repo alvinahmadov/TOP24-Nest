@@ -196,6 +196,9 @@ export interface IEnvParseOutput
 	LOG_PATH?: string;
 	LOG_LEVEL?: TLogLevel;
 	// Third party config
+	FIREBASE_PROJECT_ID?: string;
+	FIREBASE_PRIVATE_KEY?: string;
+	FIREBASE_CLIENT_EMAIL?: string;
 	BITRIX_BASE_URL?: string;
 	BITRIX_KEY?: string;
 	BITRIX_HOOK_URL?: string;
