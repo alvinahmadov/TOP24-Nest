@@ -1,12 +1,12 @@
-import { Module }   from '@nestjs/common';
-import SERVICES     from '@api/services';
-import EventsModule from './events.module';
-import AuthModule   from './auth.module';
+import { Module }          from '@nestjs/common';
+import SERVICES            from '@api/services';
+import AuthModule          from './auth.module';
+import NotificationsModule from './notification.module';
 
 @Module({
 	        imports:   [
 		        AuthModule,
-		        EventsModule
+		        NotificationsModule
 	        ],
 	        providers: SERVICES,
 	        exports:   SERVICES
