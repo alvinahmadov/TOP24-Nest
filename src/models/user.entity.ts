@@ -61,4 +61,20 @@ export default class User
 
 	@HasMany(() => CargoCompanyInn, 'userId')
 	cargoInnCompanies?: CargoCompanyInn[];
+
+	public get company() {
+		if(this.cargoCompanies) {
+			const company = this.cargoCompanies.find(c => c.isDefault);
+
+			if(company)
+				return company;
+		}
+		if(this.cargoInnCompanies) {
+			const company = this.cargoInnCompanies.find(c => c.isDefault);
+
+			if(company)
+				return company;
+		}
+		return null;
+	}
 }
