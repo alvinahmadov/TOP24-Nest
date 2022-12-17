@@ -23,7 +23,7 @@ import {
 	CargoGuard,
 	LogistGuard
 }                              from '@api/security';
-import { EventService }        from '@api/services';
+import { NotificationService } from '@api/services';
 import BaseController          from './controller';
 
 const { path, tag, routes } = getRouteConfig('event');
@@ -34,7 +34,7 @@ const { path, tag, routes } = getRouteConfig('event');
 export default class EventController
 	extends BaseController {
 	public constructor(
-		protected readonly eventService: EventService
+		protected readonly eventService: NotificationService
 	) {
 		super();
 	}

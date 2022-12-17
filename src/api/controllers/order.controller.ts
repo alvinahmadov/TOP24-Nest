@@ -19,18 +19,16 @@ import {
 }                              from '@nestjs/platform-express';
 import {
 	OfferStatus,
-	OrderStatus,
-	UserRole
+	OrderStatus
+	// UserRole
 }                              from '@common/enums';
 import { TMulterFile }         from '@common/interfaces';
 import {
-	formatArgs,
-	getTranslation, isSuccessResponse,
+	isSuccessResponse,
 	sendResponse
 }                              from '@common/utils';
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
-import { EventsGateway }       from '@api/events';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
@@ -50,7 +48,6 @@ import {
 import BaseController          from './controller';
 
 const { path, tag, routes } = getRouteConfig('order');
-const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
 
 @ApiTags(tag)
 @Controller(path)
@@ -59,11 +56,10 @@ export default class OrderController
 	extends BaseController {
 	public constructor(
 		private readonly offerService: OfferService,
-		private readonly orderService: OrderService,
-		private readonly gateway: EventsGateway
+		private readonly orderService: OrderService
 	) {
 		super();
-		this.orderService.gateway = this.gateway;
+		// this.orderService.gateway = this.gateway;
 	}
 
 	@ApiRoute(routes.filter, {
@@ -280,19 +276,20 @@ export default class OrderController
 								{ driverId: { [Op.ne]: offer.driverId } }
 							]
 						}
-					).then(
-						// then emit message for unselected drivers.
-						([, offers]) =>
-						{
-							offers.forEach(o => this.gateway.sendDriverEvent(
-								{
-									id:      o.driverId,
-									message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], order.crmId?.toString())
-								},
-								UserRole.CARGO
-							));
-						}
 					);
+					/*      .then(
+				// then emit message for unselected drivers.
+				([, offers]) =>
+				{
+					offers.forEach(o => this.gateway.sendDriverNotification(
+						{
+							id:      o.driverId,
+							message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], order.crmId?.toString())
+						},
+						UserRole.CARGO
+					));
+				}
+			);*/
 				}
 			}
 		}

@@ -15,11 +15,10 @@ import {
 	CompanyUpdateDto
 }                              from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
-import { EventsGateway }       from '@api/events';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
 import { BitrixService }       from '@api/services';
-import { AdminGuard }          from '@api/security/guards';
+import { AdminGuard }          from '@api/security';
 import { StaticController }    from './controller';
 
 const { path, tag, routes } = getRouteConfig('bitrix');
@@ -32,12 +31,8 @@ export default class BitrixController
 	private static eventMap: Map<number, string> = new Map<number, string>();
 
 	public constructor(
-		private readonly bitrixService: BitrixService,
-		private readonly gateway: EventsGateway
-	) {
-		super();
-		this.bitrixService.gateway = gateway;
-	}
+		private readonly bitrixService: BitrixService
+	) { super(); }
 
 	@ApiRoute(routes.orders, {
 		guards:   [AdminGuard],

@@ -16,9 +16,9 @@ import {
 }                              from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
-import { ApiRoute, UserParam } from '@api/decorators';
-import { EventsGateway }       from '@api/events';
-import { HttpExceptionFilter } from '@api/middlewares';
+import { ApiRoute, UserParam }  from '@api/decorators';
+// import { NotificationsGateway } from '@api/notifications';
+import { HttpExceptionFilter }  from '@api/middlewares';
 import {
 	DefaultBoolPipe,
 	OfferPipe,
@@ -39,12 +39,8 @@ const { path, tag, routes } = getRouteConfig('offer');
 export default class OfferController
 	extends BaseController {
 	public constructor(
-		private readonly offerService: OfferService,
-		private readonly gateway: EventsGateway
-	) {
-		super();
-		this.offerService.gateway = this.gateway;
-	}
+		private readonly offerService: OfferService
+	) { super(); }
 
 	@ApiRoute(routes.filter, {
 		guards:   [AccessGuard],

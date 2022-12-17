@@ -17,7 +17,6 @@ import { TMulterFile }         from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
-import { EventsGateway }       from '@api/events';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
@@ -46,12 +45,8 @@ export default class DriverController
 	public constructor(
 		private readonly addressService: AddressService,
 		private readonly driverService: DriverService,
-		private readonly orderService: OrderService,
-		private readonly gateway: EventsGateway
-	) {
-		super();
-		this.driverService.gateway = this.gateway;
-	}
+		private readonly orderService: OrderService
+	) { super(); }
 
 	@ApiRoute(routes.filter, {
 		guards:   [AccessGuard],

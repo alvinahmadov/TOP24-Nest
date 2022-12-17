@@ -57,10 +57,10 @@ import {
 import { getRouteConfig }      from '@api/routes';
 import {
 	AccessGuard,
+	AuthService,
 	CargoGuard
 }                              from '@api/security';
 import {
-	AuthService,
 	CargoCompanyInnService,
 	CargoCompanyService,
 	OfferService,
