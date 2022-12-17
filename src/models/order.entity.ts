@@ -371,10 +371,14 @@ export default class Order
 		}
 		data.fields[ORDER.IS_OPEN] = this.isOpen ? 'Y' : 'N';
 		data.fields[ORDER.IS_FREE] = this.isFree ? 'Y' : 'N';
-		data.fields[ORDER.CANCEL_CAUSE] = this.cancelCause || '';
-		data.fields[ORDER.LINK.PAYMENT] = this.paymentPhotoLinks?.join(', ');
-		data.fields[ORDER.LINK.RECEIPT] = this.receiptPhotoLinks?.join(', ');
-		data.fields[ORDER.LINK.CONTRACT] = this.contractPhotoLink || '';
+		data.fields[ORDER.CANCEL_CAUSE] = this.cancelCause || null;
+		data.fields[ORDER.LINK.PAYMENT] = this.paymentPhotoLinks
+		                                  ? this.paymentPhotoLinks?.join(', ')
+		                                  : null;
+		data.fields[ORDER.LINK.RECEIPT] = this.receiptPhotoLinks
+		                                  ? this.receiptPhotoLinks?.join(', ')
+		                                  : null;
+		data.fields[ORDER.LINK.CONTRACT] = this.contractPhotoLink ?? null;
 		if(this.destinations) {
 			for(const destination of this.destinations) {
 				const DESTINATION = ORDER.DESTINATIONS.find(({ NAME }) => NAME === destination.point);
