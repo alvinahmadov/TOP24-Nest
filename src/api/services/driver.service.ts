@@ -2,9 +2,9 @@ import {
 	forwardRef, Inject,
 	Injectable,
 	HttpStatus
-}                            from '@nestjs/common';
-import { BitrixUrl, Bucket } from '@common/constants';
-import { UserRole }          from '@common/enums';
+}                              from '@nestjs/common';
+import { BitrixUrl, Bucket }   from '@common/constants';
+import { UserRole }            from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -18,7 +18,7 @@ import {
 	TMergedEntities,
 	TMulterFile,
 	TUpdateAttribute
-}                            from '@common/interfaces';
+}                              from '@common/interfaces';
 import {
 	addressFromCoordinates,
 	buildBitrixRequestUrl,
@@ -26,26 +26,23 @@ import {
 	filterDrivers,
 	formatArgs,
 	getTranslation
-}                            from '@common/utils';
-import { Driver, Order }     from '@models/index';
+}                              from '@common/utils';
+import { Driver, Order }       from '@models/index';
 import {
 	DestinationRepository,
 	DriverRepository
-}                            from '@repos/index';
+}                              from '@repos/index';
 import {
 	DriverCreateDto,
 	DriverFilter,
 	DriverUpdateDto,
 	ListFilter,
 	TransportFilter
-}                            from '@api/dto';
-import { EventsGateway }     from '@api/events';
-import Service               from './service';
-import ImageFileService      from './image-file.service';
-import OrderService          from './order.service';
-import CONTACT_DEL_URL = BitrixUrl.CONTACT_DEL_URL;
-import CONTACT_UPD_URL = BitrixUrl.CONTACT_UPD_URL;
-import CONTACT_ADD_URL = BitrixUrl.CONTACT_ADD_URL;
+}                              from '@api/dto';
+import { NotificationGateway } from '@api/notifications';
+import Service                 from './service';
+import ImageFileService        from './image-file.service';
+import OrderService            from './order.service';
 
 const TRANSLATIONS = getTranslation('REST', 'DRIVER');
 
@@ -56,23 +53,17 @@ export default class DriverService
 	public override readonly responses: IApiResponses<null> = {
 		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: TRANSLATIONS['NOT_FOUND'] }
 	};
-	private _gateway: EventsGateway;
 	private destinationRepo: DestinationRepository = new DestinationRepository();
 
 	constructor(
 		protected readonly imageFileService: ImageFileService,
 		@Inject(forwardRef(() => OrderService))
-		protected readonly orderService: OrderService
+		protected readonly orderService: OrderService,
+		private readonly gateway: NotificationGateway
 	) {
 		super();
 		this.repository = new DriverRepository();
 	}
-
-	public set gateway(gateway: EventsGateway) {
-		this._gateway = gateway;
-	}
-
-	public get gateway(): EventsGateway { return this._gateway;}
 
 	/**
 	 * @summary Get list of cargo company drivers
@@ -242,7 +233,7 @@ export default class DriverService
 
 		if(driver.crmId) {
 			try {
-				await this.httpClient.get(`${CONTACT_DEL_URL}?ID=${driver.crmId}`);
+				await this.httpClient.get(`${BitrixUrl.CONTACT_DEL_URL}?ID=${driver.crmId}`);
 			} catch(e) {
 				console.error(e);
 			}
@@ -280,8 +271,8 @@ export default class DriverService
 		let directions: string[] = [];
 
 		let { crmId } = driver;
-		const url = crmId ? CONTACT_UPD_URL
-		                  : CONTACT_ADD_URL;
+		const url = crmId ? BitrixUrl.CONTACT_UPD_URL
+		                  : BitrixUrl.CONTACT_ADD_URL;
 
 		if(driver.cargoId) {
 			if(driver.cargo) {
@@ -338,7 +329,7 @@ export default class DriverService
 
 				await driver.save({ fields: ['currentAddress'] });
 				const data = { currentAddress };
-				this.gateway.sendDriverEvent(
+				this.gateway.sendDriverNotification(
 					{
 						id:             driver.id,
 						status:         driver.status,
