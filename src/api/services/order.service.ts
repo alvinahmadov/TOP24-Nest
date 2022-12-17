@@ -33,6 +33,7 @@ import {
 	filterOrders,
 	formatArgs,
 	getTranslation,
+	getUniqueArray,
 	transformTransportParameters,
 	renameMulterFile
 }                              from '@common/utils';
@@ -545,10 +546,7 @@ export default class OrderService
 		if(files && files.length > 0) {
 			if(mode === 'contract') {
 				order = await this.repository.get(id, true);
-
-				const {
-					Location: contractPhotoLink
-				} = await this.imageFileService.uploadFile(
+				const { Location: contractPhotoLink } = await this.imageFileService.uploadFile(
 					renameMulterFile(files[0], Bucket.Folders.ORDER, id, mode)
 				);
 
@@ -557,57 +555,53 @@ export default class OrderService
 					message = ORDER_TRANSLATIONS['CONTRACT'];
 
 					if(order.contractPhotoLink) {
-						await this.imageFileService.deleteImage(order.contractPhotoLink);
+						const deleted = await this.imageFileService.deleteImage(order.contractPhotoLink);
+						if(deleted)
+							order.contractPhotoLink = null;
 					}
 					order = await this.repository.update(id, {
 						contractPhotoLink,
 						stage: OrderStage.SIGNED_DRIVER
 					});
 				}
+				else console.log('No contract document scan was uploaded!');
 			}
 			else if(mode === 'payment') {
-				const {
-					Location: paymentPhotoLinks
-				} = await this.imageFileService
-				              .uploadFiles(
-					              renameMulterFiles(files, Bucket.Folders.ORDER, id, mode)
-				              );
-				if(paymentPhotoLinks) {
+				let { Location: paymentPhotoLinks } = await this.imageFileService.uploadFiles(
+					renameMulterFiles(files, Bucket.Folders.ORDER, id, mode)
+				);
+
+				if(paymentPhotoLinks?.length > 0) {
 					fileUploaded = true;
 					message = ORDER_TRANSLATIONS['PAYMENT'];
 
 					if(order.paymentPhotoLinks)
-						order.paymentPhotoLinks.push(...paymentPhotoLinks);
-					else
-						order.paymentPhotoLinks = paymentPhotoLinks;
+						paymentPhotoLinks = getUniqueArray(order.paymentPhotoLinks, paymentPhotoLinks);
 
 					order = await this.repository.update(id, {
-						onPayment:         true,
-						paymentPhotoLinks: order.paymentPhotoLinks,
-						stage:             OrderStage.PAYMENT_FORMED
+						onPayment: true,
+						paymentPhotoLinks,
+						stage:     OrderStage.PAYMENT_FORMED
 					});
 				}
+				else console.log('No payment document scan was uploaded!');
+
 			}
 			else if(mode === 'receipt') {
-				const {
-					Location: receiptPhotoLinks
-				} = await this.imageFileService
-				              .uploadFiles(
-					              renameMulterFiles(files, Bucket.Folders.ORDER, id, mode)
-				              );
+				let { Location: receiptPhotoLinks } = await this.imageFileService.uploadFiles(
+					renameMulterFiles(files, Bucket.Folders.ORDER, id, mode)
+				);
+
 				if(receiptPhotoLinks) {
 					fileUploaded = true;
 					message = ORDER_TRANSLATIONS['RECEIPT'];
 
-					if(order.paymentPhotoLinks)
-						order.receiptPhotoLinks.push(...receiptPhotoLinks);
-					else
-						order.receiptPhotoLinks = receiptPhotoLinks;
+					if(order.receiptPhotoLinks)
+						receiptPhotoLinks = getUniqueArray(order.receiptPhotoLinks, receiptPhotoLinks);
 
-					order = await this.repository.update(id, {
-						receiptPhotoLinks: order.receiptPhotoLinks
-					});
+					order = await this.repository.update(id, { receiptPhotoLinks });
 				}
+				else console.log('No receipt document scan was uploaded!');
 			}
 		}
 
@@ -616,11 +610,12 @@ export default class OrderService
 				order.paymentPhotoLinks?.length > 0 &&
 				order.receiptPhotoLinks?.length > 0
 			) {
-				order.stage = OrderStage.DOCUMENT_SENT;
-				order.save({ fields: ['stage'] })
-				     .then(o => console.log(`Documents for ${mode} photos for order '${o.id}' uploaded`))
-				     .catch(console.error);
+				this.repository
+				    .update(id, { stage: OrderStage.DOCUMENT_SENT, onPayment: order.onPayment })
+				    .then(o => console.log(`Documents for ${mode} photos for order '${o.id}' uploaded`))
+				    .catch(console.error);
 			}
+			else console.log('Either payment or receipt photo not uploaded!');
 
 			this.send(order.id)
 			    .then(() => this.gateway.sendOrderNotification({ id, message }))
