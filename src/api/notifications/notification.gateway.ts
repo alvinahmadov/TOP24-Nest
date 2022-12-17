@@ -104,7 +104,7 @@ export default class NotificationGateway
 						client.join(id);
 						const company = user.company;
 
-						if(company && useFirebase) {
+						if(company) {
 							await this.createAuthUser(company);
 							company?.drivers
 							       ?.forEach(
@@ -215,28 +215,22 @@ export default class NotificationGateway
 		if(!user)
 			return;
 
-		const authUser: UserRecord = {
+		const userData = {
 			uid:           user?.id,
 			phoneNumber:   user?.phone,
 			displayName:   user?.fullName,
 			disabled:      false,
-			emailVerified: true,
-			metadata:      undefined,
-			providerData:  [],
-			toJSON(): object {
-				return user.get({ plain: true });
-			}
+			emailVerified: true
 		};
 
-		// await this.firebase.auth.createUser(
-		// 	{
-		// 		uid:           user?.id,
-		// 		phoneNumber:   user?.phone,
-		// 		displayName:   user?.fullName,
-		// 		disabled:      false,
-		// 		emailVerified: true
-		// 	}
-		// );
+		const authUser: UserRecord = useFirebase
+		                             ? await this.firebase.auth.createUser(userData)
+		                             : {
+				...userData,
+				metadata:     undefined,
+				providerData: [],
+				toJSON(): object {return user.get({ plain: true });}
+			};
 
 		if(authUser) {
 			NotificationGateway.users.set(authUser.uid, authUser);
