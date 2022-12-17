@@ -94,24 +94,35 @@ export default class NotificationGateway
 			if(user) {
 				if(user instanceof Admin) {
 					if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
-						client.data = { id, role, reff };
-						client.join(id);
+						this.createAuthUser(user)
+						    .then(success =>
+						          {
+							          if(success) {
+								          client.data = { id, role, reff };
+								          client.join(id);
+							          }
+						          });
 					}
 				}
 				else if(user instanceof User) {
 					if(role === UserRole.CARGO) {
-						client.data = { id, role, reff };
-						client.join(id);
 						const company = user.company;
-
 						if(company) {
-							await this.createAuthUser(company);
+							this.createAuthUser(company)
+							    .then(success =>
+							          {
+								          if(success) {
+									          client.data = { id, role, reff };
+									          client.join(id);
+								          }
+							          });
+
 							company?.drivers
 							       ?.forEach(
 								       driver =>
 								       {
-									       client.join(driver.id);
-									       this.createAuthUser(driver);
+									       this.createAuthUser(driver)
+									           .then(success => { if(success) client.join(driver.id); });
 								       }
 							       );
 						}
@@ -165,20 +176,20 @@ export default class NotificationGateway
 
 		}
 		if(role === UserRole.CARGO) {
-			sent = this.server.to(data.id).emit(DRIVER_EVENT, data);
-
 			const user = NotificationGateway.users.get(data.id);
 
-			if(user && useFirebase) {
-				this.firebase
-				    .messaging
-				    .sendToTopic(user.uid, { data: { message: data.message } })
-				    .then(console.info)
-				    .catch(console.error);
+			if(user) {
+				sent = this.server.to(data.id).emit(DRIVER_EVENT, data);
+
+				if(useFirebase) {
+					this.firebase
+					    .messaging
+					    .sendToTopic(user.uid, { data: { message: data.message } })
+					    .then(console.info)
+					    .catch(console.error);
+				}
 			}
-			else {
-				console.log('No driver ' + data.id + ' in users.');
-			}
+			else console.log('No driver ' + data.id + ' in users.');
 		}
 
 		if(sent && save)
@@ -212,9 +223,9 @@ export default class NotificationGateway
 	private async createAuthUser<T extends IModel,
 		E extends EntityModel<T> &
 		          TUserInfo>(user?: E)
-		: Promise<void> {
+		: Promise<boolean> {
 		if(!user)
-			return;
+			return false;
 
 		const userData = {
 			uid:           user?.id,
@@ -235,6 +246,9 @@ export default class NotificationGateway
 
 		if(authUser) {
 			NotificationGateway.users.set(authUser.uid, authUser);
+			return true;
 		}
+
+		return false;
 	}
 }
