@@ -32,12 +32,10 @@ import { getRouteConfig }      from '@api/routes';
 import {
 	AccessGuard,
 	AdminGuard,
+	AuthService,
 	LogistGuard
 }                              from '@api/security';
-import {
-	AdminService,
-	AuthService
-}                              from '@api/services';
+import { AdminService }        from '@api/services';
 import BaseController          from './controller';
 
 const { path, tag, routes } = getRouteConfig('admin');
