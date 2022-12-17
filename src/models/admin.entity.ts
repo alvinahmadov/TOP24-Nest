@@ -11,7 +11,7 @@ import {
 	BooleanColumn,
 	Index,
 	IntColumn,
-	StringColumn
+	StringColumn, VirtualColumn
 }                        from '@common/interfaces';
 import { entityConfig }  from '@api/swagger/properties';
 import EntityModel       from './entity-model';
@@ -65,4 +65,8 @@ export default class Admin
 	@ApiProperty(prop.verify)
 	@StringColumn({ defaultValue: '' })
 	verify?: string;
+
+	get fullName(): string {
+		return this.name;
+	}
 }
