@@ -1,20 +1,20 @@
-import { Op }                 from 'sequelize';
+import { Op }                  from 'sequelize';
 import {
 	forwardRef,
 	Inject,
 	Injectable,
 	HttpStatus
-}                             from '@nestjs/common';
+}                              from '@nestjs/common';
 import {
 	BitrixUrl,
 	Bucket
-}                             from '@common/constants';
+}                              from '@common/constants';
 import {
 	OfferStatus,
 	OrderStage,
 	OrderStatus,
 	TransportStatus
-}                             from '@common/enums';
+}                              from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -26,7 +26,7 @@ import {
 	TDocumentMode,
 	TMergedEntities,
 	TMulterFile
-}                             from '@common/interfaces';
+}                              from '@common/interfaces';
 import {
 	buildBitrixRequestUrl,
 	renameMulterFiles,
@@ -35,29 +35,29 @@ import {
 	getTranslation,
 	transformTransportParameters,
 	renameMulterFile
-}                             from '@common/utils';
+}                              from '@common/utils';
 import {
 	Destination,
 	Driver,
 	Order,
 	Transport
-}                             from '@models/index';
-import { EventsGateway }      from '@api/events';
+}                              from '@models/index';
 import {
 	DestinationRepository,
 	OrderRepository
-}                             from '@repos/index';
+}                              from '@repos/index';
 import {
 	ListFilter,
 	OrderCreateDto,
 	OrderFilter,
 	OrderUpdateDto
-}                             from '@api/dto';
-import Service                from './service';
-import CargoCompanyService    from './cargo-company.service';
-import CargoCompanyInnService from './cargoinn-company.service';
-import DriverService          from './driver.service';
-import ImageFileService       from './image-file.service';
+}                              from '@api/dto';
+import { NotificationGateway } from '@api/notifications';
+import Service                 from './service';
+import CargoCompanyService     from './cargo-company.service';
+import CargoCompanyInnService  from './cargoinn-company.service';
+import DriverService           from './driver.service';
+import ImageFileService        from './image-file.service';
 
 const ORDER_TRANSLATIONS = getTranslation('REST', 'ORDER');
 
@@ -73,7 +73,6 @@ export default class OrderService
 		NO_OFFER:     { statusCode: HttpStatus.NOT_FOUND, message: 'No offer found.' },
 		NO_CRM_ORDER: { statusCode: HttpStatus.NOT_FOUND, message: 'Order doesn\'t have a crm id' }
 	};
-	private _gateway: EventsGateway;
 	private destinationRepo: DestinationRepository = new DestinationRepository();
 
 	constructor(
@@ -81,17 +80,12 @@ export default class OrderService
 		private readonly cargoInnService: CargoCompanyInnService,
 		@Inject(forwardRef(() => DriverService))
 		private readonly driverService: DriverService,
-		protected readonly imageFileService: ImageFileService
+		protected readonly imageFileService: ImageFileService,
+		private readonly gateway: NotificationGateway
 	) {
 		super();
 		this.repository = new OrderRepository();
 	}
-
-	public set gateway(gateway: EventsGateway) {
-		this._gateway = gateway;
-	}
-
-	public get gateway(): EventsGateway { return this._gateway;}
 
 	/**
 	 * @summary Get order by id
@@ -253,7 +247,7 @@ export default class OrderService
 		const result = await this.repository.delete(id);
 
 		if(result.affectedCount > 0)
-			this.gateway.sendOrderEvent(
+			this.gateway.sendOrderNotification(
 				{ id, message: 'Deleted' }
 			);
 
@@ -629,7 +623,7 @@ export default class OrderService
 			}
 
 			this.send(order.id)
-			    .then(() => this.gateway.sendOrderEvent({ id, message }))
+			    .then(() => this.gateway.sendOrderNotification({ id, message }))
 			    .catch(console.error);
 
 			return {
