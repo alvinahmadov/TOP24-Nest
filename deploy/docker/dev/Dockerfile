@@ -2,6 +2,7 @@
 FROM node:lts-buster AS base
 
 RUN apt-get update && apt-get install -y apt-utils locales net-tools nano
+RUN npm install -g npm@latest --loglevel=error
 
 # Locale
 RUN sed -i -e \
