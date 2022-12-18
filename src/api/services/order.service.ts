@@ -542,6 +542,9 @@ export default class OrderService
 
 		if(!order)
 			return this.responses['NOT_FOUND'];
+		
+		let paymentPhotoLinks: string[];
+		let receiptPhotoLinks: string[];
 
 		if(files && files.length > 0) {
 			if(mode === 'contract') {
@@ -567,9 +570,12 @@ export default class OrderService
 				else console.log('No contract document scan was uploaded!');
 			}
 			else if(mode === 'payment') {
-				let { Location: paymentPhotoLinks } = await this.imageFileService.uploadFiles(
+				let uploadResponse = await this.imageFileService.uploadFiles(
 					renameMulterFiles(files, Bucket.Folders.ORDER, id, mode)
 				);
+				
+				if(uploadResponse && uploadResponse.Location)
+					paymentPhotoLinks = uploadResponse.Location;
 
 				if(paymentPhotoLinks?.length > 0) {
 					fileUploaded = true;
@@ -588,9 +594,12 @@ export default class OrderService
 
 			}
 			else if(mode === 'receipt') {
-				let { Location: receiptPhotoLinks } = await this.imageFileService.uploadFiles(
+				let uploadResponse = await this.imageFileService.uploadFiles(
 					renameMulterFiles(files, Bucket.Folders.ORDER, id, mode)
 				);
+				
+				if(uploadResponse && uploadResponse.Location)
+					receiptPhotoLinks = uploadResponse.Location;
 
 				if(receiptPhotoLinks) {
 					fileUploaded = true;
@@ -607,8 +616,8 @@ export default class OrderService
 
 		if(fileUploaded) {
 			if(
-				order.paymentPhotoLinks?.length > 0 &&
-				order.receiptPhotoLinks?.length > 0
+				paymentPhotoLinks?.length > 0 &&
+				receiptPhotoLinks?.length > 0
 			) {
 				this.repository
 				    .update(id, { stage: OrderStage.DOCUMENT_SENT, onPayment: order.onPayment })
