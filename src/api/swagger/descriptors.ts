@@ -1,35 +1,28 @@
-import { HttpStatus, RequestMethod } from '@nestjs/common';
-import {
-	ApiOperationOptions,
-	ApiQueryOptions,
-	ApiResponseOptions,
-	getSchemaPath
-}                                    from '@nestjs/swagger';
+import { HttpStatus }             from '@nestjs/common';
+import { getSchemaPath }          from '@nestjs/swagger';
 import {
 	getResponseSchema,
 	getApiResponseContent,
 	getApiResponseContentOf,
-	getApiResponseSchema,
 	getApiResponseSchemaOf,
 	getJsonApiResponseContent,
 	getJsonApiResponseContentOf
-}                                    from '@common/utils';
-import { IApiSwaggerDescription }    from '@common/interfaces';
-import env                           from '@config/env';
-import * as mo                       from '@models/index';
-import * as dto                      from '@api/dto';
+}                                 from '@common/utils';
+import { IApiSwaggerDescription } from '@common/interfaces';
+import env                        from '@config/env';
+import * as mo                    from '@models/index';
+import * as dto                   from '@api/dto';
 import {
 	ParameterObject,
 	ReferenceObject,
 	SchemaObject
-}                                    from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+}                                 from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 
 type TApiDescriptor = {
 	[k: string]: IApiSwaggerDescription
 };
 type TParamKey = 'id' | 'crmId' | 'full'
 
-const security: any = [{ bearerAuth: [] }];
 
 const parameter: Record<TParamKey, ParameterObject | ReferenceObject> = {
 	id:    {
@@ -127,7 +120,7 @@ const transformSchema = (schema: SchemaObject | ReferenceObject) =>
 export namespace NApiDescriptors {
 	export const admin: TApiDescriptor = {
 		list:      {
-			operation: { summary: 'Получить список админов/логистов', security },
+			operation: { summary: 'Получить список админов/логистов' },
 			responses: {
 				200: {
 					status:      200,
@@ -140,10 +133,7 @@ export namespace NApiDescriptors {
 			}
 		},
 		filter:    {
-			operation: {
-				summary: 'Фильтр пользователей.',
-				security
-			},
+			operation: { summary: 'Фильтр пользователей.' },
 			responses: {
 				200: {
 					status:      200,
@@ -153,10 +143,7 @@ export namespace NApiDescriptors {
 			}
 		},
 		index:     {
-			operation: {
-				summary: 'Найти админа/логиста через `id`',
-				security
-			},
+			operation: { summary: 'Найти админа/логиста через `id`' },
 			responses: {
 				200: {
 					status:      200,
@@ -177,7 +164,7 @@ export namespace NApiDescriptors {
 			}
 		},
 		create:    {
-			operation: { summary: 'Создать пользователя', security },
+			operation: { summary: 'Создать пользователя' },
 			responses: {
 				201: {
 					status:      201,
@@ -195,7 +182,7 @@ export namespace NApiDescriptors {
 			}
 		},
 		update:    {
-			operation: { summary: 'Обновить данные админа/логиста.', security },
+			operation: { summary: 'Обновить данные админа/логиста.' },
 			responses: {
 				200: {
 					status:      200,
@@ -216,8 +203,7 @@ export namespace NApiDescriptors {
 		delete:    {
 			operation: {
 				summary:     'Удаление админа/логиста.',
-				description: 'Безвозвратно удаляет пользователя',
-				security
+				description: 'Безвозвратно удаляет пользователя'
 			},
 			responses: {
 				200: {
@@ -228,7 +214,7 @@ export namespace NApiDescriptors {
 			}
 		},
 		refresh:   {
-			operation: { summary: 'Обновить токен авторизации', security },
+			operation: { summary: 'Обновить токен авторизации' },
 			responses: {
 				200: {
 					status:      200,
@@ -350,8 +336,7 @@ export namespace NApiDescriptors {
 			operation: {
 				summary:     'Получить список компаний.',
 				description: 'Возвращает список всех компаний различного типа. '
-				             + 'В список входят компании юрлица, ип и физлица.',
-				security
+				             + 'В список входят компании юрлица, ип и физлица.'
 			},
 			responses: {
 				200: {
@@ -385,8 +370,7 @@ export namespace NApiDescriptors {
 							}
 						}
 					}
-				},
-				security
+				}
 			},
 			responses: {
 				200: {
@@ -406,8 +390,7 @@ export namespace NApiDescriptors {
 			operation: {
 				summary:     'Get cargo company',
 				description: 'Gets single cargo company specified by `id`',
-				parameters:  [parameter['full']],
-				security
+				parameters:  [parameter['full']]
 			},
 			responses: {
 				200: {
@@ -439,8 +422,7 @@ export namespace NApiDescriptors {
 							}
 						}
 					}
-				},
-				security
+				}
 			},
 			responses: {
 				201: {
@@ -473,8 +455,7 @@ export namespace NApiDescriptors {
 							}
 						}
 					}
-				},
-				security
+				}
 			},
 			responses: {
 				200: {
@@ -495,8 +476,7 @@ export namespace NApiDescriptors {
 		delete:         {
 			operation: {
 				summary:     'Delete cargo company',
-				description: 'Deletes single cargo company specified by `id`',
-				security
+				description: 'Deletes single cargo company specified by `id`'
 			},
 			responses: {
 				200: {
@@ -510,7 +490,6 @@ export namespace NApiDescriptors {
 			operation: {
 				summary:     'Получает транспорты компаний, соответствующие фильтру.',
 				description: 'Компании, а также водители и транспорты этих компаний проходят фильтрацию',
-				security
 			},
 			responses: {
 				200: {
@@ -521,10 +500,7 @@ export namespace NApiDescriptors {
 			}
 		},
 		refresh:        {
-			operation: {
-				summary: 'Обновить токен авторизации',
-				security
-			},
+			operation: { summary: 'Обновить токен авторизации' },
 			responses: {
 				200: {
 					status:      200,
@@ -571,8 +547,7 @@ export namespace NApiDescriptors {
 				summary:     'Send company info into Bitrix CRM service.',
 				description: 'Updates and sends cargo company data with all related '
 				             + 'data (transports, drivers) into the Bitrix CRM '
-				             + 'service and updates cargo crm_id from result.',
-				security
+				             + 'service and updates cargo crm_id from result.'
 			}
 		},
 		activate:       {
@@ -617,40 +592,31 @@ export namespace NApiDescriptors {
 			}
 		},
 		avatar:         {
-			operation: {
-				summary: 'Upload company avatar.',
-				security
-			}
+			operation: { summary: 'Upload company avatar.' }
 		},
 		certificate:    {
-			operation: {
-				summary: 'Upload certificate scan.',
-				security
-			}
+			operation: { summary: 'Upload certificate scan.' }
 		},
 		passport:       {
 			operation: {
 				summary:     'Upload passport scan for registration.',
 				description: 'Updates passport scan file and sets up link '
 				             + 'to the updated file',
-				parameters:  [parameter.id],
-				security
+				parameters:  [parameter.id]
 			}
 		},
 		order:          {
 			operation: {
 				summary:     'Upload order scan for registration.',
 				description: 'Updates order document scan file and sets up link '
-				             + 'to the updated file',
-				security
+				             + 'to the updated file'
 			}
 		},
 		attorney:       {
 			operation: {
 				summary:     'Upload attorney sign scan for registration.',
 				description: 'Updates attorney sign document scan file and sets up '
-				             + 'link to the updated file',
-				security
+				             + 'link to the updated file'
 			}
 		},
 		passportSelfie: {
@@ -658,8 +624,7 @@ export namespace NApiDescriptors {
 				summary:     'Upload passport selfie scan for registration.',
 				description: 'Updates passport selfie scan file and sets up link '
 				             + 'to the updated file',
-				parameters:  [parameter.id],
-				security
+				parameters:  [parameter.id]
 			}
 		},
 		passportSign:   {
@@ -667,16 +632,14 @@ export namespace NApiDescriptors {
 				summary:     'Upload passport sign scan for registration.',
 				description: 'Updates passport sign scan file and sets up link '
 				             + 'to the updated file',
-				parameters:  [parameter.id],
-				security
+				parameters:  [parameter.id]
 			}
 		},
 		ogrnip:         {
 			operation: {
 				summary:     'Upload ogrnip scan for payment.',
 				description: 'Updates ogrnip scan file and sets up link to the '
-				             + 'updated file',
-				security
+				             + 'updated file'
 			}
 		}
 	};
@@ -684,8 +647,7 @@ export namespace NApiDescriptors {
 	export const driver: TApiDescriptor = {
 		list:   {
 			operation: {
-				summary: 'Get list of drivers',
-				security
+				summary: 'Get list of drivers'
 			},
 			responses: {
 				200: {
@@ -698,8 +660,7 @@ export namespace NApiDescriptors {
 		filter: {
 			operation: {
 				summary:     'Filter drivers.',
-				description: 'Filter list of data by provided body',
-				security
+				description: 'Filter list of data by provided body'
 			},
 			responses: {
 				200: {
@@ -712,8 +673,7 @@ export namespace NApiDescriptors {
 		index:  {
 			operation: {
 				summary:     'Get driver',
-				description: 'Gets single cargo company driver specified by `id`',
-				security
+				description: 'Gets single cargo company driver specified by `id`'
 			},
 			responses: {
 				200: {
@@ -730,8 +690,7 @@ export namespace NApiDescriptors {
 		},
 		create: {
 			operation: {
-				summary: 'Create a new cargo company.',
-				security
+				summary: 'Create a new cargo company.'
 			},
 			responses: {
 				201: {
@@ -754,8 +713,7 @@ export namespace NApiDescriptors {
 			operation: {
 				summary:     'Update driver',
 				description: 'Updates single driver specified by `id`',
-				requestBody: { $ref: getSchemaPath(dto.DriverUpdateDto) },
-				security
+				requestBody: { $ref: getSchemaPath(dto.DriverUpdateDto) }
 			},
 			responses: {
 				200: {
@@ -768,15 +726,13 @@ export namespace NApiDescriptors {
 		delete: {
 			operation: {
 				summary:     'Delete driver',
-				description: 'Deletes driver specified by `id`',
-				security
+				description: 'Deletes driver specified by `id`'
 			}
 		},
 		avatar: {
 			operation: {
 				summary:     'Upload avatar image.',
-				description: 'Uploads to Yandex Storage avatar of driver.',
-				security
+				description: 'Uploads to Yandex Storage avatar of driver.'
 			},
 			responses: {
 				200: {
@@ -788,8 +744,7 @@ export namespace NApiDescriptors {
 		front:  {
 			operation: {
 				summary:     'Upload license scan.',
-				description: 'Uploads to Yandex Storage front scan of driver license.',
-				security
+				description: 'Uploads to Yandex Storage front scan of driver license.'
 			},
 			responses: {
 				200: {
@@ -801,8 +756,7 @@ export namespace NApiDescriptors {
 		back:   {
 			operation: {
 				summary:     'Upload license scan.',
-				description: 'Uploads to Yandex Storage back scan of driver license.',
-				security
+				description: 'Uploads to Yandex Storage back scan of driver license.'
 			},
 			responses: {
 				200: {
@@ -815,10 +769,7 @@ export namespace NApiDescriptors {
 
 	export const event: TApiDescriptor = {
 		list:   {
-			operation: {
-				summary: 'Get list of drivers',
-				security
-			},
+			operation: {	summary: 'Get list of drivers'	},
 			responses: {
 				200: {
 					status:      200,
@@ -830,8 +781,7 @@ export namespace NApiDescriptors {
 		filter: {
 			operation: {
 				summary:     'Filter events.',
-				description: 'Filter list of data by provided body',
-				security
+				description: 'Filter list of data by provided body'
 			},
 			responses: {
 				200: {
@@ -844,8 +794,7 @@ export namespace NApiDescriptors {
 		index:  {
 			operation: {
 				summary:     'Get event',
-				description: 'Gets single event specified by `id`',
-				security
+				description: 'Gets single event specified by `id`'
 			},
 			responses: {
 				200: {
@@ -861,10 +810,7 @@ export namespace NApiDescriptors {
 			}
 		},
 		create: {
-			operation: {
-				summary: 'Create a new event.',
-				security
-			},
+			operation: { summary: 'Create a new event.' },
 			responses: {
 				201: {
 					status:      201,
@@ -886,8 +832,7 @@ export namespace NApiDescriptors {
 			operation: {
 				summary:     'Update event',
 				description: 'Updates single event specified by `id`',
-				requestBody: { $ref: getSchemaPath(dto.GatewayEventUpdateDto) },
-				security
+				requestBody: { $ref: getSchemaPath(dto.GatewayEventUpdateDto) }
 			},
 			responses: {
 				200: {
@@ -900,8 +845,7 @@ export namespace NApiDescriptors {
 		delete: {
 			operation: {
 				summary:     'Delete event',
-				description: 'Deletes event specified by `id`',
-				security
+				description: 'Deletes event specified by `id`'
 			}
 		}
 	};
@@ -955,10 +899,7 @@ export namespace NApiDescriptors {
 
 	export const image: TApiDescriptor = {
 		list:   {
-			operation: {
-				summary: 'Get list of images',
-				security
-			},
+			operation: { summary: 'Get list of images' },
 			responses: {
 				200: {
 					status:      200,
@@ -970,8 +911,7 @@ export namespace NApiDescriptors {
 		filter: {
 			operation: {
 				summary:     'Filter images.',
-				description: 'Filter list of data by provided body',
-				security
+				description: 'Filter list of data by provided body'
 			},
 			responses: {
 				200: {
@@ -984,8 +924,7 @@ export namespace NApiDescriptors {
 		index:  {
 			operation: {
 				summary:     'Get image',
-				description: 'Gets single image specified by `id`',
-				security
+				description: 'Gets single image specified by `id`'
 			},
 			responses: {
 				200: {
@@ -1001,10 +940,7 @@ export namespace NApiDescriptors {
 			}
 		},
 		create: {
-			operation: {
-				summary: 'Create a new image.',
-				security
-			},
+			operation: { summary: 'Create a new image.' },
 			responses: {
 				201: {
 					status:      201,
@@ -1025,8 +961,7 @@ export namespace NApiDescriptors {
 		update: {
 			operation: {
 				summary:     'Update image',
-				description: 'Updates single image specified by `id`',
-				security
+				description: 'Updates single image specified by `id`'
 			},
 			responses: {
 				200: {
@@ -1044,18 +979,14 @@ export namespace NApiDescriptors {
 		delete: {
 			operation: {
 				summary:     'Delete image',
-				description: 'Deletes image specified by `id`',
-				security
+				description: 'Deletes image specified by `id`'
 			}
 		}
 	};
 
 	export const offer: TApiDescriptor = {
 		list:      {
-			operation: {
-				summary: 'Get list of offers',
-				security
-			},
+			operation: { summary: 'Get list of offers' },
 			responses: {
 				200: {
 					status:      200,
@@ -1067,8 +998,7 @@ export namespace NApiDescriptors {
 		filter:    {
 			operation: {
 				summary:     'Filter offers.',
-				description: 'Filter list of data by provided body',
-				security
+				description: 'Filter list of data by provided body'
 			},
 			responses: {
 				200: {
@@ -1081,8 +1011,7 @@ export namespace NApiDescriptors {
 		index:     {
 			operation: {
 				summary:     'Get offer.',
-				description: 'Gets single offer specified by `id`',
-				security
+				description: 'Gets single offer specified by `id`'
 			},
 			responses: {
 				200: {
@@ -1100,8 +1029,7 @@ export namespace NApiDescriptors {
 		update:    {
 			operation: {
 				summary:     'Update offer',
-				description: 'Updates single offer specified by `id`',
-				security
+				description: 'Updates single offer specified by `id`'
 			},
 			responses: {
 				200: {
@@ -1122,8 +1050,7 @@ export namespace NApiDescriptors {
 		sendList:  {
 			operation: {
 				summary:     'Create new offers or update existing ones.',
-				description: 'Creates offers to send to drivers in relation to order.',
-				security
+				description: 'Creates offers to send to drivers in relation to order.'
 			},
 			responses: {
 				200: {
@@ -1136,23 +1063,20 @@ export namespace NApiDescriptors {
 		accept:    {
 			operation: {
 				summary:     'Accept offer.',
-				description: 'Accept driver\'s response for order offer.',
-				security
+				description: 'Accept driver\'s response for order offer.'
 			}
 		},
 		decline:   {
 			operation: {
 				summary:     'Decline offer.',
-				description: 'Decline driver\'s response for order offer.',
-				security
+				description: 'Decline driver\'s response for order offer.'
 			}
 		},
 		order:     {
 			operation: {
 				summary:     'Get associated drivers.',
 				description: 'Retrieve list of drivers associated with order'
-				             + 'with specific `orderId`',
-				security
+				             + 'with specific `orderId`'
 			},
 			responses: {
 				200: {
@@ -1166,8 +1090,7 @@ export namespace NApiDescriptors {
 			operation: {
 				summary:     'Get associated orders.',
 				description: 'Retrieve list of orders associated with driver '
-				             + 'with specific `driverId`',
-				security
+				             + 'with specific `driverId`'
 			},
 			responses: {
 				200: {
@@ -1185,10 +1108,7 @@ export namespace NApiDescriptors {
 		list:
 			{
 				operation:
-					{
-						summary: 'Get list of orders',
-						security
-					},
+					{ summary: 'Get list of orders' },
 				responses:
 					{
 						200: {
@@ -1202,8 +1122,7 @@ export namespace NApiDescriptors {
 			{
 				operation: {
 					summary:     'Filter orders.',
-					description: 'Filter list of data by provided body',
-					security
+					description: 'Filter list of data by provided body'
 				},
 				responses: {
 					200: {
@@ -1217,8 +1136,7 @@ export namespace NApiDescriptors {
 			{
 				operation: {
 					summary:     'Get order.',
-					description: 'Gets single order specified by `id`',
-					security
+					description: 'Gets single order specified by `id`'
 				},
 				responses: {
 					200: {
@@ -1235,10 +1153,7 @@ export namespace NApiDescriptors {
 			},
 		create:
 			{
-				operation: {
-					summary: 'Create a new order.',
-					security
-				},
+				operation: { summary: 'Create a new order.' },
 				responses: {
 					201: {
 						status:      201,
@@ -1260,8 +1175,7 @@ export namespace NApiDescriptors {
 			{
 				operation: {
 					summary:     'Update order',
-					description: 'Updates single order specified by `id`',
-					security
+					description: 'Updates single order specified by `id`'
 				},
 				responses: {
 					200: {
@@ -1280,8 +1194,7 @@ export namespace NApiDescriptors {
 			{
 				operation: {
 					summary:     'Delete order',
-					description: 'Deletes order specified by `id`',
-					security
+					description: 'Deletes order specified by `id`'
 				}
 			},
 		cargos:
@@ -1390,10 +1303,7 @@ export namespace NApiDescriptors {
 	export const payment: TApiDescriptor = {
 		list:
 			{
-				operation: {
-					summary: 'Get list of payments',
-					security
-				},
+				operation: { summary: 'Get list of payments' },
 				responses: {
 					200: {
 						status:      200,
@@ -1406,8 +1316,7 @@ export namespace NApiDescriptors {
 			{
 				operation: {
 					summary:     'Filter payments.',
-					description: 'Filter list of data by provided body',
-					security
+					description: 'Filter list of data by provided body'
 				},
 				responses: {
 					200: {
@@ -1421,8 +1330,7 @@ export namespace NApiDescriptors {
 			{
 				operation: {
 					summary:     'Get payment.',
-					description: 'Gets single payment specified by `id`',
-					security
+					description: 'Gets single payment specified by `id`'
 				},
 				responses: {
 					200: {
@@ -1439,10 +1347,7 @@ export namespace NApiDescriptors {
 			},
 		create:
 			{
-				operation: {
-					summary: 'Create a new payment.',
-					security
-				},
+				operation: { summary: 'Create a new payment.' },
 				responses: {
 					201: {
 						status:      201,
@@ -1464,8 +1369,7 @@ export namespace NApiDescriptors {
 			{
 				operation: {
 					summary:     'Update payment',
-					description: 'Updates single payment specified by `id`',
-					security
+					description: 'Updates single payment specified by `id`'
 				},
 				responses: {
 					200: {
@@ -1484,8 +1388,7 @@ export namespace NApiDescriptors {
 			{
 				operation: {
 					summary:     'Delete payment',
-					description: 'Deletes payment specified by `id`',
-					security
+					description: 'Deletes payment specified by `id`'
 				}
 			}
 	};
@@ -1536,10 +1439,7 @@ export namespace NApiDescriptors {
 	export const transport: TApiDescriptor = {
 		list:
 			{
-				operation: {
-					summary: 'Получить все транспорты',
-					security
-				},
+				operation: { summary: 'Получить все транспорты' },
 				responses: {
 					200: {
 						status:      200,
@@ -1552,8 +1452,7 @@ export namespace NApiDescriptors {
 			{
 				operation: {
 					summary:     'Фильтрация транспортов',
-					description: 'Фильтрует траснпорты по определенным значениям объекта фильтра',
-					security
+					description: 'Фильтрует траснпорты по определенным значениям объекта фильтра'
 				},
 				responses: {
 					200: {
@@ -1567,8 +1466,7 @@ export namespace NApiDescriptors {
 			{
 				operation: {
 					summary:     'Получить транспорт.',
-					description: 'Возвращает объек транспорта со значением `id` или возвращает `undefined`',
-					security
+					description: 'Возвращает объек транспорта со значением `id` или возвращает `undefined`'
 				},
 				responses: {
 					200: {
@@ -1588,8 +1486,7 @@ export namespace NApiDescriptors {
 				operation: {
 					summary:     'Создать новый транспорт',
 					description: 'При созздании транспорта необходимо указать `id` компании '
-					             + '(либо ЮЛ - `cargoId`, либо ИП/ФЛ - `cargoinnId`) и `id` водителя этой компании.',
-					security
+					             + '(либо ЮЛ - `cargoId`, либо ИП/ФЛ - `cargoinnId`) и `id` водителя этой компании.'
 				},
 				responses: {
 					201: {
@@ -1612,8 +1509,7 @@ export namespace NApiDescriptors {
 			{
 				operation: {
 					summary:     'Обновить данные транспота.',
-					description: 'Обновляет значения полей транспорта с `id` и возвращает обновленный транспорт',
-					security
+					description: 'Обновляет значения полей транспорта с `id` и возвращает обновленный транспорт'
 				},
 				responses: {
 					200: {
@@ -1638,8 +1534,7 @@ export namespace NApiDescriptors {
 				operation: {
 					summary:     'Удалить транспорт по `id`.',
 					description: 'При удалении транспорта удаляются также фото '
-					             + 'как с сетевого хранилища, так и с БД.',
-					security
+					             + 'как с сетевого хранилища, так и с БД.'
 				}
 			},
 		activate:

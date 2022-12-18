@@ -3,7 +3,10 @@ import {
 	UseGuards,
 	UseInterceptors
 }                       from '@nestjs/common';
-import { ApiConsumes }  from '@nestjs/swagger';
+import { 
+	ApiConsumes,
+	ApiBearerAuth
+}                       from '@nestjs/swagger';
 import {
 	IApiRouteInfoParams,
 	IApiRouteMetadata
@@ -31,8 +34,9 @@ export default (
 			statuses
 		} = params;
 
-		if(guards)
+		if(guards) {
 			guardFn = UseGuards(...guards);
+		}
 
 		if(statuses && statuses.length > 0) {
 			for(const status of statuses) {
@@ -62,8 +66,10 @@ export default (
 		ApiRouteInfo(routeMetadata)(target, propertyKey, descriptor);
 		RequestMapping(routeMetadata)(target, propertyKey, descriptor);
 
-		if(guardFn)
+		if(guardFn) {
 			guardFn(target, propertyKey, descriptor);
+			ApiBearerAuth()(target, propertyKey, descriptor);
+		}
 
 		if(interceptorFn)
 			interceptorFn(target, propertyKey, descriptor);

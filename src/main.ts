@@ -148,7 +148,11 @@ async function bootstrap(): Promise<INestApplication> {
 		.setTitle('24TOP API with Swagger')
 		.setDescription('Backend bridge service')
 		.setVersion('2.0')
-		.addServer(`${SCHEME}{server}`, null, serverVariables);
+		.addServer(`${SCHEME}{server}`, null, serverVariables)
+		.addBearerAuth(
+			{ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+			'access-token'
+		);
 
 	const swaggerOptions: SwaggerDocumentOptions = {
 		ignoreGlobalPrefix: true,
