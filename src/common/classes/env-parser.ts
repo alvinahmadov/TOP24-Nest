@@ -64,7 +64,7 @@ export default class EnvironmentParser {
 
 	public bool(
 		key: keyof IEnvParseOutput,
-		defaultValue?: boolean
+		defaultValue: boolean = false
 	): boolean {
 		const value: string | boolean = this.get(key, defaultValue);
 
