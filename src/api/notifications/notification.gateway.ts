@@ -57,9 +57,9 @@ import {
 	LogistGuard
 }                              from '@api/security';
 import AuthService             from '../security/auth.service';
+import env                     from '@config/env';
 
 type TUserInfo = { phone?: string; fullName: string };
-const useFirebase: boolean = false;
 
 @WebSocketGateway(SOCKET_OPTIONS)
 @Injectable()
@@ -70,6 +70,7 @@ export default class NotificationGateway
 	public server: IOServer<any, IServerEvents, any, IUserPayload>;
 
 	private static readonly users: Map<string, UserRecord> = new Map<string, UserRecord>();
+	private static readonly enableFirebase: boolean = env.firebase.enable;
 
 	private readonly logger: Logger = new Logger(NotificationGateway.name, { timestamp: true });
 	private readonly adminRepo: AdminRepository = new AdminRepository({ log: false });
@@ -181,7 +182,7 @@ export default class NotificationGateway
 			if(user) {
 				sent = this.server.to(data.id).emit(DRIVER_EVENT, data);
 
-				if(useFirebase) {
+				if(NotificationGateway.enableFirebase) {
 					this.firebase
 					    .messaging
 					    .sendToTopic(user.uid, { data: { message: data.message } })
@@ -235,7 +236,7 @@ export default class NotificationGateway
 			emailVerified: true
 		};
 
-		const authUser: UserRecord = useFirebase
+		const authUser: UserRecord = NotificationGateway.enableFirebase
 		                             ? await this.firebase.auth.createUser(userData)
 		                             : {
 				...userData,
