@@ -345,7 +345,22 @@ export default class OfferService
 				paymentPhotoLinks: null,
 				receiptPhotoLinks: null
 			})
-			    .then(({ data: o }) => this.orderService.send(o.id))
+			    .then(async({ data: o }) =>
+			          {
+				          this.destinationRepo.bulkUpdate(
+					          {
+						          shippingPhotoLinks: null,
+						          fulfilled:          false
+					          },
+					          {
+						          orderId: o.id
+					          }
+				          ).then(
+					          ([affectedCount]) => console.info('Updated ' + affectedCount + ' destinations')
+				          ).catch(console.error);
+
+				          await this.orderService.send(o.id);
+			          })
 			    .catch(console.error);
 		}
 
@@ -409,7 +424,7 @@ export default class OfferService
 		                     .map(
 			                     (offer) =>
 			                     {
-				                     let { order, orderStatus } = offer;
+				                     let { order, driver, orderStatus } = offer;
 
 				                     if(isProcessing(offer))
 					                     order.isCurrent = priorityCounter++ === 0;
@@ -426,14 +441,26 @@ export default class OfferService
 				                     else order.status = orderStatus;
 
 				                     if(order.priority) {
-					                     this.orderService.update(order.id, { isCurrent: true });
+					                     let orderUpdateDto: OrderUpdateDto = {
+						                     isCurrent: true
+					                     };
+
+					                     if(
+						                     driver.status > DriverStatus.NONE &&
+						                     driver.status < DriverStatus.DOC_LOAD
+					                     ) {
+						                     orderUpdateDto.paymentPhotoLinks = order.paymentPhotoLinks = null;
+						                     orderUpdateDto.receiptPhotoLinks = order.receiptPhotoLinks = null;
+					                     }
+
+					                     this.orderService.update(order.id, orderUpdateDto);
 				                     }
 
 				                     return {
 					                     ...(
 						                     env.api.compatMode
 						                     ? <IOrderTransformer>transformEntity(order)
-						                     : offer.order.get({ plain: true, clone: false })
+						                     : order.get({ plain: true, clone: false })
 					                     ),
 					                     priority:         order.priority,
 					                     [offerStatusKey]: offer.status,
