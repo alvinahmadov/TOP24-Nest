@@ -67,7 +67,8 @@ const env: IEnvironment = {
 	firebase:         {
 		projectId:   parser.str('FIREBASE_PROJECT_ID'),
 		privateKey:  parser.str('FIREBASE_PRIVATE_KEY'),
-		clientEmail: parser.str('FIREBASE_CLIENT_EMAIL')
+		clientEmail: parser.str('FIREBASE_CLIENT_EMAIL'),
+		enable:      parser.bool('FIREBASE_ENABLE', false)
 	},
 	objectStorage:    {
 		type:     useLocalStorage ? 'local' : 'external',
