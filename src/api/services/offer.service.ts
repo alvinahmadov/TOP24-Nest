@@ -53,7 +53,8 @@ import {
 	OfferCreateDto,
 	OfferFilter,
 	OfferUpdateDto,
-	OrderFilter
+	OrderFilter,
+	OrderUpdateDto
 }                              from '@api/dto';
 import { NotificationGateway } from '@api/notifications';
 import Service                 from './service';
@@ -192,7 +193,19 @@ export default class OfferService
 
 		if(order) {
 			if(OrderStatus.ACCEPTED < dto.orderStatus) {
-				this.orderService.update(order.id, { status: dto.orderStatus })
+				let orderDto: OrderUpdateDto = { status: dto.orderStatus };
+
+				if(dto.orderStatus === OrderStatus.FINISHED) {
+					if(order.paymentPhotoLinks?.length > 0) {
+						orderDto.onPayment = true;
+					}
+					else console.log('No payment photo links found!');
+
+					orderDto.isCurrent = false;
+				}
+
+				this.orderService
+				    .update(order.id, orderDto)
 				    .then(
 					    ({ data: uOrder }) =>
 					    {
@@ -307,23 +320,30 @@ export default class OfferService
 		}
 
 		if(offer.order) {
-			if(offer.order.contractPhotoLink)
-				await this.imageFileService.deleteImage(offer.order.contractPhotoLink);
-			if(offer.order.paymentPhotoLinks?.length > 0)
-				await this.imageFileService.deleteImageList(offer.order.paymentPhotoLinks);
-			if(offer.order.receiptPhotoLinks?.length > 0)
-				await this.imageFileService.deleteImageList(offer.order.receiptPhotoLinks);
+			const { order } = offer;
+
+			if(order.contractPhotoLink)
+				await this.imageFileService.deleteImage(order.contractPhotoLink);
+			if(order.paymentPhotoLinks?.length > 0)
+				await this.imageFileService.deleteImageList(order.paymentPhotoLinks);
+			if(order.receiptPhotoLinks?.length > 0)
+				await this.imageFileService.deleteImageList(order.receiptPhotoLinks);
 
 			this.orderService.update(offer.orderId, {
 				cargoId:           null,
 				cargoinnId:        null,
 				driverId:          null,
-				contractPhotoLink: null,
-				isCurrent:         false,
 				isOpen:            true,
 				isFree:            true,
+				isCurrent:         false,
+				isCanceled:        false,
+				onPayment:         false,
+				cancelCause:       null,
 				status:            OrderStatus.PENDING,
-				stage:             OrderStage.AGREED_OWNER
+				stage:             OrderStage.AGREED_OWNER,
+				contractPhotoLink: null,
+				paymentPhotoLinks: null,
+				receiptPhotoLinks: null
 			})
 			    .then(({ data: o }) => this.orderService.send(o.id))
 			    .catch(console.error);
