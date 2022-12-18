@@ -57,7 +57,7 @@ import {
 	LogistGuard
 }                              from '@api/security';
 import AuthService             from '../security/auth.service';
-import env                     from '@config/env';
+import env                     from '../../config/env';
 
 type TUserInfo = { phone?: string; fullName: string };
 
