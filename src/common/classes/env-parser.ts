@@ -71,7 +71,7 @@ export default class EnvironmentParser {
 		if(value !== undefined)
 			return value === 'true' || value === true;
 
-		return undefined;
+		return defaultValue;
 	}
 
 	public equal<T>(
