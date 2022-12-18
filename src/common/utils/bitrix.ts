@@ -392,13 +392,14 @@ export function buildBitrixRequestUrl(
 	return qBuilder.query;
 }
 
-export async function orderFromBitrix(crmFields: TCRMFields): Promise<{
+export async function orderFromBitrix(crmFields: TCRMFields, options?: { debug: boolean; }): Promise<{
 	orderDto: OrderCreateDto;
 	destinationDtos: DestinationCreateDto[]
 }> {
 	if(!crmFields[ORDER.ID] || !crmFields[ORDER.ID].length)
 		return null;
 	const crmId = Number(crmFields[ORDER.ID]);
+	const { debug = false } = options;
 	const destinationDtos = await parseDestination(crmFields);
 	const isCanceled = typeFromCrm(crmFields[ORDER.IS_CANCELED], false);
 	const stage: number = convertBitrix('orderStage', crmFields[ORDER.STAGE], true, true)
@@ -441,6 +442,11 @@ export async function orderFromBitrix(crmFields: TCRMFields): Promise<{
 			                 ?.map((t: string) => convertBitrix('orderTransportType', t))
 	};
 
+	if(debug) {
+		console.debug('Creating order from bitrix: ', orderDto);
+		console.debug('Creating order destinations from bitrix: ', destinationDtos);
+	}
+
 	return { orderDto, destinationDtos };
 }
 
@@ -452,13 +458,17 @@ export async function orderFromBitrix(crmFields: TCRMFields): Promise<{
  * it's crmId on database.
  *
  * @param {CargoCompany | CargoCompanyInn} company
+ * @param options
+ * @param options.debug
  *
  * @return {crmId?: number; contactCrmIds?: Map<string, number>} crm info on response
+ *
  * */
-export async function cargoToBitrix<T extends ICRMEntity & { [key: string]: any; }>(company: T)
+export async function cargoToBitrix<T extends ICRMEntity & { [key: string]: any; }>(company: T, options?: { debug: boolean; })
 	: Promise<IApiResponse<{ crmId?: number, contactCrmIds?: Map<string, number> }>> {
 	let crmCargoId = company.crmId;
 	const data: TCRMData = company.toCrm() as TCRMData;
+	const { debug = false } = options;
 	const contactCrmIdMap: Map<string, number> = new Map<string, number>();
 	const companyUpdate = crmCargoId !== undefined &&
 	                      crmCargoId !== null;
@@ -500,7 +510,7 @@ export async function cargoToBitrix<T extends ICRMEntity & { [key: string]: any;
 						                          : BitrixUrl.CONTACT_ADD_URL;
 
 						const client = await AxiosStatic.post(
-							buildBitrixRequestUrl(url, data, contactCrmId)
+							buildBitrixRequestUrl(url, data, contactCrmId, debug)
 						) as { readonly result: TCRMFields | boolean | string; };
 
 						if(!client) {
