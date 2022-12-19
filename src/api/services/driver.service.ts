@@ -23,6 +23,7 @@ import {
 	addressFromCoordinates,
 	buildBitrixRequestUrl,
 	calculateDistance,
+	fillDriverWithCompanyData,
 	filterDrivers,
 	formatArgs,
 	getTranslation
@@ -82,22 +83,11 @@ export default class DriverService
 
 		const data = await this.repository.getList(listFilter, filter);
 		const message = formatArgs(TRANSLATIONS['LIST'], data?.length);
-
-		if(listFilter?.full) {
-			data.forEach(driver =>
-			             {
-				             if(!driver.avatarLink) {
-					             if(driver.cargo)
-						             driver.avatarLink = driver.cargo.avatarLink;
-					             else if(driver.cargoinn)
-						             driver.avatarLink = driver.cargoinn.avatarLink;
-				             }
-			             });
-		}
+		const drivers = filterDrivers(data, filter, full, 2)?.map(d => fillDriverWithCompanyData(d));
 
 		return {
 			statusCode: HttpStatus.OK,
-			data:       filterDrivers(data, filter, full, 2),
+			data:       drivers,
 			message
 		};
 	}
@@ -115,18 +105,9 @@ export default class DriverService
 		if(!driver)
 			return this.responses['NOT_FOUND'];
 
-		if(full) {
-			if(!driver.avatarLink) {
-				if(driver.cargo)
-					driver.avatarLink = driver.cargo.avatarLink;
-				else if(driver.cargoinn)
-					driver.avatarLink = driver.cargoinn.avatarLink;
-			}
-		}
-
 		return {
 			statusCode: HttpStatus.OK,
-			data:       driver,
+			data:       fillDriverWithCompanyData(driver),
 			message:    formatArgs(TRANSLATIONS['GET'], driver.fullName)
 		};
 	}
@@ -138,7 +119,7 @@ export default class DriverService
 
 		return {
 			statusCode: HttpStatus.OK,
-			data:       drivers,
+			data:       drivers.map(d => fillDriverWithCompanyData(d)),
 			message:    formatArgs(TRANSLATIONS['TRANSPORTS'], drivers.length)
 		};
 	}
