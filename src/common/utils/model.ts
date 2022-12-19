@@ -1,7 +1,8 @@
 import {
 	Driver,
 	Transport
-} from '@models/index';
+}                   from '@models/index';
+import { ICompany } from '@common/interfaces';
 
 export function transformTransportParameters(transport: Transport): Transport {
 	if(transport.weightExtra > 0) transport.weight = transport.weightExtra;
@@ -16,20 +17,33 @@ export function transformDriverTransports(driver: Driver): Driver {
 	return driver;
 }
 
-export function fillDriverCompanyData(driver: Driver): Driver {
+export function fillDriverCompanyData(driver: Driver, company?: ICompany): Driver {
 	if(driver) {
 		const companyKey: keyof Driver = driver.cargoId ? 'cargo' : 'cargoinn';
+		let renamed: boolean;
 
-		if(!driver.avatarLink)
-			driver.avatarLink = driver[companyKey].avatarLink;
+		const fillData = (data: ICompany) =>
+		{
+			if(data) {
+				if(!driver.avatarLink && 'avatarLink' in data)
+					driver.avatarLink = data?.avatarLink;
 
-		if(!driver.phone)
-			driver.phone = driver[companyKey].userPhone;
+				if(!driver.phone && 'userPhone' in data)
+					driver.phone = data?.userPhone;
 
-		driver.name = driver[companyKey].fullName;
+				if('fullName' in data) {
+					driver.name = data?.fullName;
+					renamed = true;
+				}
+			}
+		};
 
-		delete driver.patronymic;
-		delete driver.lastName;
+		fillData(company ? company : driver[companyKey]);
+
+		if(renamed) {
+			delete driver.patronymic;
+			delete driver.lastName;
+		}
 	}
 
 	return driver;
