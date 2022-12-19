@@ -22,6 +22,17 @@ import {
 }                             from '@models/index';
 import GenericRepository      from './generic';
 
+const driverDefaultIncludeables: Includeable[] = [
+	{
+		model:      CargoCompany,
+		attributes: ['name', 'legalName', 'userPhone', 'avatarLink']
+	},
+	{
+		model:      CargoCompanyInn,
+		attributes: ['name', 'patronymic', 'lastName', 'userPhone', 'avatarLink']
+	}
+];
+
 export default class OrderRepository
 	extends GenericRepository<Order, IOrder>
 	implements IRepository {
@@ -34,10 +45,10 @@ export default class OrderRepository
 					model:   Transport,
 					include: [
 						{ model: Image },
-						{ model: Driver }
+						{ model: Driver, include: driverDefaultIncludeables }
 					]
 				},
-				{ model: Driver }
+				{ model: Driver, include: driverDefaultIncludeables }
 			]
 		},
 		{
@@ -185,14 +196,7 @@ export default class OrderRepository
 						{
 							model:   Driver,
 							include: [
-								{
-									model:      CargoCompany,
-									attributes: ['name', 'legalName', 'avatarLink']
-								},
-								{
-									model:      CargoCompanyInn,
-									attributes: ['name', 'patronymic', 'lastName', 'avatarLink']
-								},
+								...driverDefaultIncludeables,
 								{
 									model:   Transport,
 									where:   this.whereClause<ITransport>()
