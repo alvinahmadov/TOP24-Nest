@@ -7,11 +7,6 @@ import { transformToDriverFilter }   from '@common/utils/compat';
 export default class DriverFilterPipe
 	implements PipeTransform {
 	transform(data: any): IDriverFilter {
-		const value: IDriverFilter = !env.api.compatMode ? data : transformToDriverFilter(data);
-
-		if(value.isReady)
-			value.withCompanyName = true;
-		
-		return value;
+		return !env.api.compatMode ? data : transformToDriverFilter(data);
 	}
 }

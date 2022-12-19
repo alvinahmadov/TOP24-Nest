@@ -461,6 +461,8 @@ function transformOrder(order: models.Order)
 			receipt_link:               order.getDataValue('receiptPhotoLinks'),
 			contract_link:              order.getDataValue('contractPhotoLink'),
 			filter:                     order.getDataValue('filter'),
+			is_dedicated:               order.get('isDedicated'),
+			is_extra_payload:           order.get('isExtraPayload'),
 			cargo:                      transformCargoCompany(order?.cargo),
 			cargoinn:                   transformCargoCompanyInn(order?.cargoinn),
 			driver:                     transformDriver(order?.driver),

@@ -568,6 +568,8 @@ export interface IOrderTransformer
 	contract_link?: string | null;
 	filter?: object;
 	priority?: boolean;
+	readonly is_dedicated?: boolean;
+	readonly is_extra_payload?: boolean;
 
 	cargo?: ICargoCompanyTransformer;
 	cargoinn?: ICargoCompanyInnTransformer;

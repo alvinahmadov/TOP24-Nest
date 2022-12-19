@@ -808,13 +808,13 @@ export interface IDriver
 	 * 01.01.2023
 	 * */
 	payloadDate?: Date;
+	companyName?: string;
 	/**
 	 * Full name of the driver from name, lastname and patronymic
 	 *
 	 * @readonly
 	 * */
 	readonly fullName?: string;
-	readonly companyName?: string;
 }
 
 export interface IGatewayEvent
@@ -1117,6 +1117,8 @@ export interface IOrder
 	 * Link to the offer agreement scan by driver sent before start of order fulfillment.
 	 * */
 	contractPhotoLink?: string | null;
+	readonly isDedicated?: boolean;
+	readonly isExtraPayload?: boolean;
 }
 
 /**

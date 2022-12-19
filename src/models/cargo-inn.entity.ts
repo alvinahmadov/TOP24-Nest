@@ -1,5 +1,7 @@
+import { FindOptions }   from 'sequelize';
 import {
 	BelongsTo,
+	DefaultScope,
 	ForeignKey,
 	HasMany,
 	HasOne,
@@ -42,6 +44,16 @@ import User              from './user.entity';
 
 const { companyinn: prop } = entityConfig;
 
+const scopeOptions: FindOptions = {
+	include: [
+		{
+			model:    User,
+			order:    ['phone'],
+			separate: true
+		}
+	]
+};
+
 /**
  * Cargo company model.
  *
@@ -52,6 +64,7 @@ const { companyinn: prop } = entityConfig;
  * @extends EntityModel
  * */
 @ObjectType()
+@DefaultScope(() => scopeOptions)
 @Table({ tableName: 'companies_inn', ...TABLE_OPTIONS })
 export default class CargoCompanyInn
 	extends EntityModel<ICargoCompanyInn>
@@ -223,7 +236,7 @@ export default class CargoCompanyInn
 	public get userPhone(): string {
 		return this.user?.phone;
 	}
-	
+
 	@ApiProperty(prop.fullName)
 	@VirtualColumn()
 	public get fullName(): string {

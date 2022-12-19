@@ -17,6 +17,4 @@ export default class DriverFilter
 	orderStatus?: OrderStatus;
 	@ApiProperty({ description: 'List of statuses of the driver', required: false })
 	statuses?: number[];
-	@ApiProperty({ description: 'Include company names' })
-	withCompanyName?: boolean;
 }

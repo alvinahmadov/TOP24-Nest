@@ -437,7 +437,7 @@ export async function orderFromBitrix(crmFields: TCRMFields, options?: { debug: 
 		cancelCause:     typeFromCrm<string>(crmFields[ORDER.CANCEL_CAUSE], ''),
 		isCanceled:      isCanceled,
 		hasProblem:      typeFromCrm<boolean>(crmFields[ORDER.HAS_PROBLEM], false),
-		dedicated:       convertBitrix('transportDedicated', crmFields[ORDER.MACHINE]),
+		dedicated:       convertBitrix('transportDedicated', crmFields[ORDER.DEDICATION]),
 		transportTypes:  crmFields[ORDER.TRANSPORT_TYPE]
 			                 ?.map((t: string) => convertBitrix('orderTransportType', t))
 	};

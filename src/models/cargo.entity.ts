@@ -1,5 +1,7 @@
+import { FindOptions }   from 'sequelize';
 import {
 	BelongsTo,
+	DefaultScope,
 	ForeignKey,
 	HasMany,
 	HasOne,
@@ -30,7 +32,8 @@ import {
 	StringColumn,
 	TCRMData,
 	UrlColumn,
-	UuidColumn, VirtualColumn
+	UuidColumn,
+	VirtualColumn
 }                        from '@common/interfaces';
 import { entityConfig }  from '@api/swagger/properties';
 import EntityModel       from './entity-model';
@@ -39,9 +42,18 @@ import Order             from './order.entity';
 import Payment           from './payment.entity';
 import Transport         from './transport.entity';
 import User              from './user.entity';
-import { CARGOINN }      from '@config/json/bitrix.json';
 
 const { company: prop } = entityConfig;
+
+const scopeOptions: FindOptions = {
+	include: [
+		{
+			model:    User,
+			order:    ['phone'],
+			separate: true
+		}
+	]
+};
 
 /**
  * Cargo company model.
@@ -51,6 +63,7 @@ const { company: prop } = entityConfig;
  * @extends EntityModel
  * */
 @ObjectType()
+@DefaultScope(() => scopeOptions)
 @Table({ tableName: 'companies', ...TABLE_OPTIONS })
 export default class CargoCompany
 	extends EntityModel<ICargoCompany>
@@ -273,8 +286,8 @@ export default class CargoCompany
 			data.fields[PAYMENT.OGRNIP] = this.payment.ogrnip;
 			data.fields[PAYMENT.OGRNIP_LINK] = this.payment.ogrnipPhotoLink;
 		}
-		data.fields[CARGOINN.DATE_CREATE] = this.createdAt;
-		data.fields[CARGOINN.DATE_UPDATE] = this.updatedAt;
+		data.fields[CARGO.DATE_CREATE] = this.createdAt;
+		data.fields[CARGO.DATE_UPDATE] = this.updatedAt;
 		return data;
 	};
 }

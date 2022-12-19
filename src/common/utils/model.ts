@@ -1,8 +1,21 @@
 import {
 	Driver,
+	Order,
 	Transport
-}                   from '@models/index';
-import { ICompany } from '@common/interfaces';
+}                                from '@models/index';
+import { ICompany, TBitrixData } from '@common/interfaces';
+import { CRM }                   from '@config/json/crm_enums.json';
+
+function isDedicatedOrExtraPayload(value: string, order: Order) {
+	const dedicated: TBitrixData = CRM.ORDER.DEDICATION
+	                                  .find((d: TBitrixData) => d.VALUE === value);
+	if(!dedicated) {
+		console.debug(`Не найдено значение "${value}" для заказа!`);
+		return false;
+	}
+	return order.dedicated === dedicated.VALUE ||
+	       order.dedicated === dedicated.ID;
+}
 
 export function transformTransportParameters(transport: Transport): Transport {
 	if(transport.weightExtra > 0) transport.weight = transport.weightExtra;
@@ -17,7 +30,7 @@ export function transformDriverTransports(driver: Driver): Driver {
 	return driver;
 }
 
-export function fillDriverCompanyData(driver: Driver, company?: ICompany): Driver {
+export function fillDriverWithCompanyData(driver: Driver, company?: ICompany): Driver {
 	if(driver) {
 		const companyKey: keyof Driver = driver.cargoId ? 'cargo' : 'cargoinn';
 		let renamed: boolean;
@@ -33,6 +46,7 @@ export function fillDriverCompanyData(driver: Driver, company?: ICompany): Drive
 
 				if('fullName' in data) {
 					driver.name = data?.fullName;
+					driver.companyName = data?.fullName;
 					renamed = true;
 				}
 			}
@@ -47,4 +61,12 @@ export function fillDriverCompanyData(driver: Driver, company?: ICompany): Drive
 	}
 
 	return driver;
+}
+
+export function isDedicatedOrder(order: Order): boolean {
+	return isDedicatedOrExtraPayload('Выделенная машина', order);
+}
+
+export function isExtraPayloadOrder(order: Order): boolean {
+	return isDedicatedOrExtraPayload('Догруз', order);
 }

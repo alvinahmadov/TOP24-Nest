@@ -255,6 +255,10 @@ export default class Driver
 	@HasMany(() => Transport, 'driverId')
 	transports?: Transport[];
 
+	@ApiProperty(prop.companyName)
+	@VirtualColumn()
+	companyName?: string;
+
 	@ApiProperty(prop.fullName)
 	@VirtualColumn()
 	public get fullName(): string {
@@ -262,16 +266,6 @@ export default class Driver
 		const surname = this.lastName ? `${this.lastName}` : '';
 		const middleName = this.patronymic ? ` ${this.patronymic[0]}.` : '';
 		return `${surname}${middleName}${name}`;
-	}
-
-	@ApiProperty(prop.companyName)
-	@VirtualColumn()
-	public get companyName(): string {
-		if(this.cargo)
-			return this.cargo.fullName;
-		if(this.cargoinn)
-			return this.cargoinn.fullName;
-		return this.fullName;
 	}
 
 	public toCrm(

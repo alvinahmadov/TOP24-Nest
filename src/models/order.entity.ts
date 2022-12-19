@@ -1,3 +1,4 @@
+import { FindOptions }              from 'sequelize';
 import {
 	BelongsTo,
 	DefaultScope,
@@ -39,13 +40,16 @@ import {
 	VirtualColumn
 }                                   from '@common/interfaces';
 import { entityConfig }             from '@api/swagger/properties';
-import { convertBitrix }            from '@common/utils';
+import {
+	convertBitrix,
+	isDedicatedOrder,
+	isExtraPayloadOrder
+}                                   from '@common/utils';
 import EntityModel                  from './entity-model';
 import CargoCompany                 from './cargo.entity';
 import CargoCompanyInn              from './cargo-inn.entity';
 import Destination                  from './destination.entity';
 import Driver                       from './driver.entity';
-import { FindOptions }              from 'sequelize';
 
 const { order: prop } = entityConfig;
 
@@ -343,6 +347,16 @@ export default class Order
 	@VirtualColumn()
 	public get priority(): boolean {
 		return this.isCurrent;
+	}
+
+	@VirtualColumn()
+	public get isDedicated(): boolean {
+		return isDedicatedOrder(this);
+	}
+
+	@VirtualColumn()
+	public get isExtraPayload(): boolean {
+		return isExtraPayloadOrder(this);
 	}
 
 	public readonly toCrm = (
