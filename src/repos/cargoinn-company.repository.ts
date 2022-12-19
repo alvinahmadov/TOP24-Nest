@@ -16,8 +16,7 @@ import {
 	Image,
 	Order,
 	Payment,
-	Transport,
-	User
+	Transport
 }                             from '@models/index';
 import GenericRepository      from './generic';
 
@@ -39,8 +38,7 @@ export default class CargoInnCompanyRepository
 		{
 			model:   Transport,
 			include: [{ model: Image }]
-		},
-		{ model: User }
+		}
 	];
 
 	constructor(
@@ -71,7 +69,7 @@ export default class CargoInnCompanyRepository
 					order,
 					offset,
 					limit,
-					include: full ? this.include : [{ model: User }]
+					include: full ? this.include : undefined
 				}
 			),
 			{ id: 'getList' },
@@ -89,7 +87,7 @@ export default class CargoInnCompanyRepository
 		return this.log(
 			() => this.model.findByPk(
 				id,
-				{ include: full ? this.include : [{ model: User }] }
+				{ include: full ? this.include : undefined }
 			),
 			{ id: 'get' },
 			{ id, full }
@@ -172,18 +170,11 @@ export default class CargoInnCompanyRepository
 									              .lte('payloadDate', payloadDate)
 										          .query,
 									required: false,
-									include:  [
-										{
-											model:      CargoCompanyInn,
-											attributes: ['name', 'patronymic', 'lastName']
-										},
-										{ model: Order }
-									]
+									include:  [{ model: Order }]
 								},
 								{ model: Image }
 							]
-						},
-						{ model: User }
+						}
 					]
 				}
 			),
