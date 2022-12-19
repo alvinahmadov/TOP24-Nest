@@ -20,6 +20,17 @@ import {
 }                             from '@models/index';
 import GenericRepository      from './generic';
 
+const driverDefaultIncludeables: Includeable[] = [
+	{
+		model:      CargoCompany,
+		attributes: ['name', 'legalName', 'userPhone', 'avatarLink']
+	},
+	{
+		model:      CargoCompanyInn,
+		attributes: ['name', 'patronymic', 'lastName', 'userPhone', 'avatarLink']
+	}
+];
+
 export default class DriverRepository
 	extends GenericRepository<Driver, IDriver>
 	implements IRepository {
@@ -38,6 +49,20 @@ export default class DriverRepository
 		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(DriverRepository.name);
+	}
+
+	public override async get(id: string, full?: boolean): Promise<Driver | null> {
+		return this.log(
+			async() => this.model.findByPk(
+				id,
+				{
+					rejectOnEmpty: false,
+					include:       full ? this.include : driverDefaultIncludeables
+				}
+			),
+			{ id: 'get' },
+			{ id, full }
+		);
 	}
 
 	/**
@@ -64,7 +89,6 @@ export default class DriverRepository
 			name,
 			patronymic,
 			lastName,
-			withCompanyName = false,
 			registrationAddress,
 			currentAddress,
 			address,
@@ -116,7 +140,7 @@ export default class DriverRepository
 							include: [{ model: Image }]
 						},
 						{ model: Order }
-					] : []
+					] : driverDefaultIncludeables
 				}
 			),
 			{ id: 'getList' },
@@ -143,6 +167,7 @@ export default class DriverRepository
 							             .inArray('id', filter?.driverIds)
 								         .query,
 							include: [
+								...driverDefaultIncludeables,
 								{
 									model:    Transport,
 									required: true,
