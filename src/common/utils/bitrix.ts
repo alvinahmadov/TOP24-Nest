@@ -464,11 +464,13 @@ export async function orderFromBitrix(crmFields: TCRMFields, options?: { debug: 
  * @return {crmId?: number; contactCrmIds?: Map<string, number>} crm info on response
  *
  * */
-export async function cargoToBitrix<T extends ICRMEntity & { [key: string]: any; }>(company: T, options?: { debug: boolean; })
-	: Promise<IApiResponse<{ crmId?: number, contactCrmIds?: Map<string, number> }>> {
+export async function cargoToBitrix<T extends ICRMEntity & { [key: string]: any; }>(
+	company: T,
+	options: { debug: boolean; } = { debug: false }
+): Promise<IApiResponse<{ crmId?: number, contactCrmIds?: Map<string, number> }>> {
 	let crmCargoId = company.crmId;
 	const data: TCRMData = company.toCrm() as TCRMData;
-	const { debug = false } = options;
+	const { debug } = options;
 	const contactCrmIdMap: Map<string, number> = new Map<string, number>();
 	const companyUpdate = crmCargoId !== undefined &&
 	                      crmCargoId !== null;
