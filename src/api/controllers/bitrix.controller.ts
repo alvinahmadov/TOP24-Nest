@@ -9,7 +9,10 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { IWebhookResponse }    from '@common/interfaces';
-import { sendResponse }        from '@common/utils';
+import {
+	isSuccessResponse,
+	sendResponse
+}                              from '@common/utils';
 import {
 	CompanyInnUpdateDto,
 	CompanyUpdateDto
@@ -17,7 +20,10 @@ import {
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
-import { BitrixService }       from '@api/services';
+import {
+	BitrixService,
+	OrderService
+}                              from '@api/services';
 import { AdminGuard }          from '@api/security';
 import { StaticController }    from './controller';
 
@@ -31,7 +37,8 @@ export default class BitrixController
 	private static eventMap: Map<number, string> = new Map<number, string>();
 
 	public constructor(
-		private readonly bitrixService: BitrixService
+		private readonly bitrixService: BitrixService,
+		private readonly orderService: OrderService
 	) { super(); }
 
 	@ApiRoute(routes.orders, {
@@ -109,9 +116,12 @@ export default class BitrixController
 		const crmId = Number(crm.data['FIELDS']['ID']);
 
 		switch(crm.event) {
-			case 'ONCRMDEALADD':
-				await this.bitrixService.synchronizeOrder(crmId);
+			case 'ONCRMDEALADD': {
+				const apiResponse = await this.orderService.getByCrmId(crmId);
+				if(!isSuccessResponse(apiResponse))
+					await this.bitrixService.synchronizeOrder(crmId);
 				break;
+			}
 			case 'ONCRMDEALUPDATE': {
 				if(BitrixController.eventMap.has(crmId)) {
 					if(BitrixController.eventMap.get(crmId) === crm.ts) {
