@@ -1,7 +1,7 @@
 import { Op }                  from 'sequelize';
 import {
 	Injectable,
-	HttpStatus,
+	HttpStatus
 }                              from '@nestjs/common';
 import env                     from '@config/env';
 import {
@@ -11,7 +11,7 @@ import {
 	OrderStatus,
 	OrderStage,
 	TransportStatus,
-	UserRole,
+	UserRole
 }                              from '@common/enums';
 import {
 	IApiResponses,
@@ -26,7 +26,7 @@ import {
 	TAsyncApiResponse,
 	TOfferTransportFilter,
 	TOfferDriver,
-	TSentOffer,
+	TSentOffer
 }                              from '@common/interfaces';
 import {
 	checkTransportRequirements,
@@ -34,28 +34,28 @@ import {
 	filterTransports,
 	formatArgs,
 	getTranslation,
-	isSuccessResponse,
+	isSuccessResponse
 }                              from '@common/utils';
 import {
 	transformEntity,
 	IDriverTransformer,
 	IOrderTransformer,
-	ITransportTransformer,
+	ITransportTransformer
 }                              from '@common/utils/compat';
 import {
 	Driver,
-	Offer,
+	Offer
 }                              from '@models/index';
 import {
 	DestinationRepository,
-	OfferRepository,
+	OfferRepository
 }                              from '@repos/index';
 import {
 	OfferCreateDto,
 	OfferFilter,
 	OfferUpdateDto,
 	OrderFilter,
-	OrderUpdateDto,
+	OrderUpdateDto
 }                              from '@api/dto';
 import { NotificationGateway } from '@api/notifications';
 import Service                 from './service';
@@ -74,7 +74,7 @@ export default class OfferService
 	public override readonly responses: IApiResponses<null> = {
 		ACCEPTED:  { statusCode: HttpStatus.BAD_REQUEST, message: OFFER_TRANSLATIONS['ACCEPTED'] },
 		DECLINED:  { statusCode: HttpStatus.BAD_REQUEST, message: OFFER_TRANSLATIONS['DECLINED'] },
-		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: OFFER_TRANSLATIONS['NOT_FOUND'] },
+		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: OFFER_TRANSLATIONS['NOT_FOUND'] }
 	};
 	private destinationRepo: DestinationRepository = new DestinationRepository();
 
@@ -82,7 +82,7 @@ export default class OfferService
 		protected readonly driverService: DriverService,
 		protected readonly orderService: OrderService,
 		protected readonly transportService: TransportService,
-		private readonly gateway: NotificationGateway,
+		private readonly gateway: NotificationGateway
 	) {
 		super();
 		this.repository = new OfferRepository();
@@ -98,27 +98,27 @@ export default class OfferService
 		return {
 			statusCode: HttpStatus.OK,
 			data:       offer,
-			message:    formatArgs(OFFER_TRANSLATIONS['GET'], offer.id),
+			message:    formatArgs(OFFER_TRANSLATIONS['GET'], offer.id)
 		};
 	}
 
 	public async getList(
 		listFilter?: IListFilter,
-		filter?: IOfferFilter,
+		filter?: IOfferFilter
 	): TAsyncApiResponse<Offer[]> {
 		const offers = await this.repository.getList(listFilter, filter);
 
 		return {
 			statusCode: HttpStatus.OK,
 			data:       offers,
-			message:    formatArgs(OFFER_TRANSLATIONS['LIST'], offers.length),
+			message:    formatArgs(OFFER_TRANSLATIONS['LIST'], offers.length)
 		};
 	}
 
 	public async update(
 		orderId: string,
 		driverId: string,
-		dto: OfferUpdateDto,
+		dto: OfferUpdateDto
 	): TAsyncApiResponse<Offer | null> {
 		let offer = await this.repository.getByAssociation(orderId, driverId);
 
@@ -142,11 +142,11 @@ export default class OfferService
 					if(order.dedicated === 'Догруз') {
 						const transport = driver.transports.find(
 							t => t.status === TransportStatus.ACTIVE &&
-							     !t.isTrailer,
+							     !t.isTrailer
 						);
 						const trailer = driver.transports.find(
 							t => t.status === TransportStatus.ACTIVE &&
-							     t.isTrailer,
+							     t.isTrailer
 						);
 						const filter: ICompanyTransportFilter = {
 							weightMin: order.weight,
@@ -154,7 +154,7 @@ export default class OfferService
 							heightMin: order.height,
 							lengthMin: order.length,
 							widthMin:  order.width,
-							pallets:   order.pallets,
+							pallets:   order.pallets
 						};
 
 						// Check for transport parameters matching 
@@ -170,9 +170,9 @@ export default class OfferService
 								this.gateway.sendDriverNotification(
 									{
 										id: driverId,
-										message,
+										message
 									},
-									UserRole.CARGO,
+									UserRole.CARGO
 								);
 							}
 						}
@@ -183,9 +183,9 @@ export default class OfferService
 						this.gateway.sendDriverNotification(
 							{
 								id: driverId,
-								message,
+								message
 							},
-							UserRole.CARGO,
+							UserRole.CARGO
 						);
 					}
 				}
@@ -216,9 +216,9 @@ export default class OfferService
 								    {
 									    id:      driverId,
 									    source:  'offer',
-									    message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], uOrder?.crmId?.toString()),
+									    message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], uOrder?.crmId?.toString())
 								    },
-								    UserRole.CARGO,
+								    UserRole.CARGO
 							    );
 
 							    this.gateway.sendOrderNotification(
@@ -230,13 +230,13 @@ export default class OfferService
 									    message: formatArgs(
 										    EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
 										    order.crmId?.toString() ?? '',
-										    driver.fullName,
-									    ),
+										    driver.fullName
+									    )
 								    },
-								    UserRole.ADMIN,
+								    UserRole.ADMIN
 							    );
 						    }
-					    },
+					    }
 				    );
 			}
 		}
@@ -246,12 +246,12 @@ export default class OfferService
 				id:     order.id,
 				event:  'order',
 				source: 'offer',
-				stage:  order.stage,
+				stage:  order.stage
 			};
 			if(
 				[
 					OfferStatus.DECLINED,
-					OfferStatus.CANCELLED,
+					OfferStatus.CANCELLED
 				].some(s => s === dto.status)
 			) {
 				if(dto.status === OfferStatus.DECLINED) {
@@ -287,9 +287,9 @@ export default class OfferService
 					type:     DestinationType.LOAD,
 					loaded:   false,
 					unloaded: false,
-					uploaded: false,
+					uploaded: false
 				},
-				currentPoint: 'A',
+				currentPoint: 'A'
 			});
 		}
 
@@ -299,7 +299,7 @@ export default class OfferService
 			return {
 				statusCode: HttpStatus.OK,
 				data:       result,
-				message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id),
+				message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
 			};
 		else
 			return this.repository.getRecord('update');
@@ -317,7 +317,7 @@ export default class OfferService
 				status:         0,
 				operation:      null,
 				currentPoint:   null,
-				currentAddress: null,
+				currentAddress: null
 			});
 		}
 
@@ -345,20 +345,20 @@ export default class OfferService
 				stage:             OrderStage.AGREED_OWNER,
 				contractPhotoLink: null,
 				paymentPhotoLinks: null,
-				receiptPhotoLinks: null,
+				receiptPhotoLinks: null
 			})
 			    .then(async({ data: o }) =>
 			          {
 				          this.destinationRepo.bulkUpdate(
 					          {
 						          shippingPhotoLinks: null,
-						          fulfilled:          false,
+						          fulfilled:          false
 					          },
 					          {
-						          orderId: o.id,
-					          },
+						          orderId: o.id
+					          }
 				          ).then(
-					          ([affectedCount]) => console.info('Updated ' + affectedCount + ' destinations'),
+					          ([affectedCount]) => console.info('Updated ' + affectedCount + ' destinations')
 				          ).catch(console.error);
 
 				          await this.orderService.send(o.id);
@@ -369,14 +369,14 @@ export default class OfferService
 		return {
 			statusCode: HttpStatus.OK,
 			data:       await this.repository.delete(id),
-			message:    formatArgs(OFFER_TRANSLATIONS['DELETE'], id),
+			message:    formatArgs(OFFER_TRANSLATIONS['DELETE'], id)
 		};
 	}
 
 	public async getOrderDrivers(
 		orderId: string,
 		listFilter?: IListFilter,
-		filter?: IOfferFilter & IDriverFilter,
+		filter?: IOfferFilter & IDriverFilter
 	): TAsyncApiResponse<Driver[]> {
 		const offers = await this.repository.getOrderDrivers(orderId, listFilter, filter);
 		const drivers = offers.map(offer => offer.driver);
@@ -384,14 +384,14 @@ export default class OfferService
 		return {
 			statusCode: HttpStatus.OK,
 			data:       drivers,
-			message:    formatArgs(OFFER_TRANSLATIONS['DRIVERS'], drivers.length),
+			message:    formatArgs(OFFER_TRANSLATIONS['DRIVERS'], drivers.length)
 		};
 	}
 
 	public async getDriverOrders(
 		driverId: string,
 		listFilter?: IListFilter,
-		filter?: OfferFilter & Omit<OrderFilter, 'status' | 'statuses'>,
+		filter?: OfferFilter & Omit<OrderFilter, 'status' | 'statuses'>
 	) {
 		const offers = await this.repository.getDriverOrders(driverId, listFilter, filter);
 		const { data: transports } = await this.transportService.getList({}, { driverId });
@@ -444,7 +444,7 @@ export default class OfferService
 
 				                     if(order.priority) {
 					                     let orderUpdateDto: OrderUpdateDto = {
-						                     isCurrent: true,
+						                     isCurrent: true
 					                     };
 
 					                     if(
@@ -466,9 +466,9 @@ export default class OfferService
 					                     ),
 					                     priority:         order.priority,
 					                     [offerStatusKey]: offer.status,
-					                     transports:       offer.transports,
+					                     transports:       offer.transports
 				                     };
-			                     },
+			                     }
 		                     );
 
 		if(offers.every(o => o.status < OfferStatus.SEEN)) {
@@ -477,30 +477,30 @@ export default class OfferService
 				{
 					[Op.and]: [
 						{ orderId: { [Op.in]: orders?.map(o => o.id) } },
-						{ driverId },
-					],
-				},
+						{ driverId }
+					]
+				}
 			);
 		}
 
 		return {
 			statusCode: HttpStatus.OK,
 			data:       orders,
-			message:    formatArgs(OFFER_TRANSLATIONS['ORDERS'], orders.length),
+			message:    formatArgs(OFFER_TRANSLATIONS['ORDERS'], orders.length)
 		};
 	}
 
 	public async getOfferTransports(
 		orderId: string,
 		listFilter: IListFilter,
-		filter?: TOfferTransportFilter,
+		filter?: TOfferTransportFilter
 	): TAsyncApiResponse<any[]> {
 		const transportData: any[] = [];
 		//Temporary fix
 		if(filter.orderStatus === OrderStatus.ACCEPTED) {
 			filter.orderStatuses = [
 				OrderStatus.ACCEPTED,
-				OrderStatus.PROCESSING,
+				OrderStatus.PROCESSING
 			];
 			// filter.offerStatuses = [OfferStatus.CANCELLED];
 			delete filter.orderStatus;
@@ -516,10 +516,10 @@ export default class OfferService
 					const { transports: driverTransports = [] } = driver;
 
 					const mainTransports = driverTransports.filter(
-						transport => !transport.isTrailer,
+						transport => !transport.isTrailer
 					);
 					const trailer = driverTransports.find(
-						transport => transport.isTrailer && transport.status === TransportStatus.ACTIVE,
+						transport => transport.isTrailer && transport.status === TransportStatus.ACTIVE
 					);
 
 					if(mainTransports.length > 0) {
@@ -570,7 +570,7 @@ export default class OfferService
 										bid_price:     offer.bidPrice,
 										bid_price_max: offer.bidPriceVat,
 										bid_comments:  offer.bidComment,
-										bid_info:      offer.bidComment,
+										bid_info:      offer.bidComment
 									} : {
 										..._transport,
 										driver:      _driver,
@@ -579,33 +579,33 @@ export default class OfferService
 										orderStatus,
 										bidPrice:    offer.bidPrice,
 										bidPriceVat: offer.bidPriceVat,
-										bidComment:  offer.bidComment,
+										bidComment:  offer.bidComment
 									};
-								},
-							),
+								}
+							)
 					);
 				}
-			},
+			}
 		);
 
 		return {
 			statusCode: HttpStatus.OK,
 			data:       transportData,
-			message:    formatArgs(OFFER_TRANSLATIONS['TRANSPORTS'], transportData.length),
+			message:    formatArgs(OFFER_TRANSLATIONS['TRANSPORTS'], transportData.length)
 		};
 	}
 
 	public async sendToDriver(
 		orderId: string,
 		driverId: string,
-		dto: Omit<OfferCreateDto, 'driverId' | 'orderId'>,
+		dto: Omit<OfferCreateDto, 'driverId' | 'orderId'>
 	): TAsyncApiResponse<Offer> {
 		let offer = await this.repository.getByAssociation(orderId, driverId);
 		let exists = offer !== null;
 
 		if(!dto) dto = {
 			orderStatus: OrderStatus.PENDING,
-			status:      OfferStatus.NONE,
+			status:      OfferStatus.NONE
 		};
 
 		offer = await (
@@ -617,7 +617,7 @@ export default class OfferService
 			return {
 				statusCode: !exists ? HttpStatus.CREATED
 				                    : HttpStatus.OK,
-				data:       offer,
+				data:       offer
 			};
 
 		return !exists ? this.repository.getRecord('create')
@@ -627,7 +627,7 @@ export default class OfferService
 	public async sendToDrivers(
 		orderId: string,
 		driverDataList: Array<TOfferDriver>,
-		full?: boolean,
+		full?: boolean
 	): TAsyncApiResponse<TSentOffer> {
 		const { data: order } = await this.orderService.getById(orderId);
 		const prevOffers = await this.repository.getList({ full: true }, { orderId });
@@ -638,7 +638,7 @@ export default class OfferService
 			return {
 				statusCode: 404,
 				data:       { createCount, updateCount, offers },
-				message:    OFFER_TRANSLATIONS['NOT_FOUND'],
+				message:    OFFER_TRANSLATIONS['NOT_FOUND']
 			};
 		}
 
@@ -651,7 +651,7 @@ export default class OfferService
 			.filter(driverData => driverData !== null);
 
 		let { data: drivers } = await this.driverService.getByTransport(
-			{ driverIds: driverOffers.map(o => o.driverId) },
+			{ driverIds: driverOffers.map(o => o.driverId) }
 		);
 
 		const transportRequirements: ITransportFilter = {
@@ -660,7 +660,7 @@ export default class OfferService
 			volumeMin: order.volume,
 			lengthMin: order.length,
 			widthMin:  order.width,
-			pallets:   order.pallets ?? 0,
+			pallets:   order.pallets ?? 0
 		};
 
 		// noinspection JSUnusedLocalSymbols
@@ -672,13 +672,13 @@ export default class OfferService
 			return {
 				statusCode: 404,
 				data:       { createCount, updateCount, offers },
-				message:    formatArgs(OFFER_TRANSLATIONS['DRIVERS'], 0),
+				message:    formatArgs(OFFER_TRANSLATIONS['DRIVERS'], 0)
 			};
 		else
 			driverOffers = driverOffers.filter(
 				(offerDriver) => drivers.some(
-					(driver) => driver.id === offerDriver.driverId,
-				),
+					(driver) => driver.id === offerDriver.driverId
+				)
 			);
 
 		// TODO(alvinahmadov): Implement offer status update for non-matching offers
@@ -690,8 +690,8 @@ export default class OfferService
 					         (
 						         offer.orderStatus !== driverData.orderStatus ||
 						         offer.status > OfferStatus.SENT
-					         ),
-				),
+					         )
+				)
 			).map(driverData => ({ orderId: orderId, ...driverData }));
 
 		const offersToCreate: OfferCreateDto[] = driverOffers
@@ -713,10 +713,10 @@ export default class OfferService
 						{
 							id:      offer.driverId,
 							source:  'offer',
-							message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order.crmId?.toString()),
+							message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order.crmId?.toString())
 						},
-						UserRole.CARGO,
-					),
+						UserRole.CARGO
+					)
 				);
 		}
 
@@ -730,14 +730,14 @@ export default class OfferService
 				stage:  order.stage,
 				point:  order.destinations
 				             .filter(d => !d.fulfilled)[0]
-					        ?.point ?? 'A',
-			},
+					        ?.point ?? 'A'
+			}
 		);
 
 		return {
 			statusCode: HttpStatus.OK,
 			data:       { createCount, updateCount, offers },
-			message:    formatArgs(OFFER_TRANSLATIONS['SEND'], createCount, updateCount),
+			message:    formatArgs(OFFER_TRANSLATIONS['SEND'], createCount, updateCount)
 		};
 	}
 
@@ -747,7 +747,7 @@ export default class OfferService
 	public async accept(
 		orderId: string,
 		driverId: string,
-		role?: UserRole,
+		role?: UserRole
 	): TAsyncApiResponse<Offer> {
 		let offer = await this.repository.getByAssociation(orderId, driverId);
 		console.debug(role);
@@ -768,9 +768,9 @@ export default class OfferService
 								{
 									id:      driverId,
 									source:  'offer',
-									message: EVENT_DRIVER_TRANSLATIONS['HAS_EXISTING'],
+									message: EVENT_DRIVER_TRANSLATIONS['HAS_EXISTING']
 								},
-								UserRole.CARGO,
+								UserRole.CARGO
 							);
 						}
 
@@ -782,9 +782,9 @@ export default class OfferService
 								longitude:      driver.longitude,
 								currentPoint:   driver.currentPoint,
 								currentAddress: driver.currentAddress,
-								message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], offer.order?.crmId.toString()),
+								message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], offer.order?.crmId.toString())
 							},
-							UserRole.CARGO,
+							UserRole.CARGO
 						);
 					}
 
@@ -796,14 +796,14 @@ export default class OfferService
 						offer.id,
 						{
 							orderStatus: OrderStatus.PROCESSING,
-							status:      OfferStatus.RESPONDED,
-						},
+							status:      OfferStatus.RESPONDED
+						}
 					);
 
 					return {
 						statusCode: HttpStatus.OK,
 						data:       offer,
-						message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id),
+						message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
 					};
 				}
 			}
@@ -811,7 +811,7 @@ export default class OfferService
 			return {
 				statusCode: HttpStatus.OK,
 				data:       offer,
-				message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id),
+				message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
 			};
 		}
 
@@ -821,7 +821,7 @@ export default class OfferService
 	public async confirmDriver(
 		orderId: string,
 		driverId: string,
-		offer: Offer,
+		offer: Offer
 	): Promise<boolean> {
 		const orderTitle = offer.order?.crmId?.toString() ?? '';
 
@@ -830,9 +830,9 @@ export default class OfferService
 			operation:    {
 				type:     DestinationType.LOAD,
 				loaded:   false,
-				unloaded: false,
+				unloaded: false
 			},
-			currentPoint: 'A',
+			currentPoint: 'A'
 		});
 
 		this.orderService.update(
@@ -848,8 +848,8 @@ export default class OfferService
 				bidInfo:     offer.bidComment,
 				cargoId:     offer.driver.cargoId,
 				cargoinnId:  offer.driver.cargoinnId,
-				status:      OrderStatus.PROCESSING,
-			},
+				status:      OrderStatus.PROCESSING
+			}
 		).then(
 			({ data: order }) =>
 			{
@@ -859,16 +859,16 @@ export default class OfferService
 							id:      orderId,
 							status:  order.status,
 							stage:   order.stage,
-							message: formatArgs(EVENT_ORDER_TRANSLATIONS['ACCEPT'], orderTitle),
+							message: formatArgs(EVENT_ORDER_TRANSLATIONS['ACCEPT'], orderTitle)
 						},
-						UserRole.ADMIN,
+						UserRole.ADMIN
 					);
 					this.orderService
 					    .send(offer.orderId)
 					    .then(({ data }) => console.log('Order crm updated ' + data))
 					    .catch(console.error);
 				}
-			},
+			}
 		);
 
 		return true;
@@ -878,7 +878,7 @@ export default class OfferService
 		orderId: string,
 		driverId: string,
 		reason?: string,
-		role?: UserRole,
+		role?: UserRole
 	): TAsyncApiResponse<Offer> {
 		const offer = await this.repository.getByAssociation(orderId, driverId);
 		const status = role < UserRole.CARGO ? OrderStatus.PENDING
@@ -901,7 +901,7 @@ export default class OfferService
 						    isFree:            true,
 						    isCurrent:         false,
 						    cancelCause:       reason ?? '',
-						    contractPhotoLink: null,
+						    contractPhotoLink: null
 					    })
 					    .then(({ data: order }) =>
 					          {
@@ -914,9 +914,9 @@ export default class OfferService
 									          message: formatArgs(
 										          EVENT_ORDER_TRANSLATIONS['CANCELLED_DRIVER'],
 										          driver?.fullName,
-										          order?.crmId,
-									          ),
-								          },
+										          order?.crmId
+									          )
+								          }
 							          );
 						          }
 					          })
@@ -927,7 +927,7 @@ export default class OfferService
 					const driverDto = {
 						status:         DriverStatus.NONE,
 						currentPoint:   '',
-						currentAddress: '',
+						currentAddress: ''
 					};
 
 					let { data: orders } = await this.orderService.getList(
@@ -936,9 +936,9 @@ export default class OfferService
 							driverId,
 							statuses: [
 								OrderStatus.ACCEPTED,
-								OrderStatus.PROCESSING,
-							],
-						},
+								OrderStatus.PROCESSING
+							]
+						}
 					);
 
 					if(orders && orders.length > 1) {
@@ -956,11 +956,11 @@ export default class OfferService
 									    {
 										    id:      driver.id,
 										    status:  driver.status,
-										    message: formatArgs(EVENT_DRIVER_TRANSLATIONS['DECLINE'], order.crmId?.toString() ?? 0),
+										    message: formatArgs(EVENT_DRIVER_TRANSLATIONS['DECLINE'], order.crmId?.toString() ?? 0)
 									    },
-									    UserRole.CARGO,
+									    UserRole.CARGO
 								    );
-						    },
+						    }
 					    )
 					    .catch(r => console.error(r));
 				}
@@ -978,9 +978,9 @@ export default class OfferService
 							bidPriceVat: null,
 							orderStatus: status,
 							status:      OfferStatus.CANCELLED,
-							bidComment:  reason ?? '',
-						},
-					),
+							bidComment:  reason ?? ''
+						}
+					)
 				};
 			}
 			else
@@ -992,7 +992,7 @@ export default class OfferService
 
 	public async cancel(
 		orderId: string,
-		crmId: number,
+		crmId: number
 	): TAsyncApiResponse<Offer[]> {
 		const offers = await this.repository.getOrderDrivers(orderId);
 		offers.forEach(
@@ -1000,16 +1000,16 @@ export default class OfferService
 				this.gateway.sendDriverNotification(
 					{
 						id:      offer.driverId,
-						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmId.toString()),
+						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmId.toString())
 					},
-					UserRole.CARGO,
-				),
+					UserRole.CARGO
+				)
 		);
 
 		return {
 			statusCode: HttpStatus.OK,
 			data:       offers,
-			message:    crmId ? crmId.toString() : '',
+			message:    crmId ? crmId.toString() : ''
 		};
 	}
 }
