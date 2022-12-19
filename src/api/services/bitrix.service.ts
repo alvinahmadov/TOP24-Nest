@@ -55,6 +55,7 @@ import CONTACT_GET_URL = BitrixUrl.CONTACT_GET_URL;
 
 const COMPANY_EVENT_TRANSLATION = getTranslation('EVENT', 'COMPANY');
 const DRIVER_EVENT_TRANSLATION = getTranslation('EVENT', 'DRIVER');
+const debugBitrixOrder = false;
 
 /**
  * @summary Bitrix Service
@@ -386,7 +387,10 @@ export default class BitrixService
 					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N'
 				) return { statusCode: 200, message: 'Invalid order source/stage' };
 
-				const { orderDto, destinationDtos } = await orderFromBitrix(crmItem);
+				const { orderDto, destinationDtos } = await orderFromBitrix(
+					crmItem,
+					{ debug: !isUpdateRequest && debugBitrixOrder }
+				);
 
 				if(crmClientId > 0) {
 					const { result } = await this.httpClient.get<TCRMResponse>(
