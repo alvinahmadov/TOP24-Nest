@@ -11,8 +11,6 @@ import {
 	TMulterFile
 }                             from '@common/interfaces';
 import { transformApiResult } from '@common/utils/compat';
-import Driver                 from '@models/driver.entity';
-import Transport              from '@models/transport.entity';
 
 const phoneRegex = RegExp(/[\s+()]+/gi);
 
@@ -78,19 +76,6 @@ export function renameMulterFile(file: TMulterFile, ...args: string[]): TMulterF
 
 export function renameMulterFiles(files: TMulterFile[], ...args: string[]): TMulterFile[] {
 	return files.map(f => renameMulterFile(f, ...args));
-}
-
-export function transformTransportParameters(transport: Transport): Transport {
-	if(transport.weightExtra > 0) transport.weight = transport.weightExtra;
-	if(transport.volumeExtra > 0) transport.volume = transport.volumeExtra;
-	return transport;
-}
-
-export function transformDriverTransports(driver: Driver): Driver {
-	if(driver.transports !== undefined)
-		driver.transports = driver.transports.map(transformTransportParameters);
-
-	return driver;
 }
 
 export function sendResponse<T = any>(

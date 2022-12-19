@@ -6,4 +6,5 @@ export * from './filter';
 export * from './i18n';
 export * from './helpers';
 export * from './log';
+export * from './model';
 export * from './swagger';
