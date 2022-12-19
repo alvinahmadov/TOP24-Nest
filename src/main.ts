@@ -149,10 +149,7 @@ async function bootstrap(): Promise<INestApplication> {
 		.setDescription('Backend bridge service')
 		.setVersion('2.0')
 		.addServer(`${SCHEME}{server}`, null, serverVariables)
-		.addBearerAuth(
-			{ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-			'access-token'
-		);
+		.addBearerAuth();
 
 	const swaggerOptions: SwaggerDocumentOptions = {
 		ignoreGlobalPrefix: true,
