@@ -30,6 +30,7 @@ import {
 }                              from '@common/interfaces';
 import {
 	checkTransportRequirements,
+	fillDriverWithCompanyData,
 	filterTransports,
 	formatArgs,
 	getTranslation,
@@ -511,7 +512,7 @@ export default class OfferService
 			offer =>
 			{
 				if(offer.driver) {
-					const { driver } = offer;
+					const driver = fillDriverWithCompanyData(offer.driver);
 					const { transports: driverTransports = [] } = driver;
 
 					const mainTransports = driverTransports.filter(
@@ -563,7 +564,7 @@ export default class OfferService
 									return env.api.compatMode ? {
 										..._transport,
 										driver:        _driver,
-										company_name:  driver.companyName,
+										company_name:  driver?.companyName,
 										offer_status:  offerStatus,
 										order_status:  orderStatus,
 										bid_price:     offer.bidPrice,
