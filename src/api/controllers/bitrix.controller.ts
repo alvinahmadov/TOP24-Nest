@@ -108,22 +108,22 @@ export default class BitrixController
 
 		const crmId = Number(crm.data['FIELDS']['ID']);
 
-		if(BitrixController.eventMap.has(crmId)) {
-			if(BitrixController.eventMap.get(crmId) === crm.ts) {
-				return;
-			}
-			if(BitrixController.eventMap.size > 1000)
-				BitrixController.eventMap.clear();
-		}
-		BitrixController.eventMap.set(crmId, crm.ts);
-
 		switch(crm.event) {
 			case 'ONCRMDEALADD':
 				await this.bitrixService.synchronizeOrder(crmId);
 				break;
-			case 'ONCRMDEALUPDATE':
+			case 'ONCRMDEALUPDATE': {
+				if(BitrixController.eventMap.has(crmId)) {
+					if(BitrixController.eventMap.get(crmId) === crm.ts) {
+						return;
+					}
+				}
+				else
+					BitrixController.eventMap.set(crmId, crm.ts);
+
 				await this.bitrixService.synchronizeOrder(crmId, true);
 				break;
+			}
 			case 'ONCRMDEALDELETE':
 				await this.bitrixService.deleteOrder(crmId);
 				break;
