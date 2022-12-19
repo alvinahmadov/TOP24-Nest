@@ -226,6 +226,14 @@ export default class OfferRepository
 								         .query,
 							include: [
 								{
+									model:      CargoCompany,
+									attributes: ['name', 'legalName', 'userPhone', 'avatarLink']
+								},
+								{
+									model:      CargoCompanyInn,
+									attributes: ['name', 'patronymic', 'lastName', 'userPhone', 'avatarLink']
+								},
+								{
 									model: Transport,
 									where: this.whereClause<ITransport>()
 									           .eq('status', rest?.transportStatus)
