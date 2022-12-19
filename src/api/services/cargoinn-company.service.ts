@@ -12,6 +12,7 @@ import {
 }                                    from '@common/interfaces';
 import {
 	cargoToBitrix,
+	fillDriverWithCompanyData,
 	filterDirections,
 	filterTransports,
 	filterTransportsByOrder,
@@ -162,7 +163,8 @@ export default class CargoCompanyInnService
 		if(!company)
 			return this.repository.getRecord('create');
 
-		company.user = user;
+		if(!company.user)
+			company.user = user;
 
 		return {
 			statusCode: HttpStatus.CREATED,
@@ -294,13 +296,7 @@ export default class CargoCompanyInnService
 			{
 				company.transports
 				       .forEach(
-					       ({ driver }) =>
-					       {
-						       if(driver) {
-							       if(company?.avatarLink && !driver?.avatarLink)
-								       driver.avatarLink = company.avatarLink;
-						       }
-					       }
+					       ({ driver }) => fillDriverWithCompanyData(driver, company)
 				       );
 
 				transports.push(
