@@ -30,6 +30,7 @@ import {
 import {
 	buildBitrixRequestUrl,
 	renameMulterFiles,
+	fillDriverWithCompanyData,
 	filterOrders,
 	formatArgs,
 	getTranslation,
@@ -271,7 +272,7 @@ export default class OrderService
 		if(!order)
 			return this.responses['NOT_FOUND'];
 
-		const { driver } = order;
+		let { driver } = order;
 
 		if(driver) {
 			if(driver.transports) {
@@ -291,14 +292,7 @@ export default class OrderService
 				}
 			}
 
-			if(driver.cargo || driver.cargoinn) {
-				const companyKey = driver.cargoId ? 'cargo' : 'cargoinn';
-				driver.avatarLink = driver[companyKey].avatarLink;
-				driver.name = driver[companyKey].fullName;
-
-				delete driver.patronymic;
-				delete driver.lastName;
-			}
+			driver = fillDriverWithCompanyData(driver);
 
 			result.driver = driver;
 
@@ -542,7 +536,7 @@ export default class OrderService
 
 		if(!order)
 			return this.responses['NOT_FOUND'];
-		
+
 		let paymentPhotoLinks: string[];
 		let receiptPhotoLinks: string[];
 
@@ -573,7 +567,7 @@ export default class OrderService
 				let uploadResponse = await this.imageFileService.uploadFiles(
 					renameMulterFiles(files, Bucket.Folders.ORDER, id, mode)
 				);
-				
+
 				if(uploadResponse && uploadResponse.Location)
 					paymentPhotoLinks = uploadResponse.Location;
 
@@ -597,7 +591,7 @@ export default class OrderService
 				let uploadResponse = await this.imageFileService.uploadFiles(
 					renameMulterFiles(files, Bucket.Folders.ORDER, id, mode)
 				);
-				
+
 				if(uploadResponse && uploadResponse.Location)
 					receiptPhotoLinks = uploadResponse.Location;
 
