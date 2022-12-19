@@ -46,13 +46,7 @@ import User              from './user.entity';
 const { company: prop } = entityConfig;
 
 const scopeOptions: FindOptions = {
-	include: [
-		{
-			model:    User,
-			order:    ['phone'],
-			separate: true
-		}
-	]
+	include: [{ model: User }]
 };
 
 /**
