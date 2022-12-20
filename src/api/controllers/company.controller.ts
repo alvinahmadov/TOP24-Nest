@@ -391,18 +391,31 @@ export default class CompanyController
 		@Query() listFilter?: dto.ListFilter,
 		@Body(CompanyTransportFilterPipe) filter?: dto.CompanyTransportFilter
 	) {
-		if(filter && filter.directions) {
-			if(filter.directions.every(isUuid)) {
-				const _directions: string[] = [];
-				for(const directionId of filter.directions) {
-					const addressResponse = await this.addressService.getById(directionId);
+		if(filter) {
+			if(filter.directions) {
+				if(filter.directions.every(isUuid)) {
+					const _directions: string[] = [];
+					for(const directionId of filter.directions) {
+						const addressResponse = await this.addressService.getById(directionId);
 
-					if(isSuccessResponse(addressResponse)) {
-						const { data: address } = addressResponse;
-						_directions.push(address.city, address.region);
+						if(isSuccessResponse(addressResponse)) {
+							const { data: address } = addressResponse;
+							_directions.push(address.city, address.region);
+						}
 					}
+					filter.directions = _directions;
 				}
-				filter.directions = _directions;
+			}
+
+			if(filter.payloadCity || filter.payloadRegion) {
+				if(isUuid(filter.payloadCity)) {
+					const { data: address } = await this.addressService.getById(filter.payloadCity);
+					filter.payloadCity = address.city;
+				}
+				if(isUuid(filter.payloadRegion)) {
+					const { data: address } = await this.addressService.getById(filter.payloadRegion);
+					filter.payloadRegion = address.region;
+				}
 			}
 		}
 
