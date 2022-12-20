@@ -373,6 +373,10 @@ export function filterTransports(
 	return transportsWithTrailers;
 }
 
+export function filterMatchingDrivers(driver: Driver, requirements: ICompanyTransportFilter = {}){
+	return filterTransports(driver.transports, requirements)?.length > 0;
+}
+
 export function filterTransportsByOrder(
 	transport: Transport,
 	filter?: ICompanyTransportFilter
