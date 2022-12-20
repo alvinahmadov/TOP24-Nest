@@ -45,10 +45,10 @@ export default class OrderRepository
 					model:   Transport,
 					include: [
 						{ model: Image },
-						{ model: Driver, include: driverDefaultIncludeables }
+						{ model: Driver }
 					]
 				},
-				{ model: Driver, include: driverDefaultIncludeables }
+				{ model: Driver }
 			]
 		},
 		{
