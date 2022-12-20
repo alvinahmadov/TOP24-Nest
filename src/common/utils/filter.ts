@@ -307,15 +307,40 @@ export function filterTransports(
 	const checkPayloads = (transport: Transport): boolean =>
 		checkAgainst(transport.payloads ?? [], payloads, 'payloads', undefined, 'filterTransports');
 
+	const checkDedicated = (transport: Transport): boolean =>
+	{
+		if(filter.isDedicated) {
+			if(transport.payloadExtra) {
+				console.debug(`filterTransports: No match for dedicated transport, requested 'isDedicated: ${filter.isDedicated}'.`);
+				return false;
+			}
+		}
+		return true;
+	};
+
+	const checkExtraPayload = (transport: Transport): boolean =>
+	{
+		if(filter.payloadExtra) {
+			if(!transport.payloadExtra) {
+				console.debug(`filterTransports: No match for extra payload transport, requested 'isPayloadExtra: ${filter.payloadExtra}'.`);
+				return false;
+			}
+		}
+		return true;
+	};
+
+	const applyFilters = (transport: Transport): boolean =>
+		checkLoadingTypes(transport) &&
+		checkRiskClasses(transport) &&
+		checkFixtures(transport) &&
+		checkPayloads(transport) &&
+		checkType(transport) &&
+		checkDedicated(transport) &&
+		checkExtraPayload(transport);
+
 	const filteredTransports = transports
 		.filter(isActive)
-		.filter(
-			transport => checkLoadingTypes(transport) &&
-			             checkRiskClasses(transport) &&
-			             checkFixtures(transport) &&
-			             checkPayloads(transport) &&
-			             checkType(transport)
-		);
+		.filter(applyFilters);
 
 	const mainTransports = filteredTransports.filter(transport => !isTrailer(transport));
 	const trailers = filteredTransports.filter(isTrailer);
