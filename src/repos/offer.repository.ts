@@ -31,6 +31,19 @@ import {
 }                             from '@models/index';
 import GenericRepository      from './generic';
 
+const driverDefaultIncludeables: Includeable[] = [
+	{
+		model:      CargoCompany,
+		attributes: ['name', 'legalName', 'userPhone', 'avatarLink'],
+		subQuery:   false
+	},
+	{
+		model:      CargoCompanyInn,
+		attributes: ['name', 'patronymic', 'lastName', 'userPhone', 'avatarLink'],
+		subQuery:   false
+	}
+];
+
 export default class OfferRepository
 	extends GenericRepository<Offer, IOffer>
 	implements IRepository {
@@ -225,14 +238,7 @@ export default class OfferRepository
 							             .in('status', statuses)
 								         .query,
 							include: [
-								{
-									model:      CargoCompany,
-									attributes: ['name', 'legalName', 'userPhone', 'avatarLink']
-								},
-								{
-									model:      CargoCompanyInn,
-									attributes: ['name', 'patronymic', 'lastName', 'userPhone', 'avatarLink']
-								},
+								...driverDefaultIncludeables,
 								{
 									model: Transport,
 									where: this.whereClause<ITransport>()
