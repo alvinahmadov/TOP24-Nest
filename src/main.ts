@@ -23,7 +23,6 @@ import {
 	ISwaggerTag
 }                                 from '@common/interfaces';
 import { CustomLogger }           from '@common/utils';
-import env                        from '@config/env';
 import * as mo                    from '@models/index';
 import * as dto                   from '@api/dto';
 import { RedisIoAdapter }         from '@api/notifications';
@@ -32,6 +31,7 @@ import {
 	TApiRouteList
 }                                 from '@api/routes';
 import AppModule                  from './app.module';
+import env                        from './config/env';
 
 faker.setLocale('ru');
 
