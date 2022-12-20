@@ -165,8 +165,8 @@ export default class CargoInnCompanyRepository
 									model:    Driver,
 									where:    this.whereClause<IDriver>()
 									              .eq('isReady', true)
-									              .eq('payloadCity', payloadCity)
-									              .eq('payloadRegion', payloadRegion)
+									              .iLike('payloadCity', payloadCity)
+									              .iLike('payloadRegion', payloadRegion)
 									              .lte('payloadDate', payloadDate)
 										          .query,
 									required: false,
