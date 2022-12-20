@@ -428,7 +428,8 @@ export default class OfferService
 			                     {
 				                     let { order, driver, orderStatus } = offer;
 
-				                     if(isProcessing(offer))
+				                     if(orderStatus === OrderStatus.PROCESSING ||
+				                        order.isExtraPayload)
 					                     order.isCurrent = priorityCounter++ === 0;
 				                     else
 					                     order.isCurrent = false;
