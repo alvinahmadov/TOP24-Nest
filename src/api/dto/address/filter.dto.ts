@@ -79,4 +79,10 @@ class AddressDto
 
 export default class AddressFilter
 	extends PartialType(AddressDto)
-	implements IAddressFilter {}
+	implements IAddressFilter {
+	search?: string;
+	provider?: string;
+	onlyRegions?: boolean = false;
+	onlyCities?: boolean = false;
+	short?: boolean = false;
+}

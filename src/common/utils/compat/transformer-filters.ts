@@ -9,6 +9,7 @@ import { IFilter, IModelSortable } from '@common/interfaces';
 import * as filters                from '@common/interfaces/filters';
 import * as transformers           from '@common/utils/compat/transformer-types';
 import * as helpers                from './helpers';
+import { translateAdress }         from './helpers';
 
 /**
  * Admin model filters
@@ -19,6 +20,17 @@ export interface IAdminTransformerFilter
 	extends IFilter,
 	        IModelSortable,
 	        Partial<transformers.IAdminTransformer> {}
+
+export interface IAddressTransformerFilter
+	extends IFilter,
+	        IModelSortable,
+	        Partial<transformers.IAddressTransformer> {
+	provider?: string;
+	search?: string;
+	short?: boolean;
+	only_regions?: boolean;
+	only_cities?: boolean;
+}
 
 /**
  * Cargo model filters
@@ -154,6 +166,22 @@ export function transformToAdminFilter(data: IAdminTransformerFilter)
 	: filters.IAdminFilter {
 	if(data) {
 		return helpers.translateAdmin(data);
+	}
+
+	return null;
+}
+
+export function transformToAddressFilter(data: IAddressTransformerFilter)
+	: filters.IAddressFilter {
+	if(data) {
+		return {
+			...helpers.translateAdress(data),
+			onlyRegions: data.only_regions,
+			onlyCities:  data.only_cities,
+			short:       data.short,
+			provider:    data.provider,
+			search: data.search
+		};
 	}
 
 	return null;

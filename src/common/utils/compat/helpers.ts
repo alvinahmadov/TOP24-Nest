@@ -18,6 +18,24 @@ export const translateAdmin = <T extends transformers.IAdminTransformer>(data: T
 		.get();
 };
 
+export const translateAdress = <T extends transformers.IAddressTransformer>(data: T | Partial<T>)
+	: TOmitTimestamp<attributes.IAddress> =>
+{
+	return new FieldTransformer<T, attributes.IAddress>(data)
+		.set('id')
+		.set('region')
+		.set('regionType', 'region_type')
+		.set('city')
+		.set('cityType')
+		.set('area')
+		.set('areaType', 'area_type')
+		.set('settlement')
+		.set('settlementType', 'settlement_type')
+		.set('federalDistrict', 'federal_district')
+		.set('postalCode', 'postal_code')
+		.get();
+};
+
 export const translateCargoCompany = <T extends transformers.ICargoCompanyTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.ICargoCompany> =>
 {

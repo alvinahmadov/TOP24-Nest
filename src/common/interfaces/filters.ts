@@ -83,7 +83,13 @@ export interface IAdminFilter
  * */
 export interface IAddressFilter
 	extends IFilter,
-	        TModelFilter<IAddress> {}
+	        TModelFilter<IAddress> {
+	search?: string;
+	provider?: string;
+	onlyRegions?: boolean;
+	onlyCities?: boolean;
+	short?: boolean;
+}
 
 /**
  * Cargo model filters

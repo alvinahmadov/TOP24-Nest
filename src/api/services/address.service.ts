@@ -32,19 +32,8 @@ export default class AddressService
 		super();
 		this.repository = new AddressRepository();
 	}
-
-	public async getList(filter: ListFilter & { short?: boolean })
-		: TAsyncApiResponse<Address[]> {
-		const addresses = await this.repository.getList(filter);
-
-		return {
-			statusCode: 200,
-			data:       addresses,
-			message:    formatArgs(TRANSLATIONS['LIST'], addresses.length)
-		} as IApiResponse<Address[]>;
-	}
-
-	public async filter(
+	
+	public async getList(
 		listFilter: ListFilter,
 		filter: IAddressFilter
 	): TAsyncApiResponse<Address[]> {
@@ -54,7 +43,7 @@ export default class AddressService
 			statusCode: 200,
 			data:       addresses,
 			message:    formatArgs(TRANSLATIONS['LIST'], addresses.length)
-		} as IApiResponse<Address[]>;
+		};
 	}
 
 	public async getById(id: string)
@@ -88,20 +77,18 @@ export default class AddressService
 	public async searchByApi(
 		term: string,
 		minLength: number = 2,
-		listFilter: IListFilter & {
-			search?: string;
-			provider?: string;
-		} = { from: 0, count: 50 }
+		filter: IAddressFilter = {},
+		listFilter: IListFilter = {}
 	): TAsyncApiResponse<any> {
 		if(term === undefined ||
 		   term.length < minLength) {
 			return this.responses['NOT_FOUND'];
 		}
-		const { provider = 'osm' } = listFilter;
+		const { provider = 'osm' } = filter;
 
 		const fullAddresses = await (
-			provider === 'osm' ? searchAddressByOSM(term, listFilter.from, listFilter.count)
-			                   : searchAddressByKladr(term, listFilter.from, listFilter.count)
+			provider === 'osm' ? searchAddressByOSM(term, listFilter)
+			                   : searchAddressByKladr(term, listFilter)
 		);
 
 		return {

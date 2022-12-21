@@ -1,4 +1,5 @@
 import * as ex                 from 'express';
+import { validate as isUuid }  from 'uuid';
 import {
 	Body,
 	Controller,
@@ -19,16 +20,19 @@ import {
 }                              from '@common/enums';
 import {
 	IApiResponse,
+	IAddressFilter,
 	TBitrixData
 }                              from '@common/interfaces';
 import {
 	formatArgs,
 	getTranslation,
+	isSuccessResponse,
 	sendResponse
 }                              from '@common/utils';
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
+import { AddressFilterPipe }   from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import { AddressService }      from '@api/services';
 import { StaticController }    from './controller';
@@ -77,16 +81,26 @@ export default class ReferenceController
 			short?: boolean;
 		}
 	) {
-		const { search, regions, ...rest } = listFilter;
+		const {
+			search,
+			regions,
+			short,
+			provider,
+			...rest
+		} = listFilter;
+
+		const filter: IAddressFilter = { short, provider, search };
 
 		if(regions === undefined)
-			rest.provider = 'osm';
+			filter.provider = 'osm';
+		else
+			filter.onlyRegions = true;
 
-		const result = (search?.length > 0)
-		               ? await (listFilter.full
-		                        ? this.addressService.searchByApi(search, 2, rest)
-		                        : this.addressService.search(search, rest, Boolean(Number(regions))))
-		               : await this.addressService.getList(rest);
+		const result = search
+		               ? await (rest.full
+		                        ? this.addressService.searchByApi(search, 2, filter, rest)
+		                        : this.addressService.search(search, rest, filter.onlyRegions))
+		               : await this.addressService.getList(rest, filter);
 
 		return sendResponse(response, result);
 	}
@@ -96,10 +110,21 @@ export default class ReferenceController
 	})
 	public async filterAddresses(
 		@Res() response: ex.Response,
-		@Body() filter?: dto.AddressFilter,
-		@Query() listFilter?: dto.ListFilter
+		@Query(new DefaultValuePipe({}))
+			listFilter?: dto.ListFilter,
+		@Body(AddressFilterPipe, new DefaultValuePipe({}))
+			filter?: dto.AddressFilter
 	) {
-		const result = await this.addressService.filter(listFilter, filter);
+		if(filter) {
+			if(filter.onlyCities && isUuid(filter.region)) {
+				const regionAddress = await this.addressService.getById(filter.region);
+				if(isSuccessResponse(regionAddress)) {
+					filter.region = regionAddress.data.region;
+				}
+			}
+		}
+
+		const result = await this.addressService.getList(listFilter, filter);
 
 		return sendResponse(response, result);
 	}
