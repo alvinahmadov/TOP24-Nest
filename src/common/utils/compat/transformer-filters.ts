@@ -9,7 +9,7 @@ import { IFilter, IModelSortable } from '@common/interfaces';
 import * as filters                from '@common/interfaces/filters';
 import * as transformers           from '@common/utils/compat/transformer-types';
 import * as helpers                from './helpers';
-import { translateAdress }         from './helpers';
+import { formatDateString }        from '../date';
 
 /**
  * Admin model filters
@@ -207,6 +207,8 @@ export function transformToCompanyInnFilter(data: ICargoCompanyInnTransformerFil
 export function transformToDriverFilter(data: IDriverTransformerFilter)
 	: filters.IDriverFilter {
 	if(data) {
+		data.payload_date = formatDateString(data['payload_date']);
+
 		return {
 			...helpers.translateDriver(data),
 			statuses:    data.statuses,
