@@ -377,7 +377,7 @@ export interface IDriverTransformer
 	/**
 	 * @see IDriver.payloadDate
 	 * */
-	payload_date?: Date;
+	payload_date?: Date | string | number;
 	latitude?: number;
 	longitude?: number;
 	/**
