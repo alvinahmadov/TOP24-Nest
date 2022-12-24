@@ -6,10 +6,10 @@ import { IModel, TUpdateAttribute } from '@common/interfaces';
  * @example
  * 22-05-2022 => 2022-22-05
  * */
-export function formatDateString(date: Date | string, sep: string = '-'): Date {
+export function formatDateString(date: Date | string | number, sep: string = '-'): Date {
 	let fmtDateString = date;
 	let dateChunks: string[] = [];
-	if(typeof (date) === 'string') {
+	if(typeof date === 'string') {
 		dateChunks = date.split(sep);
 		let day, month, year;
 
@@ -31,6 +31,8 @@ export function formatDateString(date: Date | string, sep: string = '-'): Date {
 		}
 		return new Date(fmtDateString);
 	}
+	if(typeof date === 'number')
+		return new Date(date);
 	return date;
 }
 
@@ -46,8 +48,8 @@ export function dateValidator(dateString: string) {
 
 export function reformatDateString<T extends IModel, K = keyof T>(
 	data: TUpdateAttribute<T>,
-	keys: K[]
-) {
+	...keys: K[]
+): void {
 	for(const key of keys) {
 		if(key in data) {
 			// @ts-ignore
