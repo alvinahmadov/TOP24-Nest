@@ -3,7 +3,6 @@ import {
 	PipeTransform
 }                               from '@nestjs/common';
 import env                      from '@config/env';
-import { Reference }            from '@common/constants';
 import { ITransport }           from '@common/interfaces';
 import {
 	reformatDateString,
@@ -23,7 +22,7 @@ export class TransportCreatePipe
 		checkAndConvertArrayBitrix(value, 'payloads', 'transportPayload');
 		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures');
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass');
-		reformatDateString<ITransport>(value, ['diagnosticsExpiryDate', 'osagoExpiryDate']);
+		reformatDateString<ITransport>(value, 'diagnosticsExpiryDate', 'osagoExpiryDate');
 
 		return value;
 	}
@@ -41,7 +40,7 @@ export class TransportUpdatePipe
 		checkAndConvertArrayBitrix(value, 'payloads', 'transportPayload');
 		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures');
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass');
-		reformatDateString<ITransport>(value, ['diagnosticsExpiryDate', 'osagoExpiryDate']);
+		reformatDateString<ITransport>(value, 'diagnosticsExpiryDate', 'osagoExpiryDate');
 		delete value.id;
 		delete value.isTrailer;
 		delete value.hasSent;
