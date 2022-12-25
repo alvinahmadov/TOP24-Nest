@@ -30,12 +30,12 @@ import {
 import { UserRole }            from '@common/enums';
 import {
 	ICargoGatewayData,
-	IDriverGatewayData,
+	IDriverGatewayData, IGatewayData,
 	IModel,
 	IOrderGatewayData,
 	IServerEvents,
-	IUserPayload
-}                              from '@common/interfaces';
+	IUserPayload,
+} from '@common/interfaces';
 import { socketAuthExtractor } from '@common/utils';
 import {
 	Admin,
@@ -59,7 +59,17 @@ import {
 import AuthService             from '../security/auth.service';
 import env                     from '../../config/env';
 
-type TUserInfo = { phone?: string; fullName: string };
+type TDeviceInfo = {
+	registrationToken: string;
+	user: UserRecord;
+}
+
+type TNotificationTokenData = {
+	fcmToken?: string;
+	jwtToken?: string
+}
+
+type TUserInfo = { phone?: string; fullName?: string };
 
 @WebSocketGateway(SOCKET_OPTIONS)
 @Injectable()
@@ -69,7 +79,7 @@ export default class NotificationGateway
 	@WebSocketServer()
 	public server: IOServer<any, IServerEvents, any, IUserPayload>;
 
-	private static readonly users: Map<string, UserRecord> = new Map<string, UserRecord>();
+	private static readonly users: Map<string, TDeviceInfo> = new Map<string, TDeviceInfo>();
 	private static readonly enableFirebase: boolean = env.firebase.enable;
 
 	private readonly logger: Logger = new Logger(NotificationGateway.name, { timestamp: true });
@@ -81,7 +91,10 @@ export default class NotificationGateway
 		protected readonly authService: AuthService,
 		@InjectFirebaseAdmin()
 		private readonly firebase: FirebaseAdmin
-	) {}
+	) {
+		if(NotificationGateway.enableFirebase)
+			this.logger.log('Firebase enabled.');
+	}
 
 	public async handleConnection(
 		@ConnectedSocket() client: Socket
@@ -89,56 +102,17 @@ export default class NotificationGateway
 		const token = socketAuthExtractor(client);
 
 		if(token) {
-			let { id, role, reff } = await this.authService.validateAsync(token);
-			const user = await this.userRepo.get(id, true) ||
-			             await this.adminRepo.get(id);
-			if(user) {
-				if(user instanceof Admin) {
-					if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
-						this.createAuthUser(user)
-						    .then(success =>
-						          {
-							          if(success) {
-								          client.data = { id, role, reff };
-								          client.join(id);
-							          }
-						          });
-					}
-				}
-				else if(user instanceof User) {
-					if(role === UserRole.CARGO) {
-						const company = user.company;
-						if(company) {
-							this.createAuthUser(company)
-							    .then(success =>
-							          {
-								          if(success) {
-									          client.data = { id, role, reff };
-									          client.join(id);
-								          }
-							          });
-
-							company?.drivers
-							       ?.forEach(
-								       driver =>
-								       {
-									       this.createAuthUser(driver)
-									           .then(success => { if(success) client.join(driver.id); });
-								       }
-							       );
-						}
-					}
-				}
-				this.logger.log(`Client '${client.id}' connected.`);
-				return;
-			}
-			else {
-				client.send('error', { status: 404, message: 'User not found!' });
-				client.disconnect();
-				return;
+			let { id } = await this.authService.validateAsync(token);
+			
+			const result = await this.handleUser({ jwtToken: token });
+			
+			if(result) {
+				client.join(id);
+				this.logger.log(`User '${id}' joined to socket '${client.id}'.`);
 			}
 		}
 
+		this.logger.log(`Token is not valid! Disconnecting.`);
 		client.send('error', { status: 401, message: 'Unauthorized!' });
 		client.disconnect();
 	}
@@ -148,6 +122,33 @@ export default class NotificationGateway
 	) {
 		this.logger.log(`Client '${client.id}' disconnected.`);
 		client.disconnect(true);
+	}
+
+	public async handleUser(tokenData: TNotificationTokenData): Promise<boolean> {
+		if(tokenData) {
+			const { jwtToken, fcmToken } = tokenData;
+
+			let { id } = await this.authService.validateAsync(jwtToken);
+
+			const user = await this.userRepo.get(id, true) ||
+			             await this.adminRepo.get(id);
+			if(user) {
+				if(user instanceof Admin) {
+					return this.createAuthUser(user);
+				}
+				else if(user instanceof User) {
+					const company = user.company;
+					if(company) {
+						if(company.drivers?.length > 0) {
+							const driver = company.drivers[0];
+							return this.createAuthUser(driver, fcmToken);
+						}
+					}
+				}
+			}
+		}
+		
+		return false;
 	}
 
 	@UseGuards(CargoGuard)
@@ -177,22 +178,18 @@ export default class NotificationGateway
 
 		}
 		if(role === UserRole.CARGO) {
-			const user = NotificationGateway.users.get(data.id);
+			sent = this.server.to(data.id).emit(DRIVER_EVENT, data);
+			const deviceInfo = NotificationGateway.users.get(data.id);
 
-			if(user) {
-				sent = this.server.to(data.id).emit(DRIVER_EVENT, data);
+			if(deviceInfo) {
+				const { registrationToken } = deviceInfo;
 
-				if(NotificationGateway.enableFirebase) {
-					this.firebase
-					    .messaging
-					    .sendToTopic(user.uid, { data: { message: data.message } })
-					    .then(console.info)
-					    .catch(console.error);
-				}
+				this.sendToDevice(registrationToken, data)
 			}
-			else console.log('No driver ' + data.id + ' in users.');
+			else this.logger.log('No driver ' + data.id + ' in users.');
 		}
-
+		
+		this.logger.log('Sending driver info: ', data, role);
 		if(sent && save)
 			this.eventsRepo
 			    .create({ eventName: DRIVER_EVENT, eventData: data, hasSeen: false })
@@ -223,33 +220,61 @@ export default class NotificationGateway
 
 	private async createAuthUser<T extends IModel,
 		E extends EntityModel<T> &
-		          TUserInfo>(user?: E)
-		: Promise<boolean> {
-		if(!user)
+		          TUserInfo>(
+		userEntity: E,
+		registrationToken?: string
+	): Promise<boolean> {
+		if(!userEntity)
 			return false;
 
 		const userData = {
-			uid:           user?.id,
-			phoneNumber:   user?.phone,
-			displayName:   user?.fullName,
+			uid:           userEntity?.id,
+			phoneNumber:   userEntity?.phone,
+			displayName:   userEntity?.fullName,
 			disabled:      false,
 			emailVerified: true
 		};
 
-		const authUser: UserRecord = NotificationGateway.enableFirebase
-		                             ? await this.firebase.auth.createUser(userData)
-		                             : {
-				...userData,
-				metadata:     undefined,
-				providerData: [],
-				toJSON(): object {return user.get({ plain: true });}
-			};
+		let user: UserRecord;
+		
+		try {
+			if(NotificationGateway.enableFirebase) {
+				const { users } = await this.firebase.auth.listUsers();
+				user = users.find(u => u.uid === userEntity.id || u.phoneNumber === userEntity.phone);
 
-		if(authUser) {
-			NotificationGateway.users.set(authUser.uid, authUser);
+				if(!user)
+					user = await this.firebase.auth.createUser(userData);
+
+				this.logger.log('User created/got via firebase: ', user);
+			}
+			else {
+				user = {
+					...userData,
+					metadata:     undefined,
+					providerData: [],
+					toJSON(): object {return userEntity.get({ plain: true });},
+				};
+				this.logger.log('User created without firebase: ', user);
+			}
+		} catch(e) {
+			this.logger.error(e.message);
+		}
+
+		if(user) {
+			NotificationGateway.users.set(user.uid, { user, registrationToken });
 			return true;
 		}
 
 		return false;
+	}
+	
+	private sendToDevice(registrationToken: string, payload: IGatewayData) {
+		if(NotificationGateway.enableFirebase) {
+			this.firebase
+			    .messaging
+			    .sendToDevice(registrationToken, { data: { message: payload.message } })
+			    .then(res => this.logger.log(res))
+			    .catch(err => this.logger.error(err));
+		}
 	}
 }

@@ -69,6 +69,7 @@ import {
 }                              from '@api/services';
 import BaseController          from './controller';
 import AddressService          from '../services/address.service';
+import { NotificationGateway } from '@api/notifications';
 
 const { path, tag, routes } = getRouteConfig('company');
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
@@ -85,7 +86,8 @@ export default class CompanyController
 		private readonly cargoInnService: CargoCompanyInnService,
 		private readonly offerService: OfferService,
 		private readonly paymentService: PaymentService,
-		private readonly userService: UserService
+		private readonly userService: UserService,
+		private readonly gateway: NotificationGateway
 	) {
 		super();
 	}
@@ -262,23 +264,34 @@ export default class CompanyController
 
 	@ApiRoute(routes.login, { statuses: [HttpStatus.OK] })
 	public async login(
-		@Body() signInData: ISignInPhoneData,
+		@Body() signInData: ISignInPhoneData & { fcm?: string; },
 		@Res() response: ex.Response
 	) {
-		const { phone, code } = signInData;
-		const result = await this.authService.loginCompany(phone, code);
+		const { phone, code, fcm } = signInData;
+		const apiResponse = await this.authService.loginCompany(phone, code);
 
-		if(env.api.compatMode && result.data) {
-			if('company' in result.data) {
-				const { company: cargo, accessToken, refreshToken } = result.data;
-				result.data = { accessToken, refreshToken, cargo } as any;
+		if(isSuccessResponse(apiResponse)) {
+			if('accessToken' in apiResponse.data && fcm) {
+				await this.gateway.handleUser(
+					{
+						jwtToken: apiResponse.data['accessToken'],
+						fcmToken: fcm,
+					}
+				);
 			}
-			else if('code' in result.data) {
-				result.data = { code: result.data['code'] };
+			
+			if(env.api.compatMode) {
+				if('company' in apiResponse.data) {
+					const { company: cargo, accessToken, refreshToken } = apiResponse.data;
+					apiResponse.data = { accessToken, refreshToken, cargo } as any;
+				}
+				else if('code' in apiResponse.data) {
+					apiResponse.data = { code: apiResponse.data['code'] };
+				}
 			}
 		}
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.refresh, {
