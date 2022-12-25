@@ -61,7 +61,6 @@ import { NotificationGateway } from '@api/notifications';
 import Service                 from './service';
 import DriverService           from './driver.service';
 import OrderService            from './order.service';
-import TransportService        from './transport.service';
 
 const OFFER_TRANSLATIONS = getTranslation('REST', 'OFFER');
 const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
@@ -81,7 +80,6 @@ export default class OfferService
 	constructor(
 		protected readonly driverService: DriverService,
 		protected readonly orderService: OrderService,
-		protected readonly transportService: TransportService,
 		private readonly gateway: NotificationGateway
 	) {
 		super();
@@ -394,24 +392,12 @@ export default class OfferService
 		filter?: OfferFilter & Omit<OrderFilter, 'status' | 'statuses'>
 	) {
 		const offers = await this.repository.getDriverOrders(driverId, listFilter, filter);
-		const { data: transports } = await this.transportService.getList({}, { driverId });
 		const offerStatusKey = env.api.compatMode ? 'offer_status' : 'offerStatus';
 		let priorityCounter = 0;
 		const isProcessing = (offer: Offer) => offer.orderStatus === OrderStatus.PROCESSING;
 		const date = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-		const activeTransport = transports?.find(t => t.status === TransportStatus.ACTIVE && !t.isTrailer);
-
 		const orders = offers.filter(offer => offer !== null && offer.order !== null)
-		                     .filter(({ order }) =>
-		                             {
-			                             if(activeTransport &&
-			                                !activeTransport.payloadExtra)
-				                             return true;
-
-			                             return order?.dedicated === 'Догруз' ||
-			                                    order?.dedicated === 'Не важно';
-		                             })
 		                     .sort((offer1, offer2) =>
 		                           {
 			                           const date1 = offer1.order.destinations[0].date;
