@@ -13,7 +13,8 @@ import {
 	OfferStatus,
 	OrderStage,
 	OrderStatus,
-	TransportStatus
+	TransportStatus,
+	UserRole
 }                              from '@common/enums';
 import {
 	IApiResponse,
@@ -46,6 +47,7 @@ import {
 }                              from '@models/index';
 import {
 	DestinationRepository,
+	OfferRepository,
 	OrderRepository
 }                              from '@repos/index';
 import {
@@ -62,6 +64,7 @@ import DriverService           from './driver.service';
 import ImageFileService        from './image-file.service';
 
 const ORDER_TRANSLATIONS = getTranslation('REST', 'ORDER');
+const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
 
 @Injectable()
 export default class OrderService
@@ -76,6 +79,7 @@ export default class OrderService
 		NO_CRM_ORDER: { statusCode: HttpStatus.NOT_FOUND, message: 'Order doesn\'t have a crm id' }
 	};
 	private destinationRepo: DestinationRepository = new DestinationRepository();
+	private offerRepo: OfferRepository = new OfferRepository();
 
 	constructor(
 		private readonly cargoService: CargoCompanyService,
@@ -560,6 +564,8 @@ export default class OrderService
 						contractPhotoLink,
 						stage: OrderStage.SIGNED_DRIVER
 					});
+					if(order)
+						await this.notifyCancellation(order.id, order.driverId, order.crmId?.toString());
 				}
 				else console.log('No contract document scan was uploaded!');
 			}
@@ -709,5 +715,39 @@ export default class OrderService
 			statusCode: HttpStatus.OK,
 			data:       order
 		};
+	}
+
+	private async notifyCancellation(
+		orderId: string,
+		driverId: string,
+		orderTitle?: string
+	): Promise<void> {
+		if(!driverId)
+			return;
+		
+		const [affectedCount, offers] = await this.offerRepo.bulkUpdate(
+			{
+				status:      OfferStatus.DECLINED,
+				orderStatus: OrderStatus.CANCELLED_BITRIX
+			},
+			{
+				[Op.and]: [
+					{ orderId: { [Op.eq]: orderId } },
+					{ driverId: { [Op.ne]: driverId } }
+				]
+			}
+		);
+
+		if(affectedCount > 0) {
+			for(const offer of offers) {
+				this.gateway.sendDriverNotification(
+					{
+						id:      offer.driverId,
+						message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], orderTitle),
+					},
+					UserRole.CARGO,
+				);
+			}
+		}
 	}
 }

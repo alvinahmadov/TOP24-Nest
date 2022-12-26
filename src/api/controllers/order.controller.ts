@@ -1,5 +1,4 @@
 import * as ex                 from 'express';
-import { Op }                  from 'sequelize';
 import {
 	Body,
 	Controller,
@@ -17,16 +16,8 @@ import {
 	FileInterceptor,
 	FilesInterceptor
 }                              from '@nestjs/platform-express';
-import {
-	OfferStatus,
-	OrderStatus
-	// UserRole
-}                              from '@common/enums';
 import { TMulterFile }         from '@common/interfaces';
-import {
-	isSuccessResponse,
-	sendResponse
-}                              from '@common/utils';
+import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
@@ -243,56 +234,6 @@ export default class OrderController
 		@Res() response: ex.Response
 	) {
 		const apiResponse = await this.orderService.sendDocuments(id, [image], 'contract');
-
-		if(isSuccessResponse(apiResponse)) {
-			const { data: order } = apiResponse;
-
-			if(order.isCurrent) {
-				const { data: offers } = await this.offerService.getList(
-					{ full: true },
-					{
-						orderId:     id,
-						status:      OfferStatus.RESPONDED,
-						orderStatus: OrderStatus.PROCESSING,
-						isCurrent:   true
-					}
-				);
-
-				for(const offer of offers) {
-					this.offerService
-					    .confirmDriver(offer.orderId, offer.driverId, offer)
-					    .then((confirmed) => console.log(`Driver is ${!confirmed ? 'not' : ''} confirmed!`))
-					    .catch(console.error);
-
-					await this.offerService.updateAll(
-						{
-							status:      OfferStatus.DECLINED,
-							orderStatus: OrderStatus.CANCELLED_BITRIX
-						},
-						{
-							[Op.and]: [
-								{ id: { [Op.eq]: offer.id } },
-								{ orderId: { [Op.eq]: id } },
-								{ driverId: { [Op.ne]: offer.driverId } }
-							]
-						}
-					);
-					/*      .then(
-				// then emit message for unselected drivers.
-				([, offers]) =>
-				{
-					offers.forEach(o => this.gateway.sendDriverNotification(
-						{
-							id:      o.driverId,
-							message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], order.crmId?.toString())
-						},
-						UserRole.CARGO
-					));
-				}
-			);*/
-				}
-			}
-		}
 
 		return sendResponse(response, apiResponse);
 	}
