@@ -191,7 +191,7 @@ export default class OfferService
 							},
 							{
 								role: UserRole.CARGO,
-								url:  'Order'
+								url:  'Main'
 							}
 						);
 					}
@@ -273,7 +273,7 @@ export default class OfferService
 								          },
 								          {
 									          role: UserRole.CARGO,
-									          url:  'Order'
+									          url:  'Main'
 								          }
 							          );
 						          }
@@ -295,7 +295,7 @@ export default class OfferService
 				},
 				{
 					role: UserRole.CARGO,
-					url:  'Order'
+					url:  'Main'
 				}
 			);
 		}
@@ -726,7 +726,7 @@ export default class OfferService
 						},
 						{
 							role: UserRole.CARGO,
-							url:  'Order'
+							url:  'Main'
 						}
 					)
 				);
@@ -785,7 +785,7 @@ export default class OfferService
 								},
 								{
 									role: UserRole.CARGO,
-									url:  'Order'
+									url:  'Main'
 								}
 							);
 						}
@@ -803,7 +803,7 @@ export default class OfferService
 							},
 							{
 								role: UserRole.CARGO,
-								url:  'Order'
+								url:  'Main'
 							}
 						);
 					}
@@ -981,7 +981,7 @@ export default class OfferService
 									    },
 									    {
 										    role: UserRole.CARGO,
-										    url:  'Order'
+										    url:  'Main'
 									    }
 								    );
 						    }
