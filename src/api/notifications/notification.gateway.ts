@@ -7,6 +7,7 @@ import {
 	InjectFirebaseAdmin
 }                              from 'nestjs-firebase';
 import { UserRecord }          from 'firebase-admin/lib/auth/user-record';
+import { MessagingPayload }    from 'firebase-admin/lib/messaging/messaging-api';
 import {
 	ConnectedSocket,
 	MessageBody,
@@ -34,8 +35,8 @@ import {
 	IModel,
 	IOrderGatewayData,
 	IServerEvents,
-	IUserPayload,
-} from '@common/interfaces';
+	IUserPayload
+}                              from '@common/interfaces';
 import { socketAuthExtractor } from '@common/utils';
 import {
 	Admin,
@@ -103,9 +104,9 @@ export default class NotificationGateway
 
 		if(token) {
 			let { id } = await this.authService.validateAsync(token);
-			
+
 			const result = await this.handleUser({ jwtToken: token });
-			
+
 			if(result) {
 				client.join(id);
 				this.logger.log(`User '${id}' joined to socket '${client.id}'.`);
@@ -147,7 +148,7 @@ export default class NotificationGateway
 				}
 			}
 		}
-		
+
 		return false;
 	}
 
@@ -184,11 +185,11 @@ export default class NotificationGateway
 			if(deviceInfo) {
 				const { registrationToken } = deviceInfo;
 
-				this.sendToDevice(registrationToken, data)
+				this.sendToDevice(registrationToken, data);
 			}
 			else this.logger.log('No driver ' + data.id + ' in users.');
 		}
-		
+
 		this.logger.log('Sending driver info: ', data, role);
 		if(sent && save)
 			this.eventsRepo
@@ -236,7 +237,7 @@ export default class NotificationGateway
 		};
 
 		let user: UserRecord;
-		
+
 		try {
 			if(NotificationGateway.enableFirebase) {
 				const { users } = await this.firebase.auth.listUsers();
@@ -252,7 +253,7 @@ export default class NotificationGateway
 					...userData,
 					metadata:     undefined,
 					providerData: [],
-					toJSON(): object {return userEntity.get({ plain: true });},
+					toJSON(): object {return userEntity.get({ plain: true });}
 				};
 				this.logger.log('User created without firebase: ', user);
 			}
@@ -267,12 +268,25 @@ export default class NotificationGateway
 
 		return false;
 	}
-	
-	private sendToDevice(registrationToken: string, payload: IGatewayData) {
+
+	private sendToDevice(registrationToken: string, data: IGatewayData) {
 		if(NotificationGateway.enableFirebase) {
+			const payload: MessagingPayload = {
+				data:         {
+					id:      data.id,
+					message: data.message
+				},
+				notification: {
+					title: '24ТОП',
+					tag:   data.source,
+					body:  data.message,
+					icon:  env.app.icon
+				}
+			};
+
 			this.firebase
 			    .messaging
-			    .sendToDevice(registrationToken, { data: { message: payload.message } })
+			    .sendToDevice(registrationToken, payload)
 			    .then(res => this.logger.log(res))
 			    .catch(err => this.logger.error(err));
 		}
