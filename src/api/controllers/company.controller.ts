@@ -275,7 +275,7 @@ export default class CompanyController
 				await this.gateway.handleUser(
 					{
 						jwtToken: apiResponse.data['accessToken'],
-						fcmToken: fcm,
+						fcmToken: fcm.replace(/\n$/gm, ''),
 					}
 				);
 			}
