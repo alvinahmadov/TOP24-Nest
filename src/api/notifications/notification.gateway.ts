@@ -278,7 +278,7 @@ export default class NotificationGateway
 				},
 				notification: {
 					title: '24ТОП',
-					tag:   data.source,
+					tag:   data.source ?? 'default',
 					body:  data.message,
 					icon:  env.app.icon
 				}
