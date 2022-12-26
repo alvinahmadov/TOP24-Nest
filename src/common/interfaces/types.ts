@@ -86,9 +86,6 @@ export interface IEnvironment {
 		token: string;
 	};
 	firebase:         {
-		projectId:   string;
-		privateKey:  string;
-		clientEmail?: string;
 		enable?: boolean;
 	};
 	objectStorage?: {
@@ -199,9 +196,6 @@ export interface IEnvParseOutput
 	LOG_LEVEL?: TLogLevel;
 	// Third party config
 	FIREBASE_ENABLE?: any;
-	FIREBASE_PROJECT_ID?: string;
-	FIREBASE_PRIVATE_KEY?: string;
-	FIREBASE_CLIENT_EMAIL?: string;
 	ICON_URL?: string;
 	BITRIX_BASE_URL?: string;
 	BITRIX_KEY?: string;
