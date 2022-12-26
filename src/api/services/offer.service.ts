@@ -15,7 +15,6 @@ import {
 }                              from '@common/enums';
 import {
 	IApiResponses,
-	ICompanyTransportFilter,
 	IDriverFilter,
 	IListFilter,
 	IOfferFilter,
@@ -29,7 +28,6 @@ import {
 	TSentOffer
 }                              from '@common/interfaces';
 import {
-	checkTransportRequirements,
 	fillDriverWithCompanyData,
 	filterTransports,
 	formatArgs,
@@ -130,7 +128,11 @@ export default class OfferService
 			// Previous order must be finished prior to the taking new one.
 
 			// driver has old/active order
-			if(driver.order && driver.order.id !== order.id) {
+			if(
+				driver.order &&
+				driver.order.id !== order.id &&
+				driver.order.isCurrent
+			) {
 				if(
 					driver.order.status === OrderStatus.PROCESSING && // driver is processing the active order
 					driver.order.stage === OrderStage.SIGNED_DRIVER && // driver has signed the document of active order
@@ -138,6 +140,7 @@ export default class OfferService
 				) {
 					// the new order is not extra
 					if(order.dedicated === 'Догруз') {
+						/**
 						const transport = driver.transports.find(
 							t => t.status === TransportStatus.ACTIVE &&
 							     !t.isTrailer
@@ -167,23 +170,29 @@ export default class OfferService
 
 								this.gateway.sendDriverNotification(
 									{
-										id: driverId,
+										id:     driverId,
+										source: 'offer',
 										message
 									},
 									UserRole.CARGO
 								);
 							}
 						}
+						 */
 					}
 					else {
 						const message = OFFER_TRANSLATIONS['ACCEPTED'];
 
 						this.gateway.sendDriverNotification(
 							{
-								id: driverId,
+								id:     driverId,
+								source: 'offer',
 								message
 							},
-							UserRole.CARGO
+							{
+								role: UserRole.CARGO,
+								url:  'Order'
+							}
 						);
 					}
 				}
@@ -253,8 +262,21 @@ export default class OfferService
 					    .update(orderId, { status: dto.orderStatus })
 					    .then((res) =>
 					          {
-						          if(isSuccessResponse(res))
+						          if(isSuccessResponse(res)) {
 							          eventObject.status = res.data.status;
+
+							          this.gateway.sendDriverNotification(
+								          {
+									          id:      driverId,
+									          source:  'offer',
+									          message: formatArgs(EVENT_DRIVER_TRANSLATIONS['CANCELLED'], order?.crmTitle)
+								          },
+								          {
+									          role: UserRole.CARGO,
+									          url:  'Order'
+								          }
+							          );
+						          }
 					          });
 				}
 			}
@@ -269,9 +291,12 @@ export default class OfferService
 				{
 					id:      driverId,
 					source:  'offer',
-					message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], order?.crmId?.toString())
+					message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], order?.crmTitle)
 				},
-				UserRole.CARGO
+				{
+					role: UserRole.CARGO,
+					url:  'Order'
+				}
 			);
 		}
 
@@ -697,9 +722,12 @@ export default class OfferService
 						{
 							id:      offer.driverId,
 							source:  'offer',
-							message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order.crmId?.toString())
+							message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order?.crmTitle)
 						},
-						UserRole.CARGO
+						{
+							role: UserRole.CARGO,
+							url:  'Order'
+						}
 					)
 				);
 		}
@@ -755,7 +783,10 @@ export default class OfferService
 									source:  'offer',
 									message: EVENT_DRIVER_TRANSLATIONS['HAS_EXISTING']
 								},
-								UserRole.CARGO
+								{
+									role: UserRole.CARGO,
+									url:  'Order'
+								}
 							);
 						}
 
@@ -768,9 +799,12 @@ export default class OfferService
 								longitude:      driver.longitude,
 								currentPoint:   driver.currentPoint,
 								currentAddress: driver.currentAddress,
-								message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], offer.order?.crmId.toString())
+								message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], offer.order?.crmTitle)
 							},
-							UserRole.CARGO
+							{
+								role: UserRole.CARGO,
+								url:  'Order'
+							}
 						);
 					}
 
@@ -942,9 +976,13 @@ export default class OfferService
 									    {
 										    id:      driver.id,
 										    status:  driver.status,
-										    message: formatArgs(EVENT_DRIVER_TRANSLATIONS['DECLINE'], order.crmId?.toString() ?? 0)
+										    source:  'offer',
+										    message: formatArgs(EVENT_DRIVER_TRANSLATIONS['CANCELLED'], order?.crmTitle)
 									    },
-									    UserRole.CARGO
+									    {
+										    role: UserRole.CARGO,
+										    url:  'Order'
+									    }
 								    );
 						    }
 					    )
@@ -986,9 +1024,10 @@ export default class OfferService
 				this.gateway.sendDriverNotification(
 					{
 						id:      offer.driverId,
+						source:  'offer',
 						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmId.toString())
 					},
-					UserRole.CARGO
+					{ role: UserRole.CARGO }
 				)
 		);
 

@@ -724,7 +724,7 @@ export default class OrderService
 	): Promise<void> {
 		if(!driverId)
 			return;
-		
+
 		const [affectedCount, offers] = await this.offerRepo.bulkUpdate(
 			{
 				status:      OfferStatus.DECLINED,
@@ -743,9 +743,12 @@ export default class OrderService
 				this.gateway.sendDriverNotification(
 					{
 						id:      offer.driverId,
-						message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], orderTitle),
+						message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], orderTitle)
 					},
-					UserRole.CARGO,
+					{
+						role: UserRole.CARGO,
+						url:  'Main'
+					}
 				);
 			}
 		}

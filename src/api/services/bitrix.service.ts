@@ -346,7 +346,10 @@ export default class BitrixService
 							                     source: 'bitrix',
 							                     message
 						                     },
-						                     UserRole.CARGO
+						                     {
+							                     role: UserRole.CARGO,
+							                     url:  'Main'
+						                     }
 					                     );
 				                     });
 

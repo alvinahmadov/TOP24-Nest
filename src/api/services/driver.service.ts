@@ -313,14 +313,17 @@ export default class DriverService
 				this.gateway.sendDriverNotification(
 					{
 						id:             driver.id,
+						source:         'driver',
 						status:         driver.status,
 						latitude:       driver.latitude,
 						longitude:      driver.longitude,
 						currentPoint:   driver.currentAddress,
 						currentAddress: data.currentAddress
 					},
-					UserRole.ADMIN,
-					false
+					{
+						role: UserRole.ADMIN,
+						save: false
+					}
 				);
 				return data;
 			}

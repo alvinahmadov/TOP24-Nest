@@ -169,14 +169,13 @@ export default class NotificationGateway
 	@SubscribeMessage(DRIVER_EVENT)
 	public sendDriverNotification(
 		@MessageBody(DriverMessageBodyPipe) data: IDriverGatewayData,
-		role: UserRole,
-		save: boolean = true
+		options?: { save?: boolean; url?: string, role: UserRole }
 	) {
 		let sent: boolean = false;
+		const { save = true, role = UserRole.CARGO, url } = options ?? {};
 
 		if(role === UserRole.ADMIN || role === UserRole.LOGIST) {
 			sent = this.server.to(data.id).emit(DRIVER_EVENT, data);
-
 		}
 		if(role === UserRole.CARGO) {
 			sent = this.server.to(data.id).emit(DRIVER_EVENT, data);
@@ -185,7 +184,7 @@ export default class NotificationGateway
 			if(deviceInfo) {
 				const { registrationToken } = deviceInfo;
 
-				this.sendToDevice(registrationToken, data);
+				this.sendToDevice(registrationToken, data, url);
 			}
 			else this.logger.log('No driver ' + data.id + ' in users.');
 		}
@@ -268,11 +267,16 @@ export default class NotificationGateway
 		return false;
 	}
 
-	private sendToDevice(registrationToken: string, data: IGatewayData) {
+	private sendToDevice(
+		registrationToken: string,
+		data: IGatewayData,
+		navigateUrl?: string
+	) {
 		if(NotificationGateway.enableFirebase) {
 			const payload: MessagingPayload = {
 				data:         {
 					id:      data.id,
+					url:     navigateUrl ?? '',
 					message: data.message
 				},
 				notification: {
