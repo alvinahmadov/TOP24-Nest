@@ -762,6 +762,7 @@ export default class OfferService
 						this.gateway.sendDriverNotification(
 							{
 								id:             driver.id,
+								source:         'offer',
 								status:         driver.status,
 								latitude:       driver.latitude,
 								longitude:      driver.longitude,
