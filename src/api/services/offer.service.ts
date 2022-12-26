@@ -204,38 +204,25 @@ export default class OfferService
 					orderDto.isCurrent = false;
 				}
 
-				this.orderService
-				    .update(order.id, orderDto)
-				    .then(
-					    ({ data: uOrder }) =>
-					    {
-						    if(uOrder) {
-							    this.gateway.sendDriverNotification(
-								    {
-									    id:      driverId,
-									    source:  'offer',
-									    message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], uOrder?.crmId?.toString())
-								    },
-								    UserRole.CARGO
-							    );
+				const apiResponse = await this.orderService.update(order.id, orderDto);
 
-							    this.gateway.sendOrderNotification(
-								    {
-									    id:      uOrder.id,
-									    stage:   uOrder.stage,
-									    status:  uOrder.status,
-									    source:  'offer',
-									    message: formatArgs(
-										    EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
-										    order.crmId?.toString() ?? '',
-										    driver.fullName
-									    )
-								    },
-								    UserRole.ADMIN
-							    );
-						    }
-					    }
-				    );
+				if(isSuccessResponse(apiResponse)) {
+					const { data: order } = apiResponse;
+					this.gateway.sendOrderNotification(
+						{
+							id:      order.id,
+							stage:   order.stage,
+							status:  order.status,
+							source:  'offer',
+							message: formatArgs(
+								EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
+								order.crmId?.toString() ?? '',
+								driver.fullName
+							)
+						},
+						UserRole.ADMIN
+					);
+				}
 			}
 		}
 
@@ -275,8 +262,18 @@ export default class OfferService
 			this.gateway.sendOrderNotification(eventObject, UserRole.LOGIST);
 		}
 
-		if(dto.orderStatus === OrderStatus.ACCEPTED)
+		if(dto.orderStatus === OrderStatus.ACCEPTED) {
 			dto.status = OfferStatus.RESPONDED;
+
+			this.gateway.sendDriverNotification(
+				{
+					id:      driverId,
+					source:  'offer',
+					message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], order?.crmId?.toString())
+				},
+				UserRole.CARGO
+			);
+		}
 
 		if(dto.orderStatus === OrderStatus.FINISHED) {
 			await this.driverService.update(driverId, {
