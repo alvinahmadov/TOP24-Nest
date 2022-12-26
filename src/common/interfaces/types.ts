@@ -56,6 +56,7 @@ export interface IEnvironment {
 		enableGraphql?: boolean;
 		enableEvents?: boolean;
 		fileSavePath?: string;
+		icon?: string;
 	};
 	api: {
 		prefix: string;
@@ -201,6 +202,7 @@ export interface IEnvParseOutput
 	FIREBASE_PROJECT_ID?: string;
 	FIREBASE_PRIVATE_KEY?: string;
 	FIREBASE_CLIENT_EMAIL?: string;
+	ICON_URL?: string;
 	BITRIX_BASE_URL?: string;
 	BITRIX_KEY?: string;
 	BITRIX_HOOK_URL?: string;

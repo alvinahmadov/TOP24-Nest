@@ -19,6 +19,7 @@ const env: IEnvironment = {
 	scheme:           parser.str('SCHEME', DEFAULT_SCHEME),
 	app:              {
 		lang:          parser.str('LANG', 'ru'),
+		icon:          parser.str('ICON_URL', ''),
 		randomCode:    parser.bool('RANDOM_CODE', !isProd),
 		enableGraphql: parser.bool('ENABLE_GRAPHQL', false),
 		enableEvents:  parser.bool('ENABLE_EVENTS', true),
