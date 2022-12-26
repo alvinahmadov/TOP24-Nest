@@ -746,7 +746,8 @@ export default class OfferService
 						if(
 							driver.order &&
 							(driver.order.id !== offer.orderId &&
-							driver.order.status === OrderStatus.PROCESSING)
+							driver.order.status === OrderStatus.PROCESSING &&
+							driver.order.isCurrent)
 						) {
 							this.gateway.sendDriverNotification(
 								{
