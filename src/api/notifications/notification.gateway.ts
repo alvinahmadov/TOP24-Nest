@@ -1,13 +1,13 @@
 import {
 	Server as IOServer,
 	Socket
-}                           from 'socket.io';
+}                              from 'socket.io';
 import {
 	FirebaseAdmin,
 	InjectFirebaseAdmin
-}                           from 'nestjs-firebase';
-import { UserRecord }       from 'firebase-admin/lib/auth/user-record';
-import { MessagingPayload } from 'firebase-admin/lib/messaging/messaging-api';
+}                              from 'nestjs-firebase';
+import { UserRecord }          from 'firebase-admin/lib/auth/user-record';
+import { MessagingPayload }    from 'firebase-admin/lib/messaging/messaging-api';
 import {
 	ConnectedSocket,
 	MessageBody,
@@ -16,19 +16,19 @@ import {
 	SubscribeMessage,
 	WebSocketGateway,
 	WebSocketServer
-}                           from '@nestjs/websockets';
+}                              from '@nestjs/websockets';
 import {
 	Injectable,
 	Logger,
 	UseGuards
-}                           from '@nestjs/common';
+}                              from '@nestjs/common';
 import {
 	CARGO_EVENT,
 	DRIVER_EVENT,
 	ORDER_EVENT,
 	SOCKET_OPTIONS
-}                           from '@common/constants';
-import { UserRole }         from '@common/enums';
+}                              from '@common/constants';
+import { UserRole }            from '@common/enums';
 import {
 	ICargoGatewayData,
 	IDriverGatewayData, IGatewayData,
@@ -36,32 +36,29 @@ import {
 	IOrderGatewayData,
 	IServerEvents,
 	IUserPayload
-}                           from '@common/interfaces';
-import {
-	formatPhone,
-	socketAuthExtractor
-}                           from '@common/utils';
+}                              from '@common/interfaces';
+import { socketAuthExtractor } from '@common/utils';
 import {
 	Admin,
 	EntityModel,
 	User
-}                           from '@models/index';
+}                              from '@models/index';
 import {
 	AdminRepository,
 	GatewayEventRepository,
 	UserRepository
-}                           from '@repos/index';
+}                              from '@repos/index';
 import {
 	CargoMessageBodyPipe,
 	DriverMessageBodyPipe,
 	OrderMessageBodyPipe
-}                           from '@api/pipes';
+}                              from '@api/pipes';
 import {
 	CargoGuard,
 	LogistGuard
-}                           from '@api/security';
-import AuthService          from '../security/auth.service';
-import env                  from '../../config/env';
+}                              from '@api/security';
+import AuthService             from '../security/auth.service';
+import env                     from '../../config/env';
 
 type TDeviceInfo = {
 	registrationToken: string;
@@ -230,13 +227,10 @@ export default class NotificationGateway
 	): Promise<boolean> {
 		if(!userEntity)
 			return false;
-		
-		const phoneNumber = `+${formatPhone(userEntity?.phone)}`;
 
 		const userData = {
 			uid:           userEntity?.id,
 			displayName:   userEntity?.fullName,
-			phoneNumber:   phoneNumber,
 			disabled:      false,
 			emailVerified: true
 		};
@@ -246,7 +240,7 @@ export default class NotificationGateway
 		try {
 			if(NotificationGateway.enableFirebase) {
 				const { users } = await this.firebase.auth.listUsers();
-				user = users.find(u => u.uid === userEntity.id || u.phoneNumber === phoneNumber);
+				user = users.find(u => u.uid === userEntity.id);
 
 				if(!user)
 					user = await this.firebase.auth.createUser(userData);
