@@ -1,3 +1,4 @@
+import { join }                    from 'path';
 import { EnvironmentParser }       from '@common/classes';
 import { IEnvironment, TLogLevel } from '@common/interfaces';
 
@@ -66,9 +67,6 @@ const env: IEnvironment = {
 		token:   parser.str('BITRIX_TOKEN')
 	},
 	firebase:         {
-		projectId:   parser.str('FIREBASE_PROJECT_ID'),
-		privateKey:  parser.str('FIREBASE_PRIVATE_KEY'),
-		clientEmail: parser.str('FIREBASE_CLIENT_EMAIL'),
 		enable:      parser.bool('FIREBASE_ENABLE', false)
 	},
 	objectStorage:    {
@@ -111,5 +109,7 @@ const env: IEnvironment = {
 		security: parser.bool('DISABLE_AUTH', false)
 	}
 };
+
+export const FIREBASE_CONFIG_PATH = join(__dirname, '../../../src/config/json/firebase.json');
 
 export default env;

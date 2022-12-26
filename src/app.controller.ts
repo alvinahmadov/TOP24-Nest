@@ -1,4 +1,3 @@
-import { join }                from 'path';
 import * as ex                 from 'express';
 import { exec }                from 'shelljs';
 import { IMigrationOptions }   from 'sequelize-migrate/index';
@@ -61,7 +60,6 @@ export default class AppController {
 
 	@Get('agreement')
 	public getAgreement(@Res() response: ex.Response) {
-		const filepath = join(__dirname + AGREEMENT_PDF_PATH);
-		return response.sendFile(filepath, (err) => console.debug(err));
+		return response.sendFile(AGREEMENT_PDF_PATH, (err) => console.debug(err));
 	}
 }

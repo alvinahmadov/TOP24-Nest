@@ -6,6 +6,7 @@ import { GatewayMetadata }          from '@nestjs/websockets';
 import env                          from '@config/env';
 import { CRM }                      from '@config/index';
 import { TBitrixData, TBitrixEnum } from './interfaces';
+import { join }                     from 'path';
 
 export const MAX_FLOAT: number = 16000000.0;
 export const MIN_FLOAT: number = 0.0;
@@ -24,7 +25,10 @@ export const SCHEME = env.scheme;
 export const SWAGGER_PATH = 'api-docs/swagger';
 
 /**@ignore*/
-export const AGREEMENT_PDF_PATH: string = '../../../resources/files/agreement.pdf';
+export const AGREEMENT_PDF_PATH: string = join(__dirname, '../../../resources/files/agreement.pdf');
+
+/**@ignore*/
+export const FIREBASE_CONFIG_PATH = join(__dirname, '../../../src/config/json/firebase.json');
 
 /**@ignore*/
 export const JWT_OPTIONS: JwtModuleOptions = {
