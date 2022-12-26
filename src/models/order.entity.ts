@@ -359,6 +359,12 @@ export default class Order
 		return isExtraPayloadOrder(this);
 	}
 
+	@VirtualColumn()
+	public get crmTitle(): string {
+		return !!this.crmId ? `№${this.crmId.toString()}`
+		                    : this.title;
+	}
+
 	public readonly toCrm = (
 		cargoCrmId: number,
 		driverCrmId: number,
