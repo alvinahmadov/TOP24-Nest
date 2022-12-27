@@ -1014,27 +1014,30 @@ export default class OfferService
 			return this.responses['NOT_FOUND'];
 	}
 
-	public async cancel(
+	public async cancelAll(
 		orderId: string,
-		crmId: number
+		crmTitle: string
 	): TAsyncApiResponse<Offer[]> {
-		const offers = await this.repository.getOrderDrivers(orderId);
+		const offers = await this.repository.getList({}, { orderId });
 		offers.forEach(
 			(offer) =>
 				this.gateway.sendDriverNotification(
 					{
 						id:      offer.driverId,
-						source:  'offer',
-						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmId.toString())
+						source:  'bitrix',
+						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmTitle)
 					},
-					{ role: UserRole.CARGO }
+					{ 
+						role: UserRole.CARGO,
+						url: 'Main'
+					}
 				)
 		);
 
 		return {
 			statusCode: HttpStatus.OK,
 			data:       offers,
-			message:    crmId ? crmId.toString() : ''
+			message:    crmTitle
 		};
 	}
 }
