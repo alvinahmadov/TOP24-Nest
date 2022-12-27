@@ -982,7 +982,7 @@ export default class OfferService
 					    .then(
 						    ({ data: driver }) =>
 						    {
-							    if(driver)
+							    if(driver && role === UserRole.CARGO)
 								    this.gateway.sendDriverNotification(
 									    {
 										    id:      driver.id,
