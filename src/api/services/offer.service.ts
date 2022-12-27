@@ -311,6 +311,17 @@ export default class OfferService
 				},
 				currentPoint: 'A'
 			});
+
+			this.gateway.sendDriverNotification(
+				{
+					id:      driverId,
+					message: EVENT_ORDER_TRANSLATIONS['FINISHED']
+				},
+				{
+					role: UserRole.CARGO,
+					url:  'Main'
+				}
+			);
 		}
 
 		const result = await this.repository.update(offer.id, dto);
@@ -1027,9 +1038,9 @@ export default class OfferService
 						source:  'bitrix',
 						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmTitle)
 					},
-					{ 
+					{
 						role: UserRole.CARGO,
-						url: 'Main'
+						url:  'Main'
 					}
 				)
 		);
