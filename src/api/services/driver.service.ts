@@ -4,7 +4,10 @@ import {
 	HttpStatus
 }                              from '@nestjs/common';
 import { BitrixUrl, Bucket }   from '@common/constants';
-import { UserRole }            from '@common/enums';
+import {
+	DestinationType,
+	UserRole
+}                              from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -46,6 +49,13 @@ import ImageFileService        from './image-file.service';
 import OrderService            from './order.service';
 
 const TRANSLATIONS = getTranslation('REST', 'DRIVER');
+const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
+const DIST_200_METERS = 200/1000;
+const DIST_RANGE_METERS = 10/1000;
+
+const inDistanceRange = (distance: number): boolean =>
+	Math.abs(DIST_200_METERS - DIST_RANGE_METERS) < distance &&
+	distance <= DIST_200_METERS;
 
 @Injectable()
 export default class DriverService
@@ -310,6 +320,40 @@ export default class DriverService
 
 				await driver.save({ fields: ['currentAddress'] });
 				const data = { currentAddress };
+				if(inDistanceRange(distance)) {
+					let message: string = '';
+
+					switch(destination.type) {
+						case DestinationType.LOAD:
+							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_LOAD_200M'];
+							break;
+						case DestinationType.UNLOAD:
+							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_UNLOAD_200M'];
+							break;
+						case DestinationType.COMBINED:
+							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_COMBINED_200M'];
+							break;
+					}
+
+					this.gateway.sendDriverNotification(
+						{
+							id:             driver.id,
+							source:         'driver',
+							status:         driver.status,
+							latitude:       driver.latitude,
+							longitude:      driver.longitude,
+							currentPoint:   driver.currentAddress,
+							currentAddress: data.currentAddress,
+							message
+						},
+						{
+							role: UserRole.CARGO,
+							save: false,
+							url:  'Main'
+						}
+					);
+				}
+
 				this.gateway.sendDriverNotification(
 					{
 						id:             driver.id,
