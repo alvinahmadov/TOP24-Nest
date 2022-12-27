@@ -615,16 +615,16 @@ export default class OrderService
 		}
 
 		if(fileUploaded) {
-			if(
-				paymentPhotoLinks?.length > 0 &&
-				receiptPhotoLinks?.length > 0
-			) {
-				this.repository
-				    .update(id, { stage: OrderStage.DOCUMENT_SENT, onPayment: order.onPayment })
-				    .then(o => console.log(`Documents for ${mode} photos for order '${o.id}' uploaded`))
-				    .catch(console.error);
-			}
-			else console.log('Either payment or receipt photo not uploaded!');
+			// if(
+			// 	paymentPhotoLinks?.length > 0 &&
+			// 	receiptPhotoLinks?.length > 0
+			// ) {
+			// 	this.repository
+			// 	    .update(id, { stage: OrderStage.DOCUMENT_SENT, onPayment: order.onPayment })
+			// 	    .then(o => console.log(`Documents for ${mode} photos for order '${o.id}' uploaded`))
+			// 	    .catch(console.error);
+			// }
+			// else console.log('Either payment or receipt photo not uploaded!');
 
 			this.send(order.id)
 			    .then(() => this.gateway.sendOrderNotification({ id, message }))
