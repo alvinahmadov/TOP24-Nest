@@ -433,7 +433,7 @@ export default class BitrixService
 						if(order.driverId) {
 							await this.offerService.declineOffer(order.id, order.driverId);
 						}
-						await this.offerService.cancel(order.id, order.crmId);
+						await this.offerService.cancelAll(order.id, order.crmTitle);
 					}
 
 					const updateResponse = await this.orderService
