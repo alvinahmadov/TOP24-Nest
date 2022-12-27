@@ -55,6 +55,7 @@ import CONTACT_GET_URL = BitrixUrl.CONTACT_GET_URL;
 
 const COMPANY_EVENT_TRANSLATION = getTranslation('EVENT', 'COMPANY');
 const DRIVER_EVENT_TRANSLATION = getTranslation('EVENT', 'DRIVER');
+const ORDER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
 const debugBitrixOrder = false;
 
 /**
@@ -435,6 +436,19 @@ export default class BitrixService
 						}
 						await this.offerService.cancelAll(order.id, order.crmTitle);
 					}
+					
+				if(orderDto.stage === OrderStage.DOCUMENT_SENT) {
+					this.gateway.sendDriverNotification(
+						{
+							id:      order.driverId,
+							message: formatArgs(ORDER_EVENT_TRANSLATIONS['DOCUMENT_SENT'], 'г. Краснодар', 'ООО 24ТОП')
+						},
+						{
+							role: UserRole.CARGO,
+							url:  'Main'
+						}
+					);
+				}
 
 					const updateResponse = await this.orderService
 					                                 .update(order.id, { ...orderDto, hasSent: true });
