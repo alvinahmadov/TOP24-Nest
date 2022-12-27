@@ -912,7 +912,7 @@ export default class OfferService
 		role?: UserRole
 	): TAsyncApiResponse<Offer> {
 		const offer = await this.repository.getByAssociation(orderId, driverId);
-		const status = role < UserRole.CARGO ? OrderStatus.PENDING
+		const status = role < UserRole.CARGO ? OrderStatus.CANCELLED_BITRIX
 		                                     : OrderStatus.CANCELLED;
 
 		if(offer) {
