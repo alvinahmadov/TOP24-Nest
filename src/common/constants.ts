@@ -14,6 +14,8 @@ export const EARTH_RADIUS = 6371;
 export const HALF_RADIAN = 180;
 export const RANDOM_CODE_DIGITS = 1000;
 export const RANDOM_CODE_MAX = 9000;
+export const MILLIS = 24 * 60 * 60 * 1000;
+export const TIMEZONE = 'Europe/Moscow';
 
 /**@ignore*/
 export const HOST = env.host;
