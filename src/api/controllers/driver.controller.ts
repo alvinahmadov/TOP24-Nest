@@ -117,11 +117,20 @@ export default class DriverController
 			const driverGeo = await this.driverService.updateGeoData(data);
 			dto = Object.assign(dto, driverGeo);
 		}
-		if(isUuid(dto.payloadCity)) {
+		
+		if(dto.isReady !== undefined) {
+			if(!dto.isReady) {
+				dto.payloadCity = null;
+				dto.payloadRegion = null;
+				dto.payloadDate = null;
+			}
+		}
+		
+		if(dto.payloadCity && isUuid(dto.payloadCity)) {
 			const { data: { city = dto.payloadCity } } = await this.addressService.getById(dto.payloadCity);
 			dto.payloadCity = city;
 		}
-		if(isUuid(dto.payloadRegion)) {
+		if(dto.payloadRegion && isUuid(dto.payloadRegion)) {
 			const { data: { region = dto.payloadRegion } } = await this.addressService.getById(dto.payloadRegion);
 			dto.payloadRegion = region;
 		}
