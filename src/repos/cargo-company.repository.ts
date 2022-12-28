@@ -128,17 +128,6 @@ export default class CargoCompanyRepository
 			}
 		}
 
-		if(!!isDedicated) {
-			switch(rest?.dedicated) {
-				case 'Да':
-					isDedicated = true;
-					break;
-				default:
-					isDedicated = false;
-					break;
-			}
-		}
-
 		return this.log(
 			() => this.model.findAll(
 				{

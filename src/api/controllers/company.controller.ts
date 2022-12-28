@@ -430,6 +430,11 @@ export default class CompanyController
 					filter.payloadRegion = address.region;
 				}
 			}
+			
+			if(filter.dedicated && filter.dedicated === 'Да') {
+				filter.isDedicated = true;
+				filter.payloadExtra = false;
+			}
 		}
 
 		let { data: cargoTransports } = await this.cargoService.getTransports(listFilter, filter);
