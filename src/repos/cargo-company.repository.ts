@@ -145,7 +145,6 @@ export default class CargoCompanyRepository
 							where:   this.whereClause<ITransport>('and')
 							             .notNull('driverId', !!hasDriver)
 							             .inArray('type', types, true)
-							             .eq('isDedicated', isDedicated)
 							             .eq('payloadExtra', rest?.payloadExtra)
 								         .query,
 							order:   DEFAULT_SORT_ORDER,
