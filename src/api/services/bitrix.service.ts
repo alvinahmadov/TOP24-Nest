@@ -497,6 +497,8 @@ export default class BitrixService
 		: TAsyncApiResponse<TAffectedRows> {
 		const { data: order } = await this.orderService.getByCrmId(crmId);
 		if(order) {
+			await this.offerService.cancelAll(order.id, order.crmTitle);
+			
 			const { data: { affectedCount } } = await this.orderService.delete(order.id);
 			return {
 				statusCode: 200,
