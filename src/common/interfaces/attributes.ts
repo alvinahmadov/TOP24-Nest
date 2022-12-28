@@ -817,6 +817,16 @@ export interface IDriver
 	readonly fullName?: string;
 }
 
+export interface IEntityFCM
+	extends IModel {
+	entityId: string;
+	token?: string;
+	passed24H?: boolean;
+	passed6H?: boolean;
+	passed1H?: boolean;
+	passedDistance?: boolean;
+}
+
 export interface IGatewayEvent
 	extends IModel {
 	eventName: 'cargo' | 'driver' | 'order' | string;
