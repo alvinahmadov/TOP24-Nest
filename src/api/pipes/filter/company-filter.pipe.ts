@@ -17,6 +17,8 @@ export default class CompanyTransportFilterPipe
 		if(data.pallets)
 			value.pallets = data.pallets;
 		
+		if(value.dedicated === 'Да')
+			value.payloadExtra = false;
 
 		checkAndConvertBitrix(value, 'payload', 'transportPayload');
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');
