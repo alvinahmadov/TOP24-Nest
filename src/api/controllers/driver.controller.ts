@@ -137,15 +137,17 @@ export default class DriverController
 				);
 
 				if(transports.length > 0)
-					await this.transportService.update(
-						transports[0].id,
-						{
-							payloadExtra: false,
-							isDedicated:  false,
-							weightExtra:  0,
-							volumeExtra:  0
-						}
-					);
+					if(transports[0].payloadExtra) {
+						await this.transportService.update(
+							transports[0].id,
+							{
+								payloadExtra: false,
+								isDedicated:  false,
+								weightExtra:  0,
+								volumeExtra:  0
+							}
+						);
+					}
 			}
 		}
 
