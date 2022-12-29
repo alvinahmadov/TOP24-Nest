@@ -103,9 +103,9 @@ export default class TaskService
 					};
 					const title = order.crmTitle ?? '';
 					let {
-						passed24H = false,
-						passed6H = false,
-						passed1H = false
+						passed24H,
+						passed6H,
+						passed1H
 					} = fcmData ?? {};
 
 					if(inTimeRange(timeDiff, LAST_24H, LAST_6H) && !passed24H) {
@@ -125,10 +125,8 @@ export default class TaskService
 						passed24H = true;
 						passed6H = true;
 						passed1H = true;
-					} else {
-						this.logger.warn('Time range doesn\'t match!');
-						return;
 					}
+					else return;
 
 					notifyData.push(notifData);
 					this.notifications.sendDriverNotification(notifData, { role: UserRole.CARGO, url: 'Main' });
