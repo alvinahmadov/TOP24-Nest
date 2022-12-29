@@ -820,7 +820,7 @@ export interface IDriver
 export interface IEntityFCM
 	extends IModel {
 	entityId: string;
-	token?: string;
+	token: string;
 	passed24H?: boolean;
 	passed6H?: boolean;
 	passed1H?: boolean;

@@ -18,7 +18,7 @@ export default class EntityFCM
 	entityId: string;
 
 	@StringColumn()
-	token?: string;
+	token: string;
 
 	@BooleanColumn({ defaultValue: false, field: 'passed_24h' })
 	passed24H?: boolean;
