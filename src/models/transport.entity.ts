@@ -264,7 +264,7 @@ export default class Transport
 		data.fields[TRANSPORT.PAYLOAD.TYPE] = this.payloads
 		                                          .map(
 			                                          payload => convertBitrix<string, string>('transportPayload', payload, false)
-		                                          );
+		                                          ).join(', ');
 		data.fields[TRANSPORT.RISK_CLASS] = this.riskClasses
 		                                        .map(
 			                                        rc => convertBitrix<string, string>('transportRiskClass', rc, false)
