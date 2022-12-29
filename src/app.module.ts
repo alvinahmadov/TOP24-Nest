@@ -1,5 +1,6 @@
 import { join }              from 'path';
 import { Module }            from '@nestjs/common';
+import { ScheduleModule }    from '@nestjs/schedule';
 import { SequelizeModule }   from '@nestjs/sequelize';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule }   from '@nestjs/throttler';
@@ -36,6 +37,7 @@ import AppController         from './app.controller';
 				        limit: 1000
 			        }
 		        ),
+		        ScheduleModule.forRoot(),
 		        ApiModule
 	        ],
 	        controllers: [AppController],

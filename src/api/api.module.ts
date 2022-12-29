@@ -5,7 +5,6 @@ import {
 	DynamicModule,
 	ForwardReference
 }                         from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import {
 	APP_GUARD,
@@ -30,7 +29,6 @@ const imports: Array<Type | DynamicModule | Promise<DynamicModule> | ForwardRefe
 	CacheModule.register(),
 	AuthModule,
 	RESTModule,
-	ScheduleModule.forRoot(),
 	RouterModule.register(REST_ROUTES)
 ];
 
