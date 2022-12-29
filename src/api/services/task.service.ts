@@ -51,6 +51,8 @@ export default class TaskService
 
 	@Cron(CronExpression.EVERY_10_MINUTES, { timeZone: TIMEZONE })
 	public async dateTask() {
+		const now = new Date();
+		this.logger.log(`Running task "dateTask" at ${now.toLocaleString()}.`);
 		const { data: orders } = await this.orderService.getList(
 			{ full: false },
 			{
@@ -66,8 +68,12 @@ export default class TaskService
 			}
 		);
 
-		if(orders?.length > 0)
+		if(orders?.length > 0) {
 			await this.sendDestinationDateNotification(orders);
+		}
+		else {
+			this.logger.log('No orders to watch for!');
+		}
 	}
 
 	private async sendDestinationDateNotification(orders: Order[]): Promise<void> {
@@ -76,12 +82,16 @@ export default class TaskService
 
 		for(const order of orders) {
 			const destination = order.destinations.find(d => d.point === 'A');
+			const { fulfilled = false } = destination ?? {};
 
 			const fcmData = await this.fcmEntityRepo.getByEntityId(order.driverId);
 
-			if(destination && !destination.fulfilled) {
+			if(destination && !fulfilled) {
 				// @ts-ignore
-				const timeDiff: number = (destination.date - now) / MILLIS;
+				let timeDiff: number = (destination.date - now) / MILLIS;
+
+				if(timeDiff < 0)
+					timeDiff *= -1.0;
 
 				if(timeDiff <= LAST_24H) {
 					const notifData: IDriverGatewayData = {
