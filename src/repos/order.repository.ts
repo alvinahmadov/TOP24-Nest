@@ -117,10 +117,12 @@ export default class OrderRepository
 					sortOrder: order = DEFAULT_SORT_ORDER,
 					hasDriver = true,
 					statuses,
+					stages,
 					weightMin, weightMax,
 					volumeMin, volumeMax,
 					lengthMin, lengthMax,
 					heightMin, heightMax,
+					isDedicated,
 					...rest
 				} = filter ?? {};
 				if(statuses) {
@@ -139,7 +141,8 @@ export default class OrderRepository
 						             .nullOrEq('cargoinnId', rest?.cargoinnId)
 						             .nullOrEq('driverId', rest?.driverId)
 						             .notNull('driverId', hasDriver)
-						             .inArray('status', statuses)
+						             .in('status', statuses)
+						             .in('stage', stages)
 						             .between('weight', weightMin, weightMax)
 						             .between('volume', volumeMin, volumeMax)
 						             .between('length', lengthMin, lengthMax)
