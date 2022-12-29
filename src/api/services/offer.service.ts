@@ -46,6 +46,7 @@ import {
 }                              from '@models/index';
 import {
 	DestinationRepository,
+	EntityFCMRepository,
 	OfferRepository
 }                              from '@repos/index';
 import {
@@ -73,7 +74,8 @@ export default class OfferService
 		DECLINED:  { statusCode: HttpStatus.BAD_REQUEST, message: OFFER_TRANSLATIONS['DECLINED'] },
 		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: OFFER_TRANSLATIONS['NOT_FOUND'] }
 	};
-	private destinationRepo: DestinationRepository = new DestinationRepository();
+	private readonly destinationRepo: DestinationRepository = new DestinationRepository();
+	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: false });
 
 	constructor(
 		protected readonly driverService: DriverService,
@@ -321,6 +323,16 @@ export default class OfferService
 					role: UserRole.CARGO,
 					url:  'Main'
 				}
+			);
+
+			await this.fcmEntityRepo.bulkUpdate(
+				{
+					passed1H:       false,
+					passed6H:       false,
+					passed24H:      false,
+					passedDistance: false
+				},
+				{ entityId: driverId }
 			);
 		}
 
