@@ -109,18 +109,18 @@ export default class TaskService
 						passed1H
 					} = fcmData ?? {};
 
-					if(inTimeRange(timeDiff, LAST_24H, LAST_6H, passed24H)) {
+					if(inTimeRange(timeDiff, LAST_24H, LAST_6H, !passed24H)) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_24H'], title);
 
 						passed24H = true;
 					}
-					else if(inTimeRange(timeDiff, LAST_6H, LAST_1H, passed6H)) {
+					else if(inTimeRange(timeDiff, LAST_6H, LAST_1H, !passed6H)) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_6H'], title);
 
 						passed24H = true;
 						passed6H = true;
 					}
-					else if(inTimeRange(timeDiff, LAST_1H, 0, passed1H)) {
+					else if(inTimeRange(timeDiff, LAST_1H, 0, !passed1H)) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_1H'], title);
 
 						passed24H = true;
