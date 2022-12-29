@@ -41,6 +41,12 @@ export default abstract class Service<M extends Model,
 		this.logger = new Logger(Service.name, { timestamp: true });
 		this.httpClient = new Axios();
 	}
+	
+	public set log(value: boolean) {
+		if(this.repository) {
+			this.repository.useLogger = value;
+		}
+	}
 
 	/**
 	 * Creates a model instance and/or database record.

@@ -64,6 +64,13 @@ export class GenericRepository<M extends Model, Attribute extends IModel>
 		return this.model.tableName;
 	}
 
+	public set useLogger(value: boolean) {
+		if(this.options)
+			this.options.log = value;
+		else
+			this.options = { log: value };
+	}
+
 	/**
 	 * Searches item by primary key
 	 *
@@ -213,7 +220,7 @@ export class GenericRepository<M extends Model, Attribute extends IModel>
 			async() =>
 			{
 				const result = await this.model.update<any>(
-					dto, 
+					dto,
 					<any>{ where: { id }, returning: true, ...(options ?? {}) });
 				return result[0] > 0 ? result[1][0] : null;
 			},

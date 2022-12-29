@@ -47,7 +47,9 @@ export default class TaskService
 		protected readonly driverService: DriverService,
 		protected readonly orderService: OrderService,
 		protected readonly notifications: NotificationGateway
-	) {}
+	) {
+		this.orderService.log = false;
+	}
 
 	@Cron(CronExpression.EVERY_10_MINUTES, { timeZone: TIMEZONE })
 	public async dateTask() {
