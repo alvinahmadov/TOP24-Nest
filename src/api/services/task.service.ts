@@ -48,6 +48,7 @@ export default class TaskService
 		protected readonly orderService: OrderService,
 		protected readonly notifications: NotificationGateway
 	) {
+		this.driverService.log = false;
 		this.orderService.log = false;
 	}
 
