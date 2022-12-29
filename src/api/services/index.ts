@@ -11,6 +11,7 @@ import OfferService           from './offer.service';
 import OrderService           from './order.service';
 import NotificationService    from './notification.service';
 import PaymentService         from './payment.service';
+import TaskService            from './task.service';
 import TransportService       from './transport.service';
 import UserService            from './user.service';
 
@@ -28,6 +29,7 @@ const SERVICES = [
 	OfferService,
 	OrderService,
 	PaymentService,
+	TaskService,
 	TransportService,
 	UserService
 ];
