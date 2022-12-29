@@ -52,7 +52,7 @@ export default class TaskService
 		this.orderService.log = false;
 	}
 
-	@Cron(CronExpression.EVERY_10_MINUTES, { timeZone: TIMEZONE })
+	@Cron(CronExpression.EVERY_HOUR, { timeZone: TIMEZONE })
 	public async dateTask() {
 		const now = new Date();
 		this.logger.log(`Running task "dateTask" at ${now.toLocaleString()}.`);
