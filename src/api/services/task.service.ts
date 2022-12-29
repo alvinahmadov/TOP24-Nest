@@ -83,12 +83,11 @@ export default class TaskService
 		const notifyData: IDriverGatewayData[] = [];
 
 		for(const order of orders) {
-			const destination = order.destinations.find(d => d.point === 'A');
-			const { fulfilled = false } = destination ?? {};
+			const destination = order.destinations.find(d => d.point === 'A' && d.fulfilled === false);
 
 			const fcmData = await this.fcmEntityRepo.getByEntityId(order.driverId);
 
-			if(destination && !fulfilled) {
+			if(destination) {
 				// @ts-ignore
 				let timeDiff: number = (destination.date - now) / MILLIS;
 
@@ -140,7 +139,7 @@ export default class TaskService
 		}
 
 		if(notifyData.length > 0) {
-			this.logger.log('Sent timing notifications: ', { ...notifyData });
+			this.logger.log('Sent timing notifications.');
 		}
 	}
 }
