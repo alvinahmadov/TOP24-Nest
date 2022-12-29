@@ -13,9 +13,12 @@ import {
 import { transformApiResult } from '@common/utils/compat';
 
 const phoneRegex = RegExp(/[\s+()]+/gi);
+const cleanStringRegex = RegExp(/(\s|\n)/g);
 
 export const formatPhone = (phoneNumber?: string): string | undefined =>
 	phoneNumber ? phoneNumber.replace(phoneRegex, '') : undefined;
+
+export const cleanToken = (str: string): string => str?.replace(cleanStringRegex, '');
 
 export const getRandomCode = (
 	digits: number = RANDOM_CODE_DIGITS,
