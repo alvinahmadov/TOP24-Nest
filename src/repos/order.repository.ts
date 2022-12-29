@@ -115,7 +115,7 @@ export default class OrderRepository
 				} = listFilter ?? {};
 				const {
 					sortOrder: order = DEFAULT_SORT_ORDER,
-					hasDriver = true,
+					hasDriver,
 					statuses,
 					stages,
 					weightMin, weightMax,
@@ -140,7 +140,7 @@ export default class OrderRepository
 						             .nullOrEq('cargoId', rest?.cargoId)
 						             .nullOrEq('cargoinnId', rest?.cargoinnId)
 						             .nullOrEq('driverId', rest?.driverId)
-						             .notNull('driverId', hasDriver)
+						             .notNull('driverId', !!hasDriver)
 						             .inArray('status', statuses)
 						             .inArray('stage', stages)
 						             .between('weight', weightMin, weightMax)
