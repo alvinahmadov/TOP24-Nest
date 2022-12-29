@@ -275,11 +275,11 @@ export default class CompanyController
 				await this.gateway.handleUser(
 					{
 						jwtToken: apiResponse.data['accessToken'],
-						fcmToken: fcm.replace(/(\n|\s)/gmi, ''),
+						fcmToken: fcm
 					}
 				);
 			}
-			
+
 			if(env.api.compatMode) {
 				if('company' in apiResponse.data) {
 					const { company: cargo, accessToken, refreshToken } = apiResponse.data;

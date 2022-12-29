@@ -1,13 +1,13 @@
 import {
 	Server as IOServer,
 	Socket
-}                              from 'socket.io';
+}                           from 'socket.io';
 import {
 	FirebaseAdmin,
 	InjectFirebaseAdmin
-}                              from 'nestjs-firebase';
-import { UserRecord }          from 'firebase-admin/lib/auth/user-record';
-import { MessagingPayload }    from 'firebase-admin/lib/messaging/messaging-api';
+}                           from 'nestjs-firebase';
+import { UserRecord }       from 'firebase-admin/lib/auth/user-record';
+import { MessagingPayload } from 'firebase-admin/lib/messaging/messaging-api';
 import {
 	ConnectedSocket,
 	MessageBody,
@@ -16,50 +16,54 @@ import {
 	SubscribeMessage,
 	WebSocketGateway,
 	WebSocketServer
-}                              from '@nestjs/websockets';
+}                           from '@nestjs/websockets';
 import {
 	Injectable,
 	Logger,
 	UseGuards
-}                              from '@nestjs/common';
+}                           from '@nestjs/common';
 import {
 	CARGO_EVENT,
 	DRIVER_EVENT,
 	ORDER_EVENT,
 	SOCKET_OPTIONS
-}                              from '@common/constants';
-import { UserRole }            from '@common/enums';
+}                           from '@common/constants';
+import { UserRole }         from '@common/enums';
 import {
 	ICargoGatewayData,
-	IDriverGatewayData, IGatewayData,
+	IDriverGatewayData,
+	IGatewayData,
 	IModel,
 	IOrderGatewayData,
 	IServerEvents,
 	IUserPayload
-}                              from '@common/interfaces';
-import { socketAuthExtractor } from '@common/utils';
+}                           from '@common/interfaces';
+import {
+	cleanToken,
+	socketAuthExtractor
+}                           from '@common/utils';
 import {
 	Admin,
 	EntityModel,
 	User
-}                              from '@models/index';
+}                           from '@models/index';
 import {
 	AdminRepository,
 	EntityFCMRepository,
 	GatewayEventRepository,
 	UserRepository
-}                              from '@repos/index';
+}                           from '@repos/index';
 import {
 	CargoMessageBodyPipe,
 	DriverMessageBodyPipe,
 	OrderMessageBodyPipe
-}                              from '@api/pipes';
+}                           from '@api/pipes';
 import {
 	CargoGuard,
 	LogistGuard
-}                              from '@api/security';
-import AuthService             from '../security/auth.service';
-import env                     from '../../config/env';
+}                           from '@api/security';
+import AuthService          from '../security/auth.service';
+import env                  from '../../config/env';
 
 type TDeviceInfo = {
 	registrationToken: string;
@@ -149,6 +153,8 @@ export default class NotificationGateway
 							const driver = company.drivers[0];
 							try {
 								if(fcmToken) {
+									fcmToken = cleanToken(fcmToken);
+									
 									const [entityData, created] = await this.fcmEntityRepo.findOrCreate(
 										{
 											where:    { entityId: driver?.id },
@@ -160,7 +166,7 @@ export default class NotificationGateway
 									);
 
 									if(!created) {
-										if(entityData.token !== fcmToken) {
+										if(cleanToken(entityData.token) !== fcmToken) {
 											await this.fcmEntityRepo.update(entityData.id, { token: fcmToken });
 										}
 									}
@@ -168,7 +174,7 @@ export default class NotificationGateway
 								else {
 									const entityData = await this.fcmEntityRepo.getByEntityId(driver?.id);
 									if(entityData && entityData.token) {
-										fcmToken = entityData.token;
+										fcmToken = cleanToken(entityData.token);
 									}
 									else this.logger.warn('No token provided for fcm');
 								}
@@ -214,7 +220,7 @@ export default class NotificationGateway
 			sent = this.server.to(data.id).emit(DRIVER_EVENT, data);
 			const deviceInfo = NotificationGateway.users.get(data.id);
 
-			if(deviceInfo) {
+			if(deviceInfo && deviceInfo.registrationToken) {
 				const { registrationToken } = deviceInfo;
 
 				this.sendToDevice(registrationToken, data, url);
@@ -226,9 +232,9 @@ export default class NotificationGateway
 					    fcmData =>
 					    {
 						    if(fcmData && fcmData.token) {
-							    this.sendToDevice(fcmData.token?.replace(/(\n|\s)/gmi, ''), data, url);
+										this.sendToDevice(fcmData.token, data, url);
 						    }
-						    else console.warn('Not initialized');
+						    else console.warn('Entity doesn\'t have saved token!');
 					    }
 				    )
 				    .catch(console.error);
@@ -281,6 +287,7 @@ export default class NotificationGateway
 		};
 
 		let user: UserRecord;
+		registrationToken = cleanToken(registrationToken);
 
 		try {
 			if(NotificationGateway.enableFirebase) {
@@ -332,10 +339,11 @@ export default class NotificationGateway
 					icon:  env.app.icon
 				}
 			};
+			const token = cleanToken(registrationToken);
 
 			this.firebase
 			    .messaging
-			    .sendToDevice(registrationToken, payload)
+			    .sendToDevice(token, payload)
 			    .then(res => this.logger.log(res))
 			    .catch(err => this.logger.error(err));
 		}
