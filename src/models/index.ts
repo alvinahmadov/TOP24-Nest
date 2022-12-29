@@ -4,6 +4,7 @@ import CargoCompany    from './cargo.entity';
 import CargoCompanyInn from './cargo-inn.entity';
 import Destination     from './destination.entity';
 import Driver          from './driver.entity';
+import EntityFCM       from './fcm.entity';
 import EntityModel     from './entity-model';
 import GatewayEvent    from './gateway-event.entity';
 import Image           from './image.entity';
@@ -20,6 +21,7 @@ export {
 	CargoCompanyInn,
 	Destination,
 	Driver,
+	EntityFCM,
 	EntityModel,
 	GatewayEvent,
 	Image,

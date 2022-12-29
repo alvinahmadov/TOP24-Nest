@@ -34,7 +34,8 @@ import {
 import { Driver, Order }       from '@models/index';
 import {
 	DestinationRepository,
-	DriverRepository
+	DriverRepository,
+	EntityFCMRepository
 }                              from '@repos/index';
 import {
 	DriverCreateDto,
@@ -50,12 +51,9 @@ import OrderService            from './order.service';
 
 const TRANSLATIONS = getTranslation('REST', 'DRIVER');
 const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
-const DIST_200_METERS = 200/1000;
-const DIST_RANGE_METERS = 10/1000;
+const DIST_200_METERS = 200 / 1000;
 
-const inDistanceRange = (distance: number): boolean =>
-	Math.abs(DIST_200_METERS - DIST_RANGE_METERS) < distance &&
-	distance <= DIST_200_METERS;
+const inDistanceRange = (distance: number): boolean => distance <= DIST_200_METERS;
 
 @Injectable()
 export default class DriverService
@@ -64,7 +62,8 @@ export default class DriverService
 	public override readonly responses: IApiResponses<null> = {
 		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: TRANSLATIONS['NOT_FOUND'] }
 	};
-	private destinationRepo: DestinationRepository = new DestinationRepository();
+	private readonly destinationRepo: DestinationRepository = new DestinationRepository();
+	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: true });
 
 	constructor(
 		protected readonly imageFileService: ImageFileService,
@@ -320,7 +319,10 @@ export default class DriverService
 
 				await driver.save({ fields: ['currentAddress'] });
 				const data = { currentAddress };
-				if(inDistanceRange(distance)) {
+				const fcmEntity = await this.fcmEntityRepo.getByEntityId(driver.id);
+				const passedDistance = fcmEntity ? fcmEntity.passedDistance : false;
+
+				if(distance <= DIST_200_METERS && !passedDistance) {
 					let message: string = '';
 
 					switch(destination.type) {
@@ -352,6 +354,11 @@ export default class DriverService
 							url:  'Main'
 						}
 					);
+
+					if(fcmEntity) {
+						fcmEntity.passedDistance = true;
+						await fcmEntity.save({ fields: ['passedDistance'] });
+					}
 				}
 
 				this.gateway.sendDriverNotification(

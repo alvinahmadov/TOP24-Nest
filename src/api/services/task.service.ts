@@ -18,6 +18,7 @@ import {
 	getTranslation
 }                               from '@common/utils';
 import { Order }                from '@models/index';
+import EntityFCMRepository      from '@repos/fcm.repository';
 import { NotificationGateway }  from '@api/notifications';
 import DriverService            from './driver.service';
 import OrderService             from './order.service';
@@ -27,15 +28,20 @@ const ORDER_EVENT_TRANSLATION = getTranslation('EVENT', 'ORDER');
 const LAST_24H = 1,
 	LAST_6H = 0.25,
 	LAST_1H = 0.041666666666666664;
-const DIFF_5MIN = 0.00347222222222221;
 
-// In range 5 min
-const inTimeRange = (time: number, h: number) => h - DIFF_5MIN < time && time <= h;
+// In range of [h1; h2)
+const inTimeRange = (
+	time: number,
+	endTime: number,
+	startTime: number = 0,
+	condition?: boolean
+) => (startTime < time && time <= endTime) && (condition ?? true);
 
 @Injectable()
 export default class TaskService
 	implements IService {
 	private readonly logger = new Logger(TaskService.name);
+	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: true });
 
 	constructor(
 		protected readonly driverService: DriverService,
@@ -68,36 +74,50 @@ export default class TaskService
 		const now: Date = new Date();
 		const notifyData: IDriverGatewayData[] = [];
 
-		orders.forEach(
-			order =>
-			{
-				const destination = order.destinations.find(d => d.point === 'A');
-				if(destination && !destination.fulfilled) {
-					// @ts-ignore
-					const timeDiff: number = (destination.date - now) / MILLIS;
+		for(const order of orders) {
+			const destination = order.destinations.find(d => d.point === 'A');
 
-					if(timeDiff <= LAST_24H) {
-						const notifData: IDriverGatewayData = {
-							id:     order.driverId,
-							source: 'task'
-						};
+			const fcmData = await this.fcmEntityRepo.getByEntityId(order.driverId);
 
-						if(inTimeRange(timeDiff, LAST_24H)) {
-							notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_24H'], order.crmTitle);
-						}
-						else if(inTimeRange(timeDiff, LAST_6H)) {
-							notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_6H'], order.crmTitle);
-						}
-						else if(inTimeRange(timeDiff, LAST_1H)) {
-							notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_1H'], order.crmTitle);
-						}
+			if(destination && !destination.fulfilled) {
+				// @ts-ignore
+				const timeDiff: number = (destination.date - now) / MILLIS;
 
-						notifyData.push(notifData);
-						this.notifications.sendDriverNotification(notifData, { role: UserRole.CARGO, url: 'Main' });
+				if(timeDiff <= LAST_24H) {
+					const notifData: IDriverGatewayData = {
+						id:     order.driverId,
+						source: 'task'
+					};
+					const title = order.crmTitle;
+					let {
+						passed24H = false,
+						passed6H = false,
+						passed1H = false
+					} = fcmData ?? {};
+
+					if(inTimeRange(timeDiff, LAST_24H, LAST_6H, !passed24H)) {
+						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_24H'], title);
+						passed24H = true;
 					}
+					else if(inTimeRange(timeDiff, LAST_6H, LAST_1H, !fcmData?.passed6H)) {
+						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_6H'], title);
+						passed6H = true;
+					}
+					else if(inTimeRange(timeDiff, LAST_1H, 0, !fcmData?.passed1H)) {
+						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_1H'], title);
+						passed1H = true;
+					}
+
+					notifyData.push(notifData);
+					this.notifications.sendDriverNotification(notifData, { role: UserRole.CARGO, url: 'Main' });
+
+					if(fcmData)
+						this.fcmEntityRepo
+						    .update(fcmData.id, { passed24H, passed6H, passed1H })
+						    .catch(console.error);
 				}
 			}
-		);
+		}
 
 		if(notifyData.length > 0) {
 			this.logger.log('Sent timing notifications: ', { ...notifyData });

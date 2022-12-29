@@ -45,6 +45,7 @@ import {
 }                              from '@models/index';
 import {
 	AdminRepository,
+	EntityFCMRepository,
 	GatewayEventRepository,
 	UserRepository
 }                              from '@repos/index';
@@ -87,6 +88,7 @@ export default class NotificationGateway
 	private readonly adminRepo: AdminRepository = new AdminRepository({ log: false });
 	private readonly userRepo: UserRepository = new UserRepository({ log: false });
 	private readonly eventsRepo: GatewayEventRepository = new GatewayEventRepository({ log: true });
+	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: false });
 
 	constructor(
 		protected readonly authService: AuthService,
@@ -125,9 +127,11 @@ export default class NotificationGateway
 		client.disconnect(true);
 	}
 
-	public async handleUser(tokenData: TNotificationTokenData): Promise<boolean> {
+	public async handleUser(
+		tokenData: TNotificationTokenData
+	): Promise<boolean> {
 		if(tokenData) {
-			const { jwtToken, fcmToken } = tokenData;
+			let { jwtToken, fcmToken } = tokenData;
 
 			let { id } = await this.authService.validateAsync(jwtToken);
 
@@ -142,6 +146,34 @@ export default class NotificationGateway
 					if(company) {
 						if(company.drivers?.length > 0) {
 							const driver = company.drivers[0];
+							try {
+								if(fcmToken) {
+									const [entityData, created] = await this.fcmEntityRepo.findOrCreate(
+										{
+											where:    { entityId: driver?.id },
+											defaults: {
+												entityId: driver?.id,
+												token:    fcmToken
+											}
+										}
+									);
+
+									if(!created) {
+										if(entityData.token !== fcmToken) {
+											await this.fcmEntityRepo.update(entityData.id, { token: fcmToken });
+										}
+									}
+								}
+								else {
+									const entityData = await this.fcmEntityRepo.getByEntityId(driver?.id);
+									if(entityData && entityData.token) {
+										fcmToken = entityData.token;
+									}
+									else this.logger.warn('No token provided for fcm');
+								}
+							} catch(e) {
+								console.error(e);
+							}
 							return this.createAuthUser(driver, fcmToken);
 						}
 					}
@@ -186,7 +218,18 @@ export default class NotificationGateway
 
 				this.sendToDevice(registrationToken, data, url);
 			}
-			else this.logger.log('No driver ' + data.id + ' in users.');
+			else {
+				this.fcmEntityRepo
+				    .getByEntityId(data.id)
+				    .then(
+					    fcmData =>
+					    {
+						    if(fcmData && fcmData.token)
+							    this.sendToDevice(fcmData.token, data, url);
+					    }
+				    )
+				    .catch(console.error);
+			}
 		}
 
 		this.logger.log('Sending driver info: ', data, role);

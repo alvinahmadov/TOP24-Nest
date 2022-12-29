@@ -6,6 +6,7 @@ import {
 	ICargoCompanyInn,
 	IDestination,
 	IDriver,
+	IEntityFCM,
 	IGatewayEvent,
 	IImage,
 	IModel,
@@ -128,6 +129,15 @@ export interface IDriverFilter
 	        TModelFilter<IDriver> {
 	orderStatus?: OrderStatus;
 	statuses?: DriverStatus[];
+}
+
+export interface IEntityFCMFilter 
+extends IFilter,
+        TModelFilter<IEntityFCM> {
+	notPassed24H?: boolean;
+	notPassed6H?: boolean;
+	notPassed1H?: boolean;
+	notPassedDistance?: boolean;
 }
 
 export interface IGatewayEventFilter
