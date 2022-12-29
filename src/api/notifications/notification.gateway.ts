@@ -154,7 +154,7 @@ export default class NotificationGateway
 							try {
 								if(fcmToken) {
 									fcmToken = cleanToken(fcmToken);
-									
+
 									const [entityData, created] = await this.fcmEntityRepo.findOrCreate(
 										{
 											where:    { entityId: driver?.id },
@@ -232,7 +232,7 @@ export default class NotificationGateway
 					    fcmData =>
 					    {
 						    if(fcmData && fcmData.token) {
-										this.sendToDevice(fcmData.token, data, url);
+							    this.sendToDevice(fcmData.token, data, url);
 						    }
 						    else console.warn('Entity doesn\'t have saved token!');
 					    }
