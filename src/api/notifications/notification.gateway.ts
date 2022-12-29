@@ -112,10 +112,11 @@ export default class NotificationGateway
 			if(result) {
 				client.join(id);
 				this.logger.log(`User '${id}' joined to socket '${client.id}'.`);
+				return;
 			}
 		}
-
-		this.logger.log(`Token is not valid! Disconnecting.`);
+		else
+			this.logger.log(`Token is not valid! Disconnecting.`);
 		client.send('error', { status: 401, message: 'Unauthorized!' });
 		client.disconnect();
 	}
