@@ -98,10 +98,11 @@ export default class TaskService
 
 				if(timeDiff <= LAST_24H) {
 					const notifData: IDriverGatewayData = {
-						id:     order.driverId,
-						source: 'task'
+						id:      order.driverId,
+						source:  'task',
+						message: ''
 					};
-					const title = order.crmTitle;
+					const title = order.crmTitle ?? '';
 					let {
 						passed24H = false,
 						passed6H = false,
@@ -110,14 +111,20 @@ export default class TaskService
 
 					if(inTimeRange(timeDiff, LAST_24H, LAST_6H, !passed24H)) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_24H'], title);
+
 						passed24H = true;
 					}
-					else if(inTimeRange(timeDiff, LAST_6H, LAST_1H, !fcmData?.passed6H)) {
+					else if(inTimeRange(timeDiff, LAST_6H, LAST_1H, !passed6H)) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_6H'], title);
+
+						passed24H = true;
 						passed6H = true;
 					}
-					else if(inTimeRange(timeDiff, LAST_1H, 0, !fcmData?.passed1H)) {
+					else if(inTimeRange(timeDiff, LAST_1H, 0, !passed1H)) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_1H'], title);
+
+						passed24H = true;
+						passed6H = true;
 						passed1H = true;
 					}
 
