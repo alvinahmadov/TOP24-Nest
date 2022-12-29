@@ -40,7 +40,7 @@ Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"userId": {{userId}}
+	"userId": "{{userId}}"
 }
 
 ### Get single company with associated entities such as drivers, transports, payment etc.
@@ -59,7 +59,7 @@ Content-Type: application/json
   "company_type": 0,
 	"email": "{{companyEmail}}",
   "phone": "{{companyPhone}}",
-	"user": "{{userPhone}}"
+	"user": "{{userPhone}}",
   "inn": "000000000000",
   "kpp": "000000000000",
   "ogpn": "000000000000",
@@ -92,7 +92,7 @@ Content-Type: application/json
 	"name": "Сергей",
   "middle_name": "Викторович",
   "surname": "Поланский",
-	"user": "{{userPhone}}"
+	"user": "{{userPhone}}",
   "phone": "{{companyPhone}}",
   "email": "{{companyEmail}}",
   "company_type": 1,
@@ -107,7 +107,7 @@ Content-Type: application/json
   "nds": "428",
   "address_first": "Россия, Калужская обл., г. Обнинск, 249030",
   "address_second": "Россия, Калининградская обл., г. Приморск, 238510",
-  "address_third": "Россия, Калужская обл., г. Таруса, 249100",
+  "address_third": "Россия, Калужская обл., г. Таруса, 249100"
 }
 
 ### Register a new company as private entity to user.
@@ -120,7 +120,7 @@ Content-Type: application/json
   "middle_name": "Федорович",
   "surname": "Галак",
   "email": "{{userEmail}}",
-	"user": "{{userPhone}}"
+	"user": "{{userPhone}}",
   "company_type": 2,
   "inn": "000000000000",
   "birth_date": "1991-05-23",
@@ -132,7 +132,7 @@ Content-Type: application/json
   "phone": "{{companyPhone}}",
   "address_first": "Россия, Краснодарский край, г. Анапа, 353440",
   "address_second": "Россия, Краснодарский край, г. Абинск, 353320",
-  "address_third": "Россия, Краснодарский край, г. Абинск, 353320",
+  "address_third": "Россия, Краснодарский край, г. Абинск, 353320"
 }
 
 ### Update some information about company
