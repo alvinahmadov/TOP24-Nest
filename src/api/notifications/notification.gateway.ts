@@ -225,8 +225,10 @@ export default class NotificationGateway
 				    .then(
 					    fcmData =>
 					    {
-						    if(fcmData && fcmData.token)
-							    this.sendToDevice(fcmData.token, data, url);
+						    if(fcmData && fcmData.token) {
+							    this.sendToDevice(fcmData.token?.replace(/(\n|\s)/gmi, ''), data, url);
+						    }
+						    else console.warn('Not initialized');
 					    }
 				    )
 				    .catch(console.error);
