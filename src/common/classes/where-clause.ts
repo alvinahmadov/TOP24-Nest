@@ -281,6 +281,9 @@ export default class WhereClause<T extends IModel> {
 			{
 				if(this.debug)
 					console.debug({ name: 'notNull', conj: this._conjunct, key, condition });
+				if(condition === undefined)
+					return;
+				
 				if(condition)
 					this._query[key] = { [Op.not]: null };
 			}
