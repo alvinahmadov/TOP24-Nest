@@ -140,7 +140,7 @@ export default class OrderRepository
 						             .nullOrEq('cargoId', rest?.cargoId)
 						             .nullOrEq('cargoinnId', rest?.cargoinnId)
 						             .nullOrEq('driverId', rest?.driverId)
-						             .notNull('driverId', !!hasDriver)
+						             .notNull('driverId', hasDriver)
 						             .inArray('status', statuses)
 						             .inArray('stage', stages)
 						             .between('weight', weightMin, weightMax)
