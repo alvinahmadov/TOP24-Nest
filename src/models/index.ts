@@ -39,6 +39,7 @@ const MODELS = [
 	CargoCompanyInn,
 	Destination,
 	Driver,
+	EntityFCM,
 	GatewayEvent,
 	Image,
 	Offer,
