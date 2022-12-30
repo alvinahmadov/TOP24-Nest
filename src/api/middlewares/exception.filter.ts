@@ -1,3 +1,4 @@
+import * as ex             from 'express';
 import {
 	Catch,
 	ArgumentsHost,
@@ -21,23 +22,24 @@ export default class HttpExceptionFilter
 		const { httpAdapter } = this.httpAdapterHost;
 
 		const ctx = host.switchToHttp();
-		const status = exception instanceof HttpException
-		               ? exception.getStatus()
-		               : HttpStatus.INTERNAL_SERVER_ERROR;
+		const statusCode = exception instanceof HttpException
+		                   ? exception.getStatus()
+		                   : HttpStatus.INTERNAL_SERVER_ERROR;
 
 		const message = exception instanceof HttpException
 		                ? exception.message
 		                : (<Error>exception)?.message;
 
+		const { method, path } = ctx.getRequest<ex.Request>();
+
 		const responseBody = {
-			status,
-			timestamp: new Date().toISOString(),
-			path:      httpAdapter.getRequestUrl(ctx.getRequest()),
+			statusCode,
+			request: `${method} ${path}`,
 			message
 		};
 
 		console.error({ ERROR: { ...responseBody, exception } });
 
-		httpAdapter.reply(ctx.getResponse(), responseBody, status);
+		httpAdapter.reply(ctx.getResponse(), responseBody, statusCode);
 	}
 }

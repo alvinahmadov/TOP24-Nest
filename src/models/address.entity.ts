@@ -11,7 +11,7 @@ import {
 	StringColumn,
 	VirtualColumn
 }                        from '@common/interfaces';
-import entityConfig      from '@common/properties';
+import { entityConfig }  from '@api/swagger/properties';
 import EntityModel       from './entity-model';
 
 const { address: prop } = entityConfig;

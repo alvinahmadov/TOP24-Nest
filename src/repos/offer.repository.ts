@@ -1,6 +1,10 @@
-import { Includeable, Op }              from 'sequelize';
-import { DEFAULT_SORT_ORDER }           from '@common/constants';
-import { OrderStatus, TransportStatus } from '@common/enums';
+import { Includeable, Op }    from 'sequelize';
+import { DEFAULT_SORT_ORDER } from '@common/constants';
+import {
+	OfferStatus,
+	OrderStatus,
+	TransportStatus
+}                             from '@common/enums';
 import {
 	IDriver,
 	IDriverFilter,
@@ -12,17 +16,33 @@ import {
 	IRepository,
 	IRepositoryOptions,
 	ITransport,
+	TAffectedRows,
+	TOfferTransportFilter,
 	TUpdateAttribute
-}                                       from '@common/interfaces';
+}                             from '@common/interfaces';
 import {
 	CargoCompany,
-	CargoInnCompany,
+	CargoCompanyInn,
 	Driver,
+	Image,
 	Offer,
 	Order,
 	Transport
-}                                       from '@models/index';
-import GenericRepository                from './generic';
+}                             from '@models/index';
+import GenericRepository      from './generic';
+
+const driverDefaultIncludeables: Includeable[] = [
+	{
+		model:      CargoCompany,
+		attributes: ['name', 'legalName', 'userPhone', 'avatarLink'],
+		subQuery:   false
+	},
+	{
+		model:      CargoCompanyInn,
+		attributes: ['name', 'patronymic', 'lastName', 'userPhone', 'avatarLink'],
+		subQuery:   false
+	}
+];
 
 export default class OfferRepository
 	extends GenericRepository<Offer, IOffer>
@@ -112,29 +132,41 @@ export default class OfferRepository
 		if(filter === null)
 			return [];
 
+		const {
+			from:  offset = 0,
+			count: limit,
+			full = false
+		} = listFilter ?? {};
+		const {
+			sortOrder = DEFAULT_SORT_ORDER,
+			strict = false,
+			orderStatus,
+			driverIds,
+			driverStatus,
+			transportStatus,
+			hasComment,
+			orderStatuses,
+			isCurrent,
+			statuses,
+			...rest
+		} = filter ?? {};
+
 		return this.log(
 			() =>
 			{
-				const {
-					from:  offset = 0,
-					count: limit,
-					full = false
-				} = listFilter ?? {};
-				const {
-					sortOrder = DEFAULT_SORT_ORDER,
-					strict = false,
-					orderStatus,
-					driverStatus,
-					transportStatus,
-					hasComment,
-					...rest
-				} = filter ?? {};
-
 				return this.model.findAll(
 					{
-						where:   this.whereClause()
-						             .fromFilter(rest)
-							         .query,
+						where:   {
+							...this.whereClause('and')
+							       .eq('driverId', rest?.driverId)
+							       .eq('orderId', rest?.orderId)
+							       .eq('status', rest?.status)
+							       .eq('orderStatus', orderStatus)
+							       .in('driverId', driverIds)
+							       .in('orderStatus', orderStatuses)
+							       .in('status', statuses)
+								   .query ?? {}
+						},
 						offset,
 						order:   sortOrder,
 						include: full ? [
@@ -151,11 +183,14 @@ export default class OfferRepository
 											       .query
 									},
 									{ model: CargoCompany },
-									{ model: CargoInnCompany }
+									{ model: CargoCompanyInn }
 								]
 							},
 							{
 								model:   Order,
+								where:   this.whereClause<IOrder>()
+								             .eq('isCurrent', isCurrent)
+									         .query,
 								include: [{ model: Driver }]
 							}
 						] : [],
@@ -203,6 +238,7 @@ export default class OfferRepository
 							             .in('status', statuses)
 								         .query,
 							include: [
+								...driverDefaultIncludeables,
 								{
 									model: Transport,
 									where: this.whereClause<ITransport>()
@@ -222,26 +258,30 @@ export default class OfferRepository
 	public async getOrderTransports(
 		orderId: string,
 		listFilter: IListFilter = {},
-		filter?: Pick<IOfferFilter, 'transportStatus'> & IDriverFilter
+		filter?: TOfferTransportFilter
 	): Promise<Offer[]> {
 		const {
-			from:  offset = 0,
+			from:  offset,
 			count: limit
 		} = listFilter;
 
 		const {
 			sortOrder: order = DEFAULT_SORT_ORDER,
-			orderStatus,
-			transportStatus
+			transportStatus,
+			orderStatuses = [],
+			offerStatuses = []
 		} = filter ?? {};
 
 		return this.log(
 			() => this.model.findAll(
 				{
-					where:   this.whereClause('and')
-					             .eq('orderId', orderId)
-					             .eq('orderStatus', orderStatus)
-						         .query,
+					where:   {
+						orderId: { [Op.eq]: orderId },
+						[Op.or]: [
+							{ orderStatus: { [Op.in]: orderStatuses } },
+							{ status: { [Op.in]: offerStatuses } }
+						]
+					},
 					offset,
 					limit,
 					order,
@@ -251,13 +291,15 @@ export default class OfferRepository
 							order:    DEFAULT_SORT_ORDER,
 							required: true,
 							include:  [
+								{ model: CargoCompany },
+								{ model: CargoCompanyInn },
 								{
 									model:   Transport,
 									where:   this.whereClause<ITransport>()
 									             .eq('status', transportStatus)
 										         .query,
 									order:   DEFAULT_SORT_ORDER,
-									include: [{ all: true }]
+									include: [{ model: Image }]
 								}
 							]
 						},
@@ -276,7 +318,7 @@ export default class OfferRepository
 	public async getDriverOrders(
 		driverId: string,
 		listFilter: IListFilter,
-		filter?: IOfferFilter & IOrderFilter
+		filter?: IOfferFilter & Omit<IOrderFilter, 'status' | 'statuses'>
 	): Promise<Offer[]> {
 		return this.log(
 			() =>
@@ -286,12 +328,18 @@ export default class OfferRepository
 					count: limit
 				} = listFilter;
 				const {
-					sortOrder: order = DEFAULT_SORT_ORDER,
+					sortOrder: order = [['order_status', 'ASC'], ['status', 'ASC']],
 					orderId,
 					driverStatus,
 					status,
 					orderStatus,
-					statuses,
+					statuses = [
+						OfferStatus.SENT,
+						OfferStatus.SEEN,
+						OfferStatus.RESPONDED,
+						OfferStatus.CANCELLED
+					],
+					orderStatuses,
 					hasComment,
 					...rest
 				} = filter;
@@ -301,6 +349,7 @@ export default class OfferRepository
 						where:   this.whereClause('and')
 						             .eq('driverId', driverId)
 						             .eq('status', status)
+						             .in('status', statuses)
 						             .eq('orderStatus', orderStatus)
 							         .query,
 						offset,
@@ -321,7 +370,7 @@ export default class OfferRepository
 								           .between('pallets', 0, rest?.pallets)
 								           .gteOrNull('bidPrice', rest?.bidPrice)
 								           .lteOrNull('bidPriceVat', rest?.bidPriceVat)
-								           .inArray('status', statuses)
+								           .in('status', orderStatuses)
 								           .fromFilter<IOrderFilter>(rest)
 									       .query
 							},
@@ -341,7 +390,7 @@ export default class OfferRepository
 
 	public async updateDrivers(
 		offers: TUpdateAttribute<IOffer>[]
-	): Promise<{ affectedCount: number }> {
+	): Promise<TAffectedRows> {
 		return this.log(
 			async() =>
 			{

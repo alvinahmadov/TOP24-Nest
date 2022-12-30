@@ -1,30 +1,24 @@
 import {
-	AllowNull,
 	BelongsTo,
-	Default,
 	ForeignKey,
 	HasMany,
 	HasOne,
-	IsDate,
-	IsEmail,
-	IsUrl,
-	Table,
-	Unique
-}                           from 'sequelize-typescript';
+	Table
+}                        from 'sequelize-typescript';
 import {
 	Field,
 	InterfaceType,
 	ObjectType
-}                           from '@nestjs/graphql';
-import { ApiProperty }      from '@nestjs/swagger';
-import { CRM, DRIVER }      from '@config/json';
+}                        from '@nestjs/graphql';
+import { ApiProperty }   from '@nestjs/swagger';
+import { CRM, DRIVER }   from '@config/json';
 import {
 	DestinationType,
 	DriverStatus,
 	UserRole
-}                           from '@common/enums';
-import { UuidScalar }       from '@common/scalars';
-import { TABLE_OPTIONS }    from '@common/constants';
+}                        from '@common/enums';
+import { UuidScalar }    from '@common/scalars';
+import { TABLE_OPTIONS } from '@common/constants';
 import {
 	BooleanColumn,
 	DateColumn,
@@ -32,6 +26,7 @@ import {
 	ICRMEntity,
 	IDriver,
 	IDriverOperation,
+	Index,
 	IntColumn,
 	JsonbColumn,
 	StringColumn,
@@ -39,14 +34,13 @@ import {
 	UrlColumn,
 	UuidColumn,
 	VirtualColumn
-}                           from '@common/interfaces';
-import entityConfig         from '@common/properties';
-import { ImageFileService } from '@api/services';
-import EntityModel          from './entity-model';
-import CargoCompany         from './cargo.entity';
-import CargoInnCompany      from './cargo-inn.entity';
-import Order                from './order.entity';
-import Transport            from './transport.entity';
+}                        from '@common/interfaces';
+import { entityConfig }  from '@api/swagger/properties';
+import EntityModel       from './entity-model';
+import CargoCompany      from './cargo.entity';
+import CargoCompanyInn   from './cargo-inn.entity';
+import Order             from './order.entity';
+import Transport         from './transport.entity';
 
 const { driver: prop } = entityConfig;
 
@@ -56,6 +50,7 @@ export class DriverOperation
 	type: DestinationType;
 	unloaded?: boolean;
 	loaded?: boolean;
+	uploaded?: boolean;
 }
 
 /**
@@ -75,24 +70,26 @@ export default class Driver
 	@ApiProperty(prop.cargoId)
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoCompany)
-	@AllowNull(true)
+	@Index
 	@UuidColumn()
 	cargoId?: string;
 
 	@ApiProperty(prop.cargoinnId)
 	@Field(() => UuidScalar)
-	@ForeignKey(() => CargoInnCompany)
-	@AllowNull(true)
+	@ForeignKey(() => CargoCompanyInn)
+	@Index
 	@UuidColumn()
 	cargoinnId?: string;
 
 	@ApiProperty(prop.crmId)
-	@AllowNull(true)
-	@IntColumn()
+	@Index
+	@IntColumn({
+		           unique:       true,
+		           defaultValue: null
+	           })
 	crmId?: number;
 
 	@ApiProperty(prop.name)
-	@AllowNull(false)
 	@StringColumn()
 	name: string;
 
@@ -105,35 +102,34 @@ export default class Driver
 	lastName?: string;
 
 	@ApiProperty(prop.email)
-	@IsEmail
-	@Unique
-	@StringColumn()
+	@StringColumn({
+		              unique:   true,
+		              validate: { isEmail: true }
+	              })
 	email: string;
 
 	@ApiProperty(prop.birthDate)
-	@IsDate
 	@DateColumn()
 	birthDate: Date;
 
 	@ApiProperty(prop.isReady)
-	@Default(false)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: false })
 	isReady: boolean;
 
 	@ApiProperty(prop.status)
-	@Default(DriverStatus.NONE)
-	@AllowNull(false)
-	@IntColumn()
+	@IntColumn({
+		           allowNull:    false,
+		           defaultValue: DriverStatus.NONE
+	           })
 	status: DriverStatus;
 
 	@ApiProperty(prop.passportSerialNumber)
 	@StringColumn()
 	passportSerialNumber: string;
 
-	@ApiProperty(prop.passportDate)
-	@IsDate
+	@ApiProperty(prop.passportGivenDate)
 	@DateColumn()
-	passportDate: Date;
+	passportGivenDate: Date;
 
 	@ApiProperty(prop.passportSubdivisionCode)
 	@StringColumn()
@@ -148,8 +144,7 @@ export default class Driver
 	passportRegistrationAddress: string;
 
 	@ApiProperty(prop.role)
-	@Default(UserRole.NONE)
-	@IntColumn()
+	@IntColumn({ defaultValue: UserRole.NONE })
 	role?: UserRole;
 
 	@ApiProperty(prop.phone)
@@ -169,7 +164,6 @@ export default class Driver
 	licenseNumber: string;
 
 	@ApiProperty(prop.licenseDate)
-	@IsDate
 	@DateColumn()
 	licenseDate: Date;
 
@@ -182,12 +176,10 @@ export default class Driver
 	phoneSecond?: string;
 
 	@ApiProperty(prop.latitude)
-	@AllowNull
 	@FloatColumn()
 	latitude?: number;
 
 	@ApiProperty(prop.longitude)
-	@AllowNull
 	@FloatColumn()
 	longitude?: number;
 
@@ -202,46 +194,40 @@ export default class Driver
 	@ApiProperty(prop.operation)
 	@JsonbColumn()
 	operation?: DriverOperation;
-	
+
 	@ApiProperty(prop.payloadCity)
 	@StringColumn()
 	payloadCity?: string;
-	
+
 	@ApiProperty(prop.payloadRegion)
 	@StringColumn()
 	payloadRegion?: string;
-	
+
 	@ApiProperty(prop.payloadDate)
 	@DateColumn()
 	payloadDate?: Date;
 
 	@ApiProperty(prop.avatarLink)
-	@IsUrl
 	@UrlColumn()
 	avatarLink?: string;
 
 	@ApiProperty(prop.passportPhotoLink)
-	@IsUrl
 	@UrlColumn()
 	passportPhotoLink: string;
 
 	@ApiProperty(prop.passportSignLink)
-	@IsUrl
 	@UrlColumn()
 	passportSignLink?: string;
 
 	@ApiProperty(prop.passportSelfieLink)
-	@IsUrl
 	@UrlColumn()
 	passportSelfieLink?: string;
 
 	@ApiProperty(prop.licenseFrontLink)
-	@IsUrl
 	@UrlColumn()
 	licenseFrontLink?: string;
 
 	@ApiProperty(prop.licenseBackLink)
-	@IsUrl
 	@UrlColumn()
 	licenseBackLink?: string;
 
@@ -249,13 +235,17 @@ export default class Driver
 	@StringColumn()
 	info?: string;
 
+	@ApiProperty(prop.hasSent)
+	@BooleanColumn({ defaultValue: false })
+	hasSent?: boolean;
+
 	@ApiProperty(prop.cargo)
 	@BelongsTo(() => CargoCompany, 'cargoId')
 	cargo?: CargoCompany;
 
 	@ApiProperty(prop.cargoinn)
-	@BelongsTo(() => CargoInnCompany, 'cargoinnId')
-	cargoinn?: CargoInnCompany;
+	@BelongsTo(() => CargoCompanyInn, 'cargoinnId')
+	cargoinn?: CargoCompanyInn;
 
 	@ApiProperty(prop.order)
 	@HasOne(() => Order, 'driverId')
@@ -265,31 +255,24 @@ export default class Driver
 	@HasMany(() => Transport, 'driverId')
 	transports?: Transport[];
 
-	@ApiProperty(prop.info)
+	@ApiProperty(prop.companyName)
 	@VirtualColumn()
-	public get fullName() {
+	companyName?: string;
+
+	@ApiProperty(prop.fullName)
+	@VirtualColumn()
+	public get fullName(): string {
 		const name = this.name ? ` ${this.name[0]}.` : '';
 		const surname = this.lastName ? `${this.lastName}` : '';
 		const middleName = this.patronymic ? ` ${this.patronymic[0]}.` : '';
 		return `${surname}${middleName}${name}`;
 	}
 
-	public async deleteImages(): Promise<number> {
-		const imageFileService = new ImageFileService();
-		return imageFileService.deleteImageList(
-			[
-				this.avatarLink,
-				this.passportPhotoLink,
-				this.passportSignLink,
-				this.passportSelfieLink,
-				this.licenseBackLink,
-				this.licenseFrontLink
-			]
-		);
-	}
-
-	public toCrm(companyCrmId: number, directions: string[]): TCRMData {
-		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
+	public toCrm(
+		companyCrmId: number,
+		directions: string[]
+	): TCRMData {
+		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'N' } };
 		data.fields[DRIVER.COMPANY_ID] = companyCrmId;
 		data.fields[DRIVER.USER_TYPE] = CRM.CONTACT_TYPES[1].ID;
 		data.fields[DRIVER.NAME.FIRST] = this.name;
@@ -299,9 +282,9 @@ export default class Driver
 		data.fields[DRIVER.EMAIL] = this.email;
 		data.fields[DRIVER.PHONE] = this.phone;
 		data.fields[DRIVER.INN] = this.taxpayerNumber;
-		data.fields[DRIVER.DIRECTIONS] = directions.join(', ');
+		data.fields[DRIVER.DIRECTIONS] = directions?.join();
 		data.fields[DRIVER.ADDRESS] = this.address;
-		data.fields[DRIVER.PASSPORT.GIVEN_DATE] = this.passportDate;
+		data.fields[DRIVER.PASSPORT.GIVEN_DATE] = this.passportGivenDate;
 		data.fields[DRIVER.PASSPORT.ISSUED_BY] = this.passportIssuedBy;
 		data.fields[DRIVER.PASSPORT.SERIAL_NUMBER] = this.passportSerialNumber;
 		data.fields[DRIVER.PASSPORT.SUBDIVISION_CODE] = this.passportSubdivisionCode;
@@ -311,10 +294,10 @@ export default class Driver
 		data.fields[DRIVER.LICENSE.EXP_DATE] = this.licenseDate;
 		data.fields[DRIVER.LINK.AVATAR] = this.avatarLink;
 		data.fields[DRIVER.LINK.PASSPORT] = this.passportPhotoLink;
-		data.fields[DRIVER.LINK.LICENSE.FRONT] = this.licenseFrontLink ?? '';
-		data.fields[DRIVER.LINK.LICENSE.BACK] = this.licenseBackLink ?? '';
+		data.fields[DRIVER.LINK.LICENSE.FRONT] = this.licenseFrontLink;
+		data.fields[DRIVER.LINK.LICENSE.BACK] = this.licenseBackLink;
 		data.fields[DRIVER.DATE_CREATE] = this.createdAt;
 		data.fields[DRIVER.DATE_UPDATE] = this.updatedAt;
 		return data;
-	}
+	};
 }

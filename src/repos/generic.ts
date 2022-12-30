@@ -22,6 +22,7 @@ import {
 	TModelFilter,
 	TUpdateAttribute
 }                             from '@common/interfaces';
+import { UpdateOptions }      from 'sequelize/types/model';
 
 /**@ignore*/
 type TResponseKey = 'create' | 'update' | 'delete' | string;
@@ -29,7 +30,7 @@ type TResponseKey = 'create' | 'update' | 'delete' | string;
 /**@ignore*/
 function expandModel(model: Model | any) {
 	if(model instanceof Model)
-		return model.get({ plain: true, clone: false });
+		return model.id;
 	return model;
 }
 
@@ -61,6 +62,13 @@ export class GenericRepository<M extends Model, Attribute extends IModel>
 
 	public get tableName() {
 		return this.model.tableName;
+	}
+
+	public set useLogger(value: boolean) {
+		if(this.options)
+			this.options.log = value;
+		else
+			this.options = { log: value };
 	}
 
 	/**
@@ -154,11 +162,12 @@ export class GenericRepository<M extends Model, Attribute extends IModel>
 	 * Creates a new item.
 	 *
 	 * @param dto {TCreationAttribute} DTO to save to database.
+	 * @param full {Boolean} Include child entites when creating.
 	 * */
-	public async create(dto: TCreationAttribute<Attribute>)
+	public async create(dto: TCreationAttribute<Attribute>, full?: boolean)
 		: Promise<M | null> {
 		return this.log(
-			() => this.model.create<any>(dto, { returning: true }),
+			() => this.model.create<any>(dto, { returning: true, include: !!full ? this.include : [] }),
 			{ id: 'create' },
 			{ dto }
 		);
@@ -200,15 +209,19 @@ export class GenericRepository<M extends Model, Attribute extends IModel>
 	 *
 	 * @param id {String!} Id of the item to update.
 	 * @param dto {TUpdateAttribute} DTO to update from.
+	 * @param options {UpdateOptions} Update options.
 	 * */
 	public async update(
 		id: string,
-		dto: TUpdateAttribute<Attribute>
+		dto: TUpdateAttribute<Attribute>,
+		options?: UpdateOptions<Attribute>
 	): Promise<M | null> {
 		return this.log(
 			async() =>
 			{
-				const result = await this.model.update(<any>dto, <any>{ where: { id }, returning: true });
+				const result = await this.model.update<any>(
+					dto,
+					<any>{ where: { id }, returning: true, ...(options ?? {}) });
 				return result[0] > 0 ? result[1][0] : null;
 			},
 			{ id: 'update' },

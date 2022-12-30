@@ -31,7 +31,7 @@ export default class PaymentsRepository
 	) {
 		if(filter === null)
 			return [];
-		
+
 		return this.log(
 			async() =>
 			{
@@ -72,13 +72,13 @@ export default class PaymentsRepository
 	 * */
 	public async getByCompany(companyIdOptions: TCompanyIdOptions)
 		: Promise<Payment | null> {
-		const { cargoId, cargoinnId } = companyIdOptions;
+		const { cargoId = null, cargoinnId = null } = companyIdOptions;
 		return this.log(
-			() => this.model.findOne<any>(
+			() => this.model.findOne(
 				{
 					where: this.whereClause('or')
-					           .nullOrEq('cargoId', cargoId)
-					           .nullOrEq('cargoinnId', cargoinnId)
+					           .eq('cargoId', cargoId)
+					           .eq('cargoinnId', cargoinnId)
 						       .query
 				}),
 			{ id: 'getByCompany' },

@@ -23,15 +23,15 @@ import {
 	ISwaggerTag
 }                                 from '@common/interfaces';
 import { CustomLogger }           from '@common/utils';
-import env                        from '@config/env';
 import * as mo                    from '@models/index';
 import * as dto                   from '@api/dto';
-import { RedisIoAdapter }         from '@api/events';
+import { RedisIoAdapter }         from '@api/notifications';
 import {
 	getRouteConfig,
 	TApiRouteList
 }                                 from '@api/routes';
 import AppModule                  from './app.module';
+import env                        from './config/env';
 
 faker.setLocale('ru');
 
@@ -81,13 +81,18 @@ const DTOS = [
 	dto.TransportUpdateDto,
 	dto.TransportFilter,
 	dto.ListFilter,
-	dto.FileUploadDto
+	dto.FileUploadDto,
+	dto.FilesUploadDto,
+	// User
+	dto.UserCreateDto,
+	dto.UserFilter,
+	dto.UserUpdateDto
 ];
 const ENTITIES = [
 	mo.Address,
 	mo.Admin,
 	mo.CargoCompany,
-	mo.CargoInnCompany,
+	mo.CargoCompanyInn,
 	mo.Driver,
 	mo.Image,
 	mo.Offer,
@@ -143,7 +148,8 @@ async function bootstrap(): Promise<INestApplication> {
 		.setTitle('24TOP API with Swagger')
 		.setDescription('Backend bridge service')
 		.setVersion('2.0')
-		.addServer(`${SCHEME}{server}`, null, serverVariables);
+		.addServer(`${SCHEME}{server}`, null, serverVariables)
+		.addBearerAuth();
 
 	const swaggerOptions: SwaggerDocumentOptions = {
 		ignoreGlobalPrefix: true,
@@ -185,10 +191,7 @@ async function bootstrap(): Promise<INestApplication> {
 		}
 	));
 	app.useWebSocketAdapter(redisIoAdapter);
-	app.useStaticAssets(
-		join(__dirname, '..', 'docs'),
-		{ dotfiles: 'ignore' }
-	);
+	app.useStaticAssets(join(__dirname, '..', 'resources'), { index: false, prefix: '/resources' });
 	app.enableCors(CORS_OPTIONS);
 	await app.listen(PORT);
 

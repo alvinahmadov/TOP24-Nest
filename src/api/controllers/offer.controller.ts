@@ -10,14 +10,15 @@ import {
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { ApiRoute, UserParam } from '@common/decorators';
 import {
 	IOfferFilter,
 	IUserPayload
 }                              from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
-import { HttpExceptionFilter } from '@api/middlewares';
+import { ApiRoute, UserParam }  from '@api/decorators';
+// import { NotificationsGateway } from '@api/notifications';
+import { HttpExceptionFilter }  from '@api/middlewares';
 import {
 	DefaultBoolPipe,
 	OfferPipe,
@@ -39,9 +40,7 @@ export default class OfferController
 	extends BaseController {
 	public constructor(
 		private readonly offerService: OfferService
-	) {
-		super();
-	}
+	) { super(); }
 
 	@ApiRoute(routes.filter, {
 		guards:   [AccessGuard],
@@ -99,6 +98,19 @@ export default class OfferController
 		return sendResponse(response, result);
 	}
 
+	@ApiRoute(routes.delete, {
+		guards:   [AccessGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public override async delete(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.offerService.delete(id);
+
+		return sendResponse(response, result);
+	}
+
 	@ApiRoute(routes.driver, {
 		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
@@ -109,7 +121,7 @@ export default class OfferController
 		@Body(OfferOrderFilterPipe) filter?: dto.OfferFilter & dto.OrderFilter,
 		@Query() listFilter?: dto.ListFilter
 	) {
-		let result = await this.offerService.getOrders(driverId, listFilter, filter);
+		let result = await this.offerService.getDriverOrders(driverId, listFilter, filter);
 
 		return sendResponse(response, result);
 	}
@@ -124,7 +136,7 @@ export default class OfferController
 		@Body(OfferDriverFilterPipe) filter?: dto.OfferFilter & dto.DriverFilter,
 		@Query() listFilter?: dto.ListFilter
 	) {
-		let result = await this.offerService.getDrivers(orderId, listFilter, filter);
+		let result = await this.offerService.getOrderDrivers(orderId, listFilter, filter);
 
 		return sendResponse(response, result);
 	}
@@ -137,24 +149,13 @@ export default class OfferController
 		@Param('orderId', ParseUUIDPipe) orderId: string,
 		@Res() response: ex.Response,
 		@Query() listFilter?: dto.ListFilter,
-		@Body(OfferDriverFilterPipe) filter?: Pick<IOfferFilter, 'transportStatus'> & dto.DriverFilter
+		@Body(OfferDriverFilterPipe) filter?: Pick<IOfferFilter, 'transportStatus' | 'orderStatuses'> &
+		                                      dto.DriverFilter
 	) {
-		const result = await this.offerService.getTransports(orderId, listFilter, filter);
+		const result = await this.offerService.getOfferTransports(orderId, listFilter, filter);
 
-		return sendResponse(response, result);
-	}
-
-	@ApiRoute(routes.delete, {
-		guards:   [AccessGuard],
-		statuses: [HttpStatus.OK]
-	})
-	public override async delete(
-		@Param('id', ParseUUIDPipe) id: string,
-		@Res() response: ex.Response
-	) {
-		const result = await this.offerService.delete(id);
-
-		return sendResponse(response, result);
+		return response.status(result.statusCode)
+		               .send(result.data);
 	}
 
 	@ApiRoute(routes.accept, {
@@ -182,10 +183,9 @@ export default class OfferController
 		@Param('driverId', ParseUUIDPipe) driverId: string,
 		@UserParam() user: IUserPayload,
 		@Res() response: ex.Response,
-		@Body() reason?: string
+		@Body('reason') reason?: string
 	) {
-		const { role } = user;
-		const result = await this.offerService.decline(orderId, driverId, reason, role);
+		const result = await this.offerService.declineOffer(orderId, driverId, reason, user?.role ?? 1);
 
 		return sendResponse(response, result);
 	}

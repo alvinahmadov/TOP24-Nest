@@ -1,9 +1,6 @@
 import {
-	AllowNull,
-	Default,
 	IsEmail,
-	Table,
-	Unique
+	Table
 }                        from 'sequelize-typescript';
 import { ApiProperty }   from '@nestjs/swagger';
 import { ObjectType }    from '@nestjs/graphql';
@@ -12,10 +9,11 @@ import { TABLE_OPTIONS } from '@common/constants';
 import {
 	IAdmin,
 	BooleanColumn,
+	Index,
 	IntColumn,
-	StringColumn
+	StringColumn, VirtualColumn
 }                        from '@common/interfaces';
-import entityConfig      from '@common/properties';
+import { entityConfig }  from '@api/swagger/properties';
 import EntityModel       from './entity-model';
 
 const { admin: prop } = entityConfig;
@@ -37,10 +35,12 @@ export default class Admin
 	name: string;
 
 	@ApiProperty(prop.email)
-	@Unique
 	@IsEmail
-	@AllowNull(false)
-	@StringColumn()
+	@Index
+	@StringColumn({
+		              allowNull: false,
+		              unique:    true
+	              })
 	email: string;
 
 	@ApiProperty(prop.phone)
@@ -48,23 +48,25 @@ export default class Admin
 	phone: string;
 
 	@ApiProperty(prop.role)
-	@Default(UserRole.LOGIST)
-	@AllowNull(false)
-	@IntColumn()
+	@IntColumn({
+		           allowNull:    false,
+		           defaultValue: UserRole.LOGIST
+	           })
 	role: UserRole;
 
 	@ApiProperty(prop.confirmed)
-	@Default(false)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: false })
 	confirmed?: boolean;
 
 	@ApiProperty(prop.privilege)
-	@Default(false)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: false })
 	privilege?: boolean;
 
 	@ApiProperty(prop.verify)
-	@Default('')
-	@StringColumn()
+	@StringColumn({ defaultValue: '' })
 	verify?: string;
+
+	get fullName(): string {
+		return this.name;
+	}
 }

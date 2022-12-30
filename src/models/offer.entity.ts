@@ -1,7 +1,5 @@
 import {
-	AllowNull,
 	BelongsTo,
-	Default,
 	ForeignKey,
 	IsUUID,
 	Table
@@ -19,17 +17,18 @@ import { UuidScalar }    from '@common/scalars';
 import { TABLE_OPTIONS } from '@common/constants';
 import {
 	FloatColumn,
+	Index,
 	IOffer,
 	SmallIntColumn,
 	StringColumn,
 	UuidColumn,
 	VirtualColumn
 }                        from '@common/interfaces';
-import entityConfig      from '@common/properties';
 import {
 	filterTransports,
 	getTransportFilterFromOrder
 }                        from '@common/utils';
+import { entityConfig }  from '@api/swagger/properties';
 import EntityModel       from './entity-model';
 import Driver            from './driver.entity';
 import Order             from './order.entity';
@@ -49,29 +48,39 @@ export default class Offer
 	extends EntityModel<IOffer>
 	implements IOffer {
 	@ApiProperty(prop.orderId)
-	@IsUUID("all")
+	@IsUUID('all')
 	@Field(() => UuidScalar)
 	@ForeignKey(() => Order)
-	@AllowNull(false)
-	@UuidColumn({ onDelete: 'CASCADE' })
+	@Index
+	@UuidColumn({
+		            allowNull: false,
+		            onDelete:  'CASCADE'
+	            })
 	orderId: string;
 
 	@ApiProperty(prop.driverId)
-	@IsUUID("all")
+	@IsUUID('all')
 	@Field(() => UuidScalar)
 	@ForeignKey(() => Driver)
-	@AllowNull(false)
-	@UuidColumn({ onDelete: 'CASCADE' })
+	@Index
+	@UuidColumn({
+		            allowNull: false,
+		            onDelete:  'CASCADE'
+	            })
 	driverId: string;
 
 	@ApiProperty(prop.status)
-	@Default(OfferStatus.NONE)
-	@SmallIntColumn()
+	@SmallIntColumn({
+		                allowNull:    false,
+		                defaultValue: OfferStatus.NONE
+	                })
 	status: OfferStatus;
 
 	@ApiProperty(prop.orderStatus)
-	@Default(OrderStatus.PENDING)
-	@SmallIntColumn()
+	@SmallIntColumn({
+		                allowNull:    false,
+		                defaultValue: OrderStatus.PENDING
+	                })
 	orderStatus: OrderStatus;
 
 	@ApiProperty(prop.bidComment)

@@ -1,8 +1,6 @@
 import {
-	AllowNull,
 	BelongsTo,
 	ForeignKey,
-	IsUrl,
 	IsUUID,
 	Table
 }                        from 'sequelize-typescript';
@@ -14,16 +12,17 @@ import { ApiProperty }   from '@nestjs/swagger';
 import { TABLE_OPTIONS } from '@common/constants';
 import {
 	IImage,
+	Index,
 	UrlColumn,
 	URL,
 	UuidColumn
 }                        from '@common/interfaces';
-import entityConfig      from '@common/properties';
 import { UuidScalar }    from '@common/scalars';
+import { entityConfig }  from '@api/swagger/properties';
 import EntityModel       from './entity-model';
-import CargoCompany      from './cargo.entity';
-import CargoInnCompany   from './cargo-inn.entity';
-import Transport         from './transport.entity';
+import CargoCompany    from './cargo.entity';
+import CargoCompanyInn from './cargo-inn.entity';
+import Transport       from './transport.entity';
 
 const { image: prop } = entityConfig;
 
@@ -41,30 +40,31 @@ export default class Image
 	extends EntityModel<IImage>
 	implements IImage {
 	@ApiProperty(prop.cargoId)
-	@IsUUID("all")
+	@IsUUID('all')
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoCompany)
+	@Index
 	@UuidColumn({ onDelete: 'SET NULL' })
 	cargoId?: string;
 
 	@ApiProperty(prop.cargoinnId)
-	@IsUUID("all")
+	@IsUUID('all')
 	@Field(() => UuidScalar)
-	@ForeignKey(() => CargoInnCompany)
+	@ForeignKey(() => CargoCompanyInn)
+	@Index
 	@UuidColumn({ onDelete: 'SET NULL' })
 	cargoinnId?: string;
 
 	@ApiProperty(prop.transportId)
-	@IsUUID("all")
+	@IsUUID('all')
 	@Field(() => UuidScalar)
 	@ForeignKey(() => Transport)
+	@Index
 	@UuidColumn({ onDelete: 'CASCADE' })
 	transportId?: string;
 
 	@ApiProperty(prop.url)
-	@IsUrl
-	@AllowNull(false)
-	@UrlColumn()
+	@UrlColumn({ defaultValue: null })
 	url: URL;
 
 	@ApiProperty(prop.cargo)
@@ -72,8 +72,8 @@ export default class Image
 	cargo?: CargoCompany;
 
 	@ApiProperty(prop.cargoinn)
-	@BelongsTo(() => CargoInnCompany, 'cargoinnId')
-	cargoinn?: CargoInnCompany;
+	@BelongsTo(() => CargoCompanyInn, 'cargoinnId')
+	cargoinn?: CargoCompanyInn;
 
 	@ApiProperty(prop.transport)
 	@BelongsTo(() => Transport, 'transportId')

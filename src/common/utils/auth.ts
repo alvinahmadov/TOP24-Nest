@@ -1,6 +1,12 @@
 import * as ex    from 'express';
 import { Socket } from 'socket.io';
 
+function getHandshakeAuth(handshakeData: { [key: string]: any }): string {
+	if('authorization' in handshakeData || 'Authorization' in handshakeData)
+		return handshakeData['authorization'] || handshakeData['Authorization'] as string;
+	return undefined;
+}
+
 export function requestAuthExtractor(req: ex.Request): string {
 	let authHeader = req.header('authorization') || req.header('Authorization');
 
@@ -13,7 +19,8 @@ export function requestAuthExtractor(req: ex.Request): string {
 }
 
 export function socketAuthExtractor(client: Socket) {
-	let authHeader = client.handshake.headers.authorization;
+	let authHeader = getHandshakeAuth(client.handshake.auth) ||
+	                 getHandshakeAuth(client.handshake.headers);
 
 	if(authHeader) {
 		return authHeader.split(' ').length > 1

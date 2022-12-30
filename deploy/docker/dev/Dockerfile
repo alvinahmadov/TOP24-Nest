@@ -1,9 +1,13 @@
 ## ---- Base ---- ##
 FROM node:lts-buster AS base
 
-RUN apt-get update && apt-get install -y apt-utils net-tools nano
+RUN apt-get update && apt-get install -y apt-utils locales net-tools nano
+RUN npm install -g npm@latest --loglevel=error
 
-RUN npm install sequelize-cli -g
+# Locale
+RUN sed -i -e \
+  's/# ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen \
+   && locale-gen
 
 ENV APP_USER=node
 ENV APP_HOME=/srv/app
@@ -27,6 +31,10 @@ RUN rm -rf $APP_HOME/docs || echo "Directory '$APP_HOME/docs' doesn't exist"
 RUN mkdir $APP_HOME/docs && chown $APP_USER:$APP_USER $APP_HOME/docs
 
 USER $APP_USER
+
+ENV GENERATE_SOURCEMAP false
+ENV NODE_OPTIONS="--max-old-space-size=8192"
+ENV TZ Europe/Moscow
 
 RUN npm run build && npm run doc
 

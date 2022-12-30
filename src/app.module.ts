@@ -1,10 +1,10 @@
 import { join }              from 'path';
 import { Module }            from '@nestjs/common';
+import { ScheduleModule }    from '@nestjs/schedule';
 import { SequelizeModule }   from '@nestjs/sequelize';
-import { ThrottlerModule }   from '@nestjs/throttler';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ThrottlerModule }   from '@nestjs/throttler';
 import { ApiModule }         from '@api/api.module';
-import { ServicesModule }    from '@api/modules';
 import * as dbConfig         from './config/database';
 import MODELS                from './models';
 import AppService            from './app.service';
@@ -37,8 +37,8 @@ import AppController         from './app.controller';
 				        limit: 1000
 			        }
 		        ),
-		        ApiModule,
-		        ServicesModule
+		        ScheduleModule.forRoot(),
+		        ApiModule
 	        ],
 	        controllers: [AppController],
 	        providers:   [AppService]

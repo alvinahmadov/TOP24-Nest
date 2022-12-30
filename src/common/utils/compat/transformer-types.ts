@@ -10,42 +10,54 @@ import {
 	UserRole
 } from '@common/enums';
 import {
+	IApiResponse,
 	IDriverOperation,
-	IModel, IOffer,
+	IModel,
+	IOffer,
+	TCreationAttribute,
 	TGeoCoordinate
 } from '@common/interfaces';
 
 export type TTransformerApiResponse = {
-	status?: number,
+	statusCode?: number,
 	message?: string
 };
+
+export interface ITransformer {
+	message?: string;
+}
 
 /**
  * @see IUser
  * */
-export interface IUserTransformer {
+export interface IUserTransformer
+	extends IModel,
+	        ITransformer {
 	/**
 	 * @see IUser.role
 	 * */
 	type: UserRole;
+	phone: string;
+	verify?: string;
+	confirmed?: boolean;
+
+	cargo_companies?: ICargoCompanyTransformer[];
+	cargoinn_companies?: ICargoCompanyInnTransformer[];
 }
 
 /**
  * @see IAdmin
  * */
 export interface IAdminTransformer
-	extends IModel,
-	        IUserTransformer {
+	extends IUserTransformer {
 	email: string;
 	name: string;
-	phone: string;
-	verify?: string;
 	privilege?: boolean;
-	confirmed?: boolean;
 }
 
 export interface IAddressTransformer
-	extends IModel {
+	extends IModel,
+	        ITransformer {
 	country: string;
 	postal_code?: string;
 	federal_district?: string;
@@ -75,17 +87,16 @@ export interface IAddressTransformer
  * */
 export interface ICompanyTransformer
 	extends IModel,
-	        IUserTransformer {
+	        ITransformer {
+	userId: string;
 	name: string;
 	email: string;
+	phone: string;
 	/**
 	 * @see ICompany.type
 	 * */
 	company_type: CompanyType;
-	/**
-	 * @see ICompany.role
-	 * */
-	type: UserRole;
+	type?: UserRole;
 	/**
 	 * @see ICompany.taxpayerNumber
 	 * */
@@ -114,18 +125,18 @@ export interface ICompanyTransformer
 	 * @see ICompany.crmId
 	 * */
 	crm_id?: number;
-	phone: string;
+	is_default?: boolean;
+	confirmed?: boolean;
 	/**
 	 * @see ICompany.contactPhone
 	 * */
 	phone_second?: string;
+	user_phone: string;
 	directions?: string[];
-	verify?: string;
 	/**
 	 * @see ICompany.paymentType
 	 * */
 	nds?: string;
-	confirmed?: boolean;
 	address_first?: string;
 	address_second?: string;
 	address_third?: string;
@@ -140,11 +151,11 @@ export interface ICompanyTransformer
 	info?: string;
 	status?: string;
 
-	images?: IImageTransformer[];
 	drivers?: IDriverTransformer[];
 	orders?: IOrderTransformer[];
 	payment?: IPaymentTransformer;
 	transports?: ITransportTransformer[];
+	user: IUserTransformer;
 }
 
 /**
@@ -153,7 +164,7 @@ export interface ICompanyTransformer
 export interface ICargoCompanyTransformer
 	extends ICompanyTransformer {
 	/**
-	 * @see ICargoCompany.shortName
+	 * @see ICargoCompany.legalName
 	 * */
 	shortname: string;
 	/**
@@ -198,12 +209,17 @@ export interface ICargoCompanyTransformer
 	 * @see ICargoCompany.contactThird
 	 * */
 	contact_third?: string;
+	/**
+	 * @see ICompany.contactPhone
+	 * @deprecated Replaced by phone
+	 * */
+	phone_second?: string;
 }
 
 /**
  * @see ICargoInnCompany
  * */
-export interface ICargoInnCompanyTransformer
+export interface ICargoCompanyInnTransformer
 	extends ICompanyTransformer {
 	/**
 	 * @see ICargoInnCompany.lastName
@@ -247,7 +263,8 @@ export interface ICargoInnCompanyTransformer
  * @see IDriver
  * */
 export interface IDriverTransformer
-	extends IModel {
+	extends IModel,
+	        ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	/**
@@ -286,7 +303,7 @@ export interface IDriverTransformer
 	 * */
 	passport_serial_number: string;
 	/**
-	 * @see IDriver.passportDate
+	 * @see IDriver.passportGivenDate
 	 * */
 	passport_date: Date;
 	/**
@@ -304,7 +321,7 @@ export interface IDriverTransformer
 	/**
 	 * @see IDriver.passportPhotoLink
 	 * */
-	passport_link: string;
+	passport_photo_link: string;
 	/**
 	 * @see IDriver.passportSignLink
 	 * */
@@ -360,26 +377,37 @@ export interface IDriverTransformer
 	/**
 	 * @see IDriver.payloadDate
 	 * */
-	payload_date?: Date;
+	payload_date?: any;
 	latitude?: number;
 	longitude?: number;
 	/**
 	 * @see IDriver.currentAddress
 	 * */
 	current_address?: string;
-	fullName?: string;
+	fullname?: string;
+	company_name?: string;
 
 	cargo?: ICargoCompanyTransformer;
-	cargoinn?: ICargoInnCompanyTransformer;
+	cargoinn?: ICargoCompanyInnTransformer;
 	order?: IOrderTransformer;
 	transports?: ITransportTransformer[];
+}
+
+export interface IGatewayEventTransformer
+	extends IModel {
+	event_name: string;
+	event_data: any;
+	has_seen?: boolean;
+	readonly source?: string;
+	readonly message?: string;
 }
 
 /**
  * @see IImage
  * */
 export interface IImageTransformer
-	extends IModel {
+	extends IModel,
+	        ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	transportId?: string;
@@ -393,7 +421,8 @@ export interface IImageTransformer
  * @see IOffer
  * */
 export interface IOfferTransformer
-	extends IModel {
+	extends IModel,
+	        ITransformer {
 	orderId: string;
 	driverId: string;
 	status: OfferStatus;
@@ -422,7 +451,8 @@ export interface IOfferTransformer
  * @see IOrder
  * */
 export interface IOrderTransformer
-	extends IModel {
+	extends IModel,
+	        ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	driverId?: string;
@@ -449,6 +479,14 @@ export interface IOrderTransformer
 	 * @see IOrder.isFree
 	 * */
 	is_free?: boolean;
+	/**
+	 * @see IOrder.isCurrent
+	 * */
+	is_current?: boolean;
+	/**
+	 * Is order on payment state.
+	 * */
+	on_payment?: boolean;
 	/**
 	 * @see IOrder.cancelCause
 	 * */
@@ -503,7 +541,7 @@ export interface IOrderTransformer
 	 * @see IOrder.transportTypes
 	 * */
 	transport_types?: string[];
-	destinations?: IOrderDestinationTransformer[];
+	destinations?: IDestinationTransformer[];
 	/**
 	 * @see IOrder.driverDeferralConditions
 	 * */
@@ -517,28 +555,33 @@ export interface IOrderTransformer
 	 * */
 	dedicated_machine?: string;
 	/**
-	 * @see IOrder.paymentPhotoLink
+	 * @see IOrder.paymentPhotoLinks
 	 * */
-	payment_link?: string;
+	payment_link?: string[];
 	/**
-	 * @see IOrder.receiptPhotoLink
+	 * @see IOrder.receiptPhotoLinks
 	 * */
-	receipt_link?: string;
+	receipt_link?: string[];
 	/**
 	 * @see IOrder.contractPhotoLink
 	 * */
-	contract_link?: string;
+	contract_link?: string | null;
 	filter?: object;
+	priority?: boolean;
+	readonly is_dedicated?: boolean;
+	readonly is_extra_payload?: boolean;
 
 	cargo?: ICargoCompanyTransformer;
-	cargoinn?: ICargoInnCompanyTransformer;
+	cargoinn?: ICargoCompanyInnTransformer;
 	driver?: IDriverTransformer;
 }
 
 /**
- * @see IOrderDestination
+ * @see IDestination
  * */
-export interface IOrderDestinationTransformer {
+export interface IDestinationTransformer
+	extends IModel,
+	        ITransformer {
 	point: string;
 	type: DestinationType;
 	address: string;
@@ -550,16 +593,17 @@ export interface IOrderDestinationTransformer {
 	comment?: string;
 	fulfilled?: boolean;
 	/**
-	 * @see IOrderDestination.shippingPhotoLinks
+	 * @see IDestination.shippingPhotoLinks
 	 * */
-	shipping_links?: string[];
+	shipping_link?: string[];
 }
 
 /**
  * @see IPayment
  * */
 export interface IPaymentTransformer
-	extends IModel {
+	extends IModel,
+	        ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	/**
@@ -590,7 +634,8 @@ export interface IPaymentTransformer
  * @see ITransport
  * */
 export interface ITransportTransformer
-	extends IModel {
+	extends IModel,
+	        ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	driverId?: string;
@@ -615,7 +660,7 @@ export interface ITransportTransformer
 	 * @see ITransport.prodYear
 	 * */
 	prod_year: number;
-	payload: string;
+	payloads: string[];
 	/**
 	 * @see ITransport.payloadExtra
 	 * */
@@ -674,7 +719,7 @@ export interface ITransportTransformer
 	 * */
 	diag_num: string;
 	/**
-	 * @see ITransport.diagnosticsDate
+	 * @see ITransport.diagnosticsExpiryDate
 	 * */
 	diag_date: Date;
 	/**
@@ -693,8 +738,11 @@ export interface ITransportTransformer
 	images?: IImageTransformer[];
 }
 
-export type TOfferDriverTransformer = Pick<IOfferTransformer, 'driverId' |
-                                                              'bid_price' |
-                                                              'bid_price_max' |
-                                                              'comments' |
-                                                              'order_status'>;
+export type TOfferDriverTransformer = Omit<TCreationAttribute<IOfferTransformer>, 'orderId'>;
+
+export type TTransformerResponse<T> = IModel |
+                                      IModel[] |
+                                      ITransformer[] |
+                                      IApiResponse<T> |
+                                      (T & any[]) |
+                                      TTransformerApiResponse;

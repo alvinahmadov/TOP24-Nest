@@ -1,4 +1,5 @@
-import { DotenvParseOutput } from 'dotenv';
+import { DotenvParseOutput }  from 'dotenv';
+import { TObjectStorageAuth } from './api';
 
 //////////////
 //  Types  //
@@ -8,8 +9,6 @@ type latitude = number;
 type longitude = number;
 
 export type URL = string;
-export type integer = number;
-export type decimal = number;
 
 export type TBitrixData = {
 	ID: string;
@@ -18,6 +17,8 @@ export type TBitrixData = {
 }
 
 export type TBitrixEnum = Array<TBitrixData>;
+
+export type TObjectStorageType = 'external' | 'local';
 
 /**@ignore*/
 export type TLanguageConfig = { [langCode: string]: any };
@@ -54,6 +55,8 @@ export interface IEnvironment {
 		randomCode: boolean;
 		enableGraphql?: boolean;
 		enableEvents?: boolean;
+		fileSavePath?: string;
+		icon?: string;
 	};
 	api: {
 		prefix: string;
@@ -82,16 +85,21 @@ export interface IEnvironment {
 		key: string;
 		token: string;
 	};
+	firebase:         {
+		enable?: boolean;
+	};
+	objectStorage?: {
+		readonly type?: TObjectStorageType;
+		auth: TObjectStorageAuth;
+		url: string;
+		bucketId?: string;
+		region?: string;
+		debug?: boolean;
+	};
 	yandex: {
 		cloud?: {
 			token?: string;
 			region?: string;
-		};
-		storage?: {
-			accessKeyId: string;
-			secretKey: string;
-			url: string;
-			debug: boolean;
 		};
 	};
 	osm?: {
@@ -148,6 +156,14 @@ export interface IEnvParseOutput
 	COMPAT_MODE: string;
 	ENABLE_GRAPHQL?: string;
 	ENABLE_EVENTS?: string;
+	OBJECT_STORAGE?: string;
+	OBJECT_STORAGE_PATH?: string;
+	OBJECT_STORAGE_DEBUG?: string;
+	OBJECT_STORAGE_API_KEY?: string;
+	OBJECT_STORAGE_SECRET?: string;
+	OBJECT_STORAGE_BUCKET_ID?: string;
+	OBJECT_STORAGE_URL?: string;
+	OBJECT_STORAGE_REGION?: string;
 	NEST_DEBUG?: string;
 	SOCKET_PORT?: string;
 	RANDOM_CODE?: string;
@@ -179,6 +195,8 @@ export interface IEnvParseOutput
 	LOG_PATH?: string;
 	LOG_LEVEL?: TLogLevel;
 	// Third party config
+	FIREBASE_ENABLE?: any;
+	ICON_URL?: string;
 	BITRIX_BASE_URL?: string;
 	BITRIX_KEY?: string;
 	BITRIX_HOOK_URL?: string;
@@ -223,13 +241,4 @@ export interface ISignInEmailData
 export interface ISignInPhoneData
 	extends ISignInData {
 	phone: string;
-}
-
-/**@ignore*/
-export interface IUploadResponse {
-	ETag: string;
-	VersionId: any;
-	Location: string;
-	Key: string;
-	Bucket: string;
 }

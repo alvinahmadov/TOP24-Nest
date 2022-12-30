@@ -19,7 +19,7 @@ export default class LoggerMiddleware
 	}
 
 	public use(request: Request, response: Response, next: NextFunction) {
-		const { ip, method, path: url, body, query, params } = request;
+		const { method, path: url, body, query, params } = request;
 		let route: string;
 		const isEmptyObject = (obj: any) => !Object.entries(obj).length;
 
@@ -30,7 +30,7 @@ export default class LoggerMiddleware
 		if(!isEmptyObject(params)) route = params[0];
 
 		this.logger.log(
-			`${method} ${url}${route} - ${ip}`, { ...res }
+			`${method} ${url}${route}`, { ...res }
 		);
 
 		next();

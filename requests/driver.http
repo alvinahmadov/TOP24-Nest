@@ -1,9 +1,11 @@
 ### Get list of drivers
+// @no-cookie-jar
 GET {{api}}/driver
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Get list of drivers filtering
+### Get list of drivers filtering passportDate
+// @no-cookie-jar
 POST {{api}}/driver/filter?full=true
 Authorization: {{accessToken}}
 Content-Type: application/json
@@ -13,66 +15,82 @@ Content-Type: application/json
 }
 
 ### Get single driver by id
-GET {{api}}/driver/{{driverId}}?full=true
+// @no-cookie-jar
+GET {{api}}/driver/{{driverId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Update driver status (coordinates and status)
+// @no-cookie-jar
 PUT {{api}}/driver/{{driverId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"name": "Кирилл",
-	"middleName": "Иванович",
-	"surname": "Кожемяко",
 	"status": 1,
-	"isReady": true,
-	"avatarLink": "https://cloudflare-ipfs.com/ipfs/Qmd3W5DuhgHirLHGVixi6V76LhCkZUz6pnFt5AJBiyvHye/avatar/130.jpg"
+	"current_point": "A",
+  "operation": {
+  	"type": 0,
+    "loaded": false,
+    "unloaded": false
+  }
+}
+
+### Update driver status (coordinates and status)
+// @no-cookie-jar
+PUT {{api}}/driver/{{driverId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+    "status": 0,
+    "operation": null,
+    "current_point": null,
+    "current_address": null
 }
 
 ### Create driver account
+// @no-cookie-jar
 POST {{api}}/driver
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-    "cargoId": "{{companyId}}",
-    "name": "John",
-    "middleName": "Arestovych",
-    "surname": "Androl",
-    "email": "john.androl@mail.com",
-    "birthDate": "2012-09-07",
-    "phone": "+7 468 273 19 55",
-    "taxpayerNumber": null,
-    "passportSerialNumber": "513 1386 ",
-    "passportDate": "2027-11-12 01:47:35.576 +00:00",
-    "passportSubdivisionCode": "553 537 ",
-    "passportIssuedBy": "French Polynesia, Port Mertie, 679 Shields Knolls Suite 688",
-    "passportRegistrationAddress": "Palestinian Territory, Moniquecester, 7579 Nienow Mountains Suite 212",
-    "passportPhotoLink": "http://loremflickr.com/640/480/business",
-    "passportSignLink": "http://loremflickr.com/640/480/business",
-    "passportSelfieLink": "http://loremflickr.com/640/480/business",
-    "avatarLink": "http://loremflickr.com/640/480/business",
-    "registrationAddress": "Филиппины, Konopelskicester, Klocko проспект, 473 кв. 006",
-    "address": "Филиппины, Konopelskicester, Klocko проспект, 473 кв. 006",
-    "licenseNumber": "32 43 243243",
-    "licenseDate": "2020-12-12T00:00:00.000Z",
-    "licenseFrontLink": "http://loremflickr.com/640/480/business",
-    "licenseBackLink": "http://loremflickr.com/640/480/business",
-    "status": 1,
-    "latitude": 57.0712211,
-    "longitude": 34.2374485
+	"cargoinnId": "{{companyId}}",
+	"email": "{{userEmail}}",
+	"name": "Адам",
+	"middle_name": "Владленович",
+	"surname": "Миронов",
+	"is_ready": true,
+	"date_of_birth": "1985-08-20",
+	"phone": "+7 999 200 30 40",
+	"phone_second": "+7 998 300 30 40",
+	"taxpayer_number": "0000000000000000",
+	"passport_serial_number": "714 145",
+	"passport_date": "2026-03-26",
+	"passport_subdivision_code": "569 694",
+	"passport_issued_by": "ГУМВД России по Московской области",
+	"passport_registration_address": "Россия, Москва, Проспект Вернадского, Сизов пруд 2563",
+	"registration_address": "Россия, Москва, пр. Теслы, 830 кв. 460",
+	"physical_address": "Россия, Московская область, г. Москва, ул. Льва Толстого, 329 кв. 108",
+	"additional_phone": "+7 998 282 93 95",
+	"license": "82 256994",
+	"license_date": "2024-01-27",
+	"info": "Не работаю по выходным",
+  "latitude": 57.0712211,
+  "longitude": 34.2374485
 }
 
-> {%	client.global.set('driverId', response.body['data']['id']);	%}
+> {%	client.global.set('driverId', response.body['id']);	%}
 
 ### Delete driver
+// @no-cookie-jar
 DELETE {{api}}/driver/{{driverId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Upload driver avatar
+// @no-cookie-jar
 POST {{api}}/driver/avatar/{{driverId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
@@ -80,10 +98,11 @@ Content-Type: multipart/form-data; boundary=WebAppBoundary
 --WebAppBoundary
 Content-Disposition: form-data; name="image"; filename="avatar.png"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--
 
 ### Upload front side of passport scan
+// @no-cookie-jar
 POST {{api}}/driver/front/{{driverId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
@@ -91,16 +110,17 @@ Content-Type: multipart/form-data; boundary=WebAppBoundary
 --WebAppBoundary
 Content-Disposition: form-data; name="image"; filename="driverFrontPhotoLink.png"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--
 
 ### Upload back side of passport scan
+// @no-cookie-jar
 POST {{api}}/driver/back/{{driverId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="image"; filename="driverBackPhotoLink.jpg""
+Content-Disposition: form-data; name="image"; filename="driverBackPhotoLink.png"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--

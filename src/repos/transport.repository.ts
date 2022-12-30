@@ -5,11 +5,12 @@ import {
 	IRepository,
 	IRepositoryOptions,
 	ITransport,
-	ITransportFilter
+	ITransportFilter,
+	TAffectedRows
 }                             from '@common/interfaces';
 import {
 	CargoCompany,
-	CargoInnCompany,
+	CargoCompanyInn,
 	Driver,
 	Image,
 	Transport
@@ -22,7 +23,7 @@ export default class TransportRepository
 	protected override readonly model = Transport;
 	protected override readonly include: Includeable[] = [
 		{ model: CargoCompany },
-		{ model: CargoInnCompany },
+		{ model: CargoCompanyInn },
 		{ model: Driver },
 		{ model: Image }
 	];
@@ -31,6 +32,21 @@ export default class TransportRepository
 		protected options: IRepositoryOptions = { log: true }
 	) {
 		super(TransportRepository.name);
+	}
+
+	public override async get(id: string, full?: boolean)
+		: Promise<Transport | null> {
+		return this.log(
+			() => this.model.findByPk(
+				id,
+				{
+					include: !!full ? this.include
+					                : [{ model: Image }]
+				}
+			),
+			{ id: 'get' },
+			{ id, full }
+		);
 	}
 
 	/**
@@ -42,7 +58,7 @@ export default class TransportRepository
 	): Promise<Transport[]> {
 		if(filter === null)
 			return [];
-		
+
 		return this.log(
 			() =>
 			{
@@ -94,7 +110,7 @@ export default class TransportRepository
 					widthMin, widthMax,
 					heightMin, heightMax,
 					pallets,
-					payload,
+					payloads,
 					types,
 					status,
 					...rest
@@ -110,7 +126,7 @@ export default class TransportRepository
 						           .between('width', widthMin, widthMax)
 						           .between('height', heightMin, heightMax)
 						           .lteOrNull('pallets', pallets)
-						           .iLike('payload', payload)
+						           .inArray('payloads', payloads)
 						           .inArray('type', types)
 						           .eq('status', status)
 						           .fromFilter<ITransportFilter>(rest)
@@ -119,7 +135,7 @@ export default class TransportRepository
 						offset,
 						limit,
 						order:   sortOrder,
-						include: full ? this.include : []
+						include: full ? this.include : [{ model: Image }]
 					}
 				);
 			},
@@ -128,7 +144,7 @@ export default class TransportRepository
 		);
 	}
 
-	public override async delete(id: string) {
+	public override async delete(id: string): Promise<TAffectedRows> {
 		return this.log(
 			async() => ({ affectedCount: await this.model.destroy({ where: { id } }) }),
 			{ id: 'delete' },

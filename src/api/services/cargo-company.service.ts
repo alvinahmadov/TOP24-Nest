@@ -1,20 +1,24 @@
-import * as uuid                  from 'uuid';
-import { Injectable }             from '@nestjs/common';
+import { Op }                     from 'sequelize';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { BitrixUrl }              from '@common/constants';
 import { AxiosStatic }            from '@common/classes';
+import { UserRole }               from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
+	ICompanyDeleteResponse,
 	IService,
 	TAsyncApiResponse
 }                                 from '@common/interfaces';
 import {
 	cargoToBitrix,
-	deleteEntityImages,
+	fillDriverWithCompanyData,
 	filterDirections,
 	filterTransports,
+	filterTransportsByOrder,
 	formatArgs,
-	getTranslation
+	getTranslation,
+	isSuccessResponse
 }                                 from '@common/utils';
 import {
 	CargoCompany,
@@ -28,33 +32,34 @@ import {
 	CompanyUpdateDto,
 	ListFilter
 }                                 from '@api/dto';
-import { EventsGateway }          from '@api/events';
 import Service                    from './service';
-import AddressService             from './address.service';
+import ImageFileService           from './image-file.service';
 import PaymentService             from './payment.service';
+import TransportService           from './transport.service';
+import UserService                from './user.service';
 
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
-const EVENT_TRANSLATIONS = getTranslation('EVENT', 'COMPANY');
 
 @Injectable()
 export default class CargoCompanyService
 	extends Service<CargoCompany, CargoCompanyRepository>
 	implements IService {
 	public override readonly responses: IApiResponses<null> = {
-		NOT_FOUND:       { statusCode: 404, message: TRANSLATIONS['NOT_FOUND'] },
-		NOT_ACCEPTABLE:  { statusCode: 406, message: TRANSLATIONS['NOT_ACCEPTABLE'] },
-		ACCESS_DENIED:   { statusCode: 401, message: TRANSLATIONS['ACCESS_DENIED'] },
-		INCORRECT_TOKEN: { statusCode: 400, message: TRANSLATIONS['INCORRECT_TOKEN'] },
-		INCORRECT_PASSW: { statusCode: 403, message: TRANSLATIONS['INCORRECT_PASSW'] },
-		INCORRECT_CODE:  { statusCode: 403, message: TRANSLATIONS['INCORRECT_CODE'] },
-		INCORRECT_PHONE: { statusCode: 403, message: TRANSLATIONS['INCORRECT_PHONE'] },
-		CRM_ERROR:       { statusCode: 500, message: TRANSLATIONS['CRM_ERROR'] }
+		NOT_FOUND:       { statusCode: HttpStatus.NOT_FOUND, message: TRANSLATIONS['NOT_FOUND'] },
+		NOT_ACCEPTABLE:  { statusCode: HttpStatus.NOT_ACCEPTABLE, message: TRANSLATIONS['NOT_ACCEPTABLE'] },
+		INCORRECT_TOKEN: { statusCode: HttpStatus.BAD_REQUEST, message: TRANSLATIONS['INCORRECT_TOKEN'] },
+		INCORRECT_PASSW: { statusCode: HttpStatus.BAD_REQUEST, message: TRANSLATIONS['INCORRECT_PASSW'] },
+		INCORRECT_CODE:  { statusCode: HttpStatus.BAD_REQUEST, message: TRANSLATIONS['INCORRECT_CODE'] },
+		INCORRECT_PHONE: { statusCode: HttpStatus.BAD_REQUEST, message: TRANSLATIONS['INCORRECT_PHONE'] },
+		ACCESS_DENIED:   { statusCode: HttpStatus.FORBIDDEN, message: TRANSLATIONS['ACCESS_DENIED'] },
+		CRM_ERROR:       { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: TRANSLATIONS['CRM_ERROR'] }
 	};
 
 	constructor(
-		protected readonly addressService: AddressService,
+		protected readonly imageFileService: ImageFileService,
 		protected readonly paymentsService: PaymentService,
-		protected readonly gateway: EventsGateway
+		protected readonly transportService: TransportService,
+		protected readonly userService: UserService
 	) {
 		super();
 		this.repository = new CargoCompanyRepository();
@@ -74,13 +79,12 @@ export default class CargoCompanyService
 		filter: CompanyFilter = {}
 	): TAsyncApiResponse<CargoCompany[]> {
 		const data = await this.repository.getList(listFilter, filter);
-		const message: string = formatArgs(TRANSLATIONS['LIST'], data?.length);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data,
-			message
-		} as IApiResponse<CargoCompany[]>;
+			message:    formatArgs(TRANSLATIONS['LIST'], data?.length)
+		};
 	}
 
 	/**
@@ -97,10 +101,10 @@ export default class CargoCompanyService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['GET'], company.name)
-		} as IApiResponse<CargoCompany>;
+		};
 	}
 
 	/**
@@ -117,10 +121,10 @@ export default class CargoCompanyService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['GET'], company.name)
-		} as IApiResponse<CargoCompany>;
+		};
 	}
 
 	/**
@@ -132,24 +136,41 @@ export default class CargoCompanyService
 	 * */
 	public async create(dto: CompanyCreateDto)
 		: TAsyncApiResponse<CargoCompany> {
-		const company = await this.createModel(dto);
+		let userId: string;
+		let company: CargoCompany;
+
+		let { data: user } = await this.userService.getByPhone(dto.user);
+
+		if(!user) {
+			const { data } = await this.userService.create({ phone: dto.user, role: UserRole.CARGO });
+
+			if(data) {
+				user = data;
+				userId = user.id;
+				dto.isDefault = true;
+			}
+			else
+				return this.repository.getRecord('create');
+		}
+		else {
+			userId = user.id;
+			company = user.cargoCompanies.find(c => c.email === dto.email);
+		}
+
+		if(!company)
+			company = await this.createModel({ ...dto, userId });
 
 		if(!company)
 			return this.repository.getRecord('create');
 
-		this.gateway.sendCargoEvent(
-			{
-				id:      company.id,
-				source:  'registration',
-				message: EVENT_TRANSLATIONS['MODERATION']
-			}
-		);
+		if(!company.user)
+			company.user = user;
 
 		return {
-			statusCode: 201,
+			statusCode: HttpStatus.CREATED,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['CREATE'], company.name)
-		} as IApiResponse<CargoCompany>;
+		};
 	}
 
 	/**
@@ -167,13 +188,11 @@ export default class CargoCompanyService
 		if(!company)
 			return this.repository.getRecord('update');
 
-		this.gateway.sendCargoEvent({ id, status: company.status });
-
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       company,
 			message:    formatArgs(TRANSLATIONS['UPDATE'], company.name)
-		} as IApiResponse<CargoCompany>;
+		};
 	}
 
 	/**
@@ -184,35 +203,76 @@ export default class CargoCompanyService
 	 * @param {String!} id Id of cargo company to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<{ [k: string]: number }> {
+		: TAsyncApiResponse<ICompanyDeleteResponse> {
 		const company = await this.repository.get(id, true);
 
 		if(!company)
 			return this.responses['NOT_FOUND'];
 
 		if(company.crmId) {
-			await AxiosStatic.get(`${BitrixUrl.COMPANY_DEL_URL}?ID=${company.crmId}`);
+			await AxiosStatic.get(`${BitrixUrl.COMPANY_DEL_URL}?id=${company.crmId}`);
 		}
+		const driversCount = company.drivers.length;
+		const transportsCount = company.transports.length;
 
-		const companyImages = await company.deleteImages();
-		const transportImages = await deleteEntityImages(company.transports);
-		const driverImages = await deleteEntityImages(company.drivers);
-		const { data: { affectedCount: pays = 0 } } = await this.paymentsService.deleteByCompany(
-			{ cargoId: id }
+		const companyImages = await this.imageFileService.deleteImageList(
+			[
+				company.avatarLink,
+				company.attorneySignLink,
+				company.passportPhotoLink,
+				company.certificatePhotoLink,
+				company.directorOrderPhotoLink
+			]
+		);
+
+		const transportImages = await this.imageFileService.deleteImageList(
+			company.transports
+			       .flatMap(t => t.images)
+			       .map(image => image.url)
+		);
+
+		const driverImages = await this.imageFileService.deleteImageList(
+			company.drivers
+			       .flatMap(d => [
+				       d.avatarLink,
+				       d.licenseBackLink,
+				       d.licenseFrontLink,
+				       d.passportPhotoLink,
+				       d.passportSelfieLink,
+				       d.passportSignLink
+			       ])
+		);
+
+		const paymentImages = company.payment
+		                      ? await this.imageFileService.deleteImage(company.payment.ogrnipPhotoLink)
+		                      : 0;
+		const { data: { affectedCount: paymentItem = 0 } } = await this.paymentsService.deleteByCompany(
+			{ cargoinnId: id }
 		);
 		const { affectedCount = 0 } = await this.repository.delete(id);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       {
-				affectedCount,
-				pays,
-				companyImages,
-				transportImages,
-				driverImages
+				company:   {
+					affectedCount,
+					images: companyImages
+				},
+				payment:   {
+					affectedCount: paymentItem,
+					images:        paymentImages
+				},
+				driver:    {
+					affectedCount: driversCount,
+					images:        driverImages
+				},
+				transport: {
+					affectedCount: transportsCount,
+					images:        transportImages
+				}
 			},
 			message:    formatArgs(TRANSLATIONS['DELETE'], company.name)
-		} as IApiResponse<{ [k: string]: number }>;
+		};
 	}
 
 	/**
@@ -224,67 +284,40 @@ export default class CargoCompanyService
 		listFilter: ListFilter = {},
 		filter: CompanyTransportFilter = {}
 	): TAsyncApiResponse<Transport[]> {
-		const transports: Transport[] = [];
-		let { riskClass, fromDate, toDate, ...rest } = filter;
-		let companies: CargoCompany[] = [];
+		let transports: Transport[] = [];
+		let { riskClass, fromDate, toDate, directions, ...rest } = filter;
+		let companies: CargoCompany[] = await this.repository.getTransports(listFilter, rest);
 
-		try {
-			companies = await this.repository.getTransports(listFilter, rest);
-		} catch(e) {
-			this.logger.error(e);
-			return {
-				statusCode: 500,
-				message:    e.message
-			};
-		}
-
-		if(rest && rest.directions) {
-			if(rest.directions.every(d => uuid.validate(d))) {
-				let directions: string[] = [];
-				for(const directionId of rest.directions) {
-					const { data: address } = await this.addressService.getById(directionId);
-
-					if(address) {
-						directions.push(address.city, address.region);
-					}
-				}
-				rest.directions = directions;
-			}
-
-			companies = companies.filter(cargo => filterDirections(cargo, rest.directions));
+		if(directions) {
+			companies = companies.filter(cargo => filterDirections(cargo, directions));
 		}
 
 		companies.forEach(
-			c => transports.push(
-				...c.transports?.filter(
-					t =>
-					{
-						if(t.driver !== null) {
-							if(t.driver.order === null) {
-								return true;
-							}
-							else {
-								if(!fromDate || !toDate)
-									return true;
-								const order = t.driver.order;
-								return (
-									(order.date >= fromDate) && (order.date <= toDate)
-								);
-							}
-						}
-						return false;
-					}
-				)
-			)
+			company =>
+			{
+				company.transports
+				       .forEach(
+					       ({ driver }) =>
+					       {
+						       fillDriverWithCompanyData(driver, company)
+					       }
+				       );
+
+				transports.push(
+					...company.transports
+					          ?.filter(t => filterTransportsByOrder(t, { fromDate, toDate }))
+				);
+			}
 		);
-		const data = filterTransports(transports, filter);
+
+		transports = filterTransports(transports, filter);
 		const message = formatArgs(TRANSLATIONS['TRANSPORTS'], transports.length);
 
 		return {
-			statusCode: 200,
-			data,
+			statusCode: HttpStatus.OK,
+			data:       transports,
 			message
-		} as IApiResponse<Transport[]>;
+		};
 	}
 
 	/**
@@ -296,11 +329,75 @@ export default class CargoCompanyService
 	 *
 	 * @param {String!} id Id of cargo company
 	 * */
-	public async send(id: string): TAsyncApiResponse<number> {
+	public async send(id: string): TAsyncApiResponse<{ crmId?: number }> {
 		const company = await this.repository.get(id, true);
 		if(!company) {
 			return this.responses['NOT_FOUND'];
 		}
-		return cargoToBitrix(company);
+		const result = await cargoToBitrix(company);
+
+		if(isSuccessResponse(result)) {
+			await this.repository.update(id, { hasSent: true });
+			const { data: { contactCrmIds, crmId } } = result;
+			const promises: Promise<IApiResponse<Transport>>[] = [];
+
+			contactCrmIds?.forEach(
+				(transportCrmId, transportId) =>
+					promises.push(this.transportService.update(transportId, { crmId: transportCrmId, hasSent: true }))
+			);
+			await Promise.all(promises);
+			result.data = { crmId };
+		}
+		return result;
+	}
+
+	public async activate(id: string, options?: { disableAll: boolean, userId: string })
+		: TAsyncApiResponse<CargoCompany | null> {
+		let company = await this.repository.get(id, true);
+		const { disableAll = false, userId } = options ?? {};
+		const disableCompany = async(_userId: string): Promise<boolean> =>
+		{
+			const res = await this.repository.bulkUpdate(
+				{ isDefault: false },
+				{
+					[Op.and]: [
+						{ id: { [Op.ne]: id } },
+						{ userId: { [Op.eq]: _userId } }
+					]
+				}
+			);
+
+			return res[0] > 0;
+		};
+
+		if(company) {
+			const { user } = company;
+
+			if(user) {
+				company = await this.repository.update(id, { isDefault: true });
+				if(company && company.isDefault) {
+					await disableCompany(user.id);
+					return {
+						statusCode: HttpStatus.OK,
+						data:       company
+					};
+				}
+				else return this.repository.getRecord('update');
+			}
+			else {
+				return {
+					statusCode: HttpStatus.NOT_FOUND,
+					message:    'User not found!'
+				};
+			}
+		}
+		if(disableAll && userId) {
+			await disableCompany(userId);
+		}
+
+		return {
+			statusCode: HttpStatus.NOT_FOUND,
+			message:    `Company with phone ${id} not found!`
+		};
 	}
 }

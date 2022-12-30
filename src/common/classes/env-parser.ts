@@ -1,5 +1,6 @@
-import { config }  from 'dotenv';
+import fs          from 'fs';
 import { resolve } from 'path';
+import { config }  from 'dotenv';
 import {
 	IEnvParseOutput,
 	IParsedEnvConfigOutput
@@ -9,15 +10,22 @@ export default class EnvironmentParser {
 	protected readonly config: IEnvParseOutput;
 
 	constructor(path: string = '.env') {
-		const { error, parsed } = config({ path: path.includes('/') ? path : resolve(process.cwd(), path) }) as
-			IParsedEnvConfigOutput;
-		
-		if(!parsed) {
-			console.error(error);
-			throw error;
+		const envFilePath = path.includes('/') ? path : resolve(process.cwd(), path);
+		const exists = fs.existsSync(envFilePath);
+
+		if(exists) {
+			console.info('Using environment variables from .env file');
+			const { error, parsed } = config({ path: envFilePath }) as
+				IParsedEnvConfigOutput;
+			if(!parsed) {
+				console.error(error);
+			}
+			this.config = parsed;
 		}
-		
-		this.config = parsed;
+		else {
+			console.info('Using environment variables from process.env');
+			this.config = process.env as IEnvParseOutput;
+		}
 	}
 
 	private get<T>(
@@ -56,14 +64,14 @@ export default class EnvironmentParser {
 
 	public bool(
 		key: keyof IEnvParseOutput,
-		defaultValue?: boolean
+		defaultValue: boolean = false
 	): boolean {
 		const value: string | boolean = this.get(key, defaultValue);
 
 		if(value !== undefined)
 			return value === 'true' || value === true;
 
-		return undefined;
+		return defaultValue;
 	}
 
 	public equal<T>(

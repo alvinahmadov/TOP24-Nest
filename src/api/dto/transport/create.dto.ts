@@ -4,25 +4,23 @@ import {
 	IsDate,
 	IsInt,
 	IsString,
-	IsUrl,
 	IsUUID
-}                      from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+}                       from 'class-validator';
 import {
 	Field,
 	InputType
-}                      from '@nestjs/graphql';
+}                       from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	LoadingType,
 	TransportStatus
-}                      from '@common/enums';
+}                       from '@common/enums';
 import {
-	decimal,
 	ITransport,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
-import { UuidScalar }  from '@common/scalars';
+}                       from '@common/interfaces';
+import { UuidScalar }   from '@common/scalars';
+import { entityConfig } from '@api/swagger/properties';
 
 const { transport: prop } = entityConfig;
 
@@ -44,9 +42,6 @@ export default class TransportCreateDto
 	@IsUUID()
 	driverId?: string;
 
-	@ApiProperty(prop.crmId)
-	crmId?: number;
-
 	@ApiProperty(prop.status)
 	@IsInt()
 	status: TransportStatus = TransportStatus.NONE;
@@ -59,13 +54,9 @@ export default class TransportCreateDto
 	@IsString()
 	diagnosticsNumber: string;
 
-	@ApiProperty(prop.diagnosticsDate)
+	@ApiProperty(prop.diagnosticsExpiryDate)
 	@IsDate()
-	diagnosticsDate: Date;
-
-	@ApiProperty(prop.diagnosticsPhotoLink)
-	@IsString()
-	diagnosticsPhotoLink?: string;
+	diagnosticsExpiryDate: Date;
 
 	@ApiProperty(prop.weightExtra)
 	weightExtra: number = 0.0;
@@ -74,19 +65,19 @@ export default class TransportCreateDto
 	volumeExtra: number = 0.0;
 
 	@ApiProperty(prop.weight)
-	weight: decimal;
+	weight: number;
 
 	@ApiProperty(prop.volume)
-	volume: decimal;
+	volume: number;
 
 	@ApiProperty(prop.length)
-	length: decimal;
+	length: number;
 
 	@ApiProperty(prop.width)
-	width: decimal;
+	width: number;
 
 	@ApiProperty(prop.height)
-	height: decimal;
+	height: number;
 
 	@ApiProperty(prop.loadingTypes)
 	@IsArray()
@@ -108,13 +99,9 @@ export default class TransportCreateDto
 	@IsDate()
 	osagoExpiryDate: Date;
 
-	@ApiProperty(prop.osagoPhotoLink)
-	@IsUrl()
-	osagoPhotoLink: string;
-
-	@ApiProperty(prop.payload)
+	@ApiProperty(prop.payloads)
 	@IsString()
-	payload: string;
+	payloads: string[];
 
 	@ApiProperty(prop.payloadExtra)
 	@IsBoolean()

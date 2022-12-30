@@ -25,7 +25,7 @@ export default class ImageService
 	};
 
 	constructor(
-		private readonly imageFileService: ImageFileService
+		protected readonly imageFileService: ImageFileService
 	) {
 		super();
 		this.repository = new ImageRepository();

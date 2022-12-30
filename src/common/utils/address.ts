@@ -11,7 +11,7 @@ import {
 }                             from '@common/classes';
 import {
 	IAddress,
-	IKladrResponse,
+	IKladrResponse, IListFilter,
 	IOSMData,
 	TGeoCoordinate
 }                             from '@common/interfaces';
@@ -27,9 +27,16 @@ export async function addressFromCoordinates(
 
 	const { address } = await AxiosStatic.get<IOSMData>(url, config);
 
-	return `${address?.road ? address.road + ', ' : ''}${address?.town ? address.town + ', ' : ''}` +
-	       `${address?.county ? address.county + ', ' : ''}${address?.state ? address.state + ', ' : ''}` +
-	       `${address?.region ? address.region + ', ' : ''}${address?.country ? address.country : ''}`;
+	return [
+		address?.road,
+		address?.town,
+		address?.county,
+		address?.state,
+		address?.region,
+		address?.country,
+		address?.postcode
+	].filter(a => !!a)
+	 .join(',');
 }
 
 export function calculateDistance(
@@ -81,11 +88,11 @@ export function splitAddress(address: string): {
 
 export async function searchAddressByKladr(
 	query: string,
-	offset: number = 0,
-	limit: number = 50
+	listFilter?: IListFilter
 ): Promise<IAddress[]> {
 	const addresses: Array<IAddress> = [];
 	const qBuilder = new ApiQuery(Reference.KLADR_API_URL);
+	const { from: offset, count: limit } = listFilter ?? {};
 
 	qBuilder.addQuery('query', query)
 	        .addQuery('withParent', 1)
@@ -148,11 +155,11 @@ export async function searchAddressByKladr(
 
 export async function searchAddressByOSM(
 	query: string,
-	offset: number = 0,
-	limit: number = 50
+	listFilter?: IListFilter
 ) {
 	const addresses: Array<Partial<IAddress>> = [];
 	const qBuilder = new ApiQuery(Reference.OSM_API_URL);
+	const { count: limit } = listFilter ?? {};
 
 	qBuilder.addQuery('q', query)
 	        .addQuery('limit', limit)

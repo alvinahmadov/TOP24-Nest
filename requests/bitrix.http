@@ -1,25 +1,35 @@
-### Update cargo data from bitrix
-PUT {{api}}/bitrix/cargo/{{crmId}}
-Content-Type: application/json
-
-{
-	"info": "Some information about cargo company",
-	"status": "free",
-	"confirmed": true
-}
-
 ### Get bitrix order data
+// @no-log
+// @no-cookie-jar
 GET {{api}}/bitrix/orders
 Content-Type: application/json
 
 ### Update order data
+// @no-log
+// @no-cookie-jar
 PUT {{api}}/bitrix/order/{{crmId}}
 Content-Type: application/json
 
 ### Update bitrix order data
+// @no-log
+// @no-cookie-jar
 PATCH {{api}}/bitrix/orders
 Content-Type: application/json
 
 ### Delete order
+// @no-log
+// @no-cookie-jar
 DELETE {{api}}/bitrix/order/{{crmId}}
 Content-Type: application/json
+
+### Test webhook from bitrix
+// @no-log
+// @no-cookie-jar
+POST {{api}}/bitrix/webhook
+Content-Type: application/json
+
+{
+		"event": "ONCRMDEALUPDATE",
+		"data": { "FIELDS": { "ID": "{{crmId}}" } },
+		"ts": "256325654982"
+}

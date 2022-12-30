@@ -1,172 +1,280 @@
-### Legal entity cargo companies
-
-### Request login code for the account
+### Request a new login code for the account by mobile phone number
+// @no-cookie-jar
 POST {{api}}/company/login
 Content-Type: application/json
 
 {
-	"phone": "{{companyPhone}}"
+	"phone": "{{userPhone}}"
 }
 
-> {%	client.global.set('verificationCode', response.body['data']['code'])	%}
+> {%	client.global.set('verificationCode', response.body['code'])	%}
 
-### Finish login by supplying received code
+### Use received code for authorization completion.
+// @no-cookie-jar
 POST {{api}}/company/login
 Content-Type: application/json
 
 {
-	"phone": "{{companyPhone}}",
+	"phone": "{{userPhone}}",
 	"code": "{{verificationCode}}"
 }
 
 > {%
-	client.global.set("accessToken", response.body['data']['accessToken']);
-	client.global.set("refreshToken", response.body['data']['refreshToken']);
-	client.global.set("companyId", response.body['data']['company']['id']);
+	client.global.set("accessToken", response.body['accessToken']);
+	client.global.set("refreshToken", response.body['refreshToken']);
+	client.global.set("companyId", response.body['cargo']['id']);
+	client.global.set("userId", response.body['cargo']['userId']);
+	client.global.set("userPhone", response.body['cargo']['user']['phone']);
 %}
 
-### Get list of cargo companies
+### Get list of companies.
+// @no-cookie-jar
 GET {{api}}/company
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Get filtered list of cargo companies
-POST {{api}}/company/filter?full=true
+### Get some list of companies matching filters.
+// @no-cookie-jar
+POST {{api}}/company/filter
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"phone": "{{companyPhone}}"
+	"userId": "{{userId}}"
 }
 
-### Get single cargo company with associated models
-GET {{api}}/company/{{companyId}}
+### Get single company with associated entities such as drivers, transports, payment etc.
+// @no-cookie-jar
+GET {{api}}/company/{{companyId}}?full=true
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Register as a new cargo company
+### Register a new company as legal entity to user. 
+// @no-cookie-jar
 POST {{api}}/company
 Content-Type: application/json
 
 {
-	"name": "ООО 'РосПеревозки'",
-	"shortName": "РП",
+	"name": "Карго Сервис",
+  "company_type": 0,
 	"email": "{{companyEmail}}",
-	"phone": "{{companyPhone}}",
-	"taxpayerNumber": "7707083893",
-	"taxReasonCode": "773601001",
-	"paymentType": "НДС 20%",
-	"registrationNumber": "025850",
-	"directions": ["Москва"],
-	"director": "",
-	"passportSerialNumber": "4218 555555",
-	"passportRegistrationAddress": "Москва, 117312, ул. Вавилова, д. 19",
-	"passportGivenDate": "06.06.2018",
-	"passportSubdivisionCode": "354 354",
-	"passportIssuedBy": "УМВД России по Липецкой области",
-	"address": "Россия, Москва, 117312, ул. Вавилова, д. 19",
-	"contact": "Константинопольский К. К.",
-	"type": 0,
-	"phoneSecond": "+7 (435) 435 45 43"
+  "phone": "{{companyPhone}}",
+	"user": "{{userPhone}}",
+  "inn": "000000000000",
+  "kpp": "000000000000",
+  "ogpn": "000000000000",
+  "director": "Валерий Громов",
+  "shortname": "ООО \"КаргоСервис\"",
+  "passport_serial_number": "000000000000",
+  "passport_date": "2018-01-01",
+  "passport_subdivision_code": "883 835 ",
+  "passport_issued_by": "ГУМВД России по Брянской области",
+  "passport_registration_address": "Россия, Брянская обл., г. Фокино, 242610",
+  "nds": "426",
+  "address_first": "Россия, Брянская область, г. Брянск, ул. Ленина, 241000",
+  "address_second": "Россия, Брянская обл., г. Клинцы, 243140"
 }
 
 > {%
 	client.global.set("accessToken", response.body['accessToken']);
 	client.global.set("refreshToken", response.body['refreshToken']);
 	client.global.set("companyId", response.body['company']['id'])
-	client.global.set("companyPhone", response.body['company']['phone'])
+	client.global.set("userId", response.body['user']['id'])
+	client.global.set("companyPhone", response.body['user']['phone'])
 %}
 
+### Register a new company as individual entity to user.
+// @no-cookie-jar
+POST {{api}}/company
+Content-Type: application/json
+
+{
+	"name": "Сергей",
+  "middle_name": "Викторович",
+  "surname": "Поланский",
+	"user": "{{userPhone}}",
+  "phone": "{{companyPhone}}",
+  "email": "{{companyEmail}}",
+  "company_type": 1,
+  "inn": "000000000000",
+  "birth_date": "1989-01-15",
+  "passport_serial_number": "000000000000",
+  "passport_date": "2019-01-01",
+  "passport_subdivision_code": "648 485",
+  "passport_issued_by": "УМВД по Волгоградской области, г. Волгоград",
+  "passport_registration_address": "Россия, Волгоградская обл., г. Ленинск, 404620",
+  "phone_second": "+7 526 854 85 08",
+  "nds": "428",
+  "address_first": "Россия, Калужская обл., г. Обнинск, 249030",
+  "address_second": "Россия, Калининградская обл., г. Приморск, 238510",
+  "address_third": "Россия, Калужская обл., г. Таруса, 249100"
+}
+
+### Register a new company as private entity to user.
+// @no-cookie-jar
+POST {{api}}/company
+Content-Type: application/json
+
+{
+	"name": "Артем",
+  "middle_name": "Федорович",
+  "surname": "Галак",
+  "email": "{{userEmail}}",
+	"user": "{{userPhone}}",
+  "company_type": 2,
+  "inn": "000000000000",
+  "birth_date": "1991-05-23",
+  "passport_serial_number": "000000000000",
+  "passport_date": "2019-01-01",
+  "passport_subdivision_code": "648 485",
+  "passport_issued_by": "УМВД по Ивановской области, Белград",
+  "passport_registration_address": "Россия, Краснодарский край, г. Краснодар, 350000",
+  "phone": "{{companyPhone}}",
+  "address_first": "Россия, Краснодарский край, г. Анапа, 353440",
+  "address_second": "Россия, Краснодарский край, г. Абинск, 353320",
+  "address_third": "Россия, Краснодарский край, г. Абинск, 353320"
+}
+
 ### Update some information about company
+// @no-cookie-jar
 PUT {{api}}/company/{{companyId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"status": ""
+	"name": "Герман",
+	"middle_name": "Иванович",
+	"surname": "Розенблатт"
 }
 
 ### Refresh authorization token
+// @no-cookie-jar
 PATCH {{api}}/company/refresh
 Authorization: {{refreshToken}}
 Content-Type: application/json
 
 > {%
-	client.global.set("accessToken", response.body['data']['accessToken']);
+	client.global.set("accessToken", response.body['accessToken']);
 %}
 
 ### Send company data to bitrix backend
+// @no-cookie-jar
 GET {{api}}/company/send/{{companyId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Get list of transports that belong to cargo company
 ### that satisfies to physical parameters in body (not required)
-POST {{api}}/company/transports
+// @no-cookie-jar
+POST {{api}}/company/transports/{{orderId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Delete cargo company
+### Delete company and related data such as drivers, transports and payment data
+// @no-cookie-jar
 DELETE {{api}}/company/{{companyId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
+### Set company as default
+// @no-cookie-jar
+POST {{api}}/company/activate/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+
+### Get company owner user data
+// @no-cookie-jar
+POST {{api}}/company/user/{{companyPhone}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
 ### Send passport scan
+// @no-cookie-jar
+POST {{api}}/company/avatar/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="avatar.jpg"
+
+< ../resources/img/sample.jpg
+--WebAppBoundary--
+
+### Send passport scan
+// @no-cookie-jar
 POST {{api}}/company/passport/{{companyId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="image"; filename="passport_scan.png"
+Content-Disposition: form-data; name="image"; filename="passport_scan.jpg"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--
 
 ### Send passport scan
+// @no-cookie-jar
 POST {{api}}/company/passport_selfie/{{companyId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="image"; filename="passport-selfie.png"
+Content-Disposition: form-data; name="image"; filename="passport_selfie.jpg"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--
 
 ### Send passport scan
+// @no-cookie-jar
 POST {{api}}/company/passport_sign/{{companyId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="image"; filename="passport-sign.png"
+Content-Disposition: form-data; name="image"; filename="passport_sign.jpg"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--
 
 ### Send attorney sign link scan
+// @no-cookie-jar
 POST {{api}}/company/attorney/{{companyId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="image"; filename="attorney.png"
+Content-Disposition: form-data; name="image"; filename="attorney_sign.jpg"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--
 
 ### Send passport scan
+// @no-cookie-jar
 POST {{api}}/company/order/{{companyId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
-Content-Disposition: form-data; name="image"; filename="order.png"
+Content-Disposition: form-data; name="image"; filename="director_assignment_order.jpg"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--
 
 ### Send passport scan
+// @no-cookie-jar
+POST {{api}}/company/certificate/{{companyId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="certificate.png"
+
+< ../resources/img/sample.jpg
+--WebAppBoundary--
+
+### Upload ОГРНИП photo for private individual company
+// @no-cookie-jar
 POST {{api}}/company/ogrnip/{{companyId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
@@ -174,5 +282,5 @@ Content-Type: multipart/form-data; boundary=WebAppBoundary
 --WebAppBoundary
 Content-Disposition: form-data; name="image"; filename="ogrnip.png"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--

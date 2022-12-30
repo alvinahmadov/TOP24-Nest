@@ -1,13 +1,13 @@
 import {
 	ApiProperty,
 	PartialType
-}                   from '@nestjs/swagger';
+}                       from '@nestjs/swagger';
 import {
 	IAddress,
 	IAddressFilter,
 	TCreationAttribute
-}                   from '@common/interfaces';
-import entityConfig from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { address: prop } = entityConfig;
 
@@ -79,4 +79,10 @@ class AddressDto
 
 export default class AddressFilter
 	extends PartialType(AddressDto)
-	implements IAddressFilter {}
+	implements IAddressFilter {
+	search?: string;
+	provider?: string;
+	onlyRegions?: boolean = false;
+	onlyCities?: boolean = false;
+	short?: boolean = false;
+}

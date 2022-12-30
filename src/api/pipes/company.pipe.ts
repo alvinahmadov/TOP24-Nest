@@ -2,51 +2,49 @@ import { Injectable, PipeTransform } from '@nestjs/common';
 import env                           from '@config/env';
 import { CompanyType }               from '@common/enums';
 import { ICompany }                  from '@common/interfaces';
-import {
-	convertBitrix,
-	formatPhone,
-	isNumber
-}                                    from '@common/utils';
+import { convertBitrix }             from '@common/utils';
 import {
 	transformToCargoCompany,
-	transformToCargoInnCompany
+	transformToCargoCompanyInn
 }                                    from '@common/utils/compat/transformer-functions';
 import {
 	CargoCompanyRepository,
-	CargoInnCompanyRepository
+	CargoInnCompanyRepository,
+	UserRepository
 }                                    from '@repos/index';
 
 class CompanyValidator {
 	protected cargoCompanyRepo: CargoCompanyRepository;
 	protected cargoCompanyInnRepo: CargoInnCompanyRepository;
+	protected userRepo: UserRepository;
 
 	constructor() {
 		this.cargoCompanyRepo = new CargoCompanyRepository();
 		this.cargoCompanyInnRepo = new CargoInnCompanyRepository();
+		this.userRepo = new UserRepository();
 	}
 
 	protected checkPaymentType(company: ICompany) {
 		if(company.paymentType) {
-			if(!isNumber(company.paymentType))
-				throw Error('Значение типа оплаты должно быть числовым значением, взятым из справочника!');
-
-			company.paymentType = convertBitrix('paymentType', company.paymentType, true);
+			company.paymentType = convertBitrix('paymentType', company.paymentType, true) || company.paymentType;
 		}
-		else throw Error('Не указан тип оплаты!');
 	}
 
-	protected async checkPhoneNumber(phone: string, name: string) {
-		if(phone !== undefined) {
-			const company = await this.cargoCompanyRepo.getByPhone(phone) ||
-			                await this.cargoCompanyInnRepo.getByPhone(phone);
+	protected checkPassportData(company: ICompany) {
+		if(!company.passportSerialNumber)
+			company.passportSerialNumber = '';
 
-			if(company && company.name !== name) {
-				throw Error('This Phone is already taken.');
-			}
-		}
-		else {
-			throw Error('No Phone number!');
-		}
+		if(!company.passportSubdivisionCode)
+			company.passportSubdivisionCode = '';
+
+		if(!company.passportGivenDate)
+			company.passportGivenDate = new Date();
+
+		if(!company.passportRegistrationAddress)
+			company.passportRegistrationAddress = '';
+
+		if(!company.passportIssuedBy)
+			company.passportIssuedBy = '';
 	}
 }
 
@@ -56,38 +54,30 @@ export class CompanyCreatePipe
 	implements PipeTransform<ICompany> {
 	async transform(data: any) {
 		if(data) {
-			let value: ICompany;
-			const companyType = env.api.compatMode ? data['company_type'] : data['type'];
+			let value: ICompany & { user?: string };
+			const companyType = data[env.api.compatMode ? 'company_type' : 'type'];
 			if(companyType === CompanyType.ORG) {
 				value = !env.api.compatMode ? data : transformToCargoCompany(data);
 			}
 			else {
-				value = !env.api.compatMode ? data : transformToCargoInnCompany(data);
+				value = !env.api.compatMode ? data : transformToCargoCompanyInn(data);
 			}
-			const { phone, name } = value;
-			await this.checkPhoneNumber(phone, name);
+			if(!value)
+				throw new Error('DTO data is null');
+
 			this.checkPaymentType(value);
+			this.checkPassportData(value);
+			value.user = data.user;
+
+			delete value.id;
+			delete value.userId;
+			delete value.confirmed;
+			delete value.createdAt;
+			delete value.updatedAt;
+
 			return value;
 		}
 
-		return data;
-	}
-}
-
-@Injectable()
-export class CompanyUpdatePipe
-	extends CompanyValidator
-	implements PipeTransform {
-	async transform(data: any) {
-		const { phone } = data;
-		if(phone !== undefined) {
-			const company = await this.cargoCompanyRepo.getByPhone(phone) ||
-			                await this.cargoCompanyInnRepo.getByPhone(phone);
-
-			if(company !== null) {
-				throw Error('Указанный номер занят другим пользователем!');
-			}
-		}
 		return data;
 	}
 }

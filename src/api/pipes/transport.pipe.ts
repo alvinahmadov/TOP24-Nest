@@ -1,31 +1,28 @@
 import {
 	Injectable,
 	PipeTransform
-}                     from '@nestjs/common';
-import env            from '@config/env';
-import { Reference }  from '@common/constants';
-import { ITransport } from '@common/interfaces';
+}                               from '@nestjs/common';
+import env                      from '@config/env';
+import { ITransport }           from '@common/interfaces';
 import {
 	reformatDateString,
 	checkAndConvertBitrix,
 	checkAndConvertArrayBitrix
-}                     from '@common/utils';
-import {
-	ITransportTransformer,
-	transformToTransport
-}                     from '@common/utils/compat';
+}                               from '@common/utils';
+import { transformToTransport } from '@common/utils/compat';
 
 @Injectable()
 export class TransportCreatePipe
 	implements PipeTransform<any, ITransport> {
 	transform(data: any): ITransport {
 		const value: ITransport = !env.api.compatMode ? data : transformToTransport(data);
-		checkAndConvertBitrix(value, 'payload', 'transportPayload');
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');
+		checkAndConvertBitrix(value, 'model', 'transportModel');
 		checkAndConvertBitrix(value, 'type', 'transportType');
-		checkAndConvertArrayBitrix(value, 'fixtures', 'fixtures', Reference.FIXTURES);
-		checkAndConvertArrayBitrix(value, 'riskClasses', 'riskClass', Reference.RISK_CLASSES);
-		reformatDateString<ITransport>(value, ['diagnosticsDate', 'osagoExpiryDate']);
+		checkAndConvertArrayBitrix(value, 'payloads', 'transportPayload');
+		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures');
+		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass');
+		reformatDateString<ITransport>(value, 'diagnosticsExpiryDate', 'osagoExpiryDate');
 
 		return value;
 	}
@@ -35,19 +32,21 @@ export class TransportCreatePipe
 export class TransportUpdatePipe
 	implements PipeTransform {
 	transform(data: any): Partial<ITransport> {
-		delete data.createdAt;
-		delete data.updatedAt;
-
-		const value = !env.api.compatMode ? data : transformToTransport(data);
-		checkAndConvertBitrix(value, 'payload', 'transportPayload');
+		const value: ITransport = !env.api.compatMode ? data : transformToTransport(data);
+		value.payloadExtra = value.volumeExtra > 0 || value.weightExtra > 0;
 		checkAndConvertBitrix(value, 'brand', 'transportBrand');
+		checkAndConvertBitrix(value, 'model', 'transportModel');
 		checkAndConvertBitrix(value, 'type', 'transportType');
-		checkAndConvertArrayBitrix(value, 'fixtures', 'fixtures', Reference.FIXTURES);
-		checkAndConvertArrayBitrix(value, 'riskClasses', 'riskClass', Reference.RISK_CLASSES);
-		if(env.api.compatMode)
-			reformatDateString<ITransportTransformer>(value, ['diag_date', 'osago_date']);
-		else
-			reformatDateString<ITransport>(value, ['diagnosticsDate', 'osagoExpiryDate']);
+		checkAndConvertArrayBitrix(value, 'payloads', 'transportPayload');
+		checkAndConvertArrayBitrix(value, 'fixtures', 'transportFixtures');
+		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass');
+		reformatDateString<ITransport>(value, 'diagnosticsExpiryDate', 'osagoExpiryDate');
+		delete value.id;
+		delete value.isTrailer;
+		delete value.hasSent;
+		delete value.confirmed;
+		delete value.createdAt;
+		delete value.updatedAt;
 
 		return value;
 	}

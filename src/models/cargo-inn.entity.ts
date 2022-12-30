@@ -1,69 +1,88 @@
+import { FindOptions }   from 'sequelize';
 import {
-	AllowNull,
-	Default,
+	BelongsTo,
+	DefaultScope,
+	ForeignKey,
 	HasMany,
 	HasOne,
-	IsDate,
-	IsEmail,
-	IsUrl,
-	Table,
-	Unique
-}                           from 'sequelize-typescript';
-import { ApiProperty }      from '@nestjs/swagger';
-import { ObjectType }       from '@nestjs/graphql';
+	IsUUID,
+	Table
+}                        from 'sequelize-typescript';
+import { ApiProperty }   from '@nestjs/swagger';
+import { ObjectType }    from '@nestjs/graphql';
 import {
 	CARGOINN,
-	CRM
-}                           from '@config/json';
+	CRM,
+	PAYMENT
+}                        from '@config/json';
 import {
 	CompanyType,
 	UserRole
-}                           from '@common/enums';
-import { TABLE_OPTIONS }    from '@common/constants';
+}                        from '@common/enums';
+import { TABLE_OPTIONS } from '@common/constants';
 import {
 	BooleanColumn,
 	DateColumn,
-	ICargoInnCompany,
-	ICRMEntity,
+	ICargoCompanyInn,
+	Index,
 	IntColumn,
 	StringArrayColumn,
 	StringColumn,
 	TCRMData,
-	UrlColumn
-}                           from '@common/interfaces';
-import entityConfig         from '@common/properties';
-import { convertBitrix }    from '@common/utils';
-import { ImageFileService } from '@api/services';
-import EntityModel          from './entity-model';
-import Driver               from './driver.entity';
-import Image                from './image.entity';
-import Order                from './order.entity';
-import Payment              from './payment.entity';
-import Transport            from './transport.entity';
+	UrlColumn,
+	UuidColumn,
+	VirtualColumn
+}                        from '@common/interfaces';
+import { convertBitrix } from '@common/utils';
+import { entityConfig }  from '@api/swagger/properties';
+import EntityModel       from './entity-model';
+import Driver            from './driver.entity';
+import Order             from './order.entity';
+import Payment           from './payment.entity';
+import Transport         from './transport.entity';
+import User              from './user.entity';
 
 const { companyinn: prop } = entityConfig;
+
+const scopeOptions: FindOptions = {
+	include: [{ model: User }]
+};
 
 /**
  * Cargo company model.
  *
  * @description Cargo company by individual entrepreneur
  *
- * @class CargoInnCompany
- * @interface ICargoInnCompany
+ * @class CargoCompanyInn
+ * @interface ICargoCompanyInn
  * @extends EntityModel
  * */
 @ObjectType()
-@Table({ tableName: 'cargoinn_companies', ...TABLE_OPTIONS })
-export default class CargoInnCompany
-	extends EntityModel<ICargoInnCompany>
-	implements ICargoInnCompany, ICRMEntity {
+@DefaultScope(() => scopeOptions)
+@Table({ tableName: 'companies_inn', ...TABLE_OPTIONS })
+export default class CargoCompanyInn
+	extends EntityModel<ICargoCompanyInn>
+	implements ICargoCompanyInn {
+	@ApiProperty(prop.userId)
+	@IsUUID('all')
+	@ForeignKey(() => User)
+	@Index
+	@UuidColumn({
+		            allowNull: false,
+		            onDelete:  'CASCADE'
+	            })
+	userId: string;
+
 	@ApiProperty(prop.crmId)
-	@IntColumn()
+	@Index
+	@IntColumn({
+		           unique:       true,
+		           defaultValue: null
+	           })
 	crmId?: number;
 
 	@ApiProperty(prop.name)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	name: string;
 
 	@ApiProperty(prop.patronymic)
@@ -74,36 +93,30 @@ export default class CargoInnCompany
 	@StringColumn()
 	lastName: string;
 
-	@ApiProperty(prop.type)
-	@AllowNull(false)
-	@IntColumn()
-	type: CompanyType;
-
-	@ApiProperty(prop.role)
-	@AllowNull(false)
-	@Default(UserRole.CARGO)
-	@IntColumn()
-	role: UserRole;
-
 	@ApiProperty(prop.taxpayerNumber)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	taxpayerNumber: string;
 
+	@ApiProperty(prop.type)
+	@IntColumn({ allowNull: false })
+	type: CompanyType;
+
+	@ApiProperty(prop.email)
+	@StringColumn({
+		              unique:   true,
+		              validate: { isEmail: true }
+	              })
+	email: string;
+
 	@ApiProperty(prop.phone)
-	@Unique
-	@AllowNull(false)
 	@StringColumn()
 	phone: string;
 
-	@ApiProperty(prop.email)
-	@IsEmail
-	@Unique
-	@StringColumn()
-	email: string;
+	@ApiProperty(prop.isDefault)
+	@BooleanColumn({ defaultValue: false })
+	isDefault: boolean;
 
 	@ApiProperty(prop.birthDate)
-	@IsDate
 	@DateColumn()
 	birthDate: Date;
 
@@ -116,19 +129,15 @@ export default class CargoInnCompany
 	passportSubdivisionCode: string;
 
 	@ApiProperty(prop.passportGivenDate)
-	@IsDate
-	@AllowNull(false)
-	@DateColumn()
+	@DateColumn({ allowNull: false })
 	passportGivenDate: Date;
 
 	@ApiProperty(prop.passportIssuedBy)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	passportIssuedBy: string;
 
 	@ApiProperty(prop.passportRegistrationAddress)
-	@AllowNull(false)
-	@StringColumn()
+	@StringColumn({ allowNull: false })
 	passportRegistrationAddress: string;
 
 	@ApiProperty(prop.paymentType)
@@ -144,14 +153,8 @@ export default class CargoInnCompany
 	status?: string;
 
 	@ApiProperty(prop.confirmed)
-	@Default(false)
-	@BooleanColumn()
+	@BooleanColumn({ defaultValue: false })
 	confirmed?: boolean;
-
-	@ApiProperty(prop.verify)
-	@Default('')
-	@StringColumn()
-	verify?: string;
 
 	@ApiProperty(prop.address)
 	@StringColumn()
@@ -178,32 +181,27 @@ export default class CargoInnCompany
 	info?: string;
 
 	@ApiProperty(prop.avatarLink)
-	@IsUrl
 	@UrlColumn()
 	avatarLink?: string;
 
 	@ApiProperty(prop.passportPhotoLink)
-	@IsUrl
 	@UrlColumn()
 	passportPhotoLink?: string;
 
 	@ApiProperty(prop.passportSignLink)
-	@IsUrl
 	@UrlColumn()
 	passportSignLink?: string;
 
 	@ApiProperty(prop.passportSelfieLink)
-	@IsUrl
 	@UrlColumn()
 	passportSelfieLink?: string;
+
+	@BooleanColumn({ defaultValue: false })
+	hasSent?: boolean;
 
 	@ApiProperty(prop.drivers)
 	@HasMany(() => Driver, 'cargoinnId')
 	drivers?: Driver[];
-
-	@ApiProperty(prop.images)
-	@HasMany(() => Image, 'cargoinnId')
-	images?: Image[];
 
 	@ApiProperty(prop.orders)
 	@HasMany(() => Order, 'cargoinnId')
@@ -217,54 +215,66 @@ export default class CargoInnCompany
 	@HasMany(() => Transport, 'cargoinnId')
 	transports?: Transport[];
 
-	public toCrm(): TCRMData {
+	@ApiProperty(prop.user)
+	@BelongsTo(() => User, 'userId')
+	user: User;
+
+	@ApiProperty(prop.role)
+	@VirtualColumn()
+	public get role(): UserRole {
+		return this.user?.role ?? UserRole.CARGO;
+	}
+
+	@ApiProperty(prop.userPhone)
+	@VirtualColumn()
+	public get userPhone(): string {
+		return this.user?.phone;
+	}
+
+	@ApiProperty(prop.fullName)
+	@VirtualColumn()
+	public get fullName(): string {
+		const lastName = this.lastName ? `${this.lastName}` : '';
+		const patronymic = this.patronymic ? ` ${this.patronymic[0]}.` : '';
+		const name = this.name ? ` ${this.name[0]}.` : '';
+		return `${lastName}${patronymic}${name}`;
+	}
+
+	public toCrm = (): TCRMData =>
+	{
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
 		data.fields[CARGOINN.NAME.FIRST] = this.name || 'Company';
-		data.fields[CARGOINN.NAME.PATRONYMIC] = this.patronymic || '';
+		data.fields[CARGOINN.NAME.PATRONYMIC] = this.patronymic;
 		data.fields[CARGOINN.NAME.LAST] = this.lastName || '';
 		data.fields[CARGOINN.TYPE] = CRM.COMPANY.TYPES[this.type].ID;
-		data.fields[CARGOINN.BIRTH_DATE] = this.birthDate?.toDateString() || '';
-		data.fields[CARGOINN.DIRECTIONS] = this.directions?.join() || '';
-		data.fields[CARGOINN.INN] = this.taxpayerNumber || '';
-		data.fields[CARGOINN.PASSPORT.SERIAL_NUMBER] = this.passportSerialNumber || '';
-		data.fields[CARGOINN.PASSPORT.GIVEN_DATE] = this.passportGivenDate.toDateString() || '';
-		data.fields[CARGOINN.PASSPORT.SUBDIVISION_CODE] = this.passportSubdivisionCode || '';
-		data.fields[CARGOINN.PASSPORT.ISSUED_BY] = this.passportIssuedBy || '';
-		data.fields[CARGOINN.PASSPORT.REGISTRATION_ADDRESS] = this.passportRegistrationAddress || '';
-		data.fields[CARGOINN.PAYMENT.TYPE] = convertBitrix('paymentType', this.paymentType, false) || '';
-		data.fields[CARGOINN.ADDRESS.LEGAL] = this.address || '';
-		data.fields[CARGOINN.ADDRESS.POSTAL] = this.postalAddress || '';
-		data.fields[CARGOINN.ADDRESS.ACTUAL] = this.actualAddress || '';
-		data.fields[CARGOINN.PHONE] = this.phone || '';
-		data.fields[CARGOINN.EMAIL] = this.email || '';
-		data.fields[CARGOINN.LINK.AVATAR] = this.avatarLink || '';
-		data.fields[CARGOINN.LINK.PASSPORT_PHOTO] = this.passportPhotoLink || '';
-		data.fields[CARGOINN.LINK.PASSPORT_SIGN] = this.passportSignLink || '';
-		data.fields[CARGOINN.LINK.PASSPORT_SELFIE] = this.passportSelfieLink || '';
-		if(this.payment)
-			this.payment.toCrm(data);
-		if(this.images)
-			data.fields[CARGOINN.LINK.IMAGE] = this.images.map(image => image.url || '');
-		return data;
-	}
-
-	public async deleteImages(): Promise<number> {
-		const imageFileService = new ImageFileService();
-		let count = 0;
-
-		if(this.images) {
-			count += await imageFileService.deleteImageList(this.images.map(i => i.url));
+		data.fields[CARGOINN.BIRTH_DATE] = this.birthDate;
+		data.fields[CARGOINN.DIRECTIONS] = this.directions?.join();
+		data.fields[CARGOINN.INN] = this.taxpayerNumber;
+		data.fields[CARGOINN.PASSPORT.SERIAL_NUMBER] = this.passportSerialNumber;
+		data.fields[CARGOINN.PASSPORT.GIVEN_DATE] = this.passportGivenDate;
+		data.fields[CARGOINN.PASSPORT.SUBDIVISION_CODE] = this.passportSubdivisionCode;
+		data.fields[CARGOINN.PASSPORT.ISSUED_BY] = this.passportIssuedBy;
+		data.fields[CARGOINN.PASSPORT.REGISTRATION_ADDRESS] = this.passportRegistrationAddress;
+		data.fields[CARGOINN.PAYMENT.TYPE] = convertBitrix('paymentType', this.paymentType, false);
+		data.fields[CARGOINN.ADDRESS.LEGAL] = this.address;
+		data.fields[CARGOINN.ADDRESS.POSTAL] = this.postalAddress;
+		data.fields[CARGOINN.ADDRESS.ACTUAL] = this.actualAddress;
+		data.fields[CARGOINN.PHONE] = this.phone;
+		data.fields[CARGOINN.EMAIL] = this.email;
+		data.fields[CARGOINN.LINK.AVATAR] = this.avatarLink;
+		data.fields[CARGOINN.LINK.PASSPORT_PHOTO] = this.passportPhotoLink;
+		data.fields[CARGOINN.LINK.PASSPORT_SIGN] = this.passportSignLink;
+		data.fields[CARGOINN.LINK.PASSPORT_SELFIE] = this.passportSelfieLink;
+		if(this.payment) {
+			data.fields[PAYMENT.BANK_NAME] = this.payment.bankName;
+			data.fields[PAYMENT.BANK_ID_CODE] = this.payment.bankBic;
+			data.fields[PAYMENT.CORRESPONDENT_ACCOUNT] = this.payment.correspondentAccount;
+			data.fields[PAYMENT.CURRENT_ACCOUNT] = this.payment.currentAccount;
+			data.fields[PAYMENT.OGRNIP] = this.payment.ogrnip;
+			data.fields[PAYMENT.OGRNIP_LINK] = this.payment.ogrnipPhotoLink;
 		}
-
-		count += await imageFileService.deleteImageList(
-			[
-				this.avatarLink,
-				this.passportSignLink,
-				this.passportPhotoLink,
-				this.passportSelfieLink
-			]
-		);
-
-		return count;
-	}
+		data.fields[CARGOINN.DATE_CREATE] = this.createdAt;
+		data.fields[CARGOINN.DATE_UPDATE] = this.updatedAt;
+		return data;
+	};
 }

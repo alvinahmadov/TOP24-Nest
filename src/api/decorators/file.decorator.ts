@@ -3,11 +3,12 @@ import * as dto    from '@api/dto';
 
 /**@ignore*/
 export default (
-	options: { required?: boolean } = { required: true }
+	options: { required?: boolean, multi?: boolean } = { required: true }
 ) => ApiBody(
 	{
 		description: 'Image',
-		type:        dto.FileUploadDto,
+		type:        !!options.multi ? dto.FilesUploadDto
+		                             : dto.FileUploadDto,
 		required:    !!options.required
 	}
 );

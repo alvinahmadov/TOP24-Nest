@@ -144,43 +144,46 @@ export function reverseDefaultValueType(
 	defaultValue: any,
 	prefix: string = 'Sequelize.'
 ): IDefaultReverseResult {
-	if(defaultValue.constructor.name == 'NOW') {
-		return {
-			internal: true,
-			value:    `${prefix}NOW`
-		};
-	}
-
-	if(defaultValue.constructor.name == 'UUIDV1') {
-		return {
-			internal: true,
-			value:    `${prefix}UUIDV1`
-		};
-	}
-
-	if(defaultValue.constructor.name == 'UUIDV4') {
-		return {
-			internal: true,
-			value:    `${prefix}UUIDV4`
-		};
-	}
-
-	if(typeof defaultValue?.fn !== 'undefined') {
-		return {
-			internal: true,
-			value:    `${prefix}fn('${defaultValue.fn}')`
-		};
-	}
-
-	if(typeof defaultValue === 'function') {
-		const retValue = defaultValue();
-		if(retValue && retValue.val) {
+	if(defaultValue !== null) {
+		if(typeof defaultValue.fn !== 'undefined') {
 			return {
 				internal: true,
-				value:    `${prefix}literal(\'${retValue.val}\')`
+				value:    `${prefix}fn('${defaultValue.fn}')`
 			};
 		}
-		return { notSupported: true, value: '' };
+		else if(typeof defaultValue === 'function') {
+			if(defaultValue.constructor.name == 'NOW') {
+				return {
+					internal: true,
+					value:    `${prefix}NOW`
+				};
+			}
+			else if(defaultValue.constructor.name == 'UUIDV1') {
+				return {
+					internal: true,
+					value:    `${prefix}UUIDV1`
+				};
+			}
+			else if(defaultValue.constructor.name == 'UUIDV4') {
+				return {
+					internal: true,
+					value:    `${prefix}UUIDV4`
+				};
+			}
+			else {
+				const retValue = defaultValue();
+				if(retValue && retValue.val) {
+					return {
+						internal: true,
+						value:    `${prefix}literal(\'${retValue.val}\')`
+					};
+				}
+				else {
+					console.debug('Not supported');
+					return { notSupported: true, value: '' };
+				}
+			}
+		}
 	}
 
 	return { value: defaultValue };
@@ -199,7 +202,7 @@ export function reverseModels(
 			let rowAttribute: IRecord<string | IDefaultReverseResult> = {};
 			column = refactorColumnName(column, initOptions.underscored);
 
-			if(attribute.defaultValue) {
+			if(attribute.defaultValue !== undefined) {
 				const _val = reverseDefaultValueType(attribute.defaultValue);
 				if(_val.notSupported) {
 					console.log(
@@ -236,7 +239,6 @@ export function reverseModels(
 				'autoIncrement',
 				'autoIncrementIdentity',
 				'comment',
-				'defaultValue',
 				'references',
 				'onUpdate',
 				'onDelete',

@@ -1,5 +1,4 @@
-import { Injectable }         from '@nestjs/common';
-import { GEO_LOOKUP_SERVICE } from '@common/constants';
+import { Injectable }        from '@nestjs/common';
 import {
 	IAddressFilter,
 	IApiResponse,
@@ -7,17 +6,17 @@ import {
 	IListFilter,
 	IService,
 	TAsyncApiResponse
-}                             from '@common/interfaces';
+}                            from '@common/interfaces';
 import {
 	formatArgs,
 	getTranslation,
 	searchAddressByKladr,
 	searchAddressByOSM
-}                             from '@common/utils';
-import { Address }            from '@models/index';
-import { AddressRepository }  from '@repos/index';
-import { ListFilter }         from '@api/dto';
-import Service                from './service';
+}                            from '@common/utils';
+import { Address }           from '@models/index';
+import { AddressRepository } from '@repos/index';
+import { ListFilter }        from '@api/dto';
+import Service               from './service';
 
 const TRANSLATIONS = getTranslation('REST', 'ADDRESS');
 
@@ -33,19 +32,8 @@ export default class AddressService
 		super();
 		this.repository = new AddressRepository();
 	}
-
-	public async getList(filter: ListFilter & { short?: boolean })
-		: TAsyncApiResponse<Address[]> {
-		const addresses = await this.repository.getList(filter);
-
-		return {
-			statusCode: 200,
-			data:       addresses,
-			message:    formatArgs(TRANSLATIONS['LIST'], addresses.length)
-		} as IApiResponse<Address[]>;
-	}
-
-	public async filter(
+	
+	public async getList(
 		listFilter: ListFilter,
 		filter: IAddressFilter
 	): TAsyncApiResponse<Address[]> {
@@ -55,7 +43,7 @@ export default class AddressService
 			statusCode: 200,
 			data:       addresses,
 			message:    formatArgs(TRANSLATIONS['LIST'], addresses.length)
-		} as IApiResponse<Address[]>;
+		};
 	}
 
 	public async getById(id: string)
@@ -89,18 +77,18 @@ export default class AddressService
 	public async searchByApi(
 		term: string,
 		minLength: number = 2,
-		listFilter: IListFilter = { from: 0, count: 50 }
+		filter: IAddressFilter = {},
+		listFilter: IListFilter = {}
 	): TAsyncApiResponse<any> {
 		if(term === undefined ||
 		   term.length < minLength) {
 			return this.responses['NOT_FOUND'];
 		}
-
-		const encoded = encodeURI(term);
+		const { provider = 'osm' } = filter;
 
 		const fullAddresses = await (
-			GEO_LOOKUP_SERVICE === 'osm' ? searchAddressByOSM(encoded, listFilter.from, listFilter.count)
-			                             : searchAddressByKladr(encoded, listFilter.from, listFilter.count)
+			provider === 'osm' ? searchAddressByOSM(term, listFilter)
+			                   : searchAddressByKladr(term, listFilter)
 		);
 
 		return {
@@ -108,5 +96,19 @@ export default class AddressService
 			data:       fullAddresses,
 			message:    formatArgs(TRANSLATIONS['LIST'], fullAddresses.length)
 		} as IApiResponse<any>;
+	}
+
+	public async searchByGeolocation(
+		coordinates: { latitude: number; longitude: number },
+		distance: number = 60.0
+	): TAsyncApiResponse<Address[]> {
+		const { latitude, longitude } = coordinates;
+
+		const result = await this.repository.findByCoordinates([latitude, longitude], distance);
+
+		return {
+			statusCode: 200,
+			data:       result
+		};
 	}
 }

@@ -10,6 +10,7 @@ import {
 	UserRole
 } from '@common/enums';
 import {
+	ICRMEntity,
 	IOrderFilter,
 	TGeoCoordinate,
 	URL
@@ -38,7 +39,47 @@ export interface IModel {
 	updatedAt: Date;
 }
 
-export interface IUser {
+export interface IPassportData {
+	/**
+	 * Passport Serial Number.
+	 *
+	 * @example
+	 * 4218 555555
+	 * */
+	passportSerialNumber: string;
+	/**
+	 * Code of subdivision of passport given place.
+	 * */
+	passportSubdivisionCode: string;
+	/**
+	 * Passport given date.
+	 *
+	 * @example
+	 * 22.09.2015
+	 * */
+	passportGivenDate: Date;
+	/**
+	 * Passport issued place.
+	 *
+	 * @example
+	 * УМВД России по Липецкой области
+	 * */
+	passportIssuedBy: string;
+	/**
+	 * Given address in the passport.
+	 *
+	 * @example
+	 * Москва, 117312, ул. Вавилова, д. 19
+	 * */
+	passportRegistrationAddress: string;
+	/**
+	 * URL of passport scan image
+	 * */
+	passportPhotoLink?: string;
+}
+
+export interface IUser
+	extends IModel {
 	/**
 	 * Role of the user.
 	 *
@@ -46,55 +87,21 @@ export interface IUser {
 	 * @enum UserRole
 	 * */
 	role: UserRole;
-}
-
-/**
- * User entity.
- * */
-export interface IAdmin
-	extends IModel,
-	        IUser {
+	phone: string;
 	/**
-	 * Admin email.
+	 * User email.
 	 *
 	 * @example
 	 * logist.cargo@mail.com
 	 * */
-	email: string;
+	email?: string;
 	/**
-	 * Admin name.
-	 *
-	 * @example
-	 * Иван
-	 * */
-	name: string;
-	/**
-	 * Admin phone number.
-	 *
-	 * @example
-	 * +7 000 000 00 00
-	 * */
-	phone: string;
-	/**
-	 * Verificaton code to complete registration.
+	 * Registration verification code.
 	 *
 	 * @example
 	 * 1234
 	 * */
 	verify?: string;
-	/**
-	 * Admin has privilege as super admin.
-	 *
-	 * @default false
-	 * @readonly true
-	 * */
-	privilege?: boolean;
-	/**
-	 * Admin confirmed registration.
-	 *
-	 * @default false
-	 * @readonly true
-	 * */
 	confirmed?: boolean;
 }
 
@@ -207,11 +214,62 @@ export interface IAddress
 }
 
 /**
+ * User entity.
+ * */
+export interface IAdmin
+	extends IUser {
+	/**
+	 * Admin email.
+	 *
+	 * @example
+	 * logist.cargo@mail.com
+	 * */
+	email: string;
+	/**
+	 * Admin name.
+	 *
+	 * @example
+	 * Иван
+	 * */
+	name: string;
+	/**
+	 * Admin phone number.
+	 *
+	 * @example
+	 * +7 000 000 00 00
+	 * */
+	phone: string;
+	/**
+	 * Verificaton code to complete registration.
+	 *
+	 * @example
+	 * 1234
+	 * */
+	verify?: string;
+	/**
+	 * Admin has privilege as super admin.
+	 *
+	 * @default false
+	 * @readonly true
+	 * */
+	privilege?: boolean;
+	/**
+	 * Admin confirmed registration.
+	 *
+	 * @default false
+	 * @readonly true
+	 * */
+	confirmed?: boolean;
+}
+
+/**
  * Base company entity.
  * */
 export interface ICompany
 	extends IModel,
-	        IUser {
+	        ICRMEntity,
+	        IPassportData {
+	userId: string;
 	/**
 	 * Full name of the cargo company or first name of the individual company owner.
 	 *
@@ -232,53 +290,6 @@ export interface ICompany
 	 * */
 	type: CompanyType;
 	/**
-	 * Role of the company user.
-	 * */
-	role: UserRole;
-	/**
-	 * Taxpayer Identification Number for the cargo company (ИНН).
-	 *
-	 * @example
-	 * 7707083893
-	 * */
-	taxpayerNumber: string;
-	/**
-	 * Passport Serial Number.
-	 *
-	 * @example
-	 * 4218 555555
-	 * */
-	passportSerialNumber: string;
-	/**
-	 * Passport given date.
-	 *
-	 * @example
-	 * 22.09.2015
-	 * */
-	passportGivenDate: Date;
-	/**
-	 * Code of subdivision of passport given place.
-	 * */
-	passportSubdivisionCode: string;
-	/**
-	 * Passport issued place.
-	 *
-	 * @example
-	 * УМВД России по Липецкой области
-	 * */
-	passportIssuedBy: string;
-	/**
-	 * Given address in the passport.
-	 *
-	 * @example
-	 * Москва, 117312, ул. Вавилова, д. 19
-	 * */
-	passportRegistrationAddress: string;
-	/**
-	 * CRM id of company from bitrix service.
-	 * */
-	crmId?: number;
-	/**
 	 * Phone number of cargo company.
 	 *
 	 * Stored in database in form of XXXXXXXXXXX where X - number.
@@ -288,6 +299,13 @@ export interface ICompany
 	 * 70000000000
 	 * */
 	phone: string;
+	/**
+	 * Taxpayer Identification Number for the cargo company (ИНН).
+	 *
+	 * @example
+	 * 7707083893
+	 * */
+	taxpayerNumber: string;
 	/**
 	 * Contact phone number.
 	 *
@@ -305,13 +323,6 @@ export interface ICompany
 	 * */
 	directions?: string[];
 	/**
-	 * Registration verification code.
-	 *
-	 * @example
-	 * 1234
-	 * */
-	verify?: string;
-	/**
 	 * Payment type that company accepts.
 	 *
 	 * @example
@@ -324,18 +335,27 @@ export interface ICompany
 	 * Cargo company completed registration.
 	 * */
 	confirmed?: boolean;
+	isDefault?: boolean;
 	/**
 	 * Avatar image link.
 	 * */
 	avatarLink?: string;
-	/**
-	 * Link to photo of CEO's passport.
-	 * */
-	passportPhotoLink?: string;
 	/**@deprecated*/
 	info?: string;
 	/**@deprecated*/
 	status?: string;
+	/**
+	 * Role of the company user.
+	 * @deprecated
+	 * */
+	readonly role?: UserRole;
+	readonly userPhone?: string;
+	/**
+	 * Full formatted name of the company.
+	 * For IE and PI types it is individual's personal name,
+	 * for organization it is legal name.
+	 * */
+	readonly fullName?: string;
 }
 
 /**
@@ -349,7 +369,7 @@ export interface ICargoCompany
 	 * @example
 	 * "Борис и КО"
 	 * */
-	shortName: string;
+	legalName: string;
 	/**
 	 * Tax Registration Reason Code for the cargo company.
 	 *
@@ -379,38 +399,45 @@ export interface ICargoCompany
 	attorneySignLink?: string;
 	/**
 	 * Legal address of the company.
-	 * 
+	 *
 	 * @example
 	 * Москва, 117312, ул. Вавилова, д. 19
 	 * */
 	legalAddress?: string;
 	/**
 	 * Postal address of the company.
-	 * 
+	 *
 	 * @example
 	 * Москва, 117312
 	 * */
 	postalAddress?: string;
 	/**
 	 * Contact number of the company
+	 * @deprecated
 	 * */
 	contact?: string;
 	/**
 	 * Second, additional contact number of the company
+	 * @deprecated
 	 * */
 	contactSecond?: string;
 	/**
 	 * Third, additional contact number of the company
+	 * @deprecated
 	 * */
 	contactThird?: string;
+	/**
+	 * @deprecated replaced by phone
+	 * */
+	contactPhone?: string;
 }
 
 /**
  * Indiviual cargo transportation company.
- * 
+ *
  * @extends ICompany
  * */
-export interface ICargoInnCompany
+export interface ICargoCompanyInn
 	extends ICompany {
 	/**
 	 * Cargo company's individual owner's date of birth.
@@ -437,7 +464,7 @@ export interface ICargoInnCompany
 	patronymic?: string;
 	/**
 	 * Main address of the cargo company.
-	 * 
+	 *
 	 * @example
 	 * Москва, 117312, ул. Вавилова, д. 19
 	 * */
@@ -475,6 +502,81 @@ export interface ICargoInnCompany
 }
 
 /**
+ * Load/unload destination data for order.
+ * */
+export interface IDestination
+	extends IModel {
+	orderId?: string;
+	/**
+	 * Point of destination
+	 *
+	 * @example
+	 * A
+	 * B
+	 * ...
+	 * Z
+	 * */
+	point: string;
+	/**
+	 * Physical address of destination.
+	 * */
+	address: string;
+	/**
+	 * Geolocation coordinates of destination point in form of [latitude, longitude].
+	 *
+	 * @example
+	 * [37.617617, 55.755799]
+	 * */
+	coordinates: TGeoCoordinate;
+	/**
+	 * Type of the destination.
+	 * Loading the cargo, unloading the cargo, or both for more cargos in destination.
+	 *
+	 * */
+	type: DestinationType;
+	/**
+	 * Date of arrival for cargo to the destination point.
+	 *
+	 * @example
+	 * 01.01.2023
+	 * */
+	date?: Date;
+	/**
+	 * Contact person on destination point.
+	 *
+	 * @example
+	 * Иван Алексеевич Яров.
+	 * */
+	contact?: string;
+	/**
+	 * Phone number of contact on destination point.
+	 * */
+	phone?: string;
+	/**
+	 * Distance to destination point from driver.
+	 * Calculated automatically in the backend in kilometers.
+	 *
+	 * @readonly
+	 * */
+	distance?: number;
+	/**
+	 * Comment for destination point.
+	 *
+	 * @example
+	 * Не раньше обеда.
+	 * */
+	comment?: string;
+	/**
+	 * Destination point is passed by driver after fulfillment.
+	 * */
+	fulfilled?: boolean;
+	/**
+	 * Link to the uploaded after fulfillment photo of the shipping documents.
+	 * */
+	shippingPhotoLinks?: string[];
+}
+
+/**
  * Information about driver's actions on order fulfillment.
  * */
 export interface IDriverOperation {
@@ -490,6 +592,7 @@ export interface IDriverOperation {
 	 * The payload is loaded.
 	 * */
 	loaded?: boolean;
+	uploaded?: boolean;
 }
 
 /**
@@ -497,7 +600,8 @@ export interface IDriverOperation {
  * */
 export interface IDriver
 	extends IModel,
-	        Partial<IUser> {
+	        ICRMEntity,
+	        IPassportData {
 	/**
 	 * Id of cargo company which driver is assigned.
 	 * */
@@ -506,10 +610,6 @@ export interface IDriver
 	 * Id of cargo company (individual) which driver is assigned.
 	 * */
 	cargoinnId?: string;
-	/**
-	 * CRM id of driver in bitrix service.
-	 * */
-	crmId?: number;
 	/**
 	 * Name of the driver.
 	 *
@@ -585,49 +685,9 @@ export interface IDriver
 	 * */
 	taxpayerNumber?: string;
 	/**
-	 * Passport given date.
-	 *
-	 * @example
-	 * 22.09.2019
-	 * */
-	passportDate: Date;
-	/**
-	 * Passport given place.
-	 *
-	 * @example
-	 * УМВД России по Липецкой области
-	 * */
-	passportIssuedBy: string;
-	/**
-	 * Passport Serial Number.
-	 *
-	 * @example
-	 * 4218 555555
-	 * */
-	passportSerialNumber: string;
-	/**
-	 * Passport given place's subdivision code.
-	 *
-	 * @example
-	 * УМВД России по Липецкой области
-	 * */
-	passportSubdivisionCode: string;
-	/**
-	 * Given address in the passport.
-	 *
-	 * @example
-	 * Москва, 117312, ул. Вавилова, д. 19
-	 * */
-	passportRegistrationAddress: string;
-	/**
 	 * Avatar image link.
-	 *
 	 * */
 	avatarLink?: string;
-	/**
-	 * Passport image link.
-	 * */
-	passportPhotoLink?: string;
 	/**
 	 * Passport sign image link.
 	 * */
@@ -748,12 +808,32 @@ export interface IDriver
 	 * 01.01.2023
 	 * */
 	payloadDate?: Date;
+	companyName?: string;
 	/**
 	 * Full name of the driver from name, lastname and patronymic
 	 *
 	 * @readonly
 	 * */
 	readonly fullName?: string;
+}
+
+export interface IEntityFCM
+	extends IModel {
+	entityId: string;
+	token: string;
+	passed24H?: boolean;
+	passed6H?: boolean;
+	passed1H?: boolean;
+	passedDistance?: boolean;
+}
+
+export interface IGatewayEvent
+	extends IModel {
+	eventName: 'cargo' | 'driver' | 'order' | string;
+	eventData: any;
+	hasSeen?: boolean;
+	readonly source?: string;
+	readonly message?: string;
 }
 
 /**
@@ -835,7 +915,7 @@ export interface IOffer
  * Cargo transportation order.
  * */
 export interface IOrder
-	extends IModel {
+	extends IModel, ICRMEntity {
 	/**
 	 * Id of cargo company.
 	 * */
@@ -849,19 +929,15 @@ export interface IOrder
 	 * */
 	driverId?: string;
 	/**
-	 * CRM id of order from bitrix.
-	 * */
-	crmId?: number;
-	/**
 	 * Title of the order.
-	 * 
+	 *
 	 * @example
 	 * Сделка #01
 	 * */
 	title: string;
 	/**
 	 * Price of order for payment to driver.
-	 * 
+	 *
 	 * @example
 	 * 10.000|RUB
 	 * */
@@ -872,13 +948,13 @@ export interface IOrder
 	date: Date;
 	/**
 	 * Status of the order
-	 * 
+	 *
 	 * @see OrderStatus
 	 * */
 	status: OrderStatus;
 	/**
 	 * Implementation stage of the order
-	 * 
+	 *
 	 * @see OrderStage
 	 * */
 	stage: OrderStage;
@@ -913,7 +989,7 @@ export interface IOrder
 	pallets?: number;
 	/**
 	 * Cargo loading types available in transport for order.
-	 * 
+	 *
 	 * @example
 	 * BACK: 1
 	 * TOP: 2
@@ -922,7 +998,7 @@ export interface IOrder
 	loadingTypes?: LoadingType[];
 	/**
 	 * Types of transport that fits for cargo.
-	 * 
+	 *
 	 * @example
 	 * Тентованный
 	 * Изотермический
@@ -933,6 +1009,15 @@ export interface IOrder
 	 * Order is not finished by assigned driver.
 	 * */
 	isOpen?: boolean;
+	/**
+	 * Order is currently fullfilling by driver who has
+	 * several orders in processing (payload extra)
+	 * */
+	isCurrent?: boolean;
+	/**
+	 * Order waiting for payment
+	 * */
+	onPayment?: boolean;
 	/**
 	 * Order is not assigned to any driver.
 	 * */
@@ -963,14 +1048,14 @@ export interface IOrder
 	bidPriceVat?: number;
 	/**
 	 * Information about bargain/bid for the cargo order.
-	 * 
+	 *
 	 * @example
 	 * Необходимо уточнить детали торга по телефону.
 	 * */
 	bidInfo?: string;
 	/**
 	 * Type of payment for cargo order fullfilment.
-	 * 
+	 *
 	 * @example
 	 * НДС 20%
 	 * Без НДС
@@ -980,7 +1065,7 @@ export interface IOrder
 	paymentType?: string;
 	/**
 	 * Cargo payload.
-	 * 
+	 *
 	 * @example
 	 * Арматура
 	 * Бумага
@@ -989,7 +1074,7 @@ export interface IOrder
 	payload: string;
 	/**
 	 * Risk type of cargo payload.
-	 * 
+	 *
 	 * @example
 	 * Не опасный
 	 * ADR1
@@ -1000,28 +1085,29 @@ export interface IOrder
 	/**
 	 * Load/unload destination data for order.
 	 * */
-	destinations: IOrderDestination[];
+	destinations?: IDestination[];
 	/**
 	 * Filter cache data from admin.
 	 * */
 	filter?: IOrderFilter;
+	readonly priority?: boolean;
 	/**
 	 * Driver's deferral conditions for order execution.
-	 * 
+	 *
 	 * @example
 	 * 2 рабочих дня.
 	 * */
 	driverDeferralConditions?: string;
 	/**
 	 * Cargo owner's deferral conditions for order execution.
-	 * 
+	 *
 	 * @example
 	 * 2 рабочих дня.
 	 * */
 	ownerDeferralConditions?: string;
 	/**
 	 * Transport must be dedicated for one order or can carry additional payload.
-	 * 
+	 *
 	 * @default Не важно
 	 * @example
 	 * Выделенная машина
@@ -1032,88 +1118,17 @@ export interface IOrder
 	/**
 	 * Link to the payment document scan sent after order completion.
 	 * */
-	paymentPhotoLink?: string;
+	paymentPhotoLinks?: string[];
 	/**
 	 * Link to the receipt scan sent after order completion.
 	 * */
-	receiptPhotoLink?: string;
+	receiptPhotoLinks?: string[];
 	/**
 	 * Link to the offer agreement scan by driver sent before start of order fulfillment.
 	 * */
-	contractPhotoLink?: string;
-}
-
-/**
- * Load/unload destination data for order.
- * */
-export interface IOrderDestination {
-	/**
-	 * Point of destination
-	 * 
-	 * @example
-	 * A
-	 * B
-	 * ...
-	 * Z
-	 * */
-	point: string;
-	/**
-	 * Physical address of destination.
-	 * */
-	address: string;
-	/**
-	 * Geolocation coordinates of destination point in form of [latitude, longitude].
-	 * 
-	 * @example
-	 * [37.617617, 55.755799]
-	 * */
-	coordinates: TGeoCoordinate;
-	/**
-	 * Type of the destination.
-	 * Loading the cargo, unloading the cargo, or both for more cargos in destination.
-	 *
-	 * */
-	type: DestinationType;
-	/**
-	 * Date of arrival for cargo to the destination point.
-	 * 
-	 * @example
-	 * 01.01.2023
-	 * */
-	date?: Date;
-	/**
-	 * Contact person on destination point.
-	 * 
-	 * @example
-	 * Иван Алексеевич Яров.
-	 * */
-	contact?: string;
-	/**
-	 * Phone number of contact on destination point.
-	 * */
-	phone?: string;
-	/**
-	 * Distance to destination point from driver.
-	 * Calculated automatically in the backend in kilometers.
-	 * 
-	 * @readonly
-	 * */
-	distance?: number;
-	/**
-	 * Comment for destination point.
-	 * 
-	 * @example
-	 * Не раньше обеда.
-	 * */
-	comment?: string;
-	/**
-	 * Destination point is passed by driver after fulfillment.
-	 * */
-	fulfilled?: boolean;
-	/**
-	 * Link to the uploaded after fulfillment photo of the shipping documents.
-	 * */
-	shippingPhotoLinks?: string[];
+	contractPhotoLink?: string | null;
+	readonly isDedicated?: boolean;
+	readonly isExtraPayload?: boolean;
 }
 
 /**
@@ -1150,7 +1165,7 @@ export interface IPayment
 	 * @example
 	 * 321244848332114
 	 * */
-	ogrnip: string;
+	ogrnip?: string;
 	/**
 	 * Url to the main state registration
 	 * number of an individual entrepreneur scan.
@@ -1180,7 +1195,7 @@ export interface IPayment
  * Company transport assigned to the driver.
  * */
 export interface ITransport
-	extends IModel {
+	extends IModel, ICRMEntity {
 	/**
 	 * Id of cargo company transport belongs to.
 	 * */
@@ -1196,17 +1211,17 @@ export interface ITransport
 	/**
 	 * CRM id of transport from bitrix.
 	 * */
-	crmId?: number;
+	confirmed?: boolean;
 	/**
 	 * Status of the transport.
-	 * 
+	 *
 	 * @example
 	 * ACTIVE: 1
 	 * */
 	status: TransportStatus;
 	/**
 	 * Type of the transport.
-	 * 
+	 *
 	 * @example
 	 * Тентованный
 	 * Промтоварный
@@ -1214,7 +1229,7 @@ export interface ITransport
 	type: string;
 	/**
 	 * Transport manufacturer brand.
-	 * 
+	 *
 	 * @example
 	 * ABACUS
 	 * BAUER
@@ -1222,19 +1237,19 @@ export interface ITransport
 	 * */
 	brand: string;
 	/**
-	 * Model of the transport. 
+	 * Model of the transport.
 	 * */
 	model: string;
 	/**
 	 * Transport registration number.
-	 * 
+	 *
 	 * @example
 	 * но 181 к 881
 	 * */
 	registrationNumber: string;
 	/**
 	 * Year of production of transport.
-	 * 
+	 *
 	 * @example
 	 * 2012
 	 * 2015
@@ -1242,12 +1257,12 @@ export interface ITransport
 	prodYear: number;
 	/**
 	 * Payload that transport may carry.
-	 * 
+	 *
 	 * @example
 	 * Арматура
 	 * Бумага
 	 * */
-	payload: string;
+	payloads: string[];
 	/**
 	 * Transport can carry additional cargo.
 	 * Opposite of isDedicated.
@@ -1268,14 +1283,14 @@ export interface ITransport
 	certificateNumber: string;
 	/**
 	 * Additional weight for cargo that transport can take for another order when has ongoing order.
-	 * 
+	 *
 	 * @example
 	 * 12.6
 	 * */
 	weightExtra?: number;
 	/**
 	 * Additional volume for cargo that transport can take for another order when has ongoing order.
-	 * 
+	 *
 	 * @example
 	 * 12.6
 	 * */
@@ -1306,7 +1321,7 @@ export interface ITransport
 	pallets?: number;
 	/**
 	 * Transport risk class for cargo.
-	 * 
+	 *
 	 * @example
 	 * ADR1
 	 * ADR2,ADR3
@@ -1314,7 +1329,7 @@ export interface ITransport
 	riskClasses?: string[];
 	/**
 	 * Cargo loading modes for transport.
-	 * 
+	 *
 	 * @example
 	 * Задняя
 	 * Боковая
@@ -1323,20 +1338,20 @@ export interface ITransport
 	loadingTypes?: LoadingType[];
 	/**
 	 * Extra fixtures of transport.
-	 * 
+	 *
 	 * @example
 	 * Аппарели, Без ворот, Со снятием стоек
 	 * Аппарели, Пирамида
 	 * */
 	fixtures?: string[];
 	/**
-	 * Certificate number of Compulsory insurance 
+	 * Certificate number of Compulsory insurance
 	 * of civil liability of vehicle owners (ОСАГО)
 	 * */
 	osagoNumber: string;
 	/**
 	 * OSAGO expiration date.
-	 * 
+	 *
 	 * @example
 	 * 26.05.2024
 	 * */
@@ -1352,7 +1367,7 @@ export interface ITransport
 	/**
 	 * Transport diagnostics certificate given\expiry date.
 	 * */
-	diagnosticsDate: Date;
+	diagnosticsExpiryDate: Date;
 	/**
 	 * Link to the transport diagnostics certificate photo.
 	 * */
@@ -1376,6 +1391,7 @@ export type TMergedEntities = {
 	order?: IOrder;
 	driver?: IDriver;
 	transport?: ITransport;
+	[k: string]: any;
 };
 
 export type TSentOffer = {
@@ -1384,14 +1400,4 @@ export type TSentOffer = {
 	updateCount?: number;
 }
 
-export type TOfferDriver = Pick<IOffer, 'driverId' |
-                                        'bidPrice' |
-                                        'bidComment' |
-                                        'orderStatus' |
-                                        'bidPriceVat'>;
-
-export type TOfferTransport = Pick<IOffer, 'bidPrice' |
-                                           'bidPriceVat' |
-                                           'bidComment'> & ITransport;
-
-export type TOfferOrder = IOrder & { transports: string[] };
+export type TOfferDriver = Omit<TCreationAttribute<IOffer>, 'orderId'>;

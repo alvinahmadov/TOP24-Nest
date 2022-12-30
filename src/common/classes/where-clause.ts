@@ -38,6 +38,22 @@ export default class WhereClause<T extends IModel> {
 		return new WhereClause<T>(opType, debug);
 	}
 
+	public any(
+		key: keyof T,
+		value: string
+	): this {
+		return this._exec(
+			key,
+			() =>
+			{
+				if(value === undefined) return;
+				if(this.debug)
+					console.debug({ name: 'any', conj: this._conjunct, key, value });
+				this._query[key] = { [Op.any]: value };
+			}
+		);
+	}
+
 	/**
 	 * Check operator ILIKE
 	 *
@@ -83,7 +99,7 @@ export default class WhereClause<T extends IModel> {
 				if(values === undefined || values.every(v => v === undefined) || values.length === 0) return;
 				if(this.debug)
 					console.debug({ name: 'in', conj: this._conjunct, key, values });
-				
+
 				this._query[key] = { [Op.in]: values.filter(v => v !== undefined) };
 			}
 		);
@@ -265,6 +281,9 @@ export default class WhereClause<T extends IModel> {
 			{
 				if(this.debug)
 					console.debug({ name: 'notNull', conj: this._conjunct, key, condition });
+				if(condition === undefined)
+					return;
+				
 				if(condition)
 					this._query[key] = { [Op.not]: null };
 			}
@@ -311,6 +330,32 @@ export default class WhereClause<T extends IModel> {
 						valueMax ?? MAX_FLOAT
 					]
 				};
+				if(this.debug)
+					console.debug({ name: 'between', conj: this._conjunct, key, valueMin, valueMax });
+			}
+		);
+	}
+
+	public period(
+		key: keyof T,
+		valueMin?: Date | string,
+		valueMax?: Date | string
+	): this {
+		return this._exec(
+			key,
+			() =>
+			{
+				if(valueMin === undefined && valueMax === undefined)
+					return;
+				const period: Date[] = [];
+				if(valueMin) {
+					period.push(typeof valueMin === 'string' ? new Date(valueMin) : valueMin);
+				}
+				if(valueMax) {
+					period.push(typeof valueMax === 'string' ? new Date(valueMax) : valueMax);
+				}
+
+				this._query[key] = { [Op.between]: period };
 				if(this.debug)
 					console.debug({ name: 'between', conj: this._conjunct, key, valueMin, valueMax });
 			}

@@ -45,6 +45,9 @@ export function getTranslation(...keys: string[]) {
 }
 
 export function formatArgs(str: string, ...args: any[]) {
+	if(!str)
+		return '';
+
 	if(!args || args.length === 0) {
 		while(str.search('{}') >= 0) {
 			str = str.replace('{}', '');
@@ -59,7 +62,7 @@ export function formatArgs(str: string, ...args: any[]) {
 			++index < str.length &&
 			str[index] === '}'
 		) {
-			str = str.replace('{}', String(arg));
+			str = str.replace('{}', String(arg ?? ''));
 		}
 	}
 	return str;

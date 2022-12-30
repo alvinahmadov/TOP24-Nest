@@ -1,18 +1,18 @@
 import {
 	IsString,
 	IsUUID
-}                      from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+}                       from 'class-validator';
 import {
 	Field,
 	InputType
-}                      from '@nestjs/graphql';
+}                       from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	IPayment,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
-import { UuidScalar }  from '@common/scalars';
+}                       from '@common/interfaces';
+import { UuidScalar }   from '@common/scalars';
+import { entityConfig } from '@api/swagger/properties';
 
 const { payment: prop } = entityConfig;
 
@@ -39,7 +39,7 @@ export default class PaymentCreateDto
 
 	@ApiProperty(prop.ogrnip)
 	@IsString()
-	ogrnip: string;
+	ogrnip?: string;
 
 	@ApiProperty(prop.bankName)
 	@IsString()
@@ -48,10 +48,6 @@ export default class PaymentCreateDto
 	@ApiProperty(prop.bankBic)
 	@IsString()
 	bankBic: string;
-
-	@ApiProperty(prop.ogrnipPhotoLink)
-	@IsString()
-	ogrnipPhotoLink?: string;
 
 	@ApiProperty(prop.info)
 	@IsString()

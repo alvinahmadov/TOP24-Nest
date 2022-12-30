@@ -5,11 +5,11 @@ import {
 	Mutation,
 	Resolver
 }                                  from '@nestjs/graphql';
-import { NullableArgs, UserParam } from '@common/decorators';
 import { IUserPayload }            from '@common/interfaces';
 import { Admin }                   from '@models/index';
-import { AdminService }            from '@api/services';
 import * as dto                    from '@api/dto';
+import { NullableArgs, UserParam } from '@api/decorators';
+import { AdminService }            from '@api/services';
 
 @Resolver(() => Admin)
 export default class AdminResolver {

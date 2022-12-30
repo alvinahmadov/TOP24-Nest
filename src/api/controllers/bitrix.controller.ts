@@ -8,26 +8,23 @@ import {
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
+import { IWebhookResponse }    from '@common/interfaces';
 import {
-	isOrderSent,
-	setOrderSent
-}                              from '@config/env';
-import { ApiRoute }            from '@common/decorators';
-import {
-	IApiResponse,
-	IWebhookResponse,
-	TAffectedRows
-}                              from '@common/interfaces';
-import { sendResponse }        from '@common/utils';
-import { Order }               from '@models/index';
+	isSuccessResponse,
+	sendResponse
+}                              from '@common/utils';
 import {
 	CompanyInnUpdateDto,
 	CompanyUpdateDto
 }                              from '@api/dto';
+import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
-import { BitrixService }       from '@api/services';
-import { AdminGuard }          from '@api/security/guards';
+import {
+	BitrixService,
+	OrderService
+}                              from '@api/services';
+import { AdminGuard }          from '@api/security';
 import { StaticController }    from './controller';
 
 const { path, tag, routes } = getRouteConfig('bitrix');
@@ -37,11 +34,12 @@ const { path, tag, routes } = getRouteConfig('bitrix');
 @UseFilters(HttpExceptionFilter)
 export default class BitrixController
 	extends StaticController {
+	private static eventMap: Map<number, string> = new Map<number, string>();
+
 	public constructor(
-		private readonly bitrixService: BitrixService
-	) {
-		super();
-	}
+		private readonly bitrixService: BitrixService,
+		private readonly orderService: OrderService
+	) { super(); }
 
 	@ApiRoute(routes.orders, {
 		guards:   [AdminGuard],
@@ -109,32 +107,44 @@ export default class BitrixController
 	@ApiRoute(routes.webhook, {
 		statuses: [HttpStatus.OK]
 	})
-	public async webhookListen(
-		@Body() crm: IWebhookResponse,
-		@Res() response: ex.Response
-	) {
+	public async webhookListen(@Body() crm: IWebhookResponse) {
+		if(crm.data === undefined ||
+		   crm.data['FIELDS'] === undefined ||
+		   crm.data['FIELDS']['ID'] === undefined)
+			return;
+
 		const crmId = Number(crm.data['FIELDS']['ID']);
-		let result: IApiResponse<Order | TAffectedRows | null> = {
-			statusCode: 404,
-			message:    'Event not found!'
-		};
 
 		switch(crm.event) {
-			case 'ONCRMDEALADD':
-			case 'ONCRMDEALUPDATE':
-				if(isOrderSent()) {
-					setOrderSent();
-					break;
+			case 'ONCRMDEALADD': {
+				const apiResponse = await this.orderService.getByCrmId(crmId);
+				if(!isSuccessResponse(apiResponse))
+					await this.bitrixService.synchronizeOrder(crmId);
+				break;
+			}
+			case 'ONCRMDEALUPDATE': {
+				if(BitrixController.eventMap.has(crmId)) {
+					if(BitrixController.eventMap.get(crmId) === crm.ts) {
+						return;
+					}
 				}
-				result = await this.bitrixService.synchronizeOrder(crmId);
+				else
+					BitrixController.eventMap.set(crmId, crm.ts);
+
+				await this.bitrixService.synchronizeOrder(crmId, true);
 				break;
+			}
 			case 'ONCRMDEALDELETE':
-				result = await this.bitrixService.deleteOrder(crmId);
+				await this.bitrixService.deleteOrder(crmId);
 				break;
-			default:
+			case 'ONCRMCOMPANYUPDATE':
+				await this.bitrixService.updateCargo(crmId);
+				break;
+			case 'ONCRMCONTACTUPDATE':
+				await this.bitrixService.updateTransport(crmId);
 				break;
 		}
 
-		return sendResponse(response, result);
+		return;
 	}
 }

@@ -2,6 +2,7 @@ import AdminController     from './admin.controller';
 import BitrixController    from './bitrix.controller';
 import CompanyController   from './company.controller';
 import DriverController    from './driver.controller';
+import EventController     from './event.controller';
 import GeneratorController from './generator.controller';
 import ImageController     from './image.controller';
 import OfferController     from './offer.controller';
@@ -15,6 +16,7 @@ const CONTROLLERS = [
 	BitrixController,
 	CompanyController,
 	DriverController,
+	EventController,
 	GeneratorController,
 	ImageController,
 	OfferController,
@@ -29,6 +31,7 @@ export {
 	BitrixController,
 	CompanyController,
 	DriverController,
+	EventController,
 	GeneratorController,
 	ImageController,
 	OfferController,

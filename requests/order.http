@@ -1,23 +1,31 @@
 ### Get list of orders
+// @no-log 
+// @no-cookie-jar
 GET {{api}}/order
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Get orders with specified filters
-POST {{api}}/order/filter?full=true
+// @no-log 
+// @no-cookie-jar
+POST {{api}}/order/filter
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"status": 2
+	"crm_id": "{{crmId}}"
 }
 
 ### Get single order by id
+// @no-log 
+// @no-cookie-jar
 GET {{api}}/order/{{orderId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Update order by id
+// @no-log 
+// @no-cookie-jar
 PUT {{api}}/order/{{orderId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
@@ -27,26 +35,29 @@ Content-Type: application/json
 }
 
 ### Delete order by id
+// @no-log 
+// @no-cookie-jar
 DELETE {{api}}/order/{{orderId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Get orders with specified filters
-GET {{api}}/order/driver/{{driverId}}
+// @no-log 
+// @no-cookie-jar
+GET {{api}}/order/driver/{{driverId}}?order={{orderId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
 ### Send order to bitrix
+// @no-log 
+// @no-cookie-jar
 GET {{api}}/order/send/{{orderId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Get cargo list
-GET {{api}}/order/cargolist/{{companyId}}
-Authorization: {{accessToken}}
-Content-Type: application/json
-
 ### Upload shipping document for destination point A
+// @no-log 
+// @no-cookie-jar
 POST {{api}}/order/shipping/{{orderId}}?pt={{point}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
@@ -54,10 +65,16 @@ Content-Type: multipart/form-data; boundary=WebAppBoundary
 --WebAppBoundary
 Content-Disposition: form-data; name="image"; filename="order_shipping_A.png"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
+--WebAppBoundary--
+Content-Disposition: form-data; name="image"; filename="order_shipping_01.jpg"
+
+< ../resources/img/sample.jpg
 --WebAppBoundary--
 
 ### Upload payment documents
+// @no-log 
+// @no-cookie-jar
 POST {{api}}/order/payment/{{orderId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
@@ -65,10 +82,12 @@ Content-Type: multipart/form-data; boundary=WebAppBoundary
 --WebAppBoundary
 Content-Disposition: form-data; name="image"; filename="order_payment.png"
 
-< /home/alvin/Pictures/24top.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--
 
 ### Upload contract documents
+// @no-log 
+// @no-cookie-jar
 POST {{api}}/order/contract/{{orderId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
@@ -76,10 +95,12 @@ Content-Type: multipart/form-data; boundary=WebAppBoundary
 --WebAppBoundary
 Content-Disposition: form-data; name="image"; filename="contract.png"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--
 
 ### Upload receipt documents
+// @no-log 
+// @no-cookie-jar
 POST {{api}}/order/receipt/{{orderId}}
 Authorization: {{accessToken}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
@@ -87,5 +108,29 @@ Content-Type: multipart/form-data; boundary=WebAppBoundary
 --WebAppBoundary
 Content-Disposition: form-data; name="image"; filename="receipt.png"
 
-< /path/to/image/file.png
+< ../resources/img/sample.jpg
 --WebAppBoundary--
+
+### Delete receipt documents
+// @no-log 
+// @no-cookie-jar
+DELETE {{api}}/order/receipt/{{orderId}}
+Authorization: {{accessToken}}
+
+### Delete payment documents
+// @no-log 
+// @no-cookie-jar
+DELETE {{api}}/order/payment/{{orderId}}
+Authorization: {{accessToken}}
+
+### Delete contract documents
+// @no-log 
+// @no-cookie-jar
+DELETE {{api}}/order/contract/{{orderId}}
+Authorization: {{accessToken}}
+
+### Delete shipping of point {{point}} at index 0
+// @no-log 
+// @no-cookie-jar
+DELETE {{api}}/order/shipping/{{orderId}}?pt={{point}}&index=0
+Authorization: {{accessToken}}

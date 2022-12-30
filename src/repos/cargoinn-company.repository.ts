@@ -1,7 +1,7 @@
 import { Includeable }        from 'sequelize';
 import { DEFAULT_SORT_ORDER } from '@common/constants';
 import {
-	ICargoInnCompany,
+	ICargoCompanyInn,
 	ICargoCompanyInnFilter,
 	ICompanyTransportFilter,
 	IDriver,
@@ -9,12 +9,9 @@ import {
 	ITransport,
 	IListFilter
 }                             from '@common/interfaces';
+import { convertBitrix }      from '@common/utils';
 import {
-	convertBitrix,
-	formatPhone
-}                             from '@common/utils';
-import {
-	CargoInnCompany,
+	CargoCompanyInn,
 	Driver,
 	Image,
 	Order,
@@ -24,8 +21,8 @@ import {
 import GenericRepository      from './generic';
 
 export default class CargoInnCompanyRepository
-	extends GenericRepository<CargoInnCompany, ICargoInnCompany> {
-	protected override readonly model = CargoInnCompany;
+	extends GenericRepository<CargoCompanyInn, ICargoCompanyInn> {
+	protected override readonly model = CargoCompanyInn;
 	protected override readonly include: Includeable[] = [
 		{
 			model:   Driver,
@@ -36,12 +33,11 @@ export default class CargoInnCompanyRepository
 				}
 			]
 		},
-		{ model: Image },
-		{ model: Payment },
 		{ model: Order },
+		{ model: Payment },
 		{
 			model:   Transport,
-			include: [{ all: true }]
+			include: [{ model: Image }]
 		}
 	];
 
@@ -57,36 +53,25 @@ export default class CargoInnCompanyRepository
 	public override async getList(
 		listFilter: IListFilter,
 		filter?: ICargoCompanyInnFilter
-	): Promise<CargoInnCompany[]> {
+	): Promise<CargoCompanyInn[]> {
 		if(filter === null)
 			return [];
-		
+
+		const { from: offset = 0, full = false, count: limit } = listFilter ?? {};
+		const { sortOrder: order = DEFAULT_SORT_ORDER, ...rest } = filter ?? {};
+
 		return this.log(
-			() =>
-			{
-				const {
-					from: offset = 0,
-					full = false,
-					count: limit
-				} = listFilter ?? {};
-
-				const {
-					sortOrder: order = DEFAULT_SORT_ORDER,
-					...        rest
-				} = filter ?? {};
-
-				return this.model.findAll(
-					{
-						where:   this.whereClause()
-						             .fromFilter(rest)
-							         .query,
-						order,
-						offset,
-						limit,
-						include: full ? this.include : []
-					}
-				);
-			},
+			() => this.model.findAll(
+				{
+					where:   this.whereClause()
+					             .fromFilter(rest)
+						         .query,
+					order,
+					offset,
+					limit,
+					include: full ? this.include : undefined
+				}
+			),
 			{ id: 'getList' },
 			{ listFilter, filter }
 		);
@@ -98,126 +83,91 @@ export default class CargoInnCompanyRepository
 	public override async get(
 		id: string,
 		full?: boolean
-	): Promise<CargoInnCompany | null> {
+	): Promise<CargoCompanyInn | null> {
 		return this.log(
 			() => this.model.findByPk(
 				id,
-				{ include: full ? this.include : [] }
+				{ include: full ? this.include : undefined }
 			),
 			{ id: 'get' },
-			{ id }
+			{ id, full }
 		);
 	}
 
 	public async getTransports(
 		listFilter: IListFilter,
 		filter?: ICompanyTransportFilter
-	): Promise<CargoInnCompany[]> {
+	): Promise<CargoCompanyInn[]> {
+		const {
+			from:  offset = 0,
+			count: limit
+		} = listFilter;
+
+		let {
+			sortOrder: order = DEFAULT_SORT_ORDER,
+			hasDriver,
+			types,
+			paymentTypes,
+			isDedicated,
+			payloadCity,
+			payloadRegion,
+			payloadDate,
+			...rest
+		} = filter ?? {};
+
+		if(types) {
+			const transportTypes = types.map(t => convertBitrix('transportType', t, true));
+			if(transportTypes.every(tt => tt !== undefined))
+				types = transportTypes as string[];
+		}
+
+		if(paymentTypes) {
+			const paymentTypesLocal = paymentTypes.map(pt => convertBitrix('paymentType', pt, true));
+			if(paymentTypesLocal.every(pt => pt !== undefined)) {
+				paymentTypes = paymentTypesLocal as string[];
+			}
+		}
+
 		return this.log(
-			() =>
-			{
-				const {
-					from:  offset = 0,
-					count: limit
-				} = listFilter;
-				let {
-					sortOrder = DEFAULT_SORT_ORDER,
-					hasDriver,
-					types,
-					paymentTypes,
-					isDedicated,
-					payloadCity,
-					payloadRegion,
-					payloadDate,
-					...rest
-				} = filter ?? {};
-
-				if(types) {
-					const transportTypes = types.map(t => convertBitrix('transportType', t, true));
-					if(transportTypes.every(tt => tt !== undefined))
-						types = transportTypes as string[];
-				}
-
-				if(paymentTypes) {
-					const paymentTypesLocal = paymentTypes.map(pt => convertBitrix('paymentType', pt, true));
-					if(paymentTypesLocal.every(pt => pt !== undefined)) {
-						paymentTypes = paymentTypesLocal as string[];
-					}
-				}
-
-				if(!!isDedicated) {
-					switch(rest?.dedicated) {
-						case 'Да':
-							isDedicated = true;
-							break;
-						default:
-							isDedicated = false;
-							break;
-					}
-				}
-
-				return this.model.findAll(
-					{
-						where:   this.whereClause('and')
-						             .eq('id', rest?.cargoinnId)
-						             .inArray('paymentType', paymentTypes, true)
-							         .query,
-						offset,
-						limit,
-						include: [
-							{
-								model: Driver,
-								where: this.whereClause<IDriver>()
-								           .eq('isReady', true)
-								           .eq('payloadCity', payloadCity)
-								           .eq('payloadRegion', payloadRegion)
-								           .lte('payloadDate', payloadDate)
-									       .query
-							},
-							{ model: Image },
-							{ model: Payment },
-							{ model: Order },
-							{
-								model:    Transport,
-								where:    this.whereClause<ITransport>('and')
-								              .notNull('driverId', !!hasDriver)
-								              .iLike('payload', rest?.payload)
-								              .inArray('type', types, true)
-								              .contains('riskClasses', rest?.riskClass)
-								              .eq('isDedicated', isDedicated)
-								              .eq('payloadExtra', rest?.payloadExtra)
-									          .query,
-								order:    sortOrder,
-								required: true,
-								include:  [
-									{ model: Image },
-									{ model: Driver }
-								]
-							}
-						]
-					}
-				);
-			},
-			{ id: 'getTransports' },
-			{ listFilter, filter }
-		);
-	}
-
-	public async getByPhone(
-		phone: string,
-		full?: boolean
-	): Promise<CargoInnCompany | null> {
-		return this.log(
-			() => this.model.findOne(
+			() => this.model.findAll(
 				{
-					where:   this.whereClause()
-					             .in('phone', [phone, formatPhone(phone)])
+					where:   this.whereClause('and')
+					             .eq('id', rest?.cargoinnId)
+					             .eq('isDefault', true)
+					             .inArray('paymentType', paymentTypes, true)
 						         .query,
-					include: full ? this.include : []
+					offset,
+					limit,
+					order,
+					include: [
+						{
+							model:   Transport,
+							where:   this.whereClause<ITransport>('and')
+							             .notNull('driverId', !!hasDriver)
+							             .inArray('type', types, true)
+							             .eq('payloadExtra', rest?.payloadExtra)
+								         .query,
+							order:   DEFAULT_SORT_ORDER,
+							include: [
+								{
+									model:    Driver,
+									where:    this.whereClause<IDriver>()
+									              .eq('isReady', true)
+									              .iLike('payloadCity', payloadCity)
+									              .iLike('payloadRegion', payloadRegion)
+									              .lte('payloadDate', payloadDate)
+										          .query,
+									required: false,
+									include:  [{ model: Order }]
+								},
+								{ model: Image }
+							]
+						}
+					]
 				}
 			),
-			{ id: 'getByPhone' },
-			{ phone }
+			{ id: 'getTransports' },
+			{ listFilter, filter }
 		);
 	}
 }

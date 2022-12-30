@@ -18,15 +18,35 @@ export const translateAdmin = <T extends transformers.IAdminTransformer>(data: T
 		.get();
 };
 
+export const translateAdress = <T extends transformers.IAddressTransformer>(data: T | Partial<T>)
+	: TOmitTimestamp<attributes.IAddress> =>
+{
+	return new FieldTransformer<T, attributes.IAddress>(data)
+		.set('id')
+		.set('region')
+		.set('regionType', 'region_type')
+		.set('city')
+		.set('cityType')
+		.set('area')
+		.set('areaType', 'area_type')
+		.set('settlement')
+		.set('settlementType', 'settlement_type')
+		.set('federalDistrict', 'federal_district')
+		.set('postalCode', 'postal_code')
+		.get();
+};
+
 export const translateCargoCompany = <T extends transformers.ICargoCompanyTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.ICargoCompany> =>
 {
 	return new FieldTransformer<T, attributes.ICargoCompany>(data)
 		.set('id')
+		.set('userId')
 		.set('name')
 		.set('email')
 		.set('director')
-		.set('role', 'type')
+		.set('phone')
+		.set('directions')
 		.set('type', 'company_type')
 		.set('taxpayerNumber', 'inn')
 		.set('passportSerialNumber', 'passport_serial_number')
@@ -35,13 +55,13 @@ export const translateCargoCompany = <T extends transformers.ICargoCompanyTransf
 		.set('passportIssuedBy', 'passport_issued_by')
 		.set('passportRegistrationAddress', 'passport_registration_address')
 		.set('crmId', 'crm_id')
-		.set('phone')
 		.set('contactPhone', 'phone_second')
 		.set('taxReasonCode', 'kpp')
-		.set('directions')
-		.set('verify')
+		.set('legalName', 'shortname')
+		.set('registrationNumber', 'ogpn')
 		.set('paymentType', 'nds')
 		.set('confirmed')
+		.set('isDefault', 'is_default')
 		.set('avatarLink', 'avatar_link')
 		.set('passportPhotoLink', 'passport_photo_link')
 		.set('attorneySignLink', 'attorney_sign_link')
@@ -55,19 +75,19 @@ export const translateCargoCompany = <T extends transformers.ICargoCompanyTransf
 		.get();
 };
 
-export const translateCargoInnCompany = <T extends transformers.ICargoInnCompanyTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.ICargoInnCompany> =>
+export const translateCargoCompanyInn = <T extends transformers.ICargoCompanyInnTransformer>(data: T | Partial<T>)
+	: TOmitTimestamp<attributes.ICargoCompanyInn> =>
 {
-	return new FieldTransformer<T, attributes.ICargoInnCompany>(data)
+	return new FieldTransformer<T, attributes.ICargoCompanyInn>(data)
 		.set('id')
+		.set('userId')
 		.set('name')
 		.set('email')
 		.set('phone')
-		.set('role', 'type')
 		.set('crmId', 'crm_id')
 		.set('type', 'company_type')
 		.set('confirmed')
-		.set('verify')
+		.set('isDefault', 'is_default')
 		.set('info')
 		.set('status')
 		.set('birthDate', 'birth_date')
@@ -109,13 +129,13 @@ export const translateDriver = <T extends transformers.IDriverTransformer>(data:
 		.set('birthDate', 'date_of_birth')
 		.set('isReady', 'is_ready')
 		.set('taxpayerNumber', 'taxpayer_number')
-		.set('passportDate', 'passport_date')
+		.set('passportGivenDate', 'passport_date')
 		.set('passportIssuedBy', 'passport_issued_by')
 		.set('passportSerialNumber', 'passport_serial_number')
 		.set('passportSubdivisionCode', 'passport_subdivision_code')
 		.set('passportRegistrationAddress', 'passport_registration_address')
 		.set('avatarLink', 'avatar_link')
-		.set('passportPhotoLink', 'passport_link')
+		.set('passportPhotoLink', 'passport_photo_link')
 		.set('passportSignLink', 'passport_sign_link')
 		.set('passportSelfieLink', 'passport_selfie_link')
 		.set('registrationAddress', 'registration_address')
@@ -134,7 +154,17 @@ export const translateDriver = <T extends transformers.IDriverTransformer>(data:
 		.set('payloadCity', 'payload_city')
 		.set('payloadRegion', 'payload_region')
 		.set('payloadDate', 'payload_date')
-		.set('fullName', 'fullName')
+		.set('fullName', 'fullname')
+		.get();
+};
+
+export const translateGatewayEvent = <T extends transformers.IGatewayEventTransformer>(data: T | Partial<T>)
+	: TOmitTimestamp<attributes.IGatewayEvent> =>
+{
+	return new FieldTransformer<T, attributes.IGatewayEvent>(data)
+		.set('eventName', 'event_name')
+		.set('eventData', 'event_data')
+		.set('hasSeen', 'has_seen')
 		.get();
 };
 
@@ -181,6 +211,8 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('number')
 		.set('filter')
 		.set('price')
+		.set('status')
+		.set('stage')
 		.set('crmId', 'crm_id')
 		.set('date', 'dateAt')
 		.set('dedicated', 'dedicated_machine')
@@ -190,6 +222,8 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('isOpen', 'is_open')
 		.set('isFree', 'is_free')
 		.set('isBid', 'is_bid')
+		.set('isCurrent', 'is_current')
+		.set('onPayment', 'on_payment')
 		.set('isCanceled', 'is_canceled')
 		.set('cancelCause', 'cancel_cause')
 		.set('destinations')
@@ -201,8 +235,8 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('driverDeferralConditions', 'driver_deferral_conditions')
 		.set('ownerDeferralConditions', 'owner_deferral_conditions')
 		.set('contractPhotoLink', 'contract_link')
-		.set('paymentPhotoLink', 'payment_link')
-		.set('receiptPhotoLink', 'receipt_link')
+		.set('paymentPhotoLinks', 'payment_link')
+		.set('receiptPhotoLinks', 'receipt_link')
 		.get();
 };
 
@@ -211,6 +245,8 @@ export const translatePayment = <T extends transformers.IPaymentTransformer>(dat
 {
 	return new FieldTransformer<T, attributes.IPayment>(data)
 		.set('id')
+		.set('cargoId')
+		.set('cargoinnId')
 		.set('bankBic', 'bankbik')
 		.set('bankName', 'bank')
 		.set('correspondentAccount', 'ks')
@@ -229,6 +265,8 @@ export const translateTransport = <T extends transformers.ITransportTransformer>
 		.set('cargoId')
 		.set('cargoinnId')
 		.set('driverId')
+		.set('crmId', 'crm_id')
+		.set('confirmed')
 		.set('status')
 		.set('type')
 		.set('brand')
@@ -238,22 +276,24 @@ export const translateTransport = <T extends transformers.ITransportTransformer>
 		.set('length')
 		.set('weight')
 		.set('volume')
-		.set('pallets')
+		.set('pallets', 'polets')
 		.set('weightExtra', 'weight_extra')
 		.set('volumeExtra', 'volume_extra')
-		.set('payload')
+		.set('payloads')
 		.set('payloadExtra', 'payload_extra')
-		.set('crmId', 'crm_id')
+		.set('isTrailer', 'is_trailer')
+		.set('isDedicated', 'is_dedicated')
 		.set('registrationNumber', 'registr_num')
 		.set('prodYear', 'prod_year')
 		.set('certificateNumber', 'sts')
-		.set('fixtures', 'extra_fixtures')
 		.set('riskClasses', 'risk_classes')
+		.set('loadingTypes', 'loading_types')
+		.set('fixtures', 'extra_fixtures')
 		.set('osagoNumber', 'osago_number')
 		.set('osagoExpiryDate', 'osago_date')
 		.set('osagoPhotoLink', 'osago_link')
 		.set('diagnosticsNumber', 'diag_num')
-		.set('diagnosticsDate', 'diag_date')
+		.set('diagnosticsExpiryDate', 'diag_date')
 		.set('diagnosticsPhotoLink', 'diag_link')
 		.set('comments')
 		.set('info')

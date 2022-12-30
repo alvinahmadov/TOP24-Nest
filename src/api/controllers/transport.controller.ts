@@ -12,10 +12,10 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
-import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
+import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
@@ -140,6 +140,19 @@ export default class TransportController
 		return sendResponse(response, result);
 	}
 
+	@ApiRoute(routes.activate, {
+		guards:   [AccessGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async activateTransport(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.transportService.activateTransport(id);
+
+		return sendResponse(response, result);
+	}
+
 	@ApiRoute(routes.image, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
@@ -153,10 +166,9 @@ export default class TransportController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.transportService.uploadImage(id, buffer, name);
+		const apiResponse = await this.transportService.uploadImage(id, image);
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.diag, {
@@ -172,10 +184,9 @@ export default class TransportController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.transportService.uploadDiagnosticsPhoto(id, name, buffer);
+		const apiResponse = await this.transportService.uploadDiagnosticsPhoto(id, image);
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.osago, {
@@ -191,9 +202,21 @@ export default class TransportController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.transportService.uploadOsagoPhoto(id, name, buffer);
+		const apiResponse = await this.transportService.uploadOsagoPhoto(id, image);
 
+		return sendResponse(response, apiResponse);
+	}
+
+	@ApiRoute(routes.imageDel, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async deleteImage(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Param('transportId', ParseUUIDPipe) transportId: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.transportService.deleteImage(transportId, id);
 		return sendResponse(response, result);
 	}
 }

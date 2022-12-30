@@ -3,25 +3,23 @@ import {
 	IsDate,
 	IsEmail,
 	IsInt,
+	IsNotEmpty,
 	IsString
-}                      from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { InputType }   from '@nestjs/graphql';
+}                       from 'class-validator';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
+import { CompanyType }  from '@common/enums';
 import {
-	CompanyType,
-	UserRole
-}                      from '@common/enums';
-import {
-	ICargoInnCompany,
+	ICargoCompanyInn,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { companyinn: prop } = entityConfig;
 
 @InputType()
 export default class CompanyInnCreateDto
-	implements TCreationAttribute<ICargoInnCompany> {
+	implements TCreationAttribute<Omit<ICargoCompanyInn, 'userId' | 'userPhone'>> {
 	@ApiProperty(prop.name)
 	@IsString()
 	name: string;
@@ -38,10 +36,6 @@ export default class CompanyInnCreateDto
 	@IsInt()
 	type: CompanyType;
 
-	@ApiProperty(prop.role)
-	@IsInt()
-	role: UserRole = UserRole.CARGO;
-
 	@ApiProperty(prop.taxpayerNumber)
 	@IsString()
 	taxpayerNumber: string;
@@ -55,9 +49,8 @@ export default class CompanyInnCreateDto
 	@IsEmail()
 	email: string;
 
-	@ApiProperty(prop.crmId)
-	@IsString()
-	crmId?: number;
+	@ApiProperty(prop.isDefault)
+	isDefault: boolean = false;
 
 	@ApiProperty(prop.birthDate)
 	@IsDate()
@@ -65,23 +58,23 @@ export default class CompanyInnCreateDto
 
 	@ApiProperty(prop.passportSerialNumber)
 	@IsString()
-	passportSerialNumber: string;
+	passportSerialNumber: string = '';
 
 	@ApiProperty(prop.passportSubdivisionCode)
 	@IsString()
-	passportSubdivisionCode: string;
+	passportSubdivisionCode: string = '';
 
 	@ApiProperty(prop.passportGivenDate)
 	@IsDate()
-	passportGivenDate: Date;
+	passportGivenDate: Date = new Date();
 
 	@ApiProperty(prop.passportIssuedBy)
 	@IsString()
-	passportIssuedBy: string;
+	passportIssuedBy: string = '';
 
 	@ApiProperty(prop.passportRegistrationAddress)
 	@IsString()
-	passportRegistrationAddress: string;
+	passportRegistrationAddress: string = '';
 
 	@ApiProperty(prop.passportPhotoLink)
 	@IsString()
@@ -115,10 +108,6 @@ export default class CompanyInnCreateDto
 	@IsString()
 	confirmed?: boolean;
 
-	@ApiProperty(prop.verify)
-	@IsString()
-	verify?: string;
-
 	@ApiProperty(prop.address)
 	@IsString()
 	address?: string;
@@ -139,7 +128,8 @@ export default class CompanyInnCreateDto
 	@IsString()
 	personalPhone?: string;
 
-	@ApiProperty(prop.avatarLink)
+	@ApiProperty(prop.userPhone)
 	@IsString()
-	avatarLink?: string;
+	@IsNotEmpty()
+	user: string;
 }

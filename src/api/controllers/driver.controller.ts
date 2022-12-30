@@ -13,10 +13,11 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
-import { ApiRoute }            from '@common/decorators';
+import { TransportStatus }     from '@common/enums';
 import { TMulterFile }         from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
+import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
@@ -31,7 +32,8 @@ import {
 import {
 	AddressService,
 	DriverService,
-	OrderService
+	OrderService,
+	TransportService
 }                              from '@api/services';
 import BaseController          from './controller';
 
@@ -45,10 +47,9 @@ export default class DriverController
 	public constructor(
 		private readonly addressService: AddressService,
 		private readonly driverService: DriverService,
+		private readonly transportService: TransportService,
 		private readonly orderService: OrderService
-	) {
-		super();
-	}
+	) { super(); }
 
 	@ApiRoute(routes.filter, {
 		guards:   [AccessGuard],
@@ -119,18 +120,49 @@ export default class DriverController
 			const driverGeo = await this.driverService.updateGeoData(data);
 			dto = Object.assign(dto, driverGeo);
 		}
-		if(isUuid(dto.payloadCity)) {
+
+		if(dto.isReady !== undefined) {
+			if(!dto.isReady) {
+				dto.payloadCity = null;
+				dto.payloadRegion = null;
+				dto.payloadDate = null;
+
+				const { data: transports } = await this.transportService.getByDriverId(
+					id,
+					{},
+					{
+						status:    TransportStatus.ACTIVE,
+						isTrailer: false
+					}
+				);
+
+				if(transports.length > 0)
+					if(transports[0].payloadExtra) {
+						await this.transportService.update(
+							transports[0].id,
+							{
+								payloadExtra: false,
+								isDedicated:  false,
+								weightExtra:  0,
+								volumeExtra:  0
+							}
+						);
+					}
+			}
+		}
+
+		if(dto.payloadCity && isUuid(dto.payloadCity)) {
 			const { data: { city = dto.payloadCity } } = await this.addressService.getById(dto.payloadCity);
 			dto.payloadCity = city;
 		}
-		if(isUuid(dto.payloadRegion)) {
+		if(dto.payloadRegion && isUuid(dto.payloadRegion)) {
 			const { data: { region = dto.payloadRegion } } = await this.addressService.getById(dto.payloadRegion);
 			dto.payloadRegion = region;
 		}
-		
-		const result = await this.driverService.update(id, dto);
 
-		return sendResponse(response, result);
+		const apiResponse = await this.driverService.update(id, dto);
+
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.delete, {
@@ -159,10 +191,9 @@ export default class DriverController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.driverService.uploadAvatarPhoto(id, buffer, name);
+		const apiResponse = await this.driverService.uploadAvatarPhoto(id, image);
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.front, {
@@ -178,10 +209,9 @@ export default class DriverController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.driverService.uploadLicenseFront(id, buffer, name);
+		const apiResponse = await this.driverService.uploadLicenseFront(id, image);
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.back, {
@@ -197,9 +227,8 @@ export default class DriverController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.driverService.uploadLicenseBack(id, buffer, name);
+		const apiResponse = await this.driverService.uploadLicenseBack(id, image);
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 }

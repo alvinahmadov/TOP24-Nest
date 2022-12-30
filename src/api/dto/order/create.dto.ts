@@ -7,23 +7,21 @@ import {
 	IsString,
 	IsUrl,
 	IsUUID
-}                      from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { InputType }   from '@nestjs/graphql';
+}                       from 'class-validator';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	LoadingType,
 	OrderStage,
 	OrderStatus
-}                      from '@common/enums';
+}                       from '@common/enums';
 import {
+	IDestination,
 	IOrder,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
-import {
-	OrderDestination,
-	OrderFilter
-}                      from '@models/order.entity';
+}                       from '@common/interfaces';
+import { OrderFilter }  from '@models/order.entity';
+import { entityConfig } from '@api/swagger/properties';
 
 const { order: prop } = entityConfig;
 
@@ -115,6 +113,10 @@ export default class OrderCreateDto
 	@IsBoolean()
 	isFree?: boolean = true;
 
+	@ApiProperty(prop.isCurrent)
+	@IsBoolean()
+	isCurrent?: boolean = false;
+
 	@ApiProperty(prop.isCanceled)
 	@IsBoolean()
 	isCanceled?: boolean = false;
@@ -122,6 +124,10 @@ export default class OrderCreateDto
 	@ApiProperty(prop.isBid)
 	@IsBoolean()
 	isBid?: boolean = false;
+
+	@ApiProperty(prop.onPayment)
+	@IsBoolean()
+	onPayment?: boolean = false;
 
 	@ApiProperty(prop.hasProblem)
 	@IsBoolean()
@@ -148,13 +154,13 @@ export default class OrderCreateDto
 	bidInfo?: string;
 
 	@ApiProperty(prop.bidPrice)
-	bidPrice?: number;
+	bidPrice?: number = 0.0;
 
 	@ApiProperty(prop.bidPriceVat)
-	bidPriceVAT?: number;
+	bidPriceVAT?: number = 0.0;
 
 	@ApiProperty(prop.destinations)
-	destinations: OrderDestination[] = [];
+	destinations?: IDestination[] = [];
 
 	@ApiProperty(prop.filter)
 	filter?: OrderFilter = null;
@@ -167,15 +173,15 @@ export default class OrderCreateDto
 	@IsString()
 	ownerDeferralConditions?: string;
 
-	@ApiProperty(prop.paymentPhotoLink)
+	@ApiProperty(prop.paymentPhotoLinks)
 	@IsUrl()
 	@IsString()
-	paymentPhotoLink?: string = null;
+	paymentPhotoLinks?: string[] = null;
 
-	@ApiProperty(prop.receiptPhotoLink)
+	@ApiProperty(prop.receiptPhotoLinks)
 	@IsUrl()
 	@IsString()
-	receiptPhotoLink?: string = null;
+	receiptPhotoLinks?: string[] = null;
 
 	@ApiProperty(prop.contractPhotoLink)
 	@IsUrl()

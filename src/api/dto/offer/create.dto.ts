@@ -2,21 +2,18 @@ import {
 	IsInt,
 	IsString,
 	IsUUID
-}                      from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { InputType }   from '@nestjs/graphql';
+}                       from 'class-validator';
+import { InputType }    from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	OfferStatus,
 	OrderStatus
-}                      from '@common/enums';
+}                       from '@common/enums';
 import {
-	decimal,
-	IDriver,
 	IOffer,
-	IOrder,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 
 const { offer: prop } = entityConfig;
 
@@ -44,17 +41,8 @@ export default class OfferCreateDto
 	bidComment?: string;
 
 	@ApiProperty(prop.bidPrice)
-	bidPrice?: decimal;
+	bidPrice?: number;
 
 	@ApiProperty(prop.bidPriceVat)
-	bidPriceMax?: decimal;
-
-	@ApiProperty(prop.driver)
-	driver?: IDriver;
-
-	@ApiProperty(prop.order)
-	order?: IOrder;
-
-	@ApiProperty(prop.transports)
-	transports?: string[] = [];
+	bidPriceVat?: number;
 }

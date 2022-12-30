@@ -1,22 +1,21 @@
 import {
 	CreatedAt,
-	Default,
+	IsUUID,
 	Model,
-	Sequelize,
 	UpdatedAt
-}                      from 'sequelize-typescript';
-import { ApiProperty } from '@nestjs/swagger';
+}                       from 'sequelize-typescript';
+import { ApiProperty }  from '@nestjs/swagger';
 import {
 	Field,
 	ObjectType
-}                      from '@nestjs/graphql';
+}                       from '@nestjs/graphql';
 import {
 	IdColumn,
 	IModel,
 	TCreationAttribute
-}                      from '@common/interfaces';
-import entityConfig    from '@common/properties';
-import { UuidScalar }  from '@common/scalars';
+}                       from '@common/interfaces';
+import { UuidScalar }   from '@common/scalars';
+import { entityConfig } from '@api/swagger/properties';
 
 const { base: prop } = entityConfig;
 
@@ -28,7 +27,7 @@ export default abstract class EntityModel<TModelAttributes extends IModel,
 	implements IModel {
 	@ApiProperty(prop.id)
 	@Field(() => UuidScalar)
-	@Default(() => Sequelize.literal('gen_random_uuid()'))
+	@IsUUID('all')
 	@IdColumn()
 	override id: string;
 

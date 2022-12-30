@@ -1,7 +1,8 @@
-import faker       from '@faker-js/faker';
-import * as enums  from '@common/enums';
-import * as dto    from '@api/dto';
-import * as common from './common';
+import faker         from '@faker-js/faker';
+import * as enums    from '@common/enums';
+import * as dto      from '@api/dto';
+import * as common   from './common';
+import { Reference } from '@common/constants';
 
 function getFixedFromLoadingType() {
 	const loadingSet = new Set<number>();
@@ -26,42 +27,47 @@ const generateRegistrationNumber = (): string =>
 	`${faker.random.alpha(1)} ${faker.random.alphaNumeric(3)} ${faker.datatype.string(2)}`;
 
 const generateTransport = async(driver?: dto.DriverCreateDto): Promise<dto.TransportCreateDto> =>
-	({
-		crmId:                null,
-		status:               getFixedFromTransportStatus(),
-		type:                 faker.helpers.arrayElement(common.TRANSPORT_TYPES),
-		brand:                faker.helpers.arrayElement(common.BRANDS),
-		model:                faker.vehicle.model(),
-		registrationNumber:   generateRegistrationNumber(),
-		prodYear:             faker.datatype.number({ min: 2010, max: 2021 }),
-		payload:              faker.helpers.arrayElement(common.TRANSPORT_PAYLOADS),
-		payloadExtra:         faker.datatype.boolean(),
-		fixtures:             faker.helpers.arrayElements(common.FIXTURES, 3),
-		riskClasses:          faker.helpers.arrayElements(
+{
+	const brand = faker.helpers.arrayElement(Reference.TRANSPORT_BRANDS);
+	const brandName = brand.VALUE;
+	const modelName = Reference.TRANSPORT_MODELS.find(m => m.BRAND_ID === brand.ID)?.VALUE;
+
+	return {
+		status:                getFixedFromTransportStatus(),
+		type:                  faker.helpers.arrayElement(common.TRANSPORT_TYPES),
+		brand:                 brandName,
+		model:                 modelName,
+		registrationNumber:    generateRegistrationNumber(),
+		prodYear:              faker.datatype.number({ min: 2010, max: 2021 }),
+		payloads:              faker.helpers.arrayElements(
+			common.TRANSPORT_PAYLOADS,
+			faker.datatype.number({ min: 1, max: 5 })
+		),
+		payloadExtra:          false,
+		fixtures:              faker.helpers.arrayElements(common.FIXTURES, 3),
+		riskClasses:           faker.helpers.arrayElements(
 			common.RISK_CLASSES,
 			faker.datatype.number({ min: 1, max: 4 })
 		),
-		isTrailer:            false,
-		certificateNumber:    common.generateSerialNumber([2, 2, 6]),
-		weightExtra:          faker.datatype.float(transportParameterRange),
-		volumeExtra:          faker.datatype.float(transportParameterRange),
-		weight:               faker.datatype.float(transportParameterRange),
-		volume:               faker.datatype.float(transportParameterRange),
-		length:               faker.datatype.float(transportParameterRange),
-		width:                faker.datatype.float(transportParameterRange),
-		height:               faker.datatype.float(transportParameterRange),
-		loadingTypes:         getFixedFromLoadingType(),
-		pallets:              faker.datatype.number({ min: 0, max: 50 }),
-		osagoNumber:          common.generateSerialNumber([3, 3, 4]),
-		osagoExpiryDate:      faker.date.past(5),
-		osagoPhotoLink:       faker.internet.avatar(),
-		diagnosticsNumber:    faker.random.alphaNumeric(10)
-		                           .toLocaleUpperCase(),
-		diagnosticsDate:      faker.date.past(5),
-		diagnosticsPhotoLink: faker.internet.avatar(),
-		info:                 `Сгенерированный транспорт водителя${driver ? ' ' + driver.name : ''}.`,
-		comments:             faker.lorem.sentence()
-	});
+		isTrailer:             false,
+		certificateNumber:     common.generateSerialNumber([2, 2, 6]),
+		weightExtra:           faker.datatype.float(transportParameterRange),
+		volumeExtra:           faker.datatype.float(transportParameterRange),
+		weight:                faker.datatype.float(transportParameterRange),
+		volume:                faker.datatype.float(transportParameterRange),
+		length:                faker.datatype.float(transportParameterRange),
+		width:                 faker.datatype.float(transportParameterRange),
+		height:                faker.datatype.float(transportParameterRange),
+		loadingTypes:          getFixedFromLoadingType(),
+		pallets:               faker.datatype.number({ min: 0, max: 50 }),
+		osagoNumber:           common.generateSerialNumber([3, 3, 4]),
+		osagoExpiryDate:       faker.date.future(5),
+		diagnosticsNumber:     faker.random.alphaNumeric(10)
+		                            .toLocaleUpperCase(),
+		diagnosticsExpiryDate: faker.date.future(5),
+		info:                  `Сгенерированный транспорт водителя${driver ? ' ' + driver.name : ''}.`
+	};
+};
 
 export async function generateTransports(
 	count?: number,

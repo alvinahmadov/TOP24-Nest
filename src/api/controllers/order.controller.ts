@@ -16,10 +16,10 @@ import {
 	FileInterceptor,
 	FilesInterceptor
 }                              from '@nestjs/platform-express';
-import { ApiRoute }            from '@common/decorators';
 import { TMulterFile }         from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
+import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	DefaultBoolPipe,
@@ -32,7 +32,10 @@ import {
 	CargoGuard,
 	LogistGuard
 }                              from '@api/security';
-import { OrderService }        from '@api/services';
+import {
+	OfferService,
+	OrderService
+}                              from '@api/services';
 import BaseController          from './controller';
 
 const { path, tag, routes } = getRouteConfig('order');
@@ -43,9 +46,11 @@ const { path, tag, routes } = getRouteConfig('order');
 export default class OrderController
 	extends BaseController {
 	public constructor(
+		private readonly offerService: OfferService,
 		private readonly orderService: OrderService
 	) {
 		super();
+		// this.orderService.gateway = this.gateway;
 	}
 
 	@ApiRoute(routes.filter, {
@@ -59,8 +64,8 @@ export default class OrderController
 	) {
 		if(filter && filter.crmId) {
 			const result = await this.orderService.getByCrmId(filter.crmId);
-			return response.status(result.statusCode)
-			               .send(result);
+
+			return sendResponse(response, result);
 		}
 		const result = await this.orderService.getList(listFilter, filter);
 
@@ -155,9 +160,10 @@ export default class OrderController
 	public async driver(
 		@Param('driverId', ParseUUIDPipe)
 			driverId: string,
+		@Query('order') orderId: string,
 		@Res() response: ex.Response
 	) {
-		const result = await this.orderService.getByDriver(driverId);
+		const result = await this.orderService.getByDriver(driverId, orderId);
 
 		return sendResponse(response, result);
 	}
@@ -179,8 +185,9 @@ export default class OrderController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FilesInterceptor('images')],
-			mimeTypes:    ['multipart/form-data']
+			interceptors: [FilesInterceptor('image')],
+			mimeTypes:    ['multipart/form-data'],
+			multi:        true
 		}
 	})
 	public async uploadShipping(
@@ -189,10 +196,8 @@ export default class OrderController
 		@UploadedFiles() images: Array<TMulterFile>,
 		@Res() response: ex.Response
 	) {
-		const result = await this.orderService.sendShippingDocuments(
-			id, point, images.map(i => ({ file: i.buffer, fileName: i.originalname }))
-		);
-		
+		const result = await this.orderService.sendShippingDocuments(id, point, images);
+
 		return sendResponse(response, result);
 	}
 
@@ -200,17 +205,17 @@ export default class OrderController
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('image')],
-			mimeTypes:    ['multipart/form-data']
+			interceptors: [FilesInterceptor('image')],
+			mimeTypes:    ['multipart/form-data'],
+			multi:        true
 		}
 	})
 	public async uploadPayment(
 		@Param('id', ParseUUIDPipe) id: string,
-		@UploadedFile() image: TMulterFile,
+		@UploadedFiles() images: Array<TMulterFile>,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.orderService.sendDocuments(id, buffer, name, 'payment');
+		const result = await this.orderService.sendDocuments(id, images, 'payment');
 
 		return sendResponse(response, result);
 	}
@@ -228,27 +233,82 @@ export default class OrderController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.orderService.sendDocuments(id, buffer, name, 'contract');
+		const apiResponse = await this.orderService.sendDocuments(id, [image], 'contract');
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.receipt, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('image')],
-			mimeTypes:    ['multipart/form-data']
+			interceptors: [FilesInterceptor('image')],
+			mimeTypes:    ['multipart/form-data'],
+			multi:        true
 		}
 	})
 	public async uploadReceipt(
 		@Param('id', ParseUUIDPipe) id: string,
-		@UploadedFile() image: TMulterFile,
+		@UploadedFiles() images: Array<TMulterFile>,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.orderService.sendDocuments(id, buffer, name, 'contract');
+		const result = await this.orderService.sendDocuments(id, images, 'receipt');
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.shippingDelete, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async deleteShipping(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Query('pt') point: string,
+		@Res() response: ex.Response,
+		@Query('index') index?: number
+	) {
+		const result = await this.orderService.deleteShippingDocuments(id, point, index);
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.paymentDelete, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async deletePaymentPhoto(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response,
+		@Query('index') index?: number
+	) {
+		const result = await this.orderService.deleteDocuments(id, 'payment');
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.contractDelete, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async deleteContract(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.orderService.deleteDocuments(id, 'contract');
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.receiptDelete, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async deleteReceipt(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response,
+		@Query('index') index?: number
+	) {
+		const result = await this.orderService.deleteDocuments(id, 'receipt');
 
 		return sendResponse(response, result);
 	}

@@ -1,48 +1,75 @@
-import { forwardRef, Inject, Injectable }                                                                              from '@nestjs/common';
-import { BitrixUrl, Bucket }                                                                                           from '@common/constants';
+import {
+	forwardRef, Inject,
+	Injectable,
+	HttpStatus
+}                              from '@nestjs/common';
+import { BitrixUrl, Bucket }   from '@common/constants';
+import {
+	DestinationType,
+	UserRole
+}                              from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
+	ICompanyDeleteResponse,
 	IDriver,
 	IService,
-	TAffectedRows,
 	TAsyncApiResponse,
 	TCRMData,
 	TCRMResponse,
 	TGeoCoordinate,
 	TMergedEntities,
+	TMulterFile,
 	TUpdateAttribute
-}                                                                                                                      from '@common/interfaces';
-import { addressFromCoordinates, buildBitrixRequestUrl, calculateDistance, filterDrivers, formatArgs, getTranslation } from '@common/utils';
-import { Driver, Order }                                                                                               from '@models/index';
-import { DriverRepository }                                                                                            from '@repos/index';
-import { DriverCreateDto, DriverFilter, DriverUpdateDto, ListFilter, TransportFilter }                                 from '@api/dto';
-import { EventsGateway }                                                                                               from '@api/events';
-import Service                                                                                                         from './service';
-import ImageFileService                                                                                                from './image-file.service';
-import OrderService                                                                                                    from './order.service';
-import TransportService                                                                                                from './transport.service';
-import { UserRole }                                                                                                    from '@common/enums';
-import CONTACT_DEL_URL = BitrixUrl.CONTACT_DEL_URL;
-import CONTACT_UPD_URL = BitrixUrl.CONTACT_UPD_URL;
-import CONTACT_ADD_URL = BitrixUrl.CONTACT_ADD_URL;
+}                              from '@common/interfaces';
+import {
+	addressFromCoordinates,
+	buildBitrixRequestUrl,
+	calculateDistance,
+	fillDriverWithCompanyData,
+	filterDrivers,
+	formatArgs,
+	getTranslation
+}                              from '@common/utils';
+import { Driver, Order }       from '@models/index';
+import {
+	DestinationRepository,
+	DriverRepository,
+	EntityFCMRepository
+}                              from '@repos/index';
+import {
+	DriverCreateDto,
+	DriverFilter,
+	DriverUpdateDto,
+	ListFilter,
+	TransportFilter
+}                              from '@api/dto';
+import { NotificationGateway } from '@api/notifications';
+import Service                 from './service';
+import ImageFileService        from './image-file.service';
+import OrderService            from './order.service';
 
 const TRANSLATIONS = getTranslation('REST', 'DRIVER');
+const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
+const DIST_200_METERS = 200 / 1000;
+
+const inDistanceRange = (distance: number): boolean => distance <= DIST_200_METERS;
 
 @Injectable()
 export default class DriverService
 	extends Service<Driver, DriverRepository>
 	implements IService {
 	public override readonly responses: IApiResponses<null> = {
-		NOT_FOUND: { statusCode: 404, message: TRANSLATIONS['NOT_FOUND'] }
+		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: TRANSLATIONS['NOT_FOUND'] }
 	};
+	private readonly destinationRepo: DestinationRepository = new DestinationRepository();
+	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: true });
 
 	constructor(
 		protected readonly imageFileService: ImageFileService,
 		@Inject(forwardRef(() => OrderService))
 		protected readonly orderService: OrderService,
-		protected readonly transportService: TransportService,
-		protected readonly gateway: EventsGateway
+		private readonly gateway: NotificationGateway
 	) {
 		super();
 		this.repository = new DriverRepository();
@@ -65,10 +92,11 @@ export default class DriverService
 
 		const data = await this.repository.getList(listFilter, filter);
 		const message = formatArgs(TRANSLATIONS['LIST'], data?.length);
+		const drivers = filterDrivers(data, filter, full, 2)?.map(d => fillDriverWithCompanyData(d));
 
 		return {
-			statusCode: 200,
-			data:       filterDrivers(data, filter, full, 2),
+			statusCode: HttpStatus.OK,
+			data:       drivers,
 			message
 		};
 	}
@@ -87,8 +115,8 @@ export default class DriverService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
-			data:       driver,
+			statusCode: HttpStatus.OK,
+			data:       fillDriverWithCompanyData(driver),
 			message:    formatArgs(TRANSLATIONS['GET'], driver.fullName)
 		};
 	}
@@ -99,10 +127,10 @@ export default class DriverService
 		const drivers = await this.repository.getByTransports(filter);
 
 		return {
-			statusCode: 200,
-			data:       drivers,
+			statusCode: HttpStatus.OK,
+			data:       drivers.map(d => fillDriverWithCompanyData(d)),
 			message:    formatArgs(TRANSLATIONS['TRANSPORTS'], drivers.length)
-		} as IApiResponse<Driver[]>;
+		};
 	}
 
 	/**
@@ -123,7 +151,7 @@ export default class DriverService
 			statusCode: 201,
 			data:       driver,
 			message:    formatArgs(TRANSLATIONS['CREATE'], driver.fullName)
-		} as IApiResponse<Driver>;
+		};
 	}
 
 	/**
@@ -133,12 +161,10 @@ export default class DriverService
 	 *
 	 * @param {String!} id Id of cargo company driver to update.
 	 * @param {Partial<IDriver>!} data Partial new data about cargo company driver.
-	 * @param {Boolean} sendInfo Send websocket information.
 	 * */
 	public async update(
 		id: string,
-		data: DriverUpdateDto,
-		sendInfo: boolean = true
+		data: DriverUpdateDto
 	): TAsyncApiResponse<Driver> {
 		const driver = await this.repository.update(id, data);
 
@@ -147,24 +173,11 @@ export default class DriverService
 
 		const message = formatArgs(TRANSLATIONS['UPDATE'], driver.fullName);
 
-		if(sendInfo) {
-			this.gateway.sendDriverEvent(
-				{
-					id,
-					status:    driver.status,
-					longitude: data.longitude,
-					latitude:  data.latitude,
-					message
-				},
-				UserRole.CARGO
-			);
-		}
-
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       driver,
 			message
-		} as IApiResponse<Driver>;
+		};
 	}
 
 	/**
@@ -175,44 +188,63 @@ export default class DriverService
 	 * @param {String!} id Id of cargo company driver to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<TAffectedRows & {
-		driverImagesCount?: number;
-		transportImagesCount?: number;
-	}> {
+		: TAsyncApiResponse<Pick<ICompanyDeleteResponse, 'driver' | 'transport'>> {
 		const driver = await this.repository.get(id, true);
 		let driverImagesCount = 0,
-			transportImagesCount = 0;
+			transportImagesCount = 0,
+			transportsAffected = 0;
 
 		if(!driver)
 			return this.responses['NOT_FOUND'];
 
 		const message = formatArgs(TRANSLATIONS['DELETE'], driver.fullName);
 
-		driverImagesCount = await driver.deleteImages();
+		driverImagesCount = await this.imageFileService
+		                              .deleteImageList(
+			                              [
+				                              driver.avatarLink,
+				                              driver.passportPhotoLink,
+				                              driver.passportSignLink,
+				                              driver.passportSelfieLink,
+				                              driver.licenseBackLink,
+				                              driver.licenseFrontLink
+			                              ]
+		                              );
 
 		if(driver.transports) {
-			const result = await this.transportService.deleteList(driver.transports);
-			transportImagesCount = result.data;
+			transportsAffected = driver.transports.length;
+			transportImagesCount = await this.imageFileService
+			                                 .deleteImageList(
+				                                 driver.transports
+				                                       .flatMap(t => t.images)
+				                                       .map(image => image.url)
+			                                 );
 		}
 
 		if(driver.crmId) {
-			await this.httpClient.get(`${CONTACT_DEL_URL}?ID=${driver.crmId}`);
+			try {
+				await this.httpClient.get(`${BitrixUrl.CONTACT_DEL_URL}?ID=${driver.crmId}`);
+			} catch(e) {
+				console.error(e);
+			}
 		}
 
 		const { affectedCount = 0 } = await this.repository.delete(id);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       {
-				affectedCount,
-				driverImagesCount,
-				transportImagesCount
+				driver:    {
+					affectedCount,
+					images: driverImagesCount
+				},
+				transport: {
+					affectedCount: transportsAffected,
+					images:        transportImagesCount
+				}
 			},
 			message
-		} as IApiResponse<TAffectedRows & {
-			driverImagesCount?: number;
-			transportImagesCount?: number;
-		}>;
+		};
 	}
 
 	/**
@@ -229,8 +261,8 @@ export default class DriverService
 		let directions: string[] = [];
 
 		let { crmId } = driver;
-		const url = crmId ? CONTACT_UPD_URL
-		                  : CONTACT_ADD_URL;
+		const url = crmId ? BitrixUrl.CONTACT_UPD_URL
+		                  : BitrixUrl.CONTACT_ADD_URL;
 
 		if(driver.cargoId) {
 			if(driver.cargo) {
@@ -259,7 +291,7 @@ export default class DriverService
 		}
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       crmId
 		};
 	}
@@ -281,23 +313,68 @@ export default class DriverService
 				}
 				const point: TGeoCoordinate = [driver.latitude, driver.longitude];
 				const currentAddress = await addressFromCoordinates(driver.latitude, driver.longitude);
-				const destinations = order.destinations;
-				for(const destination of destinations) {
-					destination.distance = calculateDistance(point, destination.coordinates);
-				}
-				await this.orderService.update(order.id, { destinations });
+				const destination = await this.destinationRepo.getOrderDestination(order.id, { point: driver.currentPoint });
+				const distance = calculateDistance(point, destination.coordinates);
+				await this.destinationRepo.update(destination.id, { distance });
+
 				await driver.save({ fields: ['currentAddress'] });
 				const data = { currentAddress };
-				this.gateway.sendDriverEvent(
+				const fcmEntity = await this.fcmEntityRepo.getByEntityId(driver.id);
+				const passedDistance = fcmEntity ? fcmEntity.passedDistance : false;
+
+				if(distance <= DIST_200_METERS && !passedDistance) {
+					let message: string = '';
+
+					switch(destination.type) {
+						case DestinationType.LOAD:
+							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_LOAD_200M'];
+							break;
+						case DestinationType.UNLOAD:
+							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_UNLOAD_200M'];
+							break;
+						case DestinationType.COMBINED:
+							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_COMBINED_200M'];
+							break;
+					}
+
+					this.gateway.sendDriverNotification(
+						{
+							id:             driver.id,
+							source:         'driver',
+							status:         driver.status,
+							latitude:       driver.latitude,
+							longitude:      driver.longitude,
+							currentPoint:   driver.currentAddress,
+							currentAddress: data.currentAddress,
+							message
+						},
+						{
+							role: UserRole.CARGO,
+							save: false,
+							url:  'Main'
+						}
+					);
+
+					if(fcmEntity) {
+						fcmEntity.passedDistance = true;
+						await fcmEntity.save({ fields: ['passedDistance'] });
+					}
+				}
+
+				this.gateway.sendDriverNotification(
 					{
 						id:             driver.id,
+						source:         'driver',
 						status:         driver.status,
 						latitude:       driver.latitude,
 						longitude:      driver.longitude,
 						currentPoint:   driver.currentAddress,
 						currentAddress: data.currentAddress
 					},
-					UserRole.CARGO
+					{
+						role: UserRole.ADMIN,
+						save: false
+					}
 				);
 				return data;
 			}
@@ -308,90 +385,83 @@ export default class DriverService
 	/**
 	 * @summary Upload license scan.
 	 *
-	 * @description Uploads to Yandex Storage front scan of
-	 * driver license. Then returns link to the uploaded file.
-	 *
-	 * @param {String!} id Id of driver which owns license.
-	 * @param {Buffer!} file Image file buffer to upload.
-	 * @param {String!} name Name to save in storage.
-	 * */
-	public async uploadLicenseFront(
-		id: string,
-		file: Buffer,
-		name: string
-	): TAsyncApiResponse<Driver> {
-		const fileName = `${id}/front/${name}`;
-		const linkName: keyof IDriver = 'licenseFrontLink';
-		const driver = await this.repository.get(id);
-
-		if(!driver)
-			return this.responses['NOT_FOUND'];
-
-		if(driver[linkName])
-			await this.imageFileService.deleteImage(driver[linkName], Bucket.DRIVER);
-
-		return this.uploadPhoto(
-			{ id, buffer: file, name: fileName, linkName, bucketId: Bucket.DRIVER }
-		);
-	}
-
-	/**
-	 * @summary Upload license scan.
-	 *
 	 * @description Uploads to Yandex Storage avatar image of
 	 * driver. Then returns link to the uploaded file.
 	 *
 	 * @param {String!} id Id of driver.
-	 * @param {Buffer!} file Image file buffer to upload.
-	 * @param {String!} name Name to save in storage.
+	 * @param {TMulterFile!} image Image file to upload.
+	 * @param {String} folder Name of the folder to upload the image
 	 * */
 	public async uploadAvatarPhoto(
 		id: string,
-		file: Buffer,
-		name: string
+		image: TMulterFile,
+		folder: string = 'avatar'
 	): TAsyncApiResponse<Driver> {
-		const fileName = `${id}/avatar/${name}`;
-		const linkName: keyof IDriver = 'avatarLink';
 		const driver = await this.repository.get(id);
 
 		if(!driver)
 			return this.responses['NOT_FOUND'];
 
-		if(driver[linkName])
-			await this.imageFileService.deleteImage(driver[linkName], Bucket.DRIVER);
-
-		return this.uploadPhoto(
-			{ id, buffer: file, name: fileName, linkName, bucketId: Bucket.DRIVER }
-		);
+		return this.uploadPhoto(id, image, 'avatarLink', Bucket.Folders.DRIVER, folder);
 	}
 
 	/**
 	 * @summary Upload license scan.
 	 *
-	 * @description Uploads to Yandex Storage back scan of
+	 * @description Uploads to Yandex Storage front scan of
 	 * driver license. Then returns link to the uploaded file.
 	 *
 	 * @param {String!} id Id of driver which owns license.
-	 * @param {Buffer!} file Image file buffer to upload.
-	 * @param {String!} name Name to save in storage.
+	 * @param {Buffer!} image Image file to upload.
+	 * @param {String!} folder Name of the folder to which save image in the storage.
 	 * */
-	public async uploadLicenseBack(
+	public async uploadLicenseFront(
 		id: string,
-		file: Buffer,
-		name: string
+		image: TMulterFile,
+		folder: string = 'front'
 	): TAsyncApiResponse<Driver> {
-		const fileName = `${id}/back/${name}`;
-		const linkName: keyof IDriver = 'licenseBackLink';
 		const driver = await this.repository.get(id);
 
 		if(!driver)
 			return this.responses['NOT_FOUND'];
 
-		if(driver[linkName])
-			await this.imageFileService.deleteImage(driver[linkName], Bucket.DRIVER);
+		return this.uploadPhoto(
+			id,
+			image,
+			'licenseFrontLink',
+			Bucket.Folders.DRIVER,
+			'license',
+			folder
+		);
+	}
+
+	/**
+	 * @summary Upload license back scan.
+	 *
+	 * @description Uploads to Yandex Storage front scan of
+	 * driver license. Then returns link to the uploaded file.
+	 *
+	 * @param {String!} id Id of driver which owns license.
+	 * @param {Buffer!} image Image file to upload.
+	 * @param {String!} folder Name of the folder to which save image in the storage.
+	 * */
+	public async uploadLicenseBack(
+		id: string,
+		image: TMulterFile,
+		folder: string = 'back'
+	): TAsyncApiResponse<Driver> {
+		const driver = await this.repository.get(id);
+
+		if(!driver)
+			return this.responses['NOT_FOUND'];
 
 		return this.uploadPhoto(
-			{ id, buffer: file, name: fileName, linkName, bucketId: Bucket.DRIVER }
+			id,
+			image,
+			'licenseBackLink',
+			Bucket.Folders.DRIVER,
+			'license',
+			folder
 		);
 	}
 }

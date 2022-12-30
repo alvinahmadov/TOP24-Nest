@@ -1,5 +1,26 @@
 import axios,
-{ AxiosRequestConfig, AxiosResponse } from 'axios';
+{
+	AxiosError,
+	AxiosRequestConfig,
+	AxiosResponse
+} from 'axios';
+
+interface IAxiosErrorJson<D = any> {
+	name: string;
+	message: string;
+	description?: string;
+	stack?: any | undefined;
+	config:
+		{
+			url: string;
+			method: string;
+			data?: D;
+			timeout?: number;
+			headers?: any;
+		},
+	code?: string;
+	status?: number;
+}
 
 export class AxiosStatic {
 	private static setConfig(config?: AxiosRequestConfig) {
@@ -12,21 +33,52 @@ export class AxiosStatic {
 		return config;
 	}
 
+	private static async makeRequest<T = any>(
+		cb: () => Promise<AxiosResponse<T>>,
+		config?: AxiosRequestConfig
+	): Promise<T> {
+		let result: T = null;
+		try {
+			const axiosResponse = await cb();
+			if(axiosResponse && axiosResponse.data) {
+				result = axiosResponse.data;
+			}
+		} catch(e) {
+			const axiosError = e as AxiosError<any>;
+			const errorJson = axiosError.toJSON() as any;
+			const errorDescription: IAxiosErrorJson = {
+				name:        axiosError.name,
+				message:     axiosError.message,
+				description: axiosError.response.data['error_description'],
+				config:      {
+					method: errorJson['config'].method,
+					url:    errorJson['config'].url,
+					data:   config?.data
+				}
+			};
+			console.error(errorDescription);
+		}
+		return result;
+	}
+
 	static async post<T = any, D = any>(
 		path: string,
 		data?: D,
 		config?: AxiosRequestConfig
 	): Promise<T> {
 		config = AxiosStatic.setConfig(config);
-		const { data: result } = await axios.request<T, AxiosResponse<T>, D>(
-			{
-				data,
-				url:    path,
-				method: 'post',
-				...config
-			}
+
+		return AxiosStatic.makeRequest(
+			() => axios.request<T, AxiosResponse<T>, D>(
+				{
+					data,
+					url:    path,
+					method: 'post',
+					...config
+				}
+			),
+			{ data }
 		);
-		return result;
 	}
 
 	static async get<T = any, D = any>(
@@ -35,15 +87,18 @@ export class AxiosStatic {
 		config?: AxiosRequestConfig
 	): Promise<T> {
 		config = AxiosStatic.setConfig(config);
-		const { data: result } = await axios.request<T>(
-			{
-				data,
-				url:    path,
-				method: 'get',
-				...config
-			}
+
+		return AxiosStatic.makeRequest(
+			() => axios.request<T>(
+				{
+					data,
+					url:    path,
+					method: 'get',
+					...config
+				}
+			),
+			{ data }
 		);
-		return result;
 	}
 
 	static async put<T = any, D = any>(
@@ -52,15 +107,18 @@ export class AxiosStatic {
 		config?: AxiosRequestConfig
 	): Promise<T> {
 		config = AxiosStatic.setConfig(config);
-		const { data: result } = await axios.request<T>(
-			{
-				data,
-				url:    path,
-				method: 'put',
-				...config
-			}
+
+		return AxiosStatic.makeRequest(
+			() => axios.request<T>(
+				{
+					data,
+					url:    path,
+					method: 'put',
+					...config
+				}
+			),
+			{ data }
 		);
-		return result;
 	}
 
 	static async patch<T = any, D = any>(
@@ -69,15 +127,18 @@ export class AxiosStatic {
 		config?: AxiosRequestConfig
 	): Promise<T> {
 		config = AxiosStatic.setConfig(config);
-		const { data: result } = await axios.request<T>(
-			{
-				data,
-				url:    path,
-				method: 'patch',
-				...config
-			}
+
+		return AxiosStatic.makeRequest(
+			() => axios.request<T>(
+				{
+					data,
+					url:    path,
+					method: 'patch',
+					...config
+				}
+			),
+			{ data }
 		);
-		return result;
 	}
 
 	static async delete<T = any>(
@@ -85,14 +146,16 @@ export class AxiosStatic {
 		config?: AxiosRequestConfig
 	): Promise<T> {
 		config = AxiosStatic.setConfig(config);
-		const { data: result } = await axios.request<T>(
-			{
-				url:    path,
-				method: 'delete',
-				...config
-			}
+
+		return AxiosStatic.makeRequest(
+			() => axios.request<T>(
+				{
+					url:    path,
+					method: 'delete',
+					...config
+				}
+			)
 		);
-		return result;
 	}
 }
 

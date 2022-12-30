@@ -1,12 +1,13 @@
 import {
 	IApiResponse,
 	IModel
-}                        from '@common/interfaces';
-import * as attributes   from '@common/interfaces/attributes';
-import * as models       from '@models/index';
-import EntityModel       from '@models/entity-model';
-import * as transformers from './transformer-types';
-import * as helpers      from './helpers';
+}                            from '@common/interfaces';
+import * as attributes       from '@common/interfaces/attributes';
+import { isSuccessResponse } from '@common/utils';
+import * as models           from '@models/index';
+import EntityModel           from '@models/entity-model';
+import * as transformers     from './transformer-types';
+import * as helpers          from './helpers';
 
 function transformAddress(address: models.Address)
 	: transformers.IAddressTransformer {
@@ -53,8 +54,6 @@ function transformAdmin(admin: models.Admin)
 			phone:     admin.getDataValue('phone'),
 			type:      admin.getDataValue('role'),
 			confirmed: admin.getDataValue('confirmed'),
-			privilege: admin.getDataValue('privilege'),
-			verify:    admin.getDataValue('verify'),
 			createdAt: admin.getDataValue('createdAt'),
 			updatedAt: admin.getDataValue('updatedAt')
 		};
@@ -81,22 +80,25 @@ function transformCargoCompany(company: models.CargoCompany)
 	if(company) {
 		return {
 			id:                            company.getDataValue('id'),
+			userId:                        company.userId,
 			name:                          company.getDataValue('name'),
 			email:                         company.getDataValue('email'),
 			company_type:                  company.getDataValue('type'),
-			type:                          company.getDataValue('role'),
+			type:                          company.get('role'),
 			inn:                           company.getDataValue('taxpayerNumber'),
-			shortname:                     company.getDataValue('shortName'),
+			director:                      company.getDataValue('director'),
+			shortname:                     company.getDataValue('legalName'),
 			passport_serial_number:        company.getDataValue('passportSerialNumber'),
 			passport_date:                 company.getDataValue('passportGivenDate'),
 			passport_subdivision_code:     company.getDataValue('passportSubdivisionCode'),
 			passport_issued_by:            company.getDataValue('passportIssuedBy'),
 			passport_registration_address: company.getDataValue('passportRegistrationAddress'),
 			crm_id:                        company.getDataValue('crmId'),
+			is_default:                    company.getDataValue('isDefault'),
 			phone:                         company.getDataValue('phone'),
 			phone_second:                  company.getDataValue('contactPhone'),
+			user_phone:                    company.get('userPhone'),
 			directions:                    company.getDataValue('directions'),
-			verify:                        company.getDataValue('verify'),
 			nds:                           company.getDataValue('paymentType'),
 			confirmed:                     company.getDataValue('confirmed'),
 			avatar_link:                   company.getDataValue('avatarLink'),
@@ -113,10 +115,10 @@ function transformCargoCompany(company: models.CargoCompany)
 			director_order_photo_link:     company.getDataValue('directorOrderPhotoLink'),
 			attorney_sign_link:            company.getDataValue('attorneySignLink'),
 			certificate_photo_link:        company.getDataValue('certificatePhotoLink'),
-			images:                        company.images?.map(transformImage),
 			drivers:                       company.drivers?.map(transformDriver),
 			orders:                        company.orders?.map(transformOrder),
 			payment:                       transformPayment(company.payment),
+			user:                          transformUser(company.user),
 			transports:                    company.transports?.map(transformTransport),
 			createdAt:                     company.getDataValue('createdAt'),
 			updatedAt:                     company.getDataValue('updatedAt')
@@ -138,15 +140,16 @@ export function transformToCargoCompany(data: transformers.ICargoCompanyTransfor
 	return null;
 }
 
-function transformCargoInnCompany(company: models.CargoInnCompany)
-	: transformers.ICargoInnCompanyTransformer {
+function transformCargoCompanyInn(company: models.CargoCompanyInn)
+	: transformers.ICargoCompanyInnTransformer {
 	if(company) {
 		return {
 			id:                            company.getDataValue('id'),
+			userId:                        company.getDataValue('userId'),
 			name:                          company.getDataValue('name'),
 			email:                         company.getDataValue('email'),
 			company_type:                  company.getDataValue('type'),
-			type:                          company.getDataValue('role'),
+			type:                          company.get('role'),
 			inn:                           company.getDataValue('taxpayerNumber'),
 			middle_name:                   company.getDataValue('patronymic'),
 			surname:                       company.getDataValue('lastName'),
@@ -157,10 +160,11 @@ function transformCargoInnCompany(company: models.CargoInnCompany)
 			passport_issued_by:            company.getDataValue('passportIssuedBy'),
 			passport_registration_address: company.getDataValue('passportRegistrationAddress'),
 			crm_id:                        company.getDataValue('crmId'),
+			is_default:                    company.getDataValue('isDefault'),
 			phone:                         company.getDataValue('phone'),
 			phone_second:                  company.getDataValue('contactPhone'),
+			user_phone:                    company.get('userPhone'),
 			directions:                    company.getDataValue('directions'),
-			verify:                        company.getDataValue('verify'),
 			nds:                           company.getDataValue('paymentType'),
 			confirmed:                     company.getDataValue('confirmed'),
 			address_first:                 company.getDataValue('address'),
@@ -170,11 +174,11 @@ function transformCargoInnCompany(company: models.CargoInnCompany)
 			passport_link:                 company.getDataValue('passportPhotoLink'),
 			passport_selfie_link:          company.getDataValue('passportSelfieLink'),
 			passport_sign_link:            company.getDataValue('passportSignLink'),
-			images:                        company.images?.map(transformImage),
 			drivers:                       company.drivers?.map(transformDriver),
 			orders:                        company.orders?.map(transformOrder),
 			payment:                       transformPayment(company.payment),
 			transports:                    company.transports?.map(transformTransport),
+			user:                          transformUser(company.user),
 			createdAt:                     company.getDataValue('createdAt'),
 			updatedAt:                     company.getDataValue('updatedAt')
 		};
@@ -183,11 +187,11 @@ function transformCargoInnCompany(company: models.CargoInnCompany)
 	return null;
 }
 
-export function transformToCargoInnCompany(data: transformers.ICargoInnCompanyTransformer)
-	: attributes.ICargoInnCompany {
+export function transformToCargoCompanyInn(data: transformers.ICargoCompanyInnTransformer)
+	: attributes.ICargoCompanyInn {
 	if(data) {
 		return {
-			...helpers.translateCargoInnCompany(data),
+			...helpers.translateCargoCompanyInn(data),
 			createdAt: data.createdAt,
 			updatedAt: data.updatedAt
 		};
@@ -215,11 +219,11 @@ function transformDriver(driver: models.Driver)
 			phone_second:                  driver.getDataValue('phoneSecond'),
 			taxpayer_number:               driver.getDataValue('taxpayerNumber'),
 			passport_serial_number:        driver.getDataValue('passportSerialNumber'),
-			passport_date:                 driver.getDataValue('passportDate'),
+			passport_date:                 driver.getDataValue('passportGivenDate'),
 			passport_subdivision_code:     driver.getDataValue('passportSubdivisionCode'),
 			passport_issued_by:            driver.getDataValue('passportIssuedBy'),
 			passport_registration_address: driver.getDataValue('passportRegistrationAddress'),
-			passport_link:                 driver.getDataValue('passportPhotoLink'),
+			passport_photo_link:           driver.getDataValue('passportPhotoLink'),
 			passport_sign_link:            driver.getDataValue('passportSignLink'),
 			passport_selfie_link:          driver.getDataValue('passportSelfieLink'),
 			avatar_link:                   driver.getDataValue('avatarLink'),
@@ -239,9 +243,10 @@ function transformDriver(driver: models.Driver)
 			latitude:                      driver.getDataValue('latitude'),
 			longitude:                     driver.getDataValue('longitude'),
 			current_address:               driver.getDataValue('currentAddress'),
-			fullName:                      driver.getDataValue('fullName'),
+			fullname:                      driver.get('fullName'),
+			company_name:                  driver.get('companyName'),
 			cargo:                         transformCargoCompany(driver.cargo),
-			cargoinn:                      transformCargoInnCompany(driver.cargoinn),
+			cargoinn:                      transformCargoCompanyInn(driver.cargoinn),
 			order:                         transformOrder(driver.order),
 			transports:                    driver.transports?.map(transformTransport),
 			createdAt:                     driver.getDataValue('createdAt'),
@@ -257,6 +262,70 @@ export function transformToDriver(data: transformers.IDriverTransformer)
 	if(data) {
 		return {
 			...helpers.translateDriver(data),
+			createdAt: data.createdAt,
+			updatedAt: data.updatedAt
+		};
+	}
+
+	return null;
+}
+
+function transformDestinations(destinations: models.Destination[])
+	: transformers.IDestinationTransformer[] {
+	if(destinations) {
+		return destinations.map(transformDestination);
+	}
+
+	return null;
+}
+
+function transformDestination(destination: models.Destination)
+	: transformers.IDestinationTransformer {
+	if(destination) {
+		return {
+			id:            destination.getDataValue('id'),
+			point:         destination.getDataValue('point'),
+			type:          destination.getDataValue('type'),
+			address:       destination.getDataValue('address'),
+			coordinates:   destination.getDataValue('coordinates'),
+			date:          destination.getDataValue('date'),
+			contact:       destination.getDataValue('contact'),
+			phone:         destination.getDataValue('phone'),
+			distance:      destination.getDataValue('distance'),
+			comment:       destination.getDataValue('comment'),
+			fulfilled:     destination.getDataValue('fulfilled'),
+			shipping_link: destination.getDataValue('shippingPhotoLinks'),
+			createdAt:     destination.getDataValue('createdAt'),
+			updatedAt:     destination.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+function transformGatewayEvent(event: models.GatewayEvent)
+	: transformers.IGatewayEventTransformer {
+	if(event) {
+		return {
+			id:         event.getDataValue('id'),
+			event_name: event.getDataValue('eventName'),
+			event_data: event.getDataValue('eventData'),
+			has_seen:   event.getDataValue('hasSeen'),
+			source:     event.getDataValue('source'),
+			message:    event.getDataValue('message'),
+			createdAt:  event.getDataValue('createdAt'),
+			updatedAt:  event.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+export function transformToGatewayEvent(data: transformers.IGatewayEventTransformer)
+	: attributes.IGatewayEvent {
+	if(data) {
+		return {
+			...helpers.translateGatewayEvent(data),
 			createdAt: data.createdAt,
 			updatedAt: data.updatedAt
 		};
@@ -338,6 +407,7 @@ export function transformToOfferDriver(data: Partial<transformers.TOfferDriverTr
 			bidPrice:    data.bid_price,
 			bidPriceVat: data.bid_price_max,
 			bidComment:  data.comments,
+			status:      data.status,
 			orderStatus: data.order_status
 		};
 	}
@@ -363,6 +433,8 @@ function transformOrder(order: models.Order)
 			stage:                      order.getDataValue('stage'),
 			is_open:                    order.getDataValue('isOpen'),
 			is_free:                    order.getDataValue('isFree'),
+			is_current:                 order.getDataValue('isCurrent'),
+			on_payment:                 order.getDataValue('onPayment'),
 			cancel_cause:               order.getDataValue('cancelCause'),
 			is_canceled:                order.getDataValue('isCanceled'),
 			has_problem:                order.getDataValue('hasProblem'),
@@ -381,16 +453,18 @@ function transformOrder(order: models.Order)
 			height:                     order.getDataValue('height'),
 			palets:                     order.getDataValue('pallets'),
 			transport_types:            order.getDataValue('transportTypes'),
-			destinations:               order.getDataValue('destinations'),
+			destinations:               transformDestinations(order.destinations),
 			driver_deferral_conditions: order.getDataValue('driverDeferralConditions'),
 			owner_deferral_conditions:  order.getDataValue('ownerDeferralConditions'),
 			dedicated_machine:          order.getDataValue('dedicated'),
-			payment_link:               order.getDataValue('paymentPhotoLink'),
-			receipt_link:               order.getDataValue('receiptPhotoLink'),
+			payment_link:               order.getDataValue('paymentPhotoLinks'),
+			receipt_link:               order.getDataValue('receiptPhotoLinks'),
 			contract_link:              order.getDataValue('contractPhotoLink'),
 			filter:                     order.getDataValue('filter'),
+			is_dedicated:               order.get('isDedicated'),
+			is_extra_payload:           order.get('isExtraPayload'),
 			cargo:                      transformCargoCompany(order?.cargo),
-			cargoinn:                   transformCargoInnCompany(order?.cargoinn),
+			cargoinn:                   transformCargoCompanyInn(order?.cargoinn),
 			driver:                     transformDriver(order?.driver),
 			createdAt:                  order.getDataValue('createdAt'),
 			updatedAt:                  order.getDataValue('updatedAt')
@@ -463,7 +537,7 @@ function transformTransport(transport: models.Transport)
 			model:          transport.getDataValue('model'),
 			registr_num:    transport.getDataValue('registrationNumber'),
 			prod_year:      transport.getDataValue('prodYear'),
-			payload:        transport.getDataValue('payload'),
+			payloads:       transport.getDataValue('payloads'),
 			payload_extra:  transport.getDataValue('payloadExtra'),
 			is_trailer:     transport.getDataValue('isTrailer'),
 			is_dedicated:   transport.getDataValue('isDedicated'),
@@ -482,7 +556,7 @@ function transformTransport(transport: models.Transport)
 			osago_date:     transport.getDataValue('osagoExpiryDate'),
 			osago_link:     transport.getDataValue('osagoPhotoLink'),
 			diag_num:       transport.getDataValue('diagnosticsNumber'),
-			diag_date:      transport.getDataValue('diagnosticsDate'),
+			diag_date:      transport.getDataValue('diagnosticsExpiryDate'),
 			diag_link:      transport.getDataValue('diagnosticsPhotoLink'),
 			info:           transport.getDataValue('info'),
 			comments:       transport.getDataValue('comments'),
@@ -511,51 +585,100 @@ export function transformToTransport(data: transformers.ITransportTransformer)
 	return null;
 }
 
-export function transformEntity<T extends IModel, E extends EntityModel<T>>(entity: E) {
+function transformUser(user: models.User, deep?: boolean)
+	: transformers.IUserTransformer {
+	if(user) {
+		return {
+			id:        user.getDataValue('id'),
+			phone:     user.getDataValue('phone'),
+			type:      user.getDataValue('role'),
+			confirmed: user.getDataValue('confirmed'),
+			cargo_companies:
+			           !!deep ? user.cargoCompanies.map(transformCargoCompany)
+			                  : undefined,
+			cargoinn_companies:
+			           !!deep ? user.cargoInnCompanies.map(transformCargoCompanyInn)
+			                  : undefined,
+			createdAt: user.getDataValue('createdAt'),
+			updatedAt: user.getDataValue('updatedAt')
+		};
+	}
+
+	return null;
+}
+
+export function transformEntity<T extends IModel, E extends EntityModel<T>>(
+	entity: E,
+	message?: string
+) {
+	let transformedData: transformers.ITransformer;
 	if(entity instanceof models.Address) {
-		return transformAddress(entity);
+		transformedData = transformAddress(entity);
 	}
 	else if(entity instanceof models.Admin) {
-		return transformAdmin(entity);
+		transformedData = transformAdmin(entity);
 	}
 	else if(entity instanceof models.CargoCompany) {
-		return transformCargoCompany(entity);
+		transformedData = transformCargoCompany(entity);
 	}
-	else if(entity instanceof models.CargoInnCompany) {
-		return transformCargoInnCompany(entity);
+	else if(entity instanceof models.CargoCompanyInn) {
+		transformedData = transformCargoCompanyInn(entity);
+	}
+	else if(entity instanceof models.Destination) {
+		transformedData = transformDestination(entity);
 	}
 	else if(entity instanceof models.Driver) {
-		return transformDriver(entity);
+		transformedData = transformDriver(entity);
+	}
+	else if(entity instanceof models.GatewayEvent) {
+		transformedData = transformGatewayEvent(entity);
 	}
 	else if(entity instanceof models.Image) {
-		return transformImage(entity);
+		transformedData = transformImage(entity);
 	}
 	else if(entity instanceof models.Offer) {
-		return transformOffer(entity);
+		transformedData = transformOffer(entity);
 	}
 	else if(entity instanceof models.Order) {
-		return transformOrder(entity);
+		transformedData = transformOrder(entity);
 	}
 	else if(entity instanceof models.Payment) {
-		return transformPayment(entity);
+		transformedData = transformPayment(entity);
 	}
 	else if(entity instanceof models.Transport) {
-		return transformTransport(entity);
+		transformedData = transformTransport(entity);
 	}
+	else if(entity instanceof models.User) {
+		transformedData = transformUser(entity);
+	}
+
+	if(transformedData) {
+		transformedData.message = message;
+		return transformedData;
+	}
+
 	return entity;
 }
 
-export function transformEntities<T extends IModel, E extends EntityModel<T>>(entities: E[]) {
+export function transformEntities<T extends IModel, E extends EntityModel<T>>(
+	entities: E[]
+) {
 	if(entities && entities.length > 0) {
-		return entities.map(transformEntity);
+		return entities.map(e => transformEntity(e));
 	}
 
 	return entities;
 }
 
 export function transformApiResult<T>(result: IApiResponse<T>)
-	: IModel | IModel[] | IApiResponse<T> | (T & any[]) | transformers.TTransformerApiResponse {
-	if(!result.data) {
+	: transformers.TTransformerResponse<T> | { status?: number; message?: string } {
+	if(!result) {
+		return {
+			status:  404,
+			message: 'Result is null'
+		};
+	}
+	if(!isSuccessResponse(result)) {
 		return {
 			status:  result.statusCode ?? 404,
 			message: result.message
@@ -567,30 +690,34 @@ export function transformApiResult<T>(result: IApiResponse<T>)
 			if(result.data[0] instanceof EntityModel) {
 				return transformEntities(result.data);
 			}
-			else {
-				return result.data;
-			}
+			else return result.data;
 		}
 
 		return [];
 	}
 	else if(result.data instanceof EntityModel) {
-		return transformEntity(result.data);
+		return transformEntity(result.data, result.message);
 	}
 	else {
 		if(typeof result.data === 'object') {
 			for(const dataKey in result.data) {
-				if(result.data[dataKey] instanceof EntityModel) {
+				const data = result.data[dataKey];
+				if(data instanceof EntityModel) {
 					//@ts-ignore
-					result.data[dataKey] = transformEntity(result.data[dataKey]);
+					result.data[dataKey] = transformEntity(data, result.message);
 				}
-				else if(Array.isArray(result.data[dataKey])) {
-					//@ts-ignore
-					result.data[dataKey] = transformEntities(result.data[dataKey]);
+				else if(Array.isArray(data) && data?.length > 0) {
+					if(data[0] instanceof EntityModel) {
+						//@ts-ignore
+						result.data[dataKey] = transformEntities(data);
+					}
 				}
 			}
 		}
 
-		return result.data;
+		return {
+			...result.data,
+			message: result.message
+		};
 	}
 }

@@ -1,7 +1,6 @@
 import { Request } from 'express';
 // @ts-ignore
 import { Multer }  from 'multer';
-import { Model }   from 'sequelize-typescript';
 import {
 	CanActivate,
 	HttpStatus,
@@ -23,7 +22,8 @@ import {
 import {
 	DriverStatus,
 	OrderStage,
-	OrderStatus
+	OrderStatus,
+	UserRole
 }                  from '../enums';
 
 //////////////
@@ -71,7 +71,7 @@ export type TCRMResponse = {
 	};
 }
 
-export type TDocumentMode = 'payment' | 'contract' | 'receipt';
+export type TDocumentMode = 'payment' | 'contract' | 'receipt' | string;
 
 /**@ignore*/
 export type TFormat = 'url' |
@@ -79,14 +79,17 @@ export type TFormat = 'url' |
                       'date' |
                       'float' |
                       'integer' |
+                      'string' |
                       string;
 
 /**@ignore*/
 export type TImageMimeType = 'image/gif' |
                              'image/png' |
                              'image/jpeg' |
+                             'image/jpg' |
                              'image/webp' |
-                             'image/svg+xml';
+                             'image/svg+xml' |
+                             string;
 
 export type TLogIdentifier = {
 	id?: string;
@@ -112,7 +115,7 @@ export type TOperationCount = {
 }
 
 /**@ignore*/
-export type TQueryConfig = Record<string, string | number>;
+export type TQueryConfig = Record<string, TStringOrNumber | Array<TStringOrNumber>>;
 
 /**@ignore*/
 export type TRouteAccess = {
@@ -129,9 +132,18 @@ export type TStatusCode = 200 |
                           500 |
                           number;
 
+export type TStringOrNumber = string | number;
+
+export type TObjectStorageAuth = {
+	accessKeyId: string;
+	secretKey: string;
+}
+
 export type TWebHookEvent = 'ONCRMDEALADD' |
                             'ONCRMDEALUPDATE' |
-                            'ONCRMDEALDELETE';
+                            'ONCRMDEALDELETE' |
+                            'ONCRMCOMPANYUPDATE' |
+                            'ONCRMCONTACTUPDATE';
 
 //////////////////
 //  Interfaces  //
@@ -143,7 +155,7 @@ export interface IAuthRequest
 }
 
 export interface IApiResponse<T> {
-	statusCode: TStatusCode;
+	statusCode: HttpStatus;
 	data?: T;
 	message?: string;
 }
@@ -169,7 +181,14 @@ export interface IApiRouteInfoParams {
 	fileOpts?: {
 		mimeTypes: TMediaType[];
 		interceptors: (NestInterceptor | Function)[];
+		multi?: boolean
 	};
+}
+
+export interface IApiSwaggerDescription {
+	operation?: ApiOperationOptions;
+	responses?: Record<number, ApiResponseOptions>;
+	queryOptions?: ApiQueryOptions | ApiQueryOptions[];
 }
 
 /**@ignore*/
@@ -184,11 +203,7 @@ export interface IApiRouteMetadata<M = any> {
 	 * */
 	method: RequestMethod;
 
-	api?: {
-		operation?: ApiOperationOptions;
-		responses?: Record<number, ApiResponseOptions>;
-		queryOptions?: ApiQueryOptions | ApiQueryOptions[];
-	};
+	api?: IApiSwaggerDescription;
 }
 
 export interface IApiRouteConfig<M = any> {
@@ -199,7 +214,7 @@ export interface IApiRouteConfig<M = any> {
 
 /**@ignore*/
 export interface IBucketItem {
-	buffer: Buffer;
+	buffer?: Buffer;
 	name?: string;
 	save_name?: string;
 	path?: string;
@@ -217,10 +232,41 @@ export interface ICompanyLoginResponse
 	code?: string;
 }
 
+export interface ICompanyDeleteResponse {
+	company: {
+		affectedCount: number;
+		images: number;
+	};
+	payment: {
+		affectedCount: number;
+		images: number;
+	};
+	driver: {
+		affectedCount: number;
+		images: number;
+	};
+	transport: {
+		affectedCount: number;
+		images: number;
+	};
+}
+
 export interface ICRMEntity {
+	/**
+	 * CRM id of company from bitrix service.
+	 * */
 	crmId?: number;
 
-	toCrm(...args: any[]): void | TCRMData;
+	/**
+	 * Indicate that data has been sent to the bitrix service for remote update
+	 * and prevent repeat of update actions from webhooks.
+	 * */
+	hasSent?: boolean;
+
+	/**
+	 * Convert entity data to bitrix data for sending.
+	 * */
+	readonly toCrm?: (...args: any[]) => void | TCRMData;
 }
 
 export interface IGatewayData {
@@ -350,16 +396,39 @@ export interface ILoginResponse {
 
 /**@ignore*/
 export interface IObjectStorageParams {
-	auth: {
-		accessKeyId: string;
-		secretAccessKey: string;
-	};
+	/**
+	 * Authentication data
+	 * */
+	auth: TObjectStorageAuth;
+	/**
+	 * Id or name of the bucket of object storage
+	 * */
 	bucketId: string;
+	/**
+	 * The url to the object storage endpoint
+	 * */
 	endpoint_url?: string;
+	/**
+	 * Region of the object storage host
+	 * */
 	region?: string;
 	httpOptions?: {
-		timeout?: number;
+		/**
+		 * the URL to proxy requests through.
+		 */
+		proxy?: string;
+		/**
+		 * The maximum time in milliseconds that the connection phase of the request
+		 * should be allowed to take. This only limits the connection phase and has
+		 * no impact once the socket has established a connection.
+		 * Used in node.js environments only.
+		 */
 		connectTimeout?: number;
+		/**
+		 * The number of milliseconds a request can take before automatically being terminated.
+		 * Defaults to two minutes (120000).
+		 */
+		timeout?: number;
 	};
 	debug?: boolean;
 }
@@ -401,6 +470,26 @@ export interface IServerEvents {
 
 export interface IService {}
 
+export interface IImageFileService
+	extends IService {
+	uploadFile(file: TMulterFile): Promise<IAWSUploadResponse | Error>;
+
+	uploadFiles(
+		files: TMulterFile[],
+		bucketId?: string
+	): Promise<{ Location: string[] }>;
+
+	deleteImage(
+		location: string,
+		bucketId?: string
+	): Promise<number>;
+
+	deleteImageList(
+		locations: string[],
+		bucketId?: string
+	): Promise<number>;
+}
+
 /**@ignore*/
 export interface ISwaggerOptionsRecord {
 	defaultModelsExpandDepth?: number;
@@ -423,17 +512,12 @@ export interface ISwaggerTag {
 }
 
 /**@ignore*/
-export interface IUploadOptions<M extends Model> {
-	// Entity id.
-	id: string;
-	// Uploaded file target name in Yandex Storage.
-	name: string;
-	// Image file buffer to send.
-	buffer: Buffer;
-	// Key for link model field.
-	linkName: keyof M['_attributes'];
-	// Name/id of bucket in Yandex Storage.
-	bucketId?: string;
+export interface IAWSUploadResponse {
+	Location: string;
+	ETag?: string;
+	VersionId?: any;
+	Key?: string;
+	Bucket?: string;
 }
 
 export interface IUserLoginData {
@@ -443,7 +527,7 @@ export interface IUserLoginData {
 
 export interface IUserPayload {
 	id: string;
-	role: number;
+	role: UserRole;
 	reff?: number;
 }
 

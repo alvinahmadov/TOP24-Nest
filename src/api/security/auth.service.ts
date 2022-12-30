@@ -25,13 +25,16 @@ import { Admin }         from '@models/index';
 import {
 	AdminRepository,
 	CargoCompanyRepository,
-	CargoInnCompanyRepository
+	CargoInnCompanyRepository,
+	UserRepository
 }                        from '@repos/index';
-import { StaticService } from './service';
+import { StaticService } from '../services/service';
 
 const TRANSLATIONS = getTranslation('FAIL');
 const COMPANY_TRANSLATIONS = getTranslation('REST', 'COMPANY');
 const USER_TRANSLATIONS = getTranslation('REST', 'ADMIN');
+
+const authWithoutCode = false;
 
 @Injectable()
 export default class AuthService
@@ -41,6 +44,7 @@ export default class AuthService
 	private static readonly JWT = env.jwt;
 
 	protected readonly adminRepo: AdminRepository;
+	protected readonly userRepo: UserRepository;
 	protected readonly cargoCompanyRepo: CargoCompanyRepository;
 	protected readonly cargoCompanyInnRepo: CargoInnCompanyRepository;
 
@@ -58,6 +62,7 @@ export default class AuthService
 		this.adminRepo = new AdminRepository({ log: false });
 		this.cargoCompanyRepo = new CargoCompanyRepository({ log: false });
 		this.cargoCompanyInnRepo = new CargoInnCompanyRepository({ log: false });
+		this.userRepo = new UserRepository({ log: false });
 	}
 
 	public async validateAsync(token: string)
@@ -83,36 +88,52 @@ export default class AuthService
 		repeat?: boolean
 	): TAsyncApiResponse<ICompanyLoginResponse | ICodeResponse> {
 		if(phone && phone !== '') {
-			let company = await this.cargoCompanyRepo.getByPhone(phone, true) ??
-			              await this.cargoCompanyInnRepo.getByPhone(phone, true);
+			const user = await this.userRepo.getByPhone(phone, true);
 
-			if(company) {
-				const repository = company.type === CompanyType.ORG
-				                   ? this.cargoCompanyRepo
-				                   : this.cargoCompanyInnRepo;
-
+			if(user) {
 				if(code) {
-					if(company.verify === code) {
-						const { id } = company;
-						const accessToken = this.createAccess({ id, role: company.role });
-						const refreshToken = this.createRefresh({ id, role: company.role });
-						company.verify = null;
-						company.confirmed = true;
-						await company.save({ fields: ['verify', 'confirmed'] });
+					if(user.verify === code || authWithoutCode) {
+						const { id } = user;
 
-						return {
-							statusCode: 200,
-							data:       { accessToken, refreshToken, company }
-						};
+						const company = user.cargoCompanies.find(c => c.isDefault) ??
+						                user.cargoInnCompanies.find(c => c.isDefault);
+
+						if(!company)
+							throw Error('User doesn\'t have any company');
+
+						const accessToken = this.createAccess({ id, role: user.role });
+						const refreshToken = this.createRefresh({ id, role: user.role });
+						user.verify = null;
+						await user.save({ fields: ['verify'] });
+						if(company.type === CompanyType.ORG) {
+							const cargoCompany = await this.cargoCompanyRepo.get(company.id, true);
+							return {
+								statusCode: 200,
+								data:       { accessToken, refreshToken, company: cargoCompany }
+							};
+						}
+						else {
+							const cargoInnCompany = await this.cargoCompanyInnRepo.get(company.id, true);
+							return {
+								statusCode: 200,
+								data:       { accessToken, refreshToken, company: cargoInnCompany }
+							};
+						}
 					}
 					return this.responses['INCORRECT_CODE'];
 				}
-				if(AuthService.RANDOM_CODE)
-					code = repeat ? company.verify
+
+				if(AuthService.RANDOM_CODE) {
+					code = repeat ? user.verify
 					              : getRandomCode();
-				else
+				}
+				else {
 					code = '1234';
-				await repository.update(company.id, { verify: code });
+				}
+
+				user.verify = code;
+				await user.save({ fields: ['verify'] });
+
 				return { statusCode: 200, data: { code } };
 			}
 			else

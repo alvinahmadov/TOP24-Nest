@@ -7,12 +7,12 @@ import {
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { ApiRoute }            from '@common/decorators';
 import { CompanyType }         from '@common/enums';
 import {
 	randomOf,
 	sendResponse
 }                              from '@common/utils';
+import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
 import { AdminGuard }          from '@api/security';
@@ -51,10 +51,10 @@ export default class GeneratorController {
 		guards: [AdminGuard]
 	})
 	public async createOrders(
-		@Body() data: { count?: number },
+		@Body() data: { count?: number, maxDestination?: number },
 		@Res() response: ex.Response
 	) {
-		const result = await this.generatorService.generateOrders(data.count);
+		const result = await this.generatorService.generateOrders(data.count, data.maxDestination);
 
 		return sendResponse(response, result);
 	}

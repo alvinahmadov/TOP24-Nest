@@ -1,7 +1,9 @@
 import * as ex                 from 'express';
+import { validate as isUuid }  from 'uuid';
 import {
 	Body,
 	Controller,
+	DefaultValuePipe,
 	HttpStatus,
 	Param,
 	ParseUUIDPipe,
@@ -12,22 +14,25 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { Reference }           from '@common/constants';
-import { ApiRoute }            from '@common/decorators';
 import {
 	LoadingType,
 	loadingTypeToStr
 }                              from '@common/enums';
 import {
 	IApiResponse,
+	IAddressFilter,
 	TBitrixData
 }                              from '@common/interfaces';
 import {
 	formatArgs,
 	getTranslation,
+	isSuccessResponse,
 	sendResponse
 }                              from '@common/utils';
 import * as dto                from '@api/dto';
+import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
+import { AddressFilterPipe }   from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import { AddressService }      from '@api/services';
 import { StaticController }    from './controller';
@@ -69,15 +74,33 @@ export default class ReferenceController
 	})
 	public async getAddresses(
 		@Res() response: ex.Response,
-		@Query() listFilter?: dto.ListFilter & { search?: string; regions?: string; short?: boolean }
+		@Query() listFilter?: dto.ListFilter & {
+			search?: string;
+			provider?: string;
+			regions?: string;
+			short?: boolean;
+		}
 	) {
-		const { search, regions, ...rest } = listFilter;
+		const {
+			search,
+			regions,
+			short,
+			provider,
+			...rest
+		} = listFilter;
 
-		const result = (search?.length > 0)
-		               ? await (listFilter.full
-		                        ? this.addressService.searchByApi(search, 2, rest)
-		                        : this.addressService.search(search, rest, Boolean(Number(regions))))
-		               : await this.addressService.getList(rest);
+		const filter: IAddressFilter = { short, provider, search };
+
+		if(regions === undefined)
+			filter.provider = 'osm';
+		else
+			filter.onlyRegions = true;
+
+		const result = search
+		               ? await (rest.full
+		                        ? this.addressService.searchByApi(search, 2, filter, rest)
+		                        : this.addressService.search(search, rest, filter.onlyRegions))
+		               : await this.addressService.getList(rest, filter);
 
 		return sendResponse(response, result);
 	}
@@ -87,11 +110,34 @@ export default class ReferenceController
 	})
 	public async filterAddresses(
 		@Res() response: ex.Response,
-		@Body() filter?: dto.AddressFilter,
-		@Query() listFilter?: dto.ListFilter
+		@Query(new DefaultValuePipe({}))
+			listFilter?: dto.ListFilter,
+		@Body(AddressFilterPipe, new DefaultValuePipe({}))
+			filter?: dto.AddressFilter
 	) {
-		const result = await this.addressService.filter(listFilter, filter);
+		if(filter) {
+			if(filter.onlyCities && isUuid(filter.region)) {
+				const regionAddress = await this.addressService.getById(filter.region);
+				if(isSuccessResponse(regionAddress)) {
+					filter.region = regionAddress.data.region;
+				}
+			}
+		}
 
+		const result = await this.addressService.getList(listFilter, filter);
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.addressLocation, {
+		statuses: [HttpStatus.OK]
+	})
+	public async getNearestAddress(
+		@Body() geoLocation: { latitude: number; longitude: number, distance?: number },
+		@Res() response: ex.Response
+	) {
+		const { latitude = 0, longitude = 0, distance = 60.0 } = geoLocation;
+		const result = await this.addressService.searchByGeolocation({ latitude, longitude }, distance);
 		return sendResponse(response, result);
 	}
 
@@ -148,9 +194,13 @@ export default class ReferenceController
 		                          .sort(compareByValFn)
 		                          .map(lowerCaseFn);
 
+		const orderPayloads = Reference.ORDER_PAYLOADS
+		                               .sort(compareByValFn)
+		                               .map(lowerCaseFn);
+
 		const result: IApiResponse<any> = {
 			statusCode: 200,
-			data:       { payloads },
+			data:       { payloads, orderPayloads },
 			message:    formatArgs(TRANSLATIONS['PAYLOAD_TYPES'], payloads.length)
 		};
 
@@ -180,7 +230,7 @@ export default class ReferenceController
 		statuses: [HttpStatus.OK]
 	})
 	public getRiskClasses(@Res() response: ex.Response) {
-		const riskClasses = Reference.RISK_CLASSES
+		const riskClasses = Reference.TRANSPORT_RISK_CLASSES
 		                             .sort(compareByValFn)
 		                             .map(lowerCaseFn);
 
@@ -205,6 +255,41 @@ export default class ReferenceController
 			statusCode: 200,
 			data:       { transportTypes, auto_types: transportTypes },
 			message:    formatArgs(TRANSLATIONS['TRANSPORT_TYPES'], transportTypes.length)
+		};
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.transportBrands, {
+		statuses: [HttpStatus.OK]
+	})
+	public getTransportBrands(@Res() response: ex.Response) {
+		const transportBrands = Reference.TRANSPORT_BRANDS
+		                                 .map(lowerCaseFn);
+
+		const result: IApiResponse<any> = {
+			statusCode: 200,
+			data:       { transportBrands },
+			message:    formatArgs(TRANSLATIONS['TRANSPORT_TYPES'], transportBrands?.length)
+		};
+
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.transportModels, {
+		statuses: [HttpStatus.OK]
+	})
+	public getTransportModels(
+		@Res() response: ex.Response,
+		@Param('brandId', new DefaultValuePipe(null)) id?: string
+	) {
+		const transportModels = Reference.TRANSPORT_MODELS
+		                                 .filter(a => id ? a.BRAND_ID === id : true)
+		                                 .map(lowerCaseFn);
+
+		const result: IApiResponse<any> = {
+			statusCode: 200,
+			data:       { transportModels }
 		};
 
 		return sendResponse(response, result);

@@ -1,19 +1,88 @@
-import { MAX_FLOAT, MIN_FLOAT }        from '@common/constants';
-import { OrderStage, TransportStatus } from '@common/enums';
+import { MAX_FLOAT, MIN_FLOAT } from '@common/constants';
+import {
+	loadingTypeToStr,
+	OrderStage,
+	TransportStatus
+}                               from '@common/enums';
 import {
 	ICompany,
 	ICompanyTransportFilter,
 	IDriverFilter,
 	IOrder,
 	ITransportFilter
-}                                      from '@common/interfaces';
+}                               from '@common/interfaces';
 import {
 	min,
 	transformDriverTransports
-}                                      from '@common/utils';
-import Driver                          from '@models/driver.entity';
-import Order                           from '@models/order.entity';
-import Transport                       from '@models/transport.entity';
+}                               from '@common/utils';
+import Driver                   from '@models/driver.entity';
+import Order                    from '@models/order.entity';
+import Transport                from '@models/transport.entity';
+
+const debugTransportFilter = false;
+const debugDirectionFilter = false;
+
+const hasValues = (arr?: Array<any>) => arr && arr.length > 0;
+const arrToString = (arr: any[], cb?: (v: any) => string) =>
+	cb !== undefined ? arr.map(a => `${cb(a)} (${a})`).join(', ') : arr.join(', ');
+const toString = (item: any, cb?: (v: any) => string) =>
+	cb !== undefined ? cb(item) : item?.toString();
+
+const checkAgainst = (
+	values: any[],
+	filterValues: any[],
+	name: string,
+	cb?: (v: any) => string,
+	identifier?: string
+): boolean =>
+{
+	if(!hasValues(filterValues))
+		return true;
+
+	if(hasValues(values)) {
+		if(!identifier)
+			identifier = '';
+		else
+			identifier += ': ';
+
+		const includes = values.some((value: any) => filterValues.includes(value));
+		if(!includes) {
+			if(debugTransportFilter)
+				console.debug(
+					`${identifier}No match for ${name}, requested [${arrToString(filterValues, cb)}] against [${arrToString(values, cb)}].`
+				);
+			return false;
+		}
+	}
+	else
+		return false;
+	return true;
+};
+
+const checkAgainstIn = (value: any, filterValues: any[], name: string, identifier?: string): boolean =>
+{
+	if(!hasValues(filterValues))
+		return true;
+
+	if(value) {
+		if(!identifier)
+			identifier = '';
+		else
+			identifier += ': ';
+
+		const includes = filterValues.some((filterValue: any) => value === filterValue);
+		if(!includes) {
+			if(debugTransportFilter)
+				console.debug(
+					`${identifier}No match for ${name}, requested [${arrToString(filterValues)}] against ${toString(value)}].`
+				);
+			return false;
+		}
+	}
+	else
+		return false;
+	return true;
+};
 
 export const getTransportFilterFromOrder =
 	(order: IOrder): ITransportFilter => (
@@ -30,47 +99,74 @@ export const getTransportFilterFromOrder =
 /**
  * Filter entity by regions in where it works.
  *
- * @param {ICompany} cargo Cargo company entity.
+ * @param {ICompany} company Cargo company entity.
  * @param {String[]!} directions List of regions which must be tested against direction, addresses.
  * @param {String} sep Separator in address from cargo company.
  *
  * @returns boolean
  * */
 export function filterDirections(
-	cargo: ICompany,
+	company: ICompany,
 	directions: string[],
 	sep = ','
 ): boolean {
+	if(!company) {
+		if(debugDirectionFilter) {
+			console.debug('filterDirections: No company exists!');
+		}
+		return false;
+	}
+
+	if(!directions) {
+		if(debugDirectionFilter) {
+			console.debug('filterDirections: No direction filter provided, passing!');
+		}
+		return true;
+	}
+
+	if(!company.directions || company.directions?.length === 0) {
+		if(debugDirectionFilter) {
+			console.debug('filterDirections: Company doesn\'t have directions!');
+		}
+		return false;
+	}
+
 	let contains: boolean[] = [];
-	const checkRegion = (addr: string) =>
+
+	const checkCompanyDirection = (companyDirection: string) =>
 	{
-		if(addr === null || directions === null)
+		if(companyDirection === null)
 			return;
 
-		const addressKeywords = addr.split(sep);
+		const directionParts = companyDirection.split(sep);
 
-		directions.filter(d => d !== null)
-		          .forEach(
-			          (direction: string) =>
-			          {
-				          for(const key of addressKeywords) {
-					          const res = RegExp(direction.trim(), 'gium')
-						          .test(key.trim());
+		directions.forEach(
+			(direction: string) =>
+			{
+				for(const companyDirectionPart of directionParts) {
+					const res = RegExp(direction.trim(), 'gium')
+						.test(companyDirectionPart.trim());
 
-					          if(res) contains.push(true);
-				          }
-			          }
-		          );
+					if(debugDirectionFilter) {
+						console.debug(
+							`filterDirections: Company direction "${companyDirectionPart}" matches filter direction "${direction}": ${res}`
+						);
+					}
+					contains.push(res);
+				}
+			}
+		);
 	};
-	if(!cargo)
-		return false;
 
-	if(!cargo.directions)
-		return false;
+	company.directions.forEach(d => checkCompanyDirection(d));
 
-	cargo.directions.forEach(direction => checkRegion(direction));
+	if(debugDirectionFilter) {
+		console.debug(
+			`filterDirections: Is any company direction matches filter directions: ${contains.some(c => c)}`
+		);
+	}
 
-	return contains.some(c => c == true);
+	return contains.some(c => c);
 }
 
 export function checkTransportRequirements(
@@ -127,25 +223,31 @@ export function checkTransportRequirements(
 		matchesLength = paramFilter.lengthMin <= length && length <= paramFilter.lengthMax,
 		matchesPallet = paramFilter.pallets <= pallets;
 
-	if(messageObj) {
-		if(!matchesWeight) {
-			messageObj.message = setMessage('веса', { min: paramFilter.weightMin, max: paramFilter.weightMax }, weight);
-		}
-		if(!matchesVolume) {
-			messageObj.message = setMessage('объема', { min: paramFilter.volumeMin, max: paramFilter.volumeMax }, volume);
-		}
-		if(!matchesHeight) {
-			messageObj.message = setMessage('высоты', { min: paramFilter.heightMin, max: paramFilter.heightMax }, height);
-		}
-		if(!matchesWidth) {
-			messageObj.message = setMessage('ширины', { min: paramFilter.widthMin, max: paramFilter.widthMax }, width);
-		}
-		if(!matchesLength) {
-			messageObj.message = setMessage('длины', { min: paramFilter.lengthMin, max: paramFilter.lengthMax }, length);
-		}
-		if(!matchesPallet) {
-			messageObj.message = setMessage('паллетов', { max: paramFilter.pallets }, pallets);
-		}
+	if(!messageObj) messageObj = { message: '' };
+
+	if(!matchesWeight) {
+		messageObj.message = setMessage('веса', { min: paramFilter.weightMin, max: paramFilter.weightMax }, weight);
+		console.info(messageObj);
+	}
+	if(!matchesVolume) {
+		messageObj.message = setMessage('объема', { min: paramFilter.volumeMin, max: paramFilter.volumeMax }, volume);
+		console.info(messageObj);
+	}
+	if(!matchesHeight) {
+		messageObj.message = setMessage('высоты', { min: paramFilter.heightMin, max: paramFilter.heightMax }, height);
+		console.info(messageObj);
+	}
+	if(!matchesWidth) {
+		messageObj.message = setMessage('ширины', { min: paramFilter.widthMin, max: paramFilter.widthMax }, width);
+		console.info(messageObj);
+	}
+	if(!matchesLength) {
+		messageObj.message = setMessage('длины', { min: paramFilter.lengthMin, max: paramFilter.lengthMax }, length);
+		console.info(messageObj);
+	}
+	if(!matchesPallet) {
+		messageObj.message = setMessage('паллетов', { max: paramFilter.pallets }, pallets);
+		console.info(messageObj);
 	}
 
 	return (
@@ -160,18 +262,25 @@ export function checkTransportRequirements(
 
 export function filterTransports(
 	transports: Transport[],
-	filter: ICompanyTransportFilter = {}
+	filter: ICompanyTransportFilter = {},
+	onlyActive: boolean = true
 ): Transport[] {
 	let {
 		loadingTypes = [],
 		riskClasses = [],
 		fixtures = [],
 		types = [],
+		payloads = [],
+		payload,
 		riskClass
 	} = filter;
 
-	const hasValues = (arr?: Array<any>) => arr && arr.length > 0;
-	const isActive = (transport: Transport) => transport.status === TransportStatus.ACTIVE;
+	if(riskClass && !riskClasses.includes(riskClass))
+		riskClasses.push(riskClass);
+	if(payload && !payloads.includes(payload))
+		payloads.push(payload);
+
+	const isActive = (transport: Transport) => !!onlyActive ? transport.status === TransportStatus.ACTIVE : true;
 	const isTrailer = (transport: Transport) => transport.isTrailer;
 
 	const getSummedParams = (transport: Transport, trailer?: Transport): Transport =>
@@ -186,41 +295,52 @@ export function filterTransports(
 		return transport;
 	};
 
+	const checkType = (transport: Transport): boolean =>
+		checkAgainstIn(transport.type, types, 'transport type', 'filterTransports');
+	const checkFixtures = (transport: Transport): boolean =>
+		checkAgainst(transport.fixtures, fixtures, 'fixtures', undefined, 'filterTransports');
+	const checkRiskClasses = (transport: Transport): boolean =>
+		checkAgainst(transport.riskClasses, riskClasses, 'risk class', undefined, 'filterTransports');
+	const checkLoadingTypes = (transport: Transport): boolean =>
+		checkAgainst(transport.loadingTypes, loadingTypes.map(t => Number(t)),
+		             'loading type', loadingTypeToStr, 'filterTransports');
+	const checkPayloads = (transport: Transport): boolean =>
+		checkAgainst(transport.payloads ?? [], payloads, 'payloads', undefined, 'filterTransports');
+
+	const checkDedicated = (transport: Transport): boolean =>
+	{
+		if(filter.isDedicated) {
+			if(transport.payloadExtra) {
+				console.debug(`filterTransports: No match for dedicated transport, requested 'isDedicated: ${filter.isDedicated}'.`);
+				return false;
+			}
+		}
+		return true;
+	};
+
+	const checkExtraPayload = (transport: Transport): boolean =>
+	{
+		if(filter.payloadExtra) {
+			if(!transport.payloadExtra) {
+				console.debug(`filterTransports: No match for extra payload transport, requested 'isPayloadExtra: ${filter.payloadExtra}'.`);
+				return false;
+			}
+		}
+		return true;
+	};
+
+	const applyFilters = (transport: Transport): boolean =>
+		checkLoadingTypes(transport) &&
+		checkRiskClasses(transport) &&
+		checkFixtures(transport) &&
+		checkPayloads(transport) &&
+		checkType(transport) &&
+		checkDedicated(transport) &&
+		checkExtraPayload(transport);
+
 	const filteredTransports = transports
 		.filter(isActive)
-		.filter(
-			transport =>
-				hasValues(loadingTypes) ? transport.loadingTypes.some(
-					loadingType => loadingTypes.includes(loadingType)
-				                        )
-				                        : true
-		)
-		.filter(
-			transport =>
-				hasValues(riskClasses) ? transport.riskClasses.some(
-					riskClass => riskClasses.includes(riskClass)
-				                       )
-				                       : true
-		)
-		.filter(
-			transport =>
-				hasValues(fixtures) ? transport.fixtures.some(
-					v => fixtures.includes(v)
-				                    )
-				                    : true
-		)
-		.filter(
-			transport =>
-				hasValues(types) ? types.some(transportType => transport.type === transportType)
-				                 : true
-		)
-		.filter(
-			transport =>
-				riskClass ? transport.riskClasses.some(
-					rc => filter.riskClass === rc
-				          )
-				          : true
-		);
+		.filter(applyFilters);
 
 	const mainTransports = filteredTransports.filter(transport => !isTrailer(transport));
 	const trailers = filteredTransports.filter(isTrailer);
@@ -228,7 +348,8 @@ export function filterTransports(
 	const transportsWithTrailers: Transport[] = [];
 
 	for(const mainTransport of mainTransports) {
-		const transportTrailer = trailers.find(trailer => trailer.driverId === mainTransport.driverId);
+		const transportTrailer = trailers.find(trailer => trailer.driverId === mainTransport.driverId &&
+		                                                  trailer.status === TransportStatus.ACTIVE);
 
 		let transport: Transport = null;
 		if(
@@ -246,7 +367,48 @@ export function filterTransports(
 			transportsWithTrailers.push(transport);
 	}
 
+	if(debugTransportFilter)
+		console.debug('filterTransports: length ', transportsWithTrailers.length);
+
 	return transportsWithTrailers;
+}
+
+export function filterMatchingDrivers(driver: Driver, requirements: ICompanyTransportFilter = {}){
+	return filterTransports(driver.transports, requirements)?.length > 0;
+}
+
+export function filterTransportsByOrder(
+	transport: Transport,
+	filter?: ICompanyTransportFilter
+) {
+	if(!filter) {
+		return true;
+	}
+	if(transport.driver !== null) {
+		if(transport.driver.order === null) {
+			if(debugTransportFilter)
+				console.debug('filterTransportsByOrder: No order exists, passing!');
+			return true;
+		}
+		else {
+			if(!filter.fromDate || !filter.toDate) {
+				if(debugTransportFilter)
+					console.debug('filterTransportsByOrder: No date filters, passing!');
+				return true;
+			}
+			const { order } = transport.driver;
+			const matchesByDate = (order.date >= filter.fromDate) && (order.date <= filter.toDate);
+
+			if(debugTransportFilter)
+				console.debug(`filterTransportsByOrder: Matches by date filters: ${matchesByDate}`);
+
+			return matchesByDate;
+		}
+	}
+
+	if(debugTransportFilter)
+		console.debug('filterTransportsByOrder: No driver exists!');
+	return false;
 }
 
 export function filterDrivers(

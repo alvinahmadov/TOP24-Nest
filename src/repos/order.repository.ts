@@ -14,13 +14,24 @@ import {
 }                             from '@common/interfaces';
 import {
 	CargoCompany,
-	CargoInnCompany,
+	CargoCompanyInn,
 	Driver,
 	Image,
 	Order,
 	Transport
 }                             from '@models/index';
 import GenericRepository      from './generic';
+
+const driverDefaultIncludeables: Includeable[] = [
+	{
+		model:      CargoCompany,
+		attributes: ['name', 'legalName', 'userPhone', 'avatarLink']
+	},
+	{
+		model:      CargoCompanyInn,
+		attributes: ['name', 'patronymic', 'lastName', 'userPhone', 'avatarLink']
+	}
+];
 
 export default class OrderRepository
 	extends GenericRepository<Order, IOrder>
@@ -41,7 +52,7 @@ export default class OrderRepository
 			]
 		},
 		{
-			model:   CargoInnCompany,
+			model:   CargoCompanyInn,
 			include: [
 				{
 					model:   Transport,
@@ -93,7 +104,7 @@ export default class OrderRepository
 	): Promise<Order[]> {
 		if(filter === null)
 			return [];
-		
+
 		return this.log(
 			() =>
 			{
@@ -104,11 +115,14 @@ export default class OrderRepository
 				} = listFilter ?? {};
 				const {
 					sortOrder: order = DEFAULT_SORT_ORDER,
+					hasDriver,
 					statuses,
+					stages,
 					weightMin, weightMax,
 					volumeMin, volumeMax,
 					lengthMin, lengthMax,
 					heightMin, heightMax,
+					isDedicated,
 					...rest
 				} = filter ?? {};
 				if(statuses) {
@@ -122,11 +136,13 @@ export default class OrderRepository
 
 				return this.model.findAll(
 					{
-						where:   this.whereClause('and', true)
+						where:   this.whereClause('and')
 						             .nullOrEq('cargoId', rest?.cargoId)
 						             .nullOrEq('cargoinnId', rest?.cargoinnId)
 						             .nullOrEq('driverId', rest?.driverId)
+						             .notNull('driverId', hasDriver)
 						             .inArray('status', statuses)
+						             .inArray('stage', stages)
 						             .between('weight', weightMin, weightMax)
 						             .between('volume', volumeMin, volumeMax)
 						             .between('length', lengthMin, lengthMax)
@@ -155,22 +171,37 @@ export default class OrderRepository
 		);
 	}
 
-	public async getWithDriver(id: string): Promise<Order> {
+	public async getDriverAssignedOrders(
+		driverId: string,
+		filter?: IOrderFilter
+	): Promise<Order> {
+		const {
+			id,
+			statuses = [
+				OrderStatus.ACCEPTED,
+				OrderStatus.PROCESSING,
+				OrderStatus.CANCELLED
+			],
+			stages,
+			onPayment
+		} = filter ?? {};
+
 		return this.log(
 			() => this.model.findOne(
 				{
 					where:         this.whereClause('and')
-					                   .eq('driverId', id)
-					                   .inArray('status', [
-						                   OrderStatus.ACCEPTED,
-						                   OrderStatus.PROCESSING
-					                   ])
+					                   .eq('id', id)
+					                   .eq('driverId', driverId)
+					                   .eq('onPayment', onPayment)
+					                   .in('status', statuses)
+					                   .in('stage', stages)
 						               .query,
 					order:         DEFAULT_SORT_ORDER,
 					include:       [
 						{
 							model:   Driver,
 							include: [
+								...driverDefaultIncludeables,
 								{
 									model:   Transport,
 									where:   this.whereClause<ITransport>()
@@ -184,8 +215,8 @@ export default class OrderRepository
 					rejectOnEmpty: false
 				}
 			),
-			{ id: 'getWithDriver' },
-			{ id }
+			{ id: 'getDriverAssignedOrders' },
+			{ id: driverId }
 		);
 	}
 

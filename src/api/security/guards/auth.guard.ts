@@ -11,7 +11,7 @@ import {
 	IUserPayload
 }                               from '@common/interfaces';
 import { requestAuthExtractor } from '@common/utils';
-import { AuthService }          from '@api/services';
+import AuthService              from '../auth.service';
 
 @Injectable()
 export class AccessGuard
@@ -38,13 +38,12 @@ export class AccessGuard
 		}
 	}
 
-	public override handleRequest(err: any, u: any): any {
-		const user: IUserPayload = u;
+	public override handleRequest(err: any, user: IUserPayload): any {
 		if(!user)
-			throw err;
+			throw new UnauthorizedException(`Unauthorized user. No user`);
 
 		if(!this.roles.includes(user.role))
-			throw err;
+			throw new UnauthorizedException(`Unauthorized user. Role is ${user.role}`);
 
 		return user;
 	}

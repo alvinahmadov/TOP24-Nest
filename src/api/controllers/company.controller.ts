@@ -1,4 +1,5 @@
 import * as ex                 from 'express';
+import { validate as isUuid }  from 'uuid';
 import {
 	Body,
 	Controller,
@@ -15,11 +16,7 @@ import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import env                     from '@config/env';
 import { Bucket }              from '@common/constants';
-import { ApiRoute }            from '@common/decorators';
-import {
-	CompanyType,
-	OfferStatus
-}                              from '@common/enums';
+import { CompanyType }         from '@common/enums';
 import {
 	IApiResponse,
 	IAuthRequest,
@@ -33,40 +30,46 @@ import {
 import {
 	formatArgs,
 	getTranslation,
+	isSuccessResponse,
 	sendResponse
 }                              from '@common/utils';
 import {
 	transformToCargoCompany,
-	transformToCargoInnCompany,
+	transformToCargoCompanyInn,
 	transformToCompanyFilter,
 	transformToCompanyInnFilter
 }                              from '@common/utils/compat';
 import {
 	CargoCompany,
-	CargoInnCompany,
-	Transport
+	CargoCompanyInn,
+	Payment,
+	Transport,
+	User
 }                              from '@models/index';
 import * as dto                from '@api/dto';
+import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	CompanyCreatePipe,
-	CompanyUpdatePipe,
 	CompanyTransportFilterPipe,
 	DefaultBoolPipe
 }                              from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
 import {
 	AccessGuard,
+	AuthService,
 	CargoGuard
 }                              from '@api/security';
 import {
-	AuthService,
 	CargoCompanyInnService,
 	CargoCompanyService,
 	OfferService,
-	PaymentService
+	PaymentService,
+	UserService
 }                              from '@api/services';
 import BaseController          from './controller';
+import AddressService          from '../services/address.service';
+import { NotificationGateway } from '@api/notifications';
 
 const { path, tag, routes } = getRouteConfig('company');
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
@@ -78,10 +81,13 @@ export default class CompanyController
 	extends BaseController {
 	public constructor(
 		private readonly authService: AuthService,
+		private readonly addressService: AddressService,
 		private readonly cargoService: CargoCompanyService,
 		private readonly cargoInnService: CargoCompanyInnService,
 		private readonly offerService: OfferService,
-		private readonly paymentService: PaymentService
+		private readonly paymentService: PaymentService,
+		private readonly userService: UserService,
+		private readonly gateway: NotificationGateway
 	) {
 		super();
 	}
@@ -155,19 +161,15 @@ export default class CompanyController
 		@Res() response: ex.Response
 	) {
 		let result: IApiResponse<ICompanyLoginResponse>;
-
-		const {
-			statusCode,
-			data: company,
-			message
-		} = await (
+		const { statusCode, data: company, message } =
 			dto.type === CompanyType.ORG
-			? this.cargoService.create(<dto.CompanyCreateDto>dto)
-			: this.cargoInnService.create(<dto.CompanyInnCreateDto>dto)
-		);
+			? await this.cargoService.create(<dto.CompanyCreateDto>dto)
+			: await this.cargoInnService.create(<dto.CompanyInnCreateDto>dto);
+
+		await this.activateCompany(company.id);
 
 		if(company) {
-			const { id, role } = company;
+			const { id, role } = company.user;
 			const accessToken = this.authService.createAccess({ id, role });
 			const refreshToken = this.authService.createRefresh({ id, role });
 
@@ -197,7 +199,7 @@ export default class CompanyController
 	})
 	public override async update(
 		@Param('id', ParseUUIDPipe) id: string,
-		@Body(CompanyUpdatePipe) dto: any,
+		@Body() dto: any,
 		@Res() response: ex.Response
 	) {
 		let result = await this.getCompany(id, false);
@@ -210,7 +212,7 @@ export default class CompanyController
 					result = await this.cargoService.update(id, <dto.CompanyUpdateDto>data);
 				}
 				else {
-					const data = !env.api.compatMode ? dto : transformToCargoInnCompany(dto);
+					const data = !env.api.compatMode ? dto : transformToCargoCompanyInn(dto);
 					result = await this.cargoInnService.update(id, <dto.CompanyInnUpdateDto>data);
 				}
 			}
@@ -262,23 +264,34 @@ export default class CompanyController
 
 	@ApiRoute(routes.login, { statuses: [HttpStatus.OK] })
 	public async login(
-		@Body() signInData: ISignInPhoneData,
+		@Body() signInData: ISignInPhoneData & { fcm?: string; },
 		@Res() response: ex.Response
 	) {
-		const { phone, code } = signInData;
-		const result = await this.authService.loginCompany(phone, code);
+		const { phone, code, fcm } = signInData;
+		const apiResponse = await this.authService.loginCompany(phone, code);
 
-		if(env.api.compatMode && result.data) {
-			if('company' in result.data) {
-				const { company: cargo, accessToken, refreshToken } = result.data;
-				result.data = { accessToken, refreshToken, cargo } as any;
+		if(isSuccessResponse(apiResponse)) {
+			if('accessToken' in apiResponse.data && fcm) {
+				await this.gateway.handleUser(
+					{
+						jwtToken: apiResponse.data['accessToken'],
+						fcmToken: fcm
+					}
+				);
 			}
-			else if('code' in result.data) {
-				result.data = { code: result.data['code'] };
+
+			if(env.api.compatMode) {
+				if('company' in apiResponse.data) {
+					const { company: cargo, accessToken, refreshToken } = apiResponse.data;
+					apiResponse.data = { accessToken, refreshToken, cargo } as any;
+				}
+				else if('code' in apiResponse.data) {
+					apiResponse.data = { code: apiResponse.data['code'] };
+				}
 			}
 		}
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	@ApiRoute(routes.refresh, {
@@ -307,6 +320,80 @@ export default class CompanyController
 		return sendResponse(response, result);
 	}
 
+	@ApiRoute(routes.activate, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async activate(
+		@Param('id') companyId: string,
+		@Res() response: ex.Response
+	) {
+		const result = await this.activateCompany(companyId);
+		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.user, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async getUserCompanies(
+		@Param('id') companyIdOrPhone: string,
+		@Res() response: ex.Response
+	) {
+		const companies: ICompany[] = [];
+		let user: User;
+
+		if(isUuid(companyIdOrPhone)) {
+			const companyResponse = await this.getCompany(companyIdOrPhone);
+			if(isSuccessResponse(companyResponse)) {
+				const { data: company } = companyResponse;
+				const userResponse = await this.userService.getById(company.userId, true);
+				user = userResponse.data;
+			}
+			else return sendResponse(response, companyResponse);
+		}
+		else {
+			const userResponse = await this.userService.getByPhone(companyIdOrPhone, true);
+
+			if(isSuccessResponse(userResponse)) {
+				user = userResponse.data;
+			}
+			else return sendResponse(response, { statusCode: 400, message: 'User not found!' });
+		}
+
+		companies.push(
+			...user.cargoCompanies,
+			...user.cargoInnCompanies
+		);
+
+		return sendResponse(response, {
+			statusCode: 200,
+			data:       companies
+		});
+	}
+
+	@ApiRoute(routes.send, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async sendToBitrix(
+		@Param('id') id: string,
+		@Res() response: ex.Response
+	) {
+		const apiResponse = await this.getCompany(id);
+		let result: IApiResponse<{ crmId?: number }>;
+
+		if(apiResponse && apiResponse.data) {
+			const { data: company } = apiResponse;
+			result = company.type === CompanyType.ORG
+			         ? await this.cargoService.send(id)
+			         : await this.cargoInnService.send(id);
+		}
+		else return sendResponse(response, apiResponse ?? { statusCode: 400 });
+
+		return sendResponse(response, result);
+	}
+
 	@ApiRoute(routes.transports, {
 		guards:   [AccessGuard],
 		statuses: [HttpStatus.OK]
@@ -317,8 +404,38 @@ export default class CompanyController
 		@Query() listFilter?: dto.ListFilter,
 		@Body(CompanyTransportFilterPipe) filter?: dto.CompanyTransportFilter
 	) {
+		if(filter) {
+			if(filter.directions) {
+				if(filter.directions.every(isUuid)) {
+					const _directions: string[] = [];
+					for(const directionId of filter.directions) {
+						const addressResponse = await this.addressService.getById(directionId);
+
+						if(isSuccessResponse(addressResponse)) {
+							const { data: address } = addressResponse;
+							_directions.push(address.city, address.region);
+						}
+					}
+					filter.directions = _directions;
+				}
+			}
+
+			if(filter.payloadCity || filter.payloadRegion) {
+				if(isUuid(filter.payloadCity)) {
+					const { data: address } = await this.addressService.getById(filter.payloadCity);
+					filter.payloadCity = address.city;
+				}
+				if(isUuid(filter.payloadRegion)) {
+					const { data: address } = await this.addressService.getById(filter.payloadRegion);
+					filter.payloadRegion = address.region;
+				}
+			}
+		}
+
 		let { data: cargoTransports } = await this.cargoService.getTransports(listFilter, filter);
 		let { data: cargoInnTransports } = await this.cargoInnService.getTransports(listFilter, filter);
+
+		const message = formatArgs(TRANSLATIONS['TRANSPORTS'], cargoTransports.length + cargoInnTransports.length);
 
 		if(orderId) {
 			const { data: offers } = await this.offerService.getList({}, { orderId });
@@ -326,7 +443,8 @@ export default class CompanyController
 			const setOfferStatus = (transport: Transport): Transport =>
 			{
 				const offer = offers.find(o => o.driverId === transport.driverId);
-				transport.offerStatus = offer?.status ?? OfferStatus.NONE;
+				if(offer)
+					transport.offerStatus = offer.status;
 				return transport;
 			};
 
@@ -334,19 +452,14 @@ export default class CompanyController
 			cargoInnTransports = cargoInnTransports.map(setOfferStatus);
 		}
 
-		const result = {
+		return sendResponse(response, {
 			statusCode: 200,
 			data:       [
 				...cargoTransports,
 				...cargoInnTransports
 			],
-			message:    formatArgs(
-				TRANSLATIONS['TRANSPORTS'],
-				cargoTransports.length + cargoInnTransports.length
-			)
-		};
-
-		return sendResponse(response, result);
+			message
+		});
 	}
 
 	@ApiRoute(routes.avatar, {
@@ -362,16 +475,25 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
 		const { data: company } = await this.getCompany(id);
 
-		const result = company ? await (
+		const result: IApiResponse<CargoCompany | CargoCompanyInn> = company ? await (
 			company.type === CompanyType.ORG
 			? this.uploadPhoto<CargoCompany>(
-				id, name, buffer, 'avatarLink', CompanyType.ORG, Bucket.COMPANY, 'avatar'
+				id,
+				image,
+				'avatarLink',
+				company.type,
+				Bucket.Folders.COMPANY,
+				'avatar'
 			)
-			: this.uploadPhoto<CargoInnCompany>(
-				id, name, buffer, 'avatarLink', CompanyType.IE, Bucket.COMPANY, 'avatar'
+			: this.uploadPhoto<CargoCompanyInn>(
+				id,
+				image,
+				'avatarLink',
+				company.type,
+				Bucket.Folders.COMPANY,
+				'avatar'
 			)
 		) : { statusCode: 400, message: 'Not found!' };
 
@@ -391,24 +513,31 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		let result = await this.getCompany(id);
-		if(result.data) {
-			const { originalname: name, buffer } = image;
-			if(result.data) {
-				const { data: company } = result;
-				let result1 = await (
-					company.type === CompanyType.ORG
-					? this.uploadPhoto<CargoCompany>(
-						id, name, buffer, 'passportPhotoLink', CompanyType.ORG, Bucket.COMPANY, 'passport'
-					)
-					: this.uploadPhoto<CargoInnCompany>(
-						id, name, buffer, 'passportPhotoLink', CompanyType.IE, Bucket.COMPANY, 'passport'
-					)
-				);
-				return response.status(result1.statusCode)
-				               .send(result1);
-			}
-		}
+		let companyResponse = await this.getCompany(id);
+
+		if(!isSuccessResponse(companyResponse))
+			return companyResponse;
+
+		const { data: company } = companyResponse;
+		const result: IApiResponse<CargoCompany | CargoCompanyInn> = await (
+			company.type === CompanyType.ORG
+			? this.uploadPhoto<CargoCompany>(
+				id,
+				image,
+				'passportPhotoLink',
+				company.type,
+				Bucket.Folders.COMPANY,
+				'passport'
+			)
+			: this.uploadPhoto<CargoCompanyInn>(
+				id,
+				image,
+				'passportPhotoLink',
+				company.type,
+				Bucket.Folders.COMPANY,
+				'passport'
+			)
+		);
 
 		return sendResponse(response, result);
 	}
@@ -426,13 +555,15 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
 		const result = await this.uploadPhoto<CargoCompany>(
-			id, name, buffer, 'certificatePhotoLink',
-			CompanyType.ORG, Bucket.COMPANY, 'certificate'
+			id,
+			image,
+			'certificatePhotoLink',
+			CompanyType.ORG,
+			Bucket.Folders.COMPANY,
+			'certificate'
 		);
 
-		result.data;
 		return sendResponse(response, result);
 	}
 
@@ -449,10 +580,13 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
 		const result = await this.uploadPhoto<CargoCompany>(
-			id, name, buffer, 'directorOrderPhotoLink',
-			CompanyType.ORG, Bucket.COMPANY, 'director_order'
+			id,
+			image,
+			'directorOrderPhotoLink',
+			CompanyType.ORG,
+			Bucket.Folders.COMPANY,
+			'director_order'
 		);
 
 		return sendResponse(response, result);
@@ -471,10 +605,13 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
 		const result = await this.uploadPhoto<CargoCompany>(
-			id, name, buffer, 'attorneySignLink',
-			CompanyType.ORG, Bucket.COMPANY, 'attorney'
+			id,
+			image,
+			'attorneySignLink',
+			CompanyType.ORG,
+			Bucket.Folders.COMPANY,
+			'attorney'
 		);
 
 		return sendResponse(response, result);
@@ -493,10 +630,14 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.uploadPhoto<CargoInnCompany>(
-			id, name, buffer, 'passportSignLink',
-			CompanyType.ORG, Bucket.COMPANY, 'passport'
+		const result = await this.uploadPhoto<CargoCompanyInn>(
+			id,
+			image,
+			'passportSignLink',
+			CompanyType.IE,
+			Bucket.Folders.COMPANY,
+			'passport',
+			'sign'
 		);
 
 		return sendResponse(response, result);
@@ -515,10 +656,14 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const result = await this.uploadPhoto<CargoInnCompany>(
-			id, name, buffer, 'passportSelfieLink',
-			CompanyType.IE, Bucket.COMPANY, 'passport'
+		const result = await this.uploadPhoto<CargoCompanyInn>(
+			id,
+			image,
+			'passportSelfieLink',
+			CompanyType.IE,
+			Bucket.Folders.COMPANY,
+			'passport',
+			'selfie'
 		);
 
 		return sendResponse(response, result);
@@ -537,30 +682,36 @@ export default class CompanyController
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
 	) {
-		const { originalname: name, buffer } = image;
-		const destination = `${id}/${name}`;
-		const { data: company } = await this.getCompany(id, true);
-		let result: IApiResponse<any> = { statusCode: 400, message: 'Payment not found' };
+		const companyResponse = await this.getCompany(id, true);
+		let apiResponse: IApiResponse<Payment | null>;
 
-		if(company.type !== CompanyType.ORG) {
-			if(company.payment) {
-				result = await this.paymentService.uploadPhoto(
-					{
-						id:       company.payment.id,
-						name:     destination,
-						buffer,
-						linkName: 'ogrnipPhotoLink',
-						bucketId: Bucket.COMPANY
-					}
-				);
+		if(!isSuccessResponse(companyResponse)) {
+			apiResponse = {
+				statusCode: companyResponse.statusCode,
+				message:    companyResponse.message
+			};
+		}
+		else {
+			const { data: company } = companyResponse;
+			if(company.type === CompanyType.IE) {
+				if(company.payment) {
+					apiResponse = await this.paymentService.uploadPhoto(
+						id,
+						image,
+						'ogrnipPhotoLink',
+						Bucket.Folders.COMPANY,
+						'payment',
+						'ogrnip'
+					);
+				}
 			}
 		}
 
-		return sendResponse(response, result);
+		return sendResponse(response, apiResponse);
 	}
 
 	private async getCompany(id: string, full?: boolean)
-		: TAsyncApiResponse<CargoCompany | CargoInnCompany | null> {
+		: TAsyncApiResponse<CargoCompany | CargoCompanyInn | null> {
 		const cargoCompany = await this.cargoService.getById(id, full);
 		const cargoInn = await this.cargoInnService.getById(id, full);
 
@@ -572,21 +723,41 @@ export default class CompanyController
 			return { statusCode: 404, message: TRANSLATIONS['NOT_FOUND'] };
 	}
 
+	private async activateCompany(companyId: string) {
+		let userId: string;
+		let companyType: CompanyType;
+		const companyResponse = await this.getCompany(companyId);
+
+		if(companyResponse.data) {
+			userId = companyResponse.data.userId;
+			companyType = companyResponse.data.type;
+		}
+		else return companyResponse;
+
+		if(companyType === CompanyType.ORG) {
+			await this.cargoService.activate(companyId);
+			await this.cargoInnService.activate(companyId, { disableAll: true, userId });
+			return this.cargoService.getById(companyId);
+		}
+		else {
+			await this.cargoInnService.activate(companyId);
+			await this.cargoService.activate(companyId, { disableAll: true, userId });
+			return this.cargoInnService.getById(companyId);
+		}
+	}
+
 	private async uploadPhoto<M>(
 		id: string,
-		name: string,
-		buffer: Buffer,
+		image: TMulterFile,
 		key: keyof M,
 		type: CompanyType = CompanyType.ORG,
-		bucketId: string = '',
-		folder?: string
-	): Promise<IApiResponse<ICompany>> {
-		const saveName = folder ? `${folder}/${name}`
-		                        : name;
+		folderId: string = Bucket.Folders.COMPANY,
+		...paths: string[]
+	): Promise<IApiResponse<any>> {
 		return (
 			type === CompanyType.ORG
-			? this.cargoService.uploadPhoto({ id, buffer, linkName: <any>key, name: saveName, bucketId })
-			: this.cargoInnService.uploadPhoto({ id, buffer, linkName: <any>key, name: saveName, bucketId })
+			? this.cargoService.uploadPhoto(id, image, <any>key, folderId, ...paths)
+			: this.cargoInnService.uploadPhoto(id, image, <any>key, folderId, ...paths)
 		);
 	}
 }

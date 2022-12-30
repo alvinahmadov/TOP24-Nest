@@ -19,16 +19,16 @@ function addNew(df: df.DiffNew<ITable>, actions: IAction[], currentStateTables: 
 
 		const tableName = df.rhs.tableName;
 		if(df.rhs.schema)
-		Object.values(df.rhs.schema)
-		      .forEach((v) =>
-		               {
-			               if(v.references) {
-				               if(typeof v.references !== 'string')
-					               depends.push(v.references.model as string);
-				               else
-					               depends.push(v.references);
-			               }
-		               });
+			Object.values(df.rhs.schema)
+			      .forEach((v) =>
+			               {
+				               if(v.references) {
+					               if(typeof v.references !== 'string')
+						               depends.push(v.references.model as string);
+					               else
+						               depends.push(v.references);
+				               }
+			               });
 
 		actions.push({
 			             actionType: 'createTable',
@@ -61,7 +61,6 @@ function addNew(df: df.DiffNew<ITable>, actions: IAction[], currentStateTables: 
 	const depends: string[] = [tableName];
 
 	if(df.path[1] === 'schema') {
-		// if (df.path.length === 3) - new field
 		if(df.path.length === 3) {
 			// new field
 			if(df.rhs && df.rhs.references) {
@@ -76,8 +75,7 @@ function addNew(df: df.DiffNew<ITable>, actions: IAction[], currentStateTables: 
 			             });
 			return;
 		}
-
-		// if (df.path.length > 3) - add new attribute to column (change col)
+		// add new attribute to column (change col)
 		if(df.path.length > 3) {
 			if(df.path[1] === 'schema') {
 				// new field attributes
@@ -109,6 +107,9 @@ function addNew(df: df.DiffNew<ITable>, actions: IAction[], currentStateTables: 
 		              ? JSON.parse(JSON.stringify(df.rhs))
 		              : undefined;
 
+		if(index === undefined)
+			return;
+
 		index.actionType = 'addIndex';
 		index.tableName = tableName;
 		index.depends = [tableName];
@@ -123,12 +124,13 @@ function drop(df: df.DiffDeleted<ITable>, actions: IAction[], currentStateTables
 	if(df.path.length === 1) {
 		// drop table
 		const depends: string[] = [];
-		Object.values(df.lhs.schema).forEach((v: any) =>
-		                                     {
-			                                     if(v.references) {
-				                                     depends.push(v.references.model);
-			                                     }
-		                                     });
+		Object.values(df.lhs.schema)
+		      .forEach((v: any) =>
+		               {
+			               if(v.references) {
+				               depends.push(v.references.model);
+			               }
+		               });
 
 		actions.push({
 			             actionType: 'dropTable',
@@ -175,8 +177,8 @@ function drop(df: df.DiffDeleted<ITable>, actions: IAction[], currentStateTables
 		actions.push({
 			             actionType: 'removeIndex',
 			             tableName,
-			             fields:     df.lhs.fields,
-			             options:    df.lhs.options,
+			             fields:     df.lhs?.fields,
+			             options:    df.lhs?.options,
 			             depends:    [tableName]
 		             });
 		return;
@@ -196,7 +198,7 @@ function edit(df: df.DiffEdit<ITable>, actions: IAction[], currentStateTables: a
 		}
 
 		actions.push({
-			             actionType: 'changeColumn',
+			             actionType:    'changeColumn',
 			             tableName,
 			             attributeName: df.path[2],
 			             options,

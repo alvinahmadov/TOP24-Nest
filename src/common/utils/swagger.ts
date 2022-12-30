@@ -1,80 +1,30 @@
-import { RequestMethod, Type } from '@nestjs/common';
+import { Type }          from '@nestjs/common';
 import {
+	ApiResponseOptions,
 	ApiResponseSchemaHost,
 	getSchemaPath
-}                              from '@nestjs/swagger';
-import { ContentObject }       from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import env                     from '@config/env';
+}                        from '@nestjs/swagger';
+import { ContentObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import env               from '@config/env';
 import {
-	IApiRoute,
 	TApiResponseSchemaOptions,
 	TMediaType
-}                              from '@common/interfaces';
-
-/**@ignore*/
-export const commonRoutes = <T = any, K extends keyof IApiRoute<T> = keyof IApiRoute<T>>
-(classRef: Type<T>, omit: K[] = []): IApiRoute<T> =>
-{
-	let commonRouteConfig: IApiRoute<T> = {
-		list:   {
-			path:   '',
-			method: RequestMethod.GET
-		},
-		filter: {
-			path:   'filter',
-			method: RequestMethod.POST
-		},
-		index:  {
-			path:   ':id',
-			method: RequestMethod.GET
-		},
-		create: {
-			path:   '',
-			method: RequestMethod.POST
-		},
-		update: {
-			path:   ':id',
-			method: RequestMethod.PUT
-		},
-		delete: {
-			path:   ':id',
-			method: RequestMethod.DELETE
-		}
-	};
-
-	omit.forEach(
-		(routeKey) =>
-		{
-			if(routeKey in commonRouteConfig) {
-				commonRouteConfig = Object.fromEntries(
-					Object.entries(commonRouteConfig)
-					      .filter(([k, _]) => k !== routeKey)
-				);
-			}
-		}
-	);
-
-	return commonRouteConfig;
-};
+}                        from '@common/interfaces';
 
 /**@ignore*/
 export function getApiResponseContent(
 	mediaType: TMediaType,
 	classRef?: Type,
 	options?: TApiResponseSchemaOptions
-): { content: ContentObject } {
-	let value: { content: ContentObject } = { content: null };
-
+): Record<string, ApiResponseSchemaHost> {
 	switch(mediaType) {
 		case 'application/json':
-			value.content = { 'application/json': getApiResponseSchema(classRef, options) };
-			break;
+			return { 'application/json': getApiResponseSchema(classRef, options) };
 		case 'application/xml':
-			value.content = { 'application/xml': getApiResponseSchema(classRef, options) };
-			break;
+			return { 'application/xml': getApiResponseSchema(classRef, options) };
+		default:
+			throw new Error(`Wrong media type ${mediaType}`);
 	}
-
-	return value;
 }
 
 /**@ignore*/
@@ -98,6 +48,36 @@ export const getApiResponseContentOf = (
 
 	return value;
 };
+
+/**@ignore*/
+export function getJsonApiResponseContent(
+	classRef?: Type,
+	options?: TApiResponseSchemaOptions
+): Record<string, ApiResponseSchemaHost> {
+	return { 'application/json': getApiResponseSchema(classRef, options) };
+}
+
+/**@ignore*/
+export function getJsonApiResponseContentOf(
+	key: 'oneOf' | 'anyOf' | 'allOf',
+	classRefs?: Type[],
+	options?: TApiResponseSchemaOptions
+): Record<string, ApiResponseSchemaHost> {
+	return { 'application/json': getApiResponseSchemaOf(key, classRefs, options) };
+}
+
+export function getResponseSchema(
+	httpCode: number,
+	contentFn: () => Record<string, ApiResponseSchemaHost>,
+	options: Omit<ApiResponseOptions, 'content' | 'status'> = {}
+): ApiResponseOptions {
+
+	return {
+		status:  httpCode,
+		content: contentFn(),
+		...options
+	};
+}
 
 /**@ignore*/
 export const getApiResponseSchema = (

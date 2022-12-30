@@ -1,11 +1,12 @@
-import { Order as SortOrder } from 'sequelize';
-import { TableOptions }       from 'sequelize-typescript';
-import { JwtModuleOptions }   from '@nestjs/jwt';
-import { CorsOptions }        from '@nestjs/common/interfaces/external/cors-options.interface';
-import { GatewayMetadata }    from '@nestjs/websockets';
-import env                    from '@config/env';
-import { CRM }                from '@config/index';
-import { TBitrixEnum }        from './interfaces';
+import { Order as SortOrder }       from 'sequelize';
+import { TableOptions }             from 'sequelize-typescript';
+import { JwtModuleOptions }         from '@nestjs/jwt';
+import { CorsOptions }              from '@nestjs/common/interfaces/external/cors-options.interface';
+import { GatewayMetadata }          from '@nestjs/websockets';
+import env                          from '@config/env';
+import { CRM }                      from '@config/index';
+import { TBitrixData, TBitrixEnum } from './interfaces';
+import { join }                     from 'path';
 
 export const MAX_FLOAT: number = 16000000.0;
 export const MIN_FLOAT: number = 0.0;
@@ -13,6 +14,8 @@ export const EARTH_RADIUS = 6371;
 export const HALF_RADIAN = 180;
 export const RANDOM_CODE_DIGITS = 1000;
 export const RANDOM_CODE_MAX = 9000;
+export const MILLIS = 24 * 60 * 60 * 1000;
+export const TIMEZONE = 'Europe/Moscow';
 
 /**@ignore*/
 export const HOST = env.host;
@@ -23,10 +26,11 @@ export const SCHEME = env.scheme;
 /**@ignore*/
 export const SWAGGER_PATH = 'api-docs/swagger';
 
-export const GEO_LOOKUP_SERVICE: 'osm' | 'kladr' = 'osm';
+/**@ignore*/
+export const AGREEMENT_PDF_PATH: string = join(__dirname, '../../../resources/files/agreement.pdf');
 
 /**@ignore*/
-export const AGREEMENT_PDF_PATH: string = '../../../resources/files/agreement.pdf';
+export const FIREBASE_CONFIG_PATH = join(__dirname, '../../../src/config/json/firebase.json');
 
 /**@ignore*/
 export const JWT_OPTIONS: JwtModuleOptions = {
@@ -71,8 +75,6 @@ export const TABLE_OPTIONS: TableOptions = {
 	updatedAt:   'updatedAt'
 };
 
-export const ADMIN_ROOM_ID = 'ADMIN_ROOM';
-export const CARGO_ROOM_ID = 'CARGO_ROOM';
 export const DRIVER_EVENT = 'driver';
 export const CARGO_EVENT = 'cargo';
 export const ORDER_EVENT = 'order';
@@ -89,8 +91,9 @@ export namespace BitrixUrl {
 	export const COMPANY_ADD_URL = `${API}/crm.company.add.json`;
 	export const COMPANY_DEL_URL = `${API}/crm.company.delete.json`;
 
-	export const CONTACT_UPD_URL = `${API}/crm.contact.update.json`;
+	export const CONTACT_GET_URL = `${API}/crm.contact.get.json`;
 	export const CONTACT_ADD_URL = `${API}/crm.contact.add.json`;
+	export const CONTACT_UPD_URL = `${API}/crm.contact.update.json`;
 	export const CONTACT_DEL_URL = `${API}/crm.contact.delete.json`;
 
 	export const ORDER_GET_URL = `${API}/crm.deal.get.json`;
@@ -99,10 +102,14 @@ export namespace BitrixUrl {
 }
 
 export namespace Bucket {
-	export const COMMON: string = 'commons';
-	export const COMPANY: string = 'company';
-	export const DRIVER: string = 'driver';
-	export const TRANSPORT: string = 'transport';
+	export const IMAGES_BUCKET: string = '24top-images';
+
+	export namespace Folders {
+		export const COMPANY: string = 'company';
+		export const DRIVER: string = 'driver';
+		export const ORDER: string = 'order';
+		export const TRANSPORT: string = 'transport';
+	}
 }
 
 export namespace Reference {
@@ -112,19 +119,13 @@ export namespace Reference {
 	export const OSM_API_URL: string = env.osm.url;
 
 	/**@ignore*/
-	export const DEDICATED_MACHINE: TBitrixEnum = CRM.TRANSPORT.DEDICATED;
-	/**@ignore*/
 	export const FIXTURES: TBitrixEnum = CRM.TRANSPORT.EXTRA_FIXTURES;
 	/**@ignore*/
 	export const LOADING_TYPES: TBitrixEnum = CRM.TRANSPORT.LOADING_TYPES;
 	/**@ignore*/
 	export const ORDER_STATUSES: TBitrixEnum = CRM.ORDER.STATUSES;
 	/**@ignore*/
-	export const ORDER_STAGES: TBitrixEnum = CRM.ORDER.STAGES;
-	/**@ignore*/
 	export const ORDER_PAYLOADS: TBitrixEnum = CRM.ORDER.PAYLOADS;
-	/**@ignore*/
-	export const TRANSPORT_PAYLOADS: TBitrixEnum = CRM.TRANSPORT.PAYLOADS;
 	/**@ignore*/
 	export const PAYMENT_TYPES: TBitrixEnum = CRM.COMPANY.PAYMENT_TYPES;
 	/**@ignore*/
@@ -132,5 +133,38 @@ export namespace Reference {
 	/**@ignore*/
 	export const TRANSPORT_BRANDS: TBitrixEnum = CRM.TRANSPORT.BRANDS;
 	/**@ignore*/
+	export const TRANSPORT_MODELS: Array<TBitrixData & { BRAND_ID: string }> = CRM.TRANSPORT.MODELS;
+	/**@ignore*/
+	export const TRANSPORT_PAYLOADS: TBitrixEnum = CRM.TRANSPORT.PAYLOADS;
+	/**@ignore*/
 	export const TRANSPORT_TYPES: TBitrixEnum = CRM.TRANSPORT.TYPES;
+	/**@ignore*/
+	export const TRANSPORT_RISK_CLASSES: TBitrixEnum = CRM.TRANSPORT.RISK_TYPES;
 }
+
+// noinspection JSUnusedGlobalSymbols
+export const GEO_DISTANCE_FN = `
+CREATE OR REPLACE FUNCTION geo_distance(p1 point, p2 point)
+    RETURNS double precision AS
+$BODY$
+DECLARE
+    R          integer          = 6371e3; -- Meters
+    rad        double precision = radians(1);
+    latitude1  double precision = p1[0];
+    longitude1 double precision = p1[1];
+    latitude2  double precision = p2[0];
+    longitude2 double precision = p2[1];
+    φ1         double precision = latitude1 * rad;
+    φ2         double precision = latitude2 * rad;
+    latitude   double precision = (latitude2 - latitude1) * rad;
+    longitude  double precision = (longitude2 - longitude1) * rad;
+    a          double precision = sin(latitude / 2) * sin(latitude / 2) +
+                                  cos(φ1) * cos(φ2) * sin(longitude / 2) * sin(longitude / 2);
+    c          double precision = 2 * atan2(sqrt(a), sqrt(1 - a));
+BEGIN
+    RETURN R * c;
+END
+$BODY$
+    LANGUAGE plpgsql VOLATILE
+                     COST 100;
+`;

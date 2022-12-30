@@ -10,12 +10,16 @@ type CompanyData = { company: dto.CompanyCreateDto, payment: dto.PaymentCreateDt
 /**@ignore*/
 type CompanyInnData = { company: dto.CompanyInnCreateDto, payment: dto.PaymentCreateDto };
 
+const lat = () => Number(faker.address.latitude(60.0, 50.0, 5)),
+	lng = () => Number(faker.address.longitude(60.0, 50.0, 5));
+
 async function generateCargoCompany(): Promise<CompanyData> {
 	const gender1 = faker.name.gender(true).toLowerCase() as GenderType;
 	const gender2 = faker.name.gender(true).toLowerCase() as GenderType;
 	const gender3 = faker.name.gender(true).toLowerCase() as GenderType;
 	const name = faker.company.companyName();
 	const phone = faker.phone.phoneNumber('+7 999 ### ## ##');
+
 	let email = faker.internet.email(name, undefined, undefined, { allowSpecialCharacters: false });
 
 	if(email.split('@')[0].length < 2) {
@@ -26,10 +30,10 @@ async function generateCargoCompany(): Promise<CompanyData> {
 		name,
 		phone,
 		email,
-		crmId:                       null,
+		user:                        phone,
 		type:                        enums.CompanyType.ORG,
-		role:                        enums.UserRole.CARGO,
-		confirmed:                   false,
+		isDefault:                   false,
+		confirmed:                   true,
 		contact:                     faker.name.findName(
 			faker.name.firstName(gender1),
 			faker.name.lastName(gender1),
@@ -46,14 +50,14 @@ async function generateCargoCompany(): Promise<CompanyData> {
 			gender3
 		),
 		avatarLink:                  faker.internet.avatar(),
-		directions:                  faker.helpers.arrayElements(common.DIRECTIONS),
+		directions:                  faker.helpers.arrayElements(common.DIRECTIONS, 3),
 		director:                    faker.name.findName(),
 		taxpayerNumber:              faker.finance.account(12),
 		taxReasonCode:               faker.finance.account(12),
 		registrationNumber:          faker.finance.account(12),
 		paymentType:                 faker.helpers.arrayElement(['НДС 20%', 'Без НДС', ' Наличными']),
-		legalAddress:                common.generateAddress(),
-		postalAddress:               common.generateAddress(),
+		legalAddress:                await common.generateAddressFromCoordinates(lat(), lng()),
+		postalAddress:               await common.generateAddressFromCoordinates(lat(), lng()),
 		passportGivenDate:           common.dateBetween(2000, 2020),
 		passportPhotoLink:           faker.image.business(300, 300, true),
 		passportRegistrationAddress: common.generateAddress(),
@@ -61,7 +65,7 @@ async function generateCargoCompany(): Promise<CompanyData> {
 		passportIssuedBy:            common.generateAddress(),
 		passportSubdivisionCode:     common.generateSerialNumber([3, 4]),
 		contactPhone:                faker.phone.phoneNumber('+7 998 ### ## ##'),
-		shortName:                   faker.company.catchPhrase(),
+		legalName:                   faker.company.catchPhrase(),
 		attorneySignLink:            faker.image.business(),
 		certificatePhotoLink:        faker.image.business(),
 		directorOrderPhotoLink:      faker.image.business()
@@ -85,14 +89,16 @@ async function generateCargoInnCompany(companyType?: enums.CompanyType) {
 
 	if(companyType === undefined)
 		companyType = faker.helpers.arrayElement([enums.CompanyType.IE, enums.CompanyType.PI]);
+
 	const cargoCompanyInnData: dto.CompanyInnCreateDto = {
 		name,
 		lastName,
 		patronymic:                  middle_name,
 		phone,
 		email,
+		user:                        phone,
 		type:                        companyType,
-		role:                        enums.UserRole.CARGO,
+		isDefault:                   false,
 		taxpayerNumber:              faker.finance.account(12),
 		paymentType:                 utils.randomOf('НДС 20%', 'Без НДС', ' Наличными'),
 		info:                        'Сгенерированная компания',
@@ -101,17 +107,13 @@ async function generateCargoInnCompany(companyType?: enums.CompanyType) {
 		passportIssuedBy:            faker.address.streetAddress(true),
 		passportSelfieLink:          faker.image.imageUrl(),
 		passportSignLink:            faker.image.imageUrl(),
-		status:                      '',
-		verify:                      '',
-		crmId:                       null,
-		address:                     common.generateAddress(),
-		postalAddress:               common.generateAddress(),
-		actualAddress:               common.generateAddress(),
-		avatarLink:                  faker.internet.avatar(),
+		address:                     await common.generateAddressFromCoordinates(lat(), lng()),
+		postalAddress:               await common.generateAddressFromCoordinates(lat(), lng()),
+		actualAddress:               await common.generateAddressFromCoordinates(lat(), lng()),
 		confirmed:                   false,
 		directions:                  faker.helpers.arrayElements(common.DIRECTIONS, 3),
 		passportGivenDate:           common.dateBetween(2000, 2020),
-		passportRegistrationAddress: common.generateAddress(),
+		passportRegistrationAddress: await common.generateAddressFromCoordinates(lat(), lng()),
 		passportSerialNumber:        faker.random.alphaNumeric(7),
 		passportSubdivisionCode:     common.generateSerialNumber([3, 4]),
 		contactPhone:                faker.phone.phoneNumber('+7 ### ### ## ##'),

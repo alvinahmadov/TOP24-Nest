@@ -1,53 +1,65 @@
-import { Op }              from 'sequelize';
-import { Injectable }      from '@nestjs/common';
-import env,
-{ setOrderSent }           from '@config/env';
+import { Op }                  from 'sequelize';
 import {
+	Injectable,
+	HttpStatus
+}                              from '@nestjs/common';
+import env                     from '@config/env';
+import {
+	DestinationType,
 	DriverStatus,
 	OfferStatus,
-	OrderStage,
 	OrderStatus,
+	OrderStage,
 	TransportStatus,
 	UserRole
-}                          from '@common/enums';
+}                              from '@common/enums';
 import {
 	IApiResponses,
 	IDriverFilter,
 	IListFilter,
 	IOfferFilter,
+	IOrderGatewayData,
 	IService,
 	ITransportFilter,
 	TAffectedRows,
 	TAsyncApiResponse,
+	TOfferTransportFilter,
 	TOfferDriver,
 	TSentOffer
-}                          from '@common/interfaces';
+}                              from '@common/interfaces';
 import {
-	checkTransportRequirements,
+	fillDriverWithCompanyData,
 	filterTransports,
 	formatArgs,
-	getTranslation
-}                          from '@common/utils';
-import { transformEntity } from '@common/utils/compat';
+	getTranslation,
+	isSuccessResponse
+}                              from '@common/utils';
+import {
+	transformEntity,
+	IDriverTransformer,
+	IOrderTransformer,
+	ITransportTransformer
+}                              from '@common/utils/compat';
 import {
 	Driver,
-	Offer,
-	Order
-}                          from '@models/index';
-import { OfferRepository } from '@repos/index';
+	Offer
+}                              from '@models/index';
 import {
-	DriverFilter,
+	DestinationRepository,
+	EntityFCMRepository,
+	OfferRepository
+}                              from '@repos/index';
+import {
 	OfferCreateDto,
 	OfferFilter,
 	OfferUpdateDto,
-	OrderFilter
-}                          from '@api/dto';
-import { EventsGateway }   from '@api/events';
-import Service             from './service';
-import DriverService       from './driver.service';
-import ImageFileService    from './image-file.service';
-import OrderService        from './order.service';
-import TransportService    from './transport.service';
+	OrderFilter,
+	OrderUpdateDto
+}                              from '@api/dto';
+import { NotificationGateway } from '@api/notifications';
+import Service                 from './service';
+import DriverService           from './driver.service';
+import OrderService            from './order.service';
 
 const OFFER_TRANSLATIONS = getTranslation('REST', 'OFFER');
 const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
@@ -58,17 +70,17 @@ export default class OfferService
 	extends Service<Offer, OfferRepository>
 	implements IService {
 	public override readonly responses: IApiResponses<null> = {
-		ACCEPTED:  { statusCode: 400, message: OFFER_TRANSLATIONS['ACCEPTED'] },
-		DECLINED:  { statusCode: 400, message: OFFER_TRANSLATIONS['DECLINED'] },
-		NOT_FOUND: { statusCode: 404, message: OFFER_TRANSLATIONS['NOT_FOUND'] }
+		ACCEPTED:  { statusCode: HttpStatus.BAD_REQUEST, message: OFFER_TRANSLATIONS['ACCEPTED'] },
+		DECLINED:  { statusCode: HttpStatus.BAD_REQUEST, message: OFFER_TRANSLATIONS['DECLINED'] },
+		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: OFFER_TRANSLATIONS['NOT_FOUND'] }
 	};
+	private readonly destinationRepo: DestinationRepository = new DestinationRepository();
+	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: false });
 
 	constructor(
 		protected readonly driverService: DriverService,
-		protected readonly imageFileService: ImageFileService,
 		protected readonly orderService: OrderService,
-		protected readonly transportService: TransportService,
-		protected readonly gateway: EventsGateway
+		private readonly gateway: NotificationGateway
 	) {
 		super();
 		this.repository = new OfferRepository();
@@ -82,7 +94,7 @@ export default class OfferService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       offer,
 			message:    formatArgs(OFFER_TRANSLATIONS['GET'], offer.id)
 		};
@@ -95,7 +107,7 @@ export default class OfferService
 		const offers = await this.repository.getList(listFilter, filter);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       offers,
 			message:    formatArgs(OFFER_TRANSLATIONS['LIST'], offers.length)
 		};
@@ -113,102 +125,223 @@ export default class OfferService
 
 		const { order, driver } = offer;
 		if(driver) {
-			if(driver.order) {
-				if(
-					driver.order.id !== order.id &&
-					driver.order.status === OrderStatus.PROCESSING
-				) {
-					const transport = driver.transports.find(
-						t => t.status === TransportStatus.ACTIVE &&
-						     !t.isTrailer
-					);
-					const trailer = driver.transports.find(
-						t => t.status === TransportStatus.ACTIVE &&
-						     t.isTrailer
-					);
-					const filter = {
-						weightMax: offer.order.weight,
-						volumeMax: offer.order.volume,
-						heightMax: offer.order.height,
-						lengthMax: offer.order.length,
-						widthMax:  offer.order.width,
-						pallets:   offer.order.pallets
-					};
+			// Prevent the driver from processing of two distinct 
+			// orders at the same time if the new order is not of extra payload type
+			// Previous order must be finished prior to the taking new one.
 
-					if(transport) {
-						const messageObj = { message: '' };
-						if(checkTransportRequirements(filter, transport, trailer, messageObj)) {
-							await this.transportService.update(transport.id, { payloadExtra: true });
+			// driver has old/active order
+			if(
+				driver.order &&
+				driver.order.id !== order.id &&
+				driver.order.isCurrent
+			) {
+				if(
+					driver.order.status === OrderStatus.PROCESSING && // driver is processing the active order
+					driver.order.stage === OrderStage.SIGNED_DRIVER && // driver has signed the document of active order
+					!driver.order.onPayment // driver is not waiting for payment for active order
+				) {
+					// the new order is not extra
+					if(order.dedicated === 'Догруз') {
+						/**
+						const transport = driver.transports.find(
+							t => t.status === TransportStatus.ACTIVE &&
+							     !t.isTrailer
+						);
+						const trailer = driver.transports.find(
+							t => t.status === TransportStatus.ACTIVE &&
+							     t.isTrailer
+						);
+						const filter: ICompanyTransportFilter = {
+							weightMin: order.weight,
+							volumeMin: order.volume,
+							heightMin: order.height,
+							lengthMin: order.length,
+							widthMin:  order.width,
+							pallets:   order.pallets
+						};
+
+						// Check for transport parameters matching 
+						// additional order's physical parameters
+						if(transport) {
+							const messageObj = { message: '' };
+							if(
+								!transport.payloadExtra ||
+								!checkTransportRequirements(filter, transport, trailer, messageObj)
+							) {
+								const message = formatArgs(EVENT_DRIVER_TRANSLATIONS['NO_MATCH'], messageObj.message);
+
+								this.gateway.sendDriverNotification(
+									{
+										id:     driverId,
+										source: 'offer',
+										message
+									},
+									UserRole.CARGO
+								);
+							}
 						}
-						else {
-							this.gateway.sendDriverEvent(
-								{
-									id:      driverId,
-									message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NO_MATCH'], messageObj.message)
-								},
-								UserRole.CARGO
-							);
-						}
+						 */
+					}
+					else {
+						const message = OFFER_TRANSLATIONS['ACCEPTED'];
+
+						this.gateway.sendDriverNotification(
+							{
+								id:     driverId,
+								source: 'offer',
+								message
+							},
+							{
+								role: UserRole.CARGO,
+								url:  'Main'
+							}
+						);
 					}
 				}
 			}
 		}
 
 		if(order) {
-			if(dto.orderStatus > OrderStatus.ACCEPTED) {
-				this.orderService.update(
-					order.id,
-					{
-						status: dto.orderStatus,
-						stage:  OrderStage.SIGNED_DRIVER
-					},
-					false
-				).then(
-					({ data: uOrder }) =>
-					{
-						if(uOrder) {
-							this.gateway.sendDriverEvent(
-								{
-									id:      driverId,
-									source:  'offer',
-									message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], uOrder?.crmId?.toString())
-								},
-								UserRole.CARGO
-							);
+			if(OrderStatus.ACCEPTED < dto.orderStatus) {
+				let orderDto: OrderUpdateDto = { status: dto.orderStatus };
 
-							this.gateway.sendOrderEvent(
-								{
-									id:      uOrder.id,
-									stage:   uOrder.stage,
-									status:  uOrder.status,
-									source:  'offer',
-									message: formatArgs(
-										EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
-										order.crmId.toString(),
-										driver.fullName
-									)
-								},
-								UserRole.ADMIN
-							);
-						}
+				if(dto.orderStatus === OrderStatus.FINISHED &&
+				   order.stage === OrderStage.SIGNED_DRIVER) {
+					if(order.paymentPhotoLinks?.length > 0) {
+						orderDto.onPayment = true;
 					}
-				);
+					else console.log('No payment photo links found!');
 
-				if(dto.orderStatus === OrderStatus.PENDING) {
-					dto.status = OfferStatus.DECLINED;
+					orderDto.isCurrent = false;
 				}
-				else {
-					dto.status = OfferStatus.RESPONDED;
+
+				const apiResponse = await this.orderService.update(order.id, orderDto);
+
+				if(isSuccessResponse(apiResponse)) {
+					const { data: order } = apiResponse;
+					this.gateway.sendOrderNotification(
+						{
+							id:      order.id,
+							stage:   order.stage,
+							status:  order.status,
+							source:  'offer',
+							message: formatArgs(
+								EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
+								order.crmId?.toString() ?? '',
+								driver.fullName
+							)
+						},
+						UserRole.ADMIN
+					);
 				}
 			}
+		}
+
+		if(dto.status !== undefined) {
+			const eventObject: IOrderGatewayData = {
+				id:     order.id,
+				event:  'order',
+				source: 'offer',
+				stage:  order.stage
+			};
+			if(
+				[
+					OfferStatus.DECLINED,
+					OfferStatus.CANCELLED
+				].some(s => s === dto.status)
+			) {
+				if(dto.status === OfferStatus.DECLINED) {
+					eventObject.message = 'Driver declined offer.';
+				}
+				else if(dto.status === OfferStatus.CANCELLED) {
+					eventObject.message = 'Driver cancelled offer prior to approval.';
+					dto.orderStatus = OrderStatus.PENDING;
+					dto.bidPrice = null;
+					dto.bidPriceVat = null;
+					dto.bidComment = null;
+
+					this.orderService
+					    .update(orderId, { status: dto.orderStatus })
+					    .then((res) =>
+					          {
+						          if(isSuccessResponse(res)) {
+							          eventObject.status = res.data.status;
+
+							          this.gateway.sendDriverNotification(
+								          {
+									          id:      driverId,
+									          source:  'offer',
+									          message: formatArgs(EVENT_DRIVER_TRANSLATIONS['CANCELLED'], order?.crmTitle)
+								          },
+								          {
+									          role: UserRole.CARGO,
+									          url:  'Main'
+								          }
+							          );
+						          }
+					          });
+				}
+			}
+
+			this.gateway.sendOrderNotification(eventObject, UserRole.LOGIST);
+		}
+
+		if(dto.orderStatus === OrderStatus.ACCEPTED) {
+			dto.status = OfferStatus.RESPONDED;
+
+			this.gateway.sendDriverNotification(
+				{
+					id:      driverId,
+					source:  'offer',
+					message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], order?.crmTitle)
+				},
+				{
+					role: UserRole.CARGO,
+					url:  'Main'
+				}
+			);
+		}
+
+		if(dto.orderStatus === OrderStatus.FINISHED) {
+			await this.driverService.update(driverId, {
+				status:       DriverStatus.ON_WAY,
+				operation:    {
+					type:     DestinationType.LOAD,
+					loaded:   false,
+					unloaded: false,
+					uploaded: false
+				},
+				currentPoint: 'A'
+			});
+
+			this.gateway.sendDriverNotification(
+				{
+					id:      driverId,
+					message: EVENT_ORDER_TRANSLATIONS['FINISHED']
+				},
+				{
+					role: UserRole.CARGO,
+					url:  'Main'
+				}
+			);
+
+			await this.fcmEntityRepo.bulkUpdate(
+				{
+					passed1H:       false,
+					passed6H:       false,
+					passed24H:      false,
+					passedDistance: false
+				},
+				{ entityId: driverId }
+			);
 		}
 
 		const result = await this.repository.update(offer.id, dto);
 
 		if(result)
 			return {
-				statusCode: 200,
-				data:       offer,
+				statusCode: HttpStatus.OK,
+				data:       result,
 				message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
 			};
 		else
@@ -217,19 +350,73 @@ export default class OfferService
 
 	public async delete(id: string)
 		: TAsyncApiResponse<TAffectedRows> {
-		const offer = await this.repository.get(id);
+		const offer = await this.repository.get(id, true);
 
 		if(!offer)
 			return this.responses['NOT_FOUND'];
 
+		if(offer.driver) {
+			await this.driverService.update(offer.driverId, {
+				status:         0,
+				operation:      null,
+				currentPoint:   null,
+				currentAddress: null
+			});
+		}
+
+		if(offer.order) {
+			const { order } = offer;
+
+			if(order.contractPhotoLink)
+				await this.imageFileService.deleteImage(order.contractPhotoLink);
+			if(order.paymentPhotoLinks?.length > 0)
+				await this.imageFileService.deleteImageList(order.paymentPhotoLinks);
+			if(order.receiptPhotoLinks?.length > 0)
+				await this.imageFileService.deleteImageList(order.receiptPhotoLinks);
+
+			this.orderService.update(offer.orderId, {
+				cargoId:           null,
+				cargoinnId:        null,
+				driverId:          null,
+				isOpen:            true,
+				isFree:            true,
+				isCurrent:         false,
+				isCanceled:        false,
+				onPayment:         false,
+				cancelCause:       null,
+				status:            OrderStatus.PENDING,
+				stage:             OrderStage.AGREED_OWNER,
+				contractPhotoLink: null,
+				paymentPhotoLinks: null,
+				receiptPhotoLinks: null
+			})
+			    .then(async({ data: o }) =>
+			          {
+				          this.destinationRepo.bulkUpdate(
+					          {
+						          shippingPhotoLinks: null,
+						          fulfilled:          false
+					          },
+					          {
+						          orderId: o.id
+					          }
+				          ).then(
+					          ([affectedCount]) => console.info('Updated ' + affectedCount + ' destinations')
+				          ).catch(console.error);
+
+				          await this.orderService.send(o.id);
+			          })
+			    .catch(console.error);
+		}
+
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       await this.repository.delete(id),
 			message:    formatArgs(OFFER_TRANSLATIONS['DELETE'], id)
 		};
 	}
 
-	public async getDrivers(
+	public async getOrderDrivers(
 		orderId: string,
 		listFilter?: IListFilter,
 		filter?: IOfferFilter & IDriverFilter
@@ -238,96 +425,205 @@ export default class OfferService
 		const drivers = offers.map(offer => offer.driver);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       drivers,
 			message:    formatArgs(OFFER_TRANSLATIONS['DRIVERS'], drivers.length)
 		};
 	}
 
-	public async getOrders(
+	public async getDriverOrders(
 		driverId: string,
 		listFilter?: IListFilter,
-		filter?: OfferFilter & OrderFilter
+		filter?: OfferFilter & Omit<OrderFilter, 'status' | 'statuses'>
 	) {
 		const offers = await this.repository.getDriverOrders(driverId, listFilter, filter);
-		const orders =
-			await offers?.filter(offer => offer !== null && offer.order !== null)
-			            ?.map(
-				            (offer) =>
-				            {
-					            return {
-						            ...(
-							            env.api.compatMode
-							            ? transformEntity(offer.order)
-							            : offer.order.get({ plain: true, clone: false })
-						            ),
-						            transports: offer.transports
-					            };
-				            }
-			            );
+		const offerStatusKey = env.api.compatMode ? 'offer_status' : 'offerStatus';
+		let priorityCounter = 0;
+		const isProcessing = (offer: Offer) => offer.orderStatus === OrderStatus.PROCESSING;
+		const date = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+		const orders = offers.filter(offer => offer !== null && offer.order !== null)
+		                     .sort((offer1, offer2) =>
+		                           {
+			                           const date1 = offer1.order.destinations[0].date;
+			                           const date2 = offer2.order.destinations[0].date;
+
+			                           if(isProcessing(offer1) && isProcessing(offer2)) {
+				                           return date1.valueOf() - date2.valueOf();
+			                           }
+			                           return 0;
+		                           })
+		                     .filter(offer => offer.order.destinations[0].date >= date)
+		                     .map(
+			                     (offer) =>
+			                     {
+				                     let { order, driver, orderStatus } = offer;
+
+				                     if(orderStatus === OrderStatus.PROCESSING ||
+				                        order.isExtraPayload)
+					                     order.isCurrent = priorityCounter++ === 0;
+				                     else
+					                     order.isCurrent = false;
+
+				                     if(
+					                     order.stage === OrderStage.SIGNED_DRIVER &&
+					                     orderStatus === OrderStatus.ACCEPTED
+				                     ) {
+					                     order.status = OrderStatus.ACCEPTED;
+					                     offer.orderStatus = OrderStatus.PROCESSING;
+				                     }
+				                     else order.status = orderStatus;
+
+				                     if(order.priority) {
+					                     let orderUpdateDto: OrderUpdateDto = {
+						                     isCurrent: true
+					                     };
+
+					                     if(
+						                     driver.status > DriverStatus.NONE &&
+						                     driver.status < DriverStatus.DOC_LOAD
+					                     ) {
+						                     orderUpdateDto.paymentPhotoLinks = order.paymentPhotoLinks = null;
+						                     orderUpdateDto.receiptPhotoLinks = order.receiptPhotoLinks = null;
+					                     }
+
+					                     this.orderService.update(order.id, orderUpdateDto);
+				                     }
+
+				                     return {
+					                     ...(
+						                     env.api.compatMode
+						                     ? <IOrderTransformer>transformEntity(order)
+						                     : order.get({ plain: true, clone: false })
+					                     ),
+					                     priority:         order.priority,
+					                     [offerStatusKey]: offer.status,
+					                     transports:       offer.transports
+				                     };
+			                     }
+		                     );
+
+		if(offers.every(o => o.status < OfferStatus.SEEN)) {
+			await this.repository.bulkUpdate(
+				{ status: OfferStatus.SEEN },
+				{
+					[Op.and]: [
+						{ orderId: { [Op.in]: orders?.map(o => o.id) } },
+						{ driverId }
+					]
+				}
+			);
+		}
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       orders,
 			message:    formatArgs(OFFER_TRANSLATIONS['ORDERS'], orders.length)
 		};
 	}
 
-	public async getTransports(
+	public async getOfferTransports(
 		orderId: string,
 		listFilter: IListFilter,
-		filter?: Pick<IOfferFilter, 'transportStatus'> & DriverFilter
+		filter?: TOfferTransportFilter
 	): TAsyncApiResponse<any[]> {
-		const transports: any[] = [];
+		const transportData: any[] = [];
+		//Temporary fix
+		if(filter.orderStatus === OrderStatus.ACCEPTED) {
+			filter.orderStatuses = [
+				OrderStatus.ACCEPTED,
+				OrderStatus.PROCESSING
+			];
+			// filter.offerStatuses = [OfferStatus.CANCELLED];
+			delete filter.orderStatus;
+		}
+
 		const offers = await this.repository.getOrderTransports(orderId, listFilter, filter);
 
 		offers.forEach(
 			offer =>
 			{
 				if(offer.driver) {
-					const { transports: driverTransports = [] } = offer.driver;
+					const driver = fillDriverWithCompanyData(offer.driver);
+					const { transports: driverTransports = [] } = driver;
 
 					const mainTransports = driverTransports.filter(
 						transport => !transport.isTrailer
 					);
-					const trailers = driverTransports.filter(
+					const trailer = driverTransports.find(
 						transport => transport.isTrailer && transport.status === TransportStatus.ACTIVE
 					);
 
 					if(mainTransports.length > 0) {
-						if(trailers.length > 0) {
-							mainTransports[0].trailer = trailers[0];
+						if(trailer) {
+							const activeIndex = mainTransports.findIndex(t => t.status === TransportStatus.ACTIVE);
+							mainTransports[activeIndex].trailer = trailer;
 						}
 					}
+					if(!driver.currentPoint) driver.currentPoint = 'A';
+					const getOptions = { plain: true, clone: false };
 
-					transports.push(
-						...mainTransports.map(
-							t =>
-								(env.api.compatMode
-								 ? {
-										...transformEntity(t),
-										offer_status:  offer.status,
+					transportData.push(
+						...mainTransports
+							.map(
+								transport =>
+								{
+									const {
+										status,
+										cargoId,
+										cargoinnId,
+										..._driver
+									} = env.api.compatMode
+									    ? transformEntity(driver) as IDriverTransformer
+									    : driver.get(getOptions);
+
+									const _transport = env.api.compatMode
+									                   ? transformEntity(transport) as ITransportTransformer
+									                   : transport.get(getOptions);
+									const orderStatus = offer.orderStatus;
+									const offerStatus = offer.status;
+
+									if('transports' in _driver)
+										delete _driver.transports;
+									if('cargo' in _driver)
+										delete _driver['cargo'];
+									if('cargoinn' in _driver)
+										delete _driver['cargoinn'];
+
+									if('driver' in _transport)
+										delete _transport.driver;
+
+									return env.api.compatMode ? {
+										..._transport,
+										driver:        _driver,
+										company_name:  driver?.companyName,
+										offer_status:  offerStatus,
+										order_status:  orderStatus,
 										bid_price:     offer.bidPrice,
 										bid_price_max: offer.bidPriceVat,
-										comments:      offer.bidComment
-									}
-								 : {
-										...t.get({ plain: true, clone: true }),
-										offerStatus: offer.status,
+										bid_comments:  offer.bidComment,
+										bid_info:      offer.bidComment
+									} : {
+										..._transport,
+										driver:      _driver,
+										companyName: driver.companyName,
+										offerStatus,
+										orderStatus,
 										bidPrice:    offer.bidPrice,
 										bidPriceVat: offer.bidPriceVat,
 										bidComment:  offer.bidComment
-									})
-						)
+									};
+								}
+							)
 					);
 				}
 			}
 		);
 
 		return {
-			statusCode: 200,
-			data:       transports,
-			message:    formatArgs(OFFER_TRANSLATIONS['TRANSPORTS'], transports.length)
+			statusCode: HttpStatus.OK,
+			data:       transportData,
+			message:    formatArgs(OFFER_TRANSLATIONS['TRANSPORTS'], transportData.length)
 		};
 	}
 
@@ -351,7 +647,8 @@ export default class OfferService
 
 		if(offer)
 			return {
-				statusCode: !exists ? 201 : 200,
+				statusCode: !exists ? HttpStatus.CREATED
+				                    : HttpStatus.OK,
 				data:       offer
 			};
 
@@ -364,25 +661,8 @@ export default class OfferService
 		driverDataList: Array<TOfferDriver>,
 		full?: boolean
 	): TAsyncApiResponse<TSentOffer> {
-		if(!driverDataList || !driverDataList?.length) {
-			const { affectedCount } = await this.repository.bulkDelete(
-				this.repository.whereClause('and')
-				    .eq('orderId', orderId)
-				    .lte('orderStatus', OrderStatus.CANCELLED)
-					.query
-			);
-			return {
-				statusCode: 200,
-				data:       {
-					createCount: 0,
-					updateCount: 0,
-					offers:      await this.repository.getOrderDrivers(orderId)
-				},
-				message:    `Deleted ${affectedCount} rows.`
-			};
-		}
 		const { data: order } = await this.orderService.getById(orderId);
-		const prevOffers = await this.repository.getOrderDrivers(orderId);
+		const prevOffers = await this.repository.getList({ full: true }, { orderId });
 		let createCount = 0, updateCount = 0;
 		let offers: Offer[] = [];
 
@@ -394,15 +674,13 @@ export default class OfferService
 			};
 		}
 
-		let driverOffers: TOfferDriver[] = Array.from(
-			new Set<string>(
-				driverDataList.map(driverData => driverData.driverId)
-			)
-		).map(
-			driverId => driverDataList.find(d => d.driverId === driverId)
-		).filter(
-			driverData => driverData !== null
-		);
+		driverDataList.forEach(data => data.status = OfferStatus.SENT);
+		const driverIds = new Set<string>(driverDataList.map(d => d.driverId));
+
+		let driverOffers: TOfferDriver[] = Array
+			.from(driverIds)
+			.map(driverId => driverDataList.find(d => d.driverId === driverId))
+			.filter(driverData => driverData !== null);
 
 		let { data: drivers } = await this.driverService.getByTransport(
 			{ driverIds: driverOffers.map(o => o.driverId) }
@@ -429,7 +707,11 @@ export default class OfferService
 				message:    formatArgs(OFFER_TRANSLATIONS['DRIVERS'], 0)
 			};
 		else
-			driverOffers = driverOffers.filter(o => drivers.some(d => d.id === o.driverId));
+			driverOffers = driverOffers.filter(
+				(offerDriver) => drivers.some(
+					(driver) => driver.id === offerDriver.driverId
+				)
+			);
 
 		// TODO(alvinahmadov): Implement offer status update for non-matching offers
 
@@ -437,13 +719,16 @@ export default class OfferService
 			.filter(
 				driverData => prevOffers.some(
 					offer => offer.driverId === driverData.driverId &&
-					         offer.orderStatus !== driverData.orderStatus
+					         (
+						         offer.orderStatus !== driverData.orderStatus ||
+						         offer.status > OfferStatus.SENT
+					         )
 				)
-			).map(driverData => ({ orderId: orderId, status: OfferStatus.SENT, ...driverData }));
+			).map(driverData => ({ orderId: orderId, ...driverData }));
 
 		const offersToCreate: OfferCreateDto[] = driverOffers
 			.filter(driverData => prevOffers.every(offer => offer.driverId !== driverData.driverId))
-			.map(driverData => ({ orderId: orderId, status: OfferStatus.SENT, ...driverData }));
+			.map(driverData => ({ orderId: orderId, ...driverData }));
 
 		updateCount = offersToUpdate.length;
 		createCount = offersToCreate.length;
@@ -454,21 +739,25 @@ export default class OfferService
 
 		if(createCount > 0) {
 			const offers = await this.repository.bulkCreate(offersToCreate);
-			offers.forEach(
-				offer => this.gateway.sendDriverEvent(
-					{
-						id:      offer.driverId,
-						source:  'offer',
-						message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order.crmId?.toString())
-					},
-					UserRole.CARGO
-				)
-			);
+			if(offers?.length === offersToCreate.length)
+				offers.forEach(
+					offer => this.gateway.sendDriverNotification(
+						{
+							id:      offer.driverId,
+							source:  'offer',
+							message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order?.crmTitle)
+						},
+						{
+							role: UserRole.CARGO,
+							url:  'Main'
+						}
+					)
+				);
 		}
 
-		offers = await this.repository.getOrderDrivers(orderId, { full });
+		offers = await this.repository.getOrderDrivers(orderId, { full: full === undefined ? true : full });
 
-		this.gateway.sendOrderEvent(
+		this.gateway.sendOrderNotification(
 			{
 				id:     order.id,
 				source: 'offer',
@@ -476,12 +765,12 @@ export default class OfferService
 				stage:  order.stage,
 				point:  order.destinations
 				             .filter(d => !d.fulfilled)[0]
-					        .point
+					        ?.point ?? 'A'
 			}
 		);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       { createCount, updateCount, offers },
 			message:    formatArgs(OFFER_TRANSLATIONS['SEND'], createCount, updateCount)
 		};
@@ -495,173 +784,181 @@ export default class OfferService
 		driverId: string,
 		role?: UserRole
 	): TAsyncApiResponse<Offer> {
-		const offer = await this.repository.getByAssociation(orderId, driverId);
-		let orderTitle: string;
-
+		let offer = await this.repository.getByAssociation(orderId, driverId);
+		console.debug(role);
 		if(offer) {
-			orderTitle = offer?.order.crmId?.toString() ?? '';
+			if(offer.status === OfferStatus.RESPONDED) {
+				if((
+					   offer.order?.status < OrderStatus.PROCESSING ||
+					   offer.order?.status === OrderStatus.CANCELLED
+				   ) && offer.driver?.isReady === true) {
+					if(offer.driver) {
+						const { driver } = offer;
+						if(
+							driver.order &&
+							(driver.order.id !== offer.orderId &&
+							driver.order.status === OrderStatus.PROCESSING &&
+							driver.order.isCurrent)
+						) {
+							this.gateway.sendDriverNotification(
+								{
+									id:      driverId,
+									source:  'offer',
+									message: EVENT_DRIVER_TRANSLATIONS['HAS_EXISTING']
+								},
+								{
+									role: UserRole.CARGO,
+									url:  'Main'
+								}
+							);
+						}
 
-			if(
-				offer.orderStatus === OrderStatus.CANCELLED &&
-				role <= UserRole.CARGO
-			) {
-				return this.responses['ACCEPTED'];
-			}
-
-			if(
-				offer.order?.status < OrderStatus.PROCESSING &&
-				offer.driver?.isReady === true
-			) {
-				if(offer.driver) {
-					const { driver } = offer;
-					if(
-						driver.order &&
-						driver.order.status === OrderStatus.PROCESSING
-					) {
-						this.gateway.sendDriverEvent(
+						this.gateway.sendDriverNotification(
 							{
-								id:      driverId,
-								source:  'offer',
-								message: EVENT_DRIVER_TRANSLATIONS['EXTRA']
+								id:             driver.id,
+								source:         'offer',
+								status:         driver.status,
+								latitude:       driver.latitude,
+								longitude:      driver.longitude,
+								currentPoint:   driver.currentPoint,
+								currentAddress: driver.currentAddress,
+								message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], offer.order?.crmTitle)
 							},
-							UserRole.CARGO
+							{
+								role: UserRole.CARGO,
+								url:  'Main'
+							}
 						);
 					}
 
-					this.gateway.sendDriverEvent(
+					this.confirmDriver(orderId, driverId, offer)
+					    .then((confirmed) => console.log(`Driver is ${!confirmed ? 'not' : ''} confirmed!`))
+					    .catch(console.error);
+
+					offer = await this.repository.update(
+						offer.id,
 						{
-							id:             driver.id,
-							status:         driver.status,
-							latitude:       driver.latitude,
-							longitude:      driver.longitude,
-							currentPoint:   driver.currentPoint,
-							currentAddress: driver.currentAddress,
-							message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], orderTitle)
-						},
-						UserRole.CARGO
-					);
-					// Update offer status for unselected drivers
-					this.repository.bulkUpdate(
-						{
-							status:      OfferStatus.NO_MATCH,
-							orderStatus: OrderStatus.CANCELLED_BITRIX
-						},
-						{
-							[Op.and]: [
-								{ id: { [Op.eq]: offer.id } },
-								{ driverId: { [Op.ne]: offer.driverId } }
-							]
-						}
-					).then(
-						// then emit message for unselected drivers.
-						([, offers]) =>
-						{
-							offers.forEach(o => this.gateway.sendDriverEvent(
-								{
-									id:      o.driverId,
-									message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], orderTitle)
-								},
-								UserRole.CARGO
-							));
+							orderStatus: OrderStatus.PROCESSING,
+							status:      OfferStatus.RESPONDED
 						}
 					);
+
+					return {
+						statusCode: HttpStatus.OK,
+						data:       offer,
+						message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
+					};
 				}
-
-				this.orderService.update(
-					orderId,
-					{
-						driverId:    driverId,
-						isFree:      false,
-						isOpen:      false,
-						isCanceled:  false,
-						hasProblem:  false,
-						bidPrice:    offer.bidPrice,
-						bidPriceVAT: offer.bidPriceVat,
-						bidInfo:     offer.bidComment,
-						cargoId:     offer.driver.cargoId,
-						cargoinnId:  offer.driver.cargoinnId,
-						status:      OrderStatus.PROCESSING
-					},
-					false
-				).then(
-					({ data: order }) =>
-					{
-						if(order) {
-							this.gateway.sendOrderEvent(
-								{
-									id:      orderId,
-									status:  order.status,
-									stage:   order.stage,
-									message: formatArgs(EVENT_ORDER_TRANSLATIONS['ACCEPT'], orderTitle)
-								},
-								UserRole.ADMIN
-							);
-						}
-					}
-				);
-
-				this.orderService.send(offer.orderId)
-				    .then(() => setOrderSent(true))
-				    .catch(() => setOrderSent());
-
-				return {
-					statusCode: 200,
-					data:       await this.repository.update(offer.id, { orderStatus: OrderStatus.PROCESSING }),
-					message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
-				};
 			}
-			else
-				return {
-					statusCode: 200,
-					data:       offer,
-					message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
-				};
+
+			return {
+				statusCode: HttpStatus.OK,
+				data:       offer,
+				message:    formatArgs(OFFER_TRANSLATIONS['UPDATE'], offer.id)
+			};
 		}
 
 		return this.responses['NOT_FOUND'];
 	}
 
-	public async decline(
+	public async confirmDriver(
+		orderId: string,
+		driverId: string,
+		offer: Offer
+	): Promise<boolean> {
+		const orderTitle = offer.order?.crmId?.toString() ?? '';
+
+		await this.driverService.update(driverId, {
+			status:       DriverStatus.ON_WAY,
+			operation:    {
+				type:     DestinationType.LOAD,
+				loaded:   false,
+				unloaded: false
+			},
+			currentPoint: 'A'
+		});
+
+		this.orderService.update(
+			orderId,
+			{
+				driverId:    driverId,
+				isFree:      false,
+				isOpen:      false,
+				isCanceled:  false,
+				hasProblem:  false,
+				bidPrice:    offer.bidPrice,
+				bidPriceVat: offer.bidPriceVat,
+				bidInfo:     offer.bidComment,
+				cargoId:     offer.driver.cargoId,
+				cargoinnId:  offer.driver.cargoinnId,
+				status:      OrderStatus.PROCESSING
+			}
+		).then(
+			({ data: order }) =>
+			{
+				if(order) {
+					this.gateway.sendOrderNotification(
+						{
+							id:      orderId,
+							status:  order.status,
+							stage:   order.stage,
+							message: formatArgs(EVENT_ORDER_TRANSLATIONS['ACCEPT'], orderTitle)
+						},
+						UserRole.ADMIN
+					);
+					this.orderService
+					    .send(offer.orderId)
+					    .then(({ data }) => console.log('Order crm updated ' + data))
+					    .catch(console.error);
+				}
+			}
+		);
+
+		return true;
+	}
+
+	public async declineOffer(
 		orderId: string,
 		driverId: string,
 		reason?: string,
 		role?: UserRole
 	): TAsyncApiResponse<Offer> {
 		const offer = await this.repository.getByAssociation(orderId, driverId);
-		const driverStatus = DriverStatus.NONE;
-		const status = (role ?? 0) < UserRole.CARGO ? OrderStatus.CANCELLED
-		                                            : OrderStatus.PENDING;
+		const status = role < UserRole.CARGO ? OrderStatus.CANCELLED_BITRIX
+		                                     : OrderStatus.CANCELLED;
 
 		if(offer) {
 			if(offer.orderStatus < OrderStatus.CANCELLED) {
-				let order: Order = offer.order;
-				let driver: Driver = offer.driver;
+				let { driver, order } = offer;
 
 				if(order) {
-					if(order.contractPhotoLink) {
-						await this.imageFileService.deleteImage(offer.order.contractPhotoLink);
-					}
+					await this.destinationRepo.bulkUpdate({ fulfilled: false }, { orderId: order.id });
+
+					await this.orderService.deleteDocuments(order.id, 'contract');
 
 					this.orderService
 					    .update(order.id, {
-						    status,
-						    driverId:    null,
-						    cargoId:     null,
-						    cargoinnId:  null,
-						    isOpen:      true,
-						    isFree:      true,
-						    isCanceled:  true,
-						    cancelCause: reason ?? ''
-					    }, false)
+						    status:            !order.isCanceled ? status
+						                                         : OrderStatus.CANCELLED_BITRIX,
+						    isOpen:            true,
+						    isFree:            true,
+						    isCurrent:         false,
+						    cancelCause:       reason ?? '',
+						    contractPhotoLink: null
+					    })
 					    .then(({ data: order }) =>
 					          {
 						          if(order) {
-							          this.gateway.sendOrderEvent(
+							          this.gateway.sendOrderNotification(
 								          {
 									          id:      order.id,
 									          status:  order.status,
 									          stage:   order.stage,
-									          message: `Водитель '${driver?.fullName}' отказался от сделки '№${order.number}'.`
+									          message: formatArgs(
+										          EVENT_ORDER_TRANSLATIONS['CANCELLED_DRIVER'],
+										          driver?.fullName,
+										          order?.crmId
+									          )
 								          }
 							          );
 						          }
@@ -670,41 +967,64 @@ export default class OfferService
 				}
 
 				if(driver) {
-					this.driverService.update(
-						driverId, {
-							status:         driverStatus,
-							currentPoint:   '',
-							currentAddress: ''
+					const driverDto = {
+						status:         DriverStatus.NONE,
+						currentPoint:   '',
+						currentAddress: ''
+					};
+
+					let { data: orders } = await this.orderService.getList(
+						{}, {
+
+							driverId,
+							statuses: [
+								OrderStatus.ACCEPTED,
+								OrderStatus.PROCESSING
+							]
 						}
-					).then(
-						({ data: driver }) =>
-						{
-							if(driver)
-								this.gateway.sendDriverEvent(
-									{
-										id:      driver.id,
-										status:  driver.status,
-										message: formatArgs(EVENT_DRIVER_TRANSLATIONS['DECLINE'], order.crmId?.toString() ?? 0)
-									},
-									UserRole.CARGO
-								);
-						}
-					).catch(r => console.debug(r));
+					);
+
+					if(orders && orders.length > 1) {
+						driverDto.status = DriverStatus.ON_WAY;
+						driverDto.currentPoint = 'A';
+					}
+
+					this.driverService
+					    .update(driverId, driverDto)
+					    .then(
+						    ({ data: driver }) =>
+						    {
+							    if(driver && role === UserRole.CARGO)
+								    this.gateway.sendDriverNotification(
+									    {
+										    id:      driver.id,
+										    status:  driver.status,
+										    source:  'offer',
+										    message: formatArgs(EVENT_DRIVER_TRANSLATIONS['CANCELLED'], order?.crmTitle)
+									    },
+									    {
+										    role: UserRole.CARGO,
+										    url:  'Main'
+									    }
+								    );
+						    }
+					    )
+					    .catch(r => console.error(r));
 				}
 
-				this.orderService.send(offer.orderId)
-				    .then(() => setOrderSent(true))
-				    .catch(() => setOrderSent());
+				this.orderService
+				    .send(offer.orderId)
+				    .catch(console.error);
 
 				return {
-					statusCode: 200,
+					statusCode: HttpStatus.OK,
 					data:       await this.repository.update(
 						offer.id,
 						{
 							bidPrice:    null,
 							bidPriceVat: null,
-							status:      OfferStatus.DECLINED,
 							orderStatus: status,
+							status:      OfferStatus.CANCELLED,
 							bidComment:  reason ?? ''
 						}
 					)
@@ -717,25 +1037,30 @@ export default class OfferService
 			return this.responses['NOT_FOUND'];
 	}
 
-	public async cancel(
+	public async cancelAll(
 		orderId: string,
-		crmId: number
+		crmTitle: string
 	): TAsyncApiResponse<Offer[]> {
-		const offers = await this.repository.getOrderDrivers(orderId);
+		const offers = await this.repository.getList({}, { orderId });
 		offers.forEach(
 			(offer) =>
-				this.gateway.sendDriverEvent(
+				this.gateway.sendDriverNotification(
 					{
 						id:      offer.driverId,
-						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmId.toString())
+						source:  'bitrix',
+						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmTitle)
 					},
-					UserRole.CARGO
+					{
+						role: UserRole.CARGO,
+						url:  'Main'
+					}
 				)
 		);
 
 		return {
-			statusCode: 200,
-			data:       offers
+			statusCode: HttpStatus.OK,
+			data:       offers,
+			message:    crmTitle
 		};
 	}
 }

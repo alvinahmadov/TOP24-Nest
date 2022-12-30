@@ -6,13 +6,13 @@ import {
 import CONTROLLERS          from '@api/controllers';
 import { LoggerMiddleware } from '@api/middlewares';
 import AuthModule           from './auth.module';
+import NotificationModule   from './notification.module';
 import ServicesModule       from './services.module';
-import EventsModule         from './events.module';
 
 @Module({
 	        imports:     [
 		        AuthModule,
-		        EventsModule,
+		        NotificationModule,
 		        ServicesModule
 	        ],
 	        controllers: CONTROLLERS

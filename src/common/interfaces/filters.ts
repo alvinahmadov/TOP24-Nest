@@ -3,18 +3,24 @@ import {
 	IAddress,
 	IAdmin,
 	ICargoCompany,
-	ICargoInnCompany,
+	ICargoCompanyInn,
+	IDestination,
 	IDriver,
+	IEntityFCM,
+	IGatewayEvent,
 	IImage,
 	IModel,
 	IOffer,
 	IOrder,
 	IPayment,
-	ITransport
+	ITransport,
+	IUser
 }                             from './attributes';
 import {
 	DriverStatus,
 	LoadingType,
+	OfferStatus,
+	OrderStage,
 	OrderStatus,
 	TransportStatus
 }                             from '../enums';
@@ -78,7 +84,13 @@ export interface IAdminFilter
  * */
 export interface IAddressFilter
 	extends IFilter,
-	        TModelFilter<IAddress> {}
+	        TModelFilter<IAddress> {
+	search?: string;
+	provider?: string;
+	onlyRegions?: boolean;
+	onlyCities?: boolean;
+	short?: boolean;
+}
 
 /**
  * Cargo model filters
@@ -92,11 +104,20 @@ export interface ICargoCompanyFilter
 /**
  * CargoInn model filters
  *
- * @see ICargoInnCompany
+ * @see ICargoCompanyInn
  * */
 export interface ICargoCompanyInnFilter
 	extends IFilter,
-	        TModelFilter<ICargoInnCompany> {}
+	        TModelFilter<ICargoCompanyInn> {}
+
+export interface IDestinationFilter
+	extends IFilter,
+	        TModelFilter<IDestination> {
+	fromDate?: Date | string;
+	toDate?: Date | string;
+	distanceMin?: number;
+	distanceMax?: number;
+}
 
 /**
  * Driver model filters
@@ -110,6 +131,22 @@ export interface IDriverFilter
 	statuses?: DriverStatus[];
 }
 
+export interface IEntityFCMFilter 
+extends IFilter,
+        TModelFilter<IEntityFCM> {
+	notPassed24H?: boolean;
+	notPassed6H?: boolean;
+	notPassed1H?: boolean;
+	notPassedDistance?: boolean;
+}
+
+export interface IGatewayEventFilter
+	extends IFilter,
+	        TModelFilter<IGatewayEvent> {
+	events?: ('cargo' | 'driver' | 'order' | string)[];
+	sources?: string[];
+}
+
 /**
  * @summary Image model filters
  *
@@ -121,7 +158,7 @@ export interface IImageFilter
 
 /**
  * @summary Payment model filters
- * 
+ *
  * @see IPayment
  * */
 export interface IPaymentFilter
@@ -151,6 +188,7 @@ export interface IOrderFilter
 	heightMin?: number;
 	heightMax?: number;
 	statuses?: OrderStatus[];
+	stages?: OrderStage[];
 	types?: string[];
 	pallets?: number;
 	isDedicated?: boolean;
@@ -171,9 +209,13 @@ export interface IOrderFilter
 export interface IOfferFilter
 	extends IFilter,
 	        TModelFilter<IOffer> {
+	driverIds?: string[];
+	orderIds?: string[];
 	orderStatuses?: OrderStatus[];
 	driverStatus?: DriverStatus;
+	statuses?: OfferStatus[];
 	transportStatus?: TransportStatus;
+	isCurrent?: boolean;
 	hasComment?: boolean;
 	hasBid?: boolean;
 }
@@ -223,3 +265,11 @@ export interface ICompanyTransportFilter
 	fromDate?: Date | string;
 	toDate?: Date | string;
 }
+
+export interface IUserFilter
+	extends IFilter,
+	        TModelFilter<IUser> {}
+
+export type TOfferTransportFilter = Pick<IOfferFilter, 'transportStatus' | 'orderStatuses'> &
+                                    Omit<IDriverFilter, 'statuses'>
+                                    & { offerStatuses?: OfferStatus[] };

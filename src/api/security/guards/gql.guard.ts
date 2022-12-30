@@ -36,7 +36,7 @@ export default class GqlAuthGuard
 		}
 	}
 
-	public override handleRequest(err: any, user: any): any {
+	public override handleRequest(err: any, user: IUserPayload): any {
 		if(!user)
 			throw GqlAuthGuard.unauthorizedException;
 

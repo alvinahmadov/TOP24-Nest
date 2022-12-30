@@ -11,8 +11,6 @@ import {
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { ApiRoute, UserParam } from '@common/decorators';
-import { UserRole }            from '@common/enums';
 import {
 	IAdminLoginResponse,
 	IApiResponse,
@@ -24,6 +22,7 @@ import {
 import { sendResponse }        from '@common/utils';
 import { Admin }               from '@models/index';
 import * as dto                from '@api/dto';
+import { ApiRoute, UserParam } from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
 	AdminFilterPipe,
@@ -33,12 +32,10 @@ import { getRouteConfig }      from '@api/routes';
 import {
 	AccessGuard,
 	AdminGuard,
+	AuthService,
 	LogistGuard
 }                              from '@api/security';
-import {
-	AdminService,
-	AuthService
-}                              from '@api/services';
+import { AdminService }        from '@api/services';
 import BaseController          from './controller';
 
 const { path, tag, routes } = getRouteConfig('admin');
@@ -147,11 +144,6 @@ export default class AdminController
 			message:    'Access Denied'
 		};
 		if(user.id === id) {
-			if(user.role != UserRole.ADMIN) {
-				delete dto.role;
-				delete dto.privilege;
-				delete dto.confirmed;
-			}
 			result = await this.adminService.update(id, dto);
 		}
 
@@ -171,7 +163,7 @@ export default class AdminController
 		return sendResponse(response, result);
 	}
 
-	@ApiRoute(routes.host_login, {
+	@ApiRoute(routes.hostLogin, {
 		statuses: [HttpStatus.OK]
 	})
 	public async hostLogin(
@@ -184,7 +176,7 @@ export default class AdminController
 		return sendResponse(response, result);
 	}
 
-	@ApiRoute(routes.signin, { statuses: [HttpStatus.OK] })
+	@ApiRoute(routes.signIn, { statuses: [HttpStatus.OK] })
 	public async signIn(
 		@Query('by') by: string,
 		@Body() signInDto: dto.SignInEmailDto | dto.SignInPhoneDto,

@@ -1,11 +1,12 @@
-import { join }                from 'path';
 import * as ex                 from 'express';
+import { exec }                from 'shelljs';
 import { IMigrationOptions }   from 'sequelize-migrate/index';
 import {
 	Body,
 	Controller,
 	Get,
 	Post,
+	Patch,
 	Res,
 	UseFilters
 }                              from '@nestjs/common';
@@ -47,15 +48,18 @@ export default class AppController {
 		               .send(result);
 	}
 
-	@Get('agreement')
-	public getAgreement(@Res() response: ex.Response) {
-		const filepath = join(__dirname + AGREEMENT_PDF_PATH);
-		return response.sendFile(filepath, (err) => console.debug(err));
+	@Patch('migrate')
+	public async runMigrations(
+		@Res() response: ex.Response
+	) {
+		const cmd = exec('npm run migrate');
+		const success = cmd.code === 0;
+		return response.status(success ? 200 : 400)
+		               .send(success ? cmd.stdout : cmd.stderr);
 	}
 
-	@Post('reset')
-	public async reset(@Res() response: ex.Response) {
-		const result = await this.appService.reset();
-		return response.status(result.status).send(result);
+	@Get('agreement')
+	public getAgreement(@Res() response: ex.Response) {
+		return response.sendFile(AGREEMENT_PDF_PATH, (err) => console.debug(err));
 	}
 }

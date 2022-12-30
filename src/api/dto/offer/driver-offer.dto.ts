@@ -6,8 +6,9 @@ import { TOfferDriver } from '@common/interfaces';
 export default class DriverOfferDto
 	implements TOfferDriver {
 	driverId: string;
+	status: number;
 	orderStatus: OrderStatus;
 	bidPrice?: number;
-	bidPriceVAT?: number;
+	bidPriceVat?: number;
 	bidComment?: string;
 }

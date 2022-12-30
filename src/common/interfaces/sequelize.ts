@@ -1,7 +1,27 @@
 import { ModelAttributeColumnOptions } from 'sequelize';
-import { Column, DataType, Sequelize } from 'sequelize-typescript';
+import { snakeCase }                   from 'lodash';
+import { TABLE_OPTIONS }               from '../constants';
+import {
+	annotateModelWithIndex,
+	Column,
+	DataType,
+	IndexFieldOptions,
+	IndexOptions,
+	Sequelize
+}                                      from 'sequelize-typescript';
+
+type IndexDecoratorOptions = IndexOptions &
+                             Pick<IndexFieldOptions, Exclude<keyof IndexFieldOptions, 'name'>>;
+type AnnotationFunction = <T>(
+	target: T,
+	propertyName: string
+) => void;
 
 export type TAffectedRows = { affectedCount: number };
+
+export type TAffectedEntity = TAffectedRows & {
+	images: number;
+}
 
 export type TDbOnOption = 'CASCADE' |
                           'RESTRICT' |
@@ -10,7 +30,7 @@ export type TDbOnOption = 'CASCADE' |
                           'NO ACTION';
 
 /**@ignore*/
-type TColumnOptions = Partial<Omit<ModelAttributeColumnOptions, 'onDelete' | 'onUpdate'> & {
+type TColumnOptions = Partial<Omit<ModelAttributeColumnOptions, 'onDelete' | 'onUpdate' | 'type'> & {
 	onDelete?: TDbOnOption;
 	onUpdate?: TDbOnOption;
 }>;
@@ -34,38 +54,70 @@ export const IdColumn = (options?: TColumnOptions): Function =>
 				allowNull:     false,
 				autoIncrement: false,
 				primaryKey:    true,
-				defaultValue:  Sequelize.literal('gen_random_uuid()')
+				defaultValue:  () => Sequelize.literal('gen_random_uuid()')
 			}
 		)
 	);
 };
 
 export const IntColumn = (options: TColumnOptions = {}): Function =>
-	MergeColumnOptions(options, { type: DataType.INTEGER });
+	MergeColumnOptions({ type: DataType.INTEGER }, options);
 
 export const SmallIntColumn = (options: TColumnOptions = {}): Function =>
-	MergeColumnOptions(options, { type: DataType.SMALLINT });
+	MergeColumnOptions({ type: DataType.SMALLINT }, options);
 
 export const IntArrayColumn = (options: TColumnOptions = {}): Function =>
-	MergeColumnOptions(options, { type: DataType.ARRAY(DataType.INTEGER) });
+	MergeColumnOptions({ type: DataType.ARRAY(DataType.INTEGER) }, options);
 
-export const FloatColumn = (options: TColumnOptions = {}): Function =>
-	MergeColumnOptions(options, { type: DataType.FLOAT, validate: { isFloat: true } });
+export const FloatColumn = (options: Omit<TColumnOptions, 'validate'> = {}): Function =>
+	MergeColumnOptions({ type: DataType.FLOAT, validate: { isFloat: true } }, options);
+
+export const RealArrayColumn = (options: Omit<TColumnOptions, 'validate'> = {}): Function =>
+	MergeColumnOptions({ type: DataType.ARRAY(DataType.REAL) }, options);
 
 export const BooleanColumn = (options: TColumnOptions = {}): Function =>
-	MergeColumnOptions(options, { type: DataType.BOOLEAN, defaultValue: false });
+	MergeColumnOptions({ type: DataType.BOOLEAN }, options);
 
 export const DateColumn = (options: TColumnOptions = {}): Function =>
-	MergeColumnOptions(options, { type: DataType.DATE });
+	MergeColumnOptions({ type: DataType.DATE, validate: { isDate: true } }, options);
 
 export const StringColumn = (options: TColumnOptions = {}): Function =>
-	MergeColumnOptions(options, { type: DataType.STRING });
+	MergeColumnOptions({ type: DataType.STRING }, options);
 
 export const JsonbColumn = (options: TColumnOptions = {}): Function =>
-	MergeColumnOptions(options, { type: DataType.JSONB });
+	MergeColumnOptions({ type: DataType.JSONB }, options);
 
 export const StringArrayColumn = (options: TColumnOptions = {}): Function =>
-	MergeColumnOptions(options, { type: DataType.ARRAY(DataType.STRING) });
+	MergeColumnOptions({ type: DataType.ARRAY(DataType.STRING) }, options);
 
 export const UrlColumn = (options: TColumnOptions = {}): Function =>
-	MergeColumnOptions(options, { type: DataType.STRING, defaultValue: null, validate: { isUrl: true } });
+	MergeColumnOptions({ type: DataType.STRING, defaultValue: null, validate: { isUrl: true } }, options);
+
+export function Index(name: string): AnnotationFunction;
+export function Index(indexOptions: IndexOptions): AnnotationFunction;
+export function Index<T>(target: T, propertyName: string, indexDecoratorOptions?: IndexDecoratorOptions): void;
+export function Index<T>(...args: unknown[]): AnnotationFunction | void {
+	if(arguments.length >= 2) {
+		const type: T = <T>args[0];
+		const key: string = <string>args[1];
+		const indexDecoratorOptions: IndexDecoratorOptions = <IndexDecoratorOptions>args[2];
+		annotateModelWithIndex(
+			type,
+			TABLE_OPTIONS.underscored ? snakeCase(key)
+			                          : key,
+			indexDecoratorOptions
+		);
+	}
+	else {
+		return <Type>(target: Type, propertyName: string) =>
+		{
+			const indexDecoratorOptions: IndexDecoratorOptions = <IndexDecoratorOptions>args[0];
+			annotateModelWithIndex(
+				target,
+				TABLE_OPTIONS.underscored ? snakeCase(propertyName)
+				                          : propertyName,
+				indexDecoratorOptions
+			);
+		};
+	}
+}

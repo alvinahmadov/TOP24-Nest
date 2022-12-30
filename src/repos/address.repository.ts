@@ -1,14 +1,17 @@
-import { FindAttributeOptions } from 'sequelize';
-import { DEFAULT_SORT_ORDER }   from '@common/constants';
+import {
+	FindAttributeOptions,
+	QueryTypes
+}                        from 'sequelize';
 import {
 	IAddress,
 	IAddressFilter,
 	IListFilter,
 	IRepository,
-	IRepositoryOptions
-}                               from '@common/interfaces';
-import { Address }              from '@models/index';
-import GenericRepository        from './generic';
+	IRepositoryOptions,
+	TGeoCoordinate
+}                        from '@common/interfaces';
+import { Address }       from '@models/index';
+import GenericRepository from './generic';
 
 export default class AddressRepository
 	extends GenericRepository<Address, IAddress>
@@ -46,30 +49,60 @@ export default class AddressRepository
 	 * @link GenericRepository.getList
 	 * */
 	public override async getList(
-		listFilter: IListFilter & { short?: boolean },
+		listFilter?: IListFilter,
 		filter?: IAddressFilter
 	): Promise<Address[]> {
 		if(filter === null)
 			return [];
-		
+
+		const {
+			from:  offset = 0,
+			count: limit
+		} = listFilter ?? {};
+
+		const {
+			search,
+			term,
+			strict,
+			sortOrder: order = ['region'],
+			onlyRegions = false,
+			onlyCities = false,
+			short = false,
+			provider,
+			...rest
+		} = filter ?? {};
+
+		const attributes: FindAttributeOptions = short ? ['id', 'region', 'city']
+		                                               : undefined;
+
 		return this.log(
 			() =>
 			{
-				const {
-					from: offset = 0,
-					short = false,
-					count: limit
-				} = listFilter ?? {};
-				const { sortOrder: order = DEFAULT_SORT_ORDER } = filter ?? {};
-				const attributes: FindAttributeOptions = short ? ['id', 'region', 'city']
-				                                               : undefined;
+				if(onlyRegions) {
+					return this.model.sequelize.query<Address>(
+						`SELECT DISTINCT ON(region) id, region FROM addresses ORDER BY region`,
+						{ type: QueryTypes.SELECT }
+					);
+				}
+				else if(onlyCities) {
+					if(rest?.region) {
+						return this.model.sequelize.query<Address>(
+							'SELECT DISTINCT ON(city) id, city FROM addresses WHERE region = :region ORDER BY city',
+							{ type: QueryTypes.SELECT, replacements: { region: rest.region } }
+						);
+					}
+
+					return this.model.sequelize.query<Address>(
+						'SELECT DISTINCT ON(city) id, city FROM addresses ORDER BY city',
+						{ type: QueryTypes.SELECT });
+				}
 
 				return this.model.findAll(
 					{
 						where: this.whereClause('or')
 						           .nullOrEq('latitude', filter?.latitude)
 						           .nullOrEq('longitude', filter?.longitude)
-						           .fromFilter(filter, 'eq')
+						           .fromFilter(rest, 'eq')
 							       .query,
 						offset,
 						limit,
@@ -98,26 +131,29 @@ export default class AddressRepository
 		onlyRegions: boolean = false
 	): Promise<Address[]> {
 		return this.log(
-			() =>
+			async() =>
 			{
 				term = term?.toLowerCase() ?? '';
 				const {
-					from:  offset = 0,
+					from:  offset,
 					count: limit
 				} = listFilter ?? {};
-				const term1 = term ? term.replace(term[0], term[0].toUpperCase()) : '';
+
+				if(onlyRegions) {
+					return this.model.sequelize.query<Address>(
+						`SELECT DISTINCT ON(region) * FROM addresses WHERE region ILIKE '${term}%'`,
+						{ type: QueryTypes.SELECT }
+					);
+				}
+
 				return this.model.findAll(
 					{
-						where: (
-							       onlyRegions ? this.whereClause('or')
-							                         .inArray('region', [`${term}%`, `${term1}%`])
-							                   : this.whereClause('or')
-							                         .inArray('city', [`${term}%`, `${term1}%`])
-							                         .inArray('region', [`${term}%`, `${term1}%`])
-							                         .inArray('settlement', [`${term}%`, `${term1}%`])
-						       )
+						where: this.whereClause('or')
+						           .iLike('city', `${term}%`, false)
+						           .iLike('region', `${term}%`, false)
+						           .iLike('settlement', `${term}%`, false)
 							       .query,
-						order: [['region', 'DESC']],
+						order: [['region', 'ASC']],
 						offset,
 						limit
 					}
@@ -125,6 +161,29 @@ export default class AddressRepository
 			},
 			{ id: 'find' },
 			{ info: term, listFilter }
+		);
+	}
+
+	public async findByCoordinates(coordinates: TGeoCoordinate, distance: number = 60.0) {
+		const latitude = coordinates[0];
+		const longitude = coordinates[1];
+
+		return this.log(
+			async() =>
+			{
+				return this.model.sequelize.query<Address>(
+					`SELECT DISTINCT ON(region) * FROM addresses 
+				WHERE geo_distance(
+					point(:latitude, :longitude),
+					point(latitude, longitude)
+				)/1000 <= :distance;`,
+					{
+						replacements: { latitude, longitude, distance },
+						type:         QueryTypes.SELECT
+					});
+			},
+			{ id: 'findByCoordinates' },
+			{ coordinates, distance }
 		);
 	}
 }

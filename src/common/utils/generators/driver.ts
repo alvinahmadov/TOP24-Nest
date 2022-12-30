@@ -21,32 +21,25 @@ export async function generateDriver(companies: interfaces.ICompany[])
 	const lastName = faker.name.lastName('male');
 	const email = faker.internet.email();
 
-	const lat = () => Number(faker.address.latitude(65.0, 30.0, 5)),
-		lng = () => Number(faker.address.longitude(65.0, 30.0, 5));
+	const lat = () => Number(faker.address.latitude(60.0, 45.0, 5)),
+		lng = () => Number(faker.address.longitude(60.0, 45.0, 5));
 
 	const driver: dto.DriverCreateDto = {
 		cargoId:                     company.type === enums.CompanyType.ORG
 		                             ? company.id : null,
 		cargoinnId:                  company.type !== enums.CompanyType.ORG
 		                             ? company.id : null,
-		crmId:                       null,
 		name,
 		patronymic,
 		lastName,
 		email,
-		avatarLink:                  faker.image.avatar(),
 		birthDate:                   faker.date.past(30),
 		licenseNumber:               common.generateSerialNumber([2, 2, 7]),
 		licenseDate:                 faker.date.future(5),
-		licenseBackLink:             faker.image.technics(),
-		licenseFrontLink:            faker.image.technics(),
-		passportDate:                faker.date.future(10),
+		passportGivenDate:           faker.date.past(10),
 		passportIssuedBy:            common.generateAddress(),
-		passportPhotoLink:           faker.image.imageUrl(),
 		passportRegistrationAddress: common.generateAddress(),
-		passportSelfieLink:          faker.image.imageUrl(),
 		passportSerialNumber:        common.generateSerialNumber([3, 4]),
-		passportSignLink:            faker.image.imageUrl(),
 		passportSubdivisionCode:     common.generateSerialNumber([3, 3]),
 		phone:                       company.phone,
 		phoneSecond:                 company.contactPhone,

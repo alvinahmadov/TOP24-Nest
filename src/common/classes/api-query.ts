@@ -1,18 +1,27 @@
-import { TQueryConfig } from '@common/interfaces';
+import { TQueryConfig, TStringOrNumber } from '@common/interfaces';
 
 export default class ApiQuery {
 	private readonly _config: TQueryConfig;
 
-	constructor(private readonly baseUrl: string) {
+	constructor(
+		private readonly baseUrl: string,
+		private readonly debug: boolean = false
+	) {
 		this._config = {};
 	}
 
 	public addQuery(
 		key: string,
-		value: string | number
+		value: TStringOrNumber | Array<TStringOrNumber>
 	): this {
+		if(!value)
+			return this;
+
 		if(!(key in this._config)) {
 			this._config[key] = value;
+
+			if(this.debug)
+				console.debug({ method: 'addQuery', data: { key, value } });
 		}
 
 		return this;
@@ -32,6 +41,9 @@ export default class ApiQuery {
 			}
 		}
 
-		return urlQuery;
+		if(this.debug)
+			console.debug({ method: 'query', data: { urlQuery: encodeURI(urlQuery) } });
+
+		return encodeURI(urlQuery);
 	}
 }
