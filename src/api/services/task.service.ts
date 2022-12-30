@@ -84,10 +84,9 @@ export default class TaskService
 
 		for(const order of orders) {
 			const destination = order.destinations.find(d => d.point === 'A' && d.fulfilled === false);
-
 			const fcmData = await this.fcmEntityRepo.getByEntityId(order.driverId);
 
-			if(destination) {
+			if(destination && fcmData) {
 				// @ts-ignore
 				let timeDiff: number = (destination.date - now) / MILLIS;
 
