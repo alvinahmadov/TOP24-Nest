@@ -385,9 +385,21 @@ export default class BitrixService
 				let clientContact = null;
 				const crmClientId = Number(crmItem[ORDER.CRM_CLIENT_ID] || -1);
 
+				if(crmItem[ORDER.STAGE] === 'LOSE') {
+					const crmId = Number(crmItem[ORDER.ID]);
+					const apiResponse = await this.orderService.getByCrmId(crmId);
+
+					if(isSuccessResponse(apiResponse)) {
+						const { data: order } = apiResponse;
+						await this.offerService.cancelAll(order.id, order.crmTitle);
+					}
+
+					return { statusCode: 200, message: 'Order is cancelled from bitrix.' };
+				}
+
 				if(
 					crmItem[ORDER.CATEGORY] !== '0' ||
-					crmItem[ORDER.STAGE] === 'WON' || crmItem[ORDER.STAGE] === 'LOSE' ||
+					crmItem[ORDER.STAGE] === 'WON' ||
 					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N'
 				) return { statusCode: 200, message: 'Invalid order source/stage' };
 
@@ -436,19 +448,19 @@ export default class BitrixService
 						}
 						await this.offerService.cancelAll(order.id, order.crmTitle);
 					}
-					
-				if(orderDto.stage === OrderStage.DOCUMENT_SENT) {
-					this.gateway.sendDriverNotification(
-						{
-							id:      order.driverId,
-							message: formatArgs(ORDER_EVENT_TRANSLATIONS['DOCUMENT_SENT'], 'г. Краснодар', 'ООО 24ТОП')
-						},
-						{
-							role: UserRole.CARGO,
-							url:  'Main'
-						}
-					);
-				}
+
+					if(orderDto.stage === OrderStage.DOCUMENT_SENT) {
+						this.gateway.sendDriverNotification(
+							{
+								id:      order.driverId,
+								message: formatArgs(ORDER_EVENT_TRANSLATIONS['DOCUMENT_SENT'], 'г. Краснодар', 'ООО 24ТОП')
+							},
+							{
+								role: UserRole.CARGO,
+								url:  'Main'
+							}
+						);
+					}
 
 					const updateResponse = await this.orderService
 					                                 .update(order.id, { ...orderDto, hasSent: true });
@@ -493,12 +505,11 @@ export default class BitrixService
 	 * @summary Deletes order from bitrix
 	 * @param {Number!} crmId CRM id of order to delete from bitrix
 	 * */
-	public async deleteOrder(crmId: number)
-		: TAsyncApiResponse<TAffectedRows> {
+	public async deleteOrder(crmId: number): TAsyncApiResponse<TAffectedRows> {
 		const { data: order } = await this.orderService.getByCrmId(crmId);
 		if(order) {
 			await this.offerService.cancelAll(order.id, order.crmTitle);
-			
+
 			const { data: { affectedCount } } = await this.orderService.delete(order.id);
 			return {
 				statusCode: 200,
