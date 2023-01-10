@@ -385,6 +385,11 @@ export default class BitrixService
 				let clientContact = null;
 				const crmClientId = Number(crmItem[ORDER.CRM_CLIENT_ID] || -1);
 
+				if(
+					crmItem[ORDER.CATEGORY] !== '0' ||
+					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N'
+				) return { statusCode: 200, message: 'Invalid order source/stage' };
+
 				if(crmItem[ORDER.STAGE] === 'LOSE') {
 					const crmId = Number(crmItem[ORDER.ID]);
 					const apiResponse = await this.orderService.getByCrmId(crmId);
@@ -393,15 +398,7 @@ export default class BitrixService
 						const { data: order } = apiResponse;
 						await this.offerService.cancelAll(order.id, order.crmTitle);
 					}
-
-					return { statusCode: 200, message: 'Order is cancelled from bitrix.' };
 				}
-
-				if(
-					crmItem[ORDER.CATEGORY] !== '0' ||
-					crmItem[ORDER.STAGE] === 'WON' ||
-					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N'
-				) return { statusCode: 200, message: 'Invalid order source/stage' };
 
 				const { orderDto, destinationDtos } = await orderFromBitrix(
 					crmItem,
