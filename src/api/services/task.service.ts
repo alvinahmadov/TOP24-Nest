@@ -41,8 +41,8 @@ export default class TaskService
 	implements IService {
 	private readonly logger = new Logger(TaskService.name);
 	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: true });
-	private static readonly INTERVAL: string = !DEBUG ? CronExpression.EVERY_HOUR
-	                                                  : CronExpression.EVERY_10_SECONDS;
+	public static readonly INTERVAL: string = !DEBUG ? CronExpression.EVERY_HOUR
+	                                                 : CronExpression.EVERY_10_SECONDS;
 
 	constructor(
 		protected readonly driverService: DriverService,
