@@ -385,7 +385,8 @@ export default class Order
 		data.fields[ORDER.BID.PRICE.INIT] = this.bidPrice || 0.0;
 		data.fields[ORDER.BID.PRICE.MAX] = this.bidPriceVat || 0.0;
 		data.fields[ORDER.BID.INFO] = this.bidInfo || '';
-		data.fields[ORDER.STATUS] = this.isCanceled ? '2258' : Reference.ORDER_STATUSES[this.status].ID;
+		if(this.isCanceled || Reference.ORDER_STATUSES[this.status])
+			data.fields[ORDER.STATUS] = this.isCanceled ? '2258' : Reference.ORDER_STATUSES[this.status].ID;
 		if(this.stage && (OrderStage.AGREED_OWNER < this.stage && this.stage < OrderStage.CARRYING)) {
 			data.fields[ORDER.STAGE] = convertBitrix('orderStage', this.stage, false, true);
 		}
