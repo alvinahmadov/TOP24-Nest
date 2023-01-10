@@ -42,7 +42,7 @@ export default class TaskService
 	private readonly logger = new Logger(TaskService.name);
 	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: true });
 	public static readonly INTERVAL: string = !DEBUG ? CronExpression.EVERY_HOUR
-	                                                 : CronExpression.EVERY_10_SECONDS;
+	                                                 : CronExpression.EVERY_MINUTE;
 
 	constructor(
 		protected readonly driverService: DriverService,
