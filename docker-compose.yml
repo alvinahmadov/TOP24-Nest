@@ -21,7 +21,7 @@ services:
   db:
     container_name: top24-postgres
     image: postgres:12.1-alpine
-    restart: on-failure
+    restart: always
     stdin_open: true
     tty: true
     env_file:
