@@ -216,12 +216,12 @@ export function checkTransportRequirements(
 			length = min(transport.length, trailer.length);
 	}
 
-	const matchesWeight = paramFilter.weightMin <= weight && weight <= paramFilter.weightMax,
-		matchesVolume = paramFilter.volumeMin <= volume && volume <= paramFilter.volumeMax,
-		matchesHeight = paramFilter.heightMin <= height && height <= paramFilter.heightMax,
-		matchesWidth = paramFilter.widthMin <= width && width <= paramFilter.widthMax,
-		matchesLength = paramFilter.lengthMin <= length && length <= paramFilter.lengthMax,
-		matchesPallet = paramFilter.pallets <= pallets;
+	const matchesWeight = paramFilter.weightMin <= weight && weight < paramFilter.weightMax,
+		matchesVolume = paramFilter.volumeMin <= volume && volume < paramFilter.volumeMax,
+		matchesHeight = paramFilter.heightMin <= height && height < paramFilter.heightMax,
+		matchesWidth = paramFilter.widthMin <= width && width < paramFilter.widthMax,
+		matchesLength = paramFilter.lengthMin <= length && length < paramFilter.lengthMax,
+		matchesPallet = pallets < paramFilter.pallets;
 
 	if(!messageObj) messageObj = { message: '' };
 
