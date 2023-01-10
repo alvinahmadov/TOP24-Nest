@@ -390,16 +390,6 @@ export default class BitrixService
 					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N'
 				) return { statusCode: 200, message: 'Invalid order source/stage' };
 
-				if(crmItem[ORDER.STAGE] === 'LOSE') {
-					const crmId = Number(crmItem[ORDER.ID]);
-					const apiResponse = await this.orderService.getByCrmId(crmId);
-
-					if(isSuccessResponse(apiResponse)) {
-						const { data: order } = apiResponse;
-						await this.offerService.cancelAll(order.id, order.crmTitle);
-					}
-				}
-
 				const { orderDto, destinationDtos } = await orderFromBitrix(
 					crmItem,
 					{ debug: !isUpdateRequest && debugBitrixOrder }
@@ -439,8 +429,8 @@ export default class BitrixService
 						return this.orderService.update(order.id, { hasSent: false });
 					}
 
-					if(orderDto.isCanceled) {
-						if(order.driverId) {
+					if(orderDto.isCanceled || orderDto.stage === OrderStage.LOSE) {
+						if(orderDto.isCanceled && order.driverId) {
 							await this.offerService.declineOffer(order.id, order.driverId, undefined, UserRole.LOGIST);
 						}
 						await this.offerService.cancelAll(order.id, order.crmTitle);
