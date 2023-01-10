@@ -1,11 +1,11 @@
-import { Injectable, PipeTransform }         from '@nestjs/common';
-import { ICompanyTransportFilter }           from '@common/interfaces';
-import env                                   from '@config/env';
+import { Injectable, PipeTransform } from '@nestjs/common';
+import { ICompanyTransportFilter } from '@common/interfaces';
+import env from '@config/env';
 import { transformToCompanyTransportFilter } from '@common/utils/compat';
 import {
 	checkAndConvertArrayBitrix,
 	checkAndConvertBitrix
-}                                            from '@common/utils';
+} from '@common/utils';
 
 @Injectable()
 export default class CompanyTransportFilterPipe
@@ -14,9 +14,18 @@ export default class CompanyTransportFilterPipe
 		let value: ICompanyTransportFilter = !env.api.compatMode ? data
 		                                                         : transformToCompanyTransportFilter(data);
 
+		value.paymentTypes = value.paymentTypes.map(
+			pt =>
+			{
+				if(pt === 'Наличными') 
+					return 'Карта';
+				return pt;
+			}
+		);
+
 		if(data.pallets)
 			value.pallets = data.pallets;
-		
+
 		if(value.dedicated === 'Да')
 			value.payloadExtra = false;
 
@@ -29,7 +38,7 @@ export default class CompanyTransportFilterPipe
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass');
 
 		delete value.isTrailer;
-		
+
 		return value;
 	}
 }
