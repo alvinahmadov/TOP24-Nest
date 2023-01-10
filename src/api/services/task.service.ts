@@ -24,7 +24,7 @@ import DriverService            from './driver.service';
 import OrderService             from './order.service';
 
 const ORDER_EVENT_TRANSLATION = getTranslation('EVENT', 'ORDER');
-
+const DEBUG = false;
 const LAST_24H = 1,
 	LAST_6H = 0.25,
 	LAST_1H = 0.041666666666666664;
@@ -41,6 +41,8 @@ export default class TaskService
 	implements IService {
 	private readonly logger = new Logger(TaskService.name);
 	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: true });
+	private static readonly INTERVAL: string = !DEBUG ? CronExpression.EVERY_HOUR
+	                                                  : CronExpression.EVERY_10_SECONDS;
 
 	constructor(
 		protected readonly driverService: DriverService,
@@ -51,7 +53,7 @@ export default class TaskService
 		this.orderService.log = false;
 	}
 
-	@Cron(CronExpression.EVERY_HOUR, { timeZone: TIMEZONE })
+	@Cron(TaskService.INTERVAL, { timeZone: TIMEZONE })
 	public async dateTask() {
 		const now = new Date();
 		this.logger.log(`Running task "dateTask" at ${now.toLocaleString()}.`);
