@@ -53,8 +53,6 @@ const TRANSLATIONS = getTranslation('REST', 'DRIVER');
 const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
 const DIST_200_METERS = 200 / 1000;
 
-const inDistanceRange = (distance: number): boolean => distance <= DIST_200_METERS;
-
 @Injectable()
 export default class DriverService
 	extends Service<Driver, DriverRepository>
