@@ -308,6 +308,18 @@ export default class Order
 
 	@BooleanColumn({ defaultValue: false })
 	hasSent: boolean;
+	
+	@BooleanColumn({ defaultValue: false, field: 'left_24h' })
+	left24H?: boolean;
+
+	@BooleanColumn({ defaultValue: false, field: 'left_6h' })
+	left6H?: boolean;
+
+	@BooleanColumn({ defaultValue: false, field: 'left_1h' })
+	left1H?: boolean;
+
+	@BooleanColumn({ defaultValue: false })
+	passedMinDistance?: boolean;
 
 	@ApiProperty(prop.driverDeferralConditions)
 	@StringColumn()

@@ -46,7 +46,6 @@ import {
 }                              from '@models/index';
 import {
 	DestinationRepository,
-	EntityFCMRepository,
 	OfferRepository
 }                              from '@repos/index';
 import {
@@ -75,7 +74,6 @@ export default class OfferService
 		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: OFFER_TRANSLATIONS['NOT_FOUND'] }
 	};
 	private readonly destinationRepo: DestinationRepository = new DestinationRepository();
-	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: false });
 
 	constructor(
 		protected readonly driverService: DriverService,
@@ -325,15 +323,12 @@ export default class OfferService
 				}
 			);
 
-			await this.fcmEntityRepo.bulkUpdate(
-				{
-					passed1H:       false,
-					passed6H:       false,
-					passed24H:      false,
-					passedDistance: false
-				},
-				{ entityId: driverId }
-			);
+			await this.orderService.update(orderId, {
+				left24H:           false,
+				left6H:            false,
+				left1H:            false,
+				passedMinDistance: false
+			});
 		}
 
 		const result = await this.repository.update(offer.id, dto);
@@ -944,6 +939,10 @@ export default class OfferService
 						    isOpen:            true,
 						    isFree:            true,
 						    isCurrent:         false,
+						    left24H:           false,
+						    left6H:            false,
+						    left1H:            false,
+						    passedMinDistance: false,
 						    cancelCause:       reason ?? '',
 						    contractPhotoLink: null
 					    })

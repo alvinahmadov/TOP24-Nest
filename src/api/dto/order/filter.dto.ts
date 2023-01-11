@@ -60,9 +60,17 @@ export default class OrderFilter
 	fromDate?: Date | string;
 	@ApiProperty({ description: 'Date range (end) for cargo transportation.' })
 	toDate?: Date | string;
-	override loadingTypes?: LoadingType[];
-	override status?: OrderStatus;
-	override pallets?: number;
-	override payload?: string;
-	override dedicated?: string;
+	loadingTypes?: LoadingType[];
+	status?: OrderStatus;
+	pallets?: number;
+	payload?: string;
+	dedicated?: string;
+	left24H?: boolean;
+	left6H?: boolean;
+	left1H?: boolean;
+	passedMinDistance?: boolean;
+	notLeft24H?: boolean;
+	notLeft6H?: boolean;
+	notLeft1H?: boolean;
+	notPassedMinDistance?: boolean;
 }

@@ -821,10 +821,6 @@ export interface IEntityFCM
 	extends IModel {
 	entityId: string;
 	token: string;
-	passed24H?: boolean;
-	passed6H?: boolean;
-	passed1H?: boolean;
-	passedDistance?: boolean;
 }
 
 export interface IGatewayEvent
@@ -1090,6 +1086,22 @@ export interface IOrder
 	 * Filter cache data from admin.
 	 * */
 	filter?: IOrderFilter;
+	/**
+	 * Left 24 hours to start for fulfillment.
+	 * */
+	left24H?: boolean;
+	/**
+	 * Left 6 hours to start for fulfillment.
+	 * */
+	left6H?: boolean;
+	/**
+	 * Left 1 hour to start for fulfillment.
+	 * */
+	left1H?: boolean;
+	/**
+	 * Left minimal distance to destination.
+	 * */
+	passedMinDistance?: boolean;
 	readonly priority?: boolean;
 	/**
 	 * Driver's deferral conditions for order execution.

@@ -1,5 +1,6 @@
 import {
-	forwardRef, Inject,
+	forwardRef,
+	Inject,
 	Injectable,
 	HttpStatus
 }                              from '@nestjs/common';
@@ -34,8 +35,7 @@ import {
 import { Driver, Order }       from '@models/index';
 import {
 	DestinationRepository,
-	DriverRepository,
-	EntityFCMRepository
+	DriverRepository
 }                              from '@repos/index';
 import {
 	DriverCreateDto,
@@ -61,7 +61,6 @@ export default class DriverService
 		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: TRANSLATIONS['NOT_FOUND'] }
 	};
 	private readonly destinationRepo: DestinationRepository = new DestinationRepository();
-	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: true });
 
 	constructor(
 		protected readonly imageFileService: ImageFileService,
@@ -317,8 +316,7 @@ export default class DriverService
 
 				await driver.save({ fields: ['currentAddress'] });
 				const data = { currentAddress };
-				const fcmEntity = await this.fcmEntityRepo.getByEntityId(driver.id);
-				const passedDistance = fcmEntity ? fcmEntity.passedDistance : false;
+				const passedDistance = order.passedMinDistance;
 
 				if(distance <= DIST_200_METERS && !passedDistance) {
 					let message: string = '';
@@ -353,10 +351,7 @@ export default class DriverService
 						}
 					);
 
-					if(fcmEntity) {
-						fcmEntity.passedDistance = true;
-						await fcmEntity.save({ fields: ['passedDistance'] });
-					}
+					await this.orderService.update(order.id, { passedMinDistance: true });
 				}
 
 				this.gateway.sendDriverNotification(

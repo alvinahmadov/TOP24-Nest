@@ -103,28 +103,28 @@ export default class TaskService
 					};
 					const title = order.crmTitle ?? '';
 					let {
-						passed24H,
-						passed6H,
-						passed1H
-					} = fcmData ?? {};
+						left24H,
+						left6H,
+						left1H
+					} = order ?? {};
 
-					if(inTimeRange(timeDiff, LAST_24H, LAST_6H) && !passed24H) {
+					if(inTimeRange(timeDiff, LAST_24H, LAST_6H) && !left24H) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_24H'], title);
 
-						passed24H = true;
+						left24H = true;
 					}
-					else if(inTimeRange(timeDiff, LAST_6H, LAST_1H) && !passed6H) {
+					else if(inTimeRange(timeDiff, LAST_6H, LAST_1H) && !left6H) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_6H'], title);
 
-						passed24H = true;
-						passed6H = true;
+						left24H = true;
+						left6H = true;
 					}
-					else if(inTimeRange(timeDiff, LAST_1H, 0) && !passed1H) {
+					else if(inTimeRange(timeDiff, LAST_1H, 0) && !left1H) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_1H'], title);
 
-						passed24H = true;
-						passed6H = true;
-						passed1H = true;
+						left24H = true;
+						left6H = true;
+						left1H = true;
 					}
 					else return;
 
@@ -132,9 +132,7 @@ export default class TaskService
 					this.notifications.sendDriverNotification(notifData, { role: UserRole.CARGO, url: 'Main' });
 
 					if(fcmData)
-						this.fcmEntityRepo
-						    .update(fcmData.id, { passed24H, passed6H, passed1H })
-						    .catch(console.error);
+						await this.orderService.update(order.id, { left24H, left6H, left1H });
 				}
 			}
 		}

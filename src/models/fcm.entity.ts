@@ -2,7 +2,6 @@ import { Table }         from 'sequelize-typescript';
 import { ObjectType }    from '@nestjs/graphql';
 import { TABLE_OPTIONS } from '@common/constants';
 import {
-	BooleanColumn,
 	IEntityFCM,
 	StringColumn,
 	UuidColumn
@@ -19,16 +18,4 @@ export default class EntityFCM
 
 	@StringColumn()
 	token: string;
-
-	@BooleanColumn({ defaultValue: false, field: 'passed_24h' })
-	passed24H?: boolean;
-
-	@BooleanColumn({ defaultValue: false, field: 'passed_6h' })
-	passed6H?: boolean;
-
-	@BooleanColumn({ defaultValue: false, field: 'passed_1h' })
-	passed1H?: boolean;
-
-	@BooleanColumn({ defaultValue: false })
-	passedDistance?: boolean;
 }

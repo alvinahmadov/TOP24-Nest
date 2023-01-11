@@ -1306,6 +1306,10 @@ export const entityConfig: TEntityConfigList = {
 				description: 'Поисковый фильтр для заказа.'
 				             + ''
 			},
+			left24H:           { description: 'Осталось 24 часа до начала выполнения заказа.' },
+			left6H:            { description: 'Осталось 6 часов до начала выполнения заказа.' },
+			left1H:            { description: 'Осталось 1 час до начала выполнения заказа.' },
+			passedMinDistance: { description: 'Осталось мин. расстояние (200 м.) до точки назначения.' },
 			priority:          {
 				description: 'Приоритетность заказа для выполнения по близости даты начала исполнения.'
 				             + ''
