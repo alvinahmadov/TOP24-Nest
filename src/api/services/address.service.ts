@@ -79,10 +79,10 @@ export default class AddressService
 						if(address.city) {
 							address.region = address.city;
 							address.regionType = address.cityType;
-						}
+						} else return null;
 						return address;
 					}
-				)
+				).filter(a => a !== null)
 			];
 		}
 
