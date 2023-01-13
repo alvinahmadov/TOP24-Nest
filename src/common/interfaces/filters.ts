@@ -131,14 +131,9 @@ export interface IDriverFilter
 	statuses?: DriverStatus[];
 }
 
-export interface IEntityFCMFilter 
-extends IFilter,
-        TModelFilter<IEntityFCM> {
-	notPassed24H?: boolean;
-	notPassed6H?: boolean;
-	notPassed1H?: boolean;
-	notPassedDistance?: boolean;
-}
+export interface IEntityFCMFilter
+	extends IFilter,
+	        TModelFilter<IEntityFCM> {}
 
 export interface IGatewayEventFilter
 	extends IFilter,
@@ -204,6 +199,14 @@ export interface IOrderFilter
 	hasDriver?: boolean;
 	fromDate?: Date | string;
 	toDate?: Date | string;
+	left24H?: boolean;
+	left6H?: boolean;
+	left1H?: boolean;
+	passedMinDistance?: boolean;
+	notLeft24H?: boolean;
+	notLeft6H?: boolean;
+	notLeft1H?: boolean;
+	notPassedMinDistance?: boolean;
 }
 
 export interface IOfferFilter

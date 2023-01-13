@@ -1,5 +1,6 @@
 import { Injectable }        from '@nestjs/common';
 import {
+	IAddress,
 	IAddressFilter,
 	IApiResponse,
 	IApiResponses,
@@ -32,7 +33,7 @@ export default class AddressService
 		super();
 		this.repository = new AddressRepository();
 	}
-	
+
 	public async getList(
 		listFilter: ListFilter,
 		filter: IAddressFilter
@@ -57,21 +58,39 @@ export default class AddressService
 			statusCode: 200,
 			data:       address,
 			message:    formatArgs(TRANSLATIONS['GET'], address.value)
-		} as IApiResponse<Address>;
+		};
 	}
 
 	public async search(
 		term: string,
 		listFilter: ListFilter = {},
 		onlyRegions: boolean = false
-	): TAsyncApiResponse<Address[]> {
-		const addresses = await this.repository.find(term, listFilter, onlyRegions);
+	): TAsyncApiResponse<IAddress[]> {
+		let addresses: IAddress[] = [];
+		const results = await this.repository.find(term, listFilter, onlyRegions);
+
+		if(onlyRegions && results.length > 0) {
+			const regionAddress = results[0].get({ clone: true, plain: true });
+			addresses = [
+				regionAddress,
+				...results.map(
+					address =>
+					{
+						if(address.city) {
+							address.region = address.city;
+							address.regionType = address.cityType;
+						} else return null;
+						return address;
+					}
+				).filter(a => a !== null)
+			];
+		}
 
 		return {
 			statusCode: 200,
 			data:       addresses,
 			message:    formatArgs(TRANSLATIONS['LIST'], addresses.length)
-		} as IApiResponse<Address[]>;
+		};
 	}
 
 	public async searchByApi(

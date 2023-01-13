@@ -143,4 +143,16 @@ export default class OrderUpdateDto
 
 	@ApiProperty(prop.width)
 	public width?: number;
+	
+	@ApiProperty(prop.left24H)
+	public left24H?: boolean;
+	
+	@ApiProperty(prop.left6H)
+	public left6H?: boolean;
+	
+	@ApiProperty(prop.left1H)
+	public left1H?: boolean;
+	
+	@ApiProperty(prop.passedMinDistance)
+	public passedMinDistance?: boolean;
 }

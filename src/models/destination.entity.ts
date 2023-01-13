@@ -13,6 +13,7 @@ import {
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
+	RealArrayColumn,
 	IntColumn,
 	StringArrayColumn,
 	StringColumn,
@@ -62,7 +63,7 @@ export default class Destination
 	 * Geo coordinates of destination.
 	 * */
 	@Field(() => TupleScalar)
-	@FloatColumn()
+	@RealArrayColumn()
 	coordinates: TGeoCoordinate;
 
 	/**

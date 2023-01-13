@@ -161,6 +161,18 @@ export default class OrderCreateDto
 
 	@ApiProperty(prop.destinations)
 	destinations?: IDestination[] = [];
+	
+	@ApiProperty(prop.left24H)
+	left24H?: boolean = false;
+	
+	@ApiProperty(prop.left6H)
+	left6H?: boolean = false;
+	
+	@ApiProperty(prop.left1H)
+	left1H?: boolean = false;
+	
+	@ApiProperty(prop.passedMinDistance)
+	passedMinDistance?: boolean = false;
 
 	@ApiProperty(prop.filter)
 	filter?: OrderFilter = null;

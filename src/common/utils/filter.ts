@@ -221,7 +221,7 @@ export function checkTransportRequirements(
 		matchesHeight = paramFilter.heightMin <= height && height < paramFilter.heightMax,
 		matchesWidth = paramFilter.widthMin <= width && width < paramFilter.widthMax,
 		matchesLength = paramFilter.lengthMin <= length && length < paramFilter.lengthMax,
-		matchesPallet = pallets < paramFilter.pallets;
+		matchesPallet = paramFilter.pallets > 0 ? pallets < paramFilter.pallets : true;
 
 	if(!messageObj) messageObj = { message: '' };
 

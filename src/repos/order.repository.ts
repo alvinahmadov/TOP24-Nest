@@ -105,67 +105,78 @@ export default class OrderRepository
 		if(filter === null)
 			return [];
 
-		return this.log(
-			() =>
-			{
-				const {
-					from: offset = 0,
-					full = false,
-					count: limit
-				} = listFilter ?? {};
-				const {
-					sortOrder: order = DEFAULT_SORT_ORDER,
-					hasDriver,
-					statuses,
-					stages,
-					weightMin, weightMax,
-					volumeMin, volumeMax,
-					lengthMin, lengthMax,
-					heightMin, heightMax,
-					isDedicated,
-					...rest
-				} = filter ?? {};
-				if(statuses) {
-					if(
-						rest?.status !== undefined &&
-						!statuses.includes(rest.status)
-					)
-						statuses.push(rest?.status);
-					rest.status = undefined;
-				}
+		const {
+			from: offset = 0,
+			full = false,
+			count: limit
+		} = listFilter ?? {};
 
-				return this.model.findAll(
-					{
-						where:   this.whereClause('and')
-						             .nullOrEq('cargoId', rest?.cargoId)
-						             .nullOrEq('cargoinnId', rest?.cargoinnId)
-						             .nullOrEq('driverId', rest?.driverId)
-						             .notNull('driverId', hasDriver)
-						             .inArray('status', statuses)
-						             .inArray('stage', stages)
-						             .between('weight', weightMin, weightMax)
-						             .between('volume', volumeMin, volumeMax)
-						             .between('length', lengthMin, lengthMax)
-						             .between('height', heightMin, heightMax)
-						             .eq('isFree', rest?.isFree)
-						             .eq('isOpen', rest?.isOpen)
-						             .eq('isBid', rest?.isBid)
-						             .eq('date', rest?.date)
-						             .nullOrEq('price', rest?.price)
-						             .between('pallets', 0, rest?.pallets)
-						             .gteOrNull('bidPrice', rest?.bidPrice)
-						             .lteOrNull('bidPriceVat', rest?.bidPriceVat)
-						             .iLikeOrNull('payload', rest?.payload)
-						             .iLikeOrNull('paymentType', rest?.paymentType)
-						             .fromFilter<IOrderFilter>(rest, 'eq')
-							         .query,
-						offset,
-						order,
-						limit,
-						include: full ? this.include : []
-					}
-				);
-			},
+		const {
+			sortOrder: order = DEFAULT_SORT_ORDER,
+			hasDriver,
+			statuses,
+			stages,
+			weightMin, weightMax,
+			volumeMin, volumeMax,
+			lengthMin, lengthMax,
+			heightMin, heightMax,
+			isDedicated,
+			left24H, notLeft24H,
+			left6H, notLeft6H,
+			left1H, notLeft1H,
+			passedMinDistance, notPassedMinDistance,
+			...rest
+		} = filter ?? {};
+
+		if(statuses) {
+			if(
+				rest?.status !== undefined &&
+				!statuses.includes(rest.status)
+			)
+				statuses.push(rest?.status);
+			rest.status = undefined;
+		}
+
+		return this.log(
+			() => this.model.findAll(
+				{
+					where:   this.whereClause('and')
+					             .nullOrEq('cargoId', rest?.cargoId)
+					             .nullOrEq('cargoinnId', rest?.cargoinnId)
+					             .nullOrEq('driverId', rest?.driverId)
+					             // .notNull('driverId', hasDriver)
+					             .inArray('status', statuses)
+					             .inArray('stage', stages)
+					             .between('weight', weightMin, weightMax)
+					             .between('volume', volumeMin, volumeMax)
+					             .between('length', lengthMin, lengthMax)
+					             .between('height', heightMin, heightMax)
+					             .eq('isFree', rest?.isFree)
+					             .eq('isOpen', rest?.isOpen)
+					             .eq('isBid', rest?.isBid)
+					             .eq('date', rest?.date)
+					             .eq('left24H', left24H)
+					             .eq('left6H', left6H)
+					             .eq('left1H', left1H)
+					             .eq('passedMinDistance', passedMinDistance)
+					             .notEq('left24H', notLeft24H)
+					             .notEq('left6H', notLeft6H)
+					             .notEq('left1H', notLeft1H)
+					             .notEq('passedMinDistance', notPassedMinDistance)
+					             .nullOrEq('price', rest?.price)
+					             .between('pallets', 0, rest?.pallets)
+					             .gteOrNull('bidPrice', rest?.bidPrice)
+					             .lteOrNull('bidPriceVat', rest?.bidPriceVat)
+					             .iLikeOrNull('payload', rest?.payload)
+					             .iLikeOrNull('paymentType', rest?.paymentType)
+					             .fromFilter<IOrderFilter>(rest, 'eq')
+						         .query,
+					offset,
+					order,
+					limit,
+					include: full ? this.include : []
+				}
+			),
 			{ id: 'getList' },
 			{ listFilter, filter }
 		);
