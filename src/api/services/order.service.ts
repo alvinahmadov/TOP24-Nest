@@ -151,7 +151,7 @@ export default class OrderService
 
 		// Temp fix for web
 		if(orders) {
-			if(filter && filter.statuses)
+			if(filter && filter.statuses) {
 				orders.forEach(
 					order =>
 					{
@@ -160,8 +160,13 @@ export default class OrderService
 							order.stage >= 4
 						)
 							order.stage = 4;
+						
+						if(order.hasProblem) {
+							order.status = OrderStatus.CANCELLED;
+						}
 					}
 				);
+			}
 		}
 
 		return {
