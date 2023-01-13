@@ -137,21 +137,21 @@ export default class AddressRepository
 		} = listFilter ?? {};
 				
 		return this.log(
-			async() =>
+			() =>
 			{
-				if(onlyRegions) {
-					return this.model.sequelize.query<Address>(
-						`SELECT DISTINCT ON(region) * FROM addresses WHERE region ILIKE '${term}%'`,
-						{ type: QueryTypes.SELECT }
-					);
-				}
+				// if(onlyRegions) {
+				// 	return this.model.sequelize.query<Address>(
+				// 		`SELECT DISTINCT ON(region) * FROM addresses WHERE region ILIKE '${term}%'`,
+				// 		{ type: QueryTypes.SELECT }
+				// 	);
+				// }
 
 				return this.model.findAll(
 					{
 						where: this.whereClause('or')
-						           .iLike('city', `${term}%`, false)
-						           .iLike('region', `${term}%`, false)
-						           .iLike('settlement', `${term}%`, false)
+						           .iLike('city', term, false)
+						           .iLike('region', term, false)
+						           .iLike('settlement', term, false)
 							       .query,
 						order: [['region', 'ASC']],
 						offset,
