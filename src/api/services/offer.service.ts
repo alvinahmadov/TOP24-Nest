@@ -455,9 +455,10 @@ export default class OfferService
 			                     {
 				                     let { order, driver, orderStatus } = offer;
 
-				                     if(orderStatus === OrderStatus.PROCESSING ||
-				                        order.isExtraPayload)
-					                     order.isCurrent = priorityCounter++ === 0;
+				                     if(orderStatus === OrderStatus.PROCESSING) {
+															 if(!order.isCurrent)
+																 order.isCurrent = order.isExtraPayload || priorityCounter++ === 0;
+				                     }
 				                     else
 					                     order.isCurrent = false;
 
@@ -470,7 +471,7 @@ export default class OfferService
 				                     }
 				                     else order.status = orderStatus;
 
-				                     if(order.priority) {
+				                     if(order.isCurrent) {
 					                     let orderUpdateDto: OrderUpdateDto = {
 						                     isCurrent: true
 					                     };
