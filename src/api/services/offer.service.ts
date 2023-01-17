@@ -438,7 +438,7 @@ export default class OfferService
 		const date = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
 		const orders = offers.filter(offer => offer !== null && offer.order !== null)
-		                     .filter(offer => offer.order.stage > OrderStage.LOSE || !offer.order.isCanceled)
+		                     .filter(offer => offer.order.stage > OrderStage.PREPARATION && !offer.order.isCanceled)
 		                     .sort((offer1, offer2) =>
 		                           {
 			                           const date1 = offer1.order.destinations[0].date;
