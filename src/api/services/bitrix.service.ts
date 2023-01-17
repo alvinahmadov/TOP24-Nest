@@ -387,7 +387,9 @@ export default class BitrixService
 
 				if(
 					crmItem[ORDER.CATEGORY] !== '0' ||
-					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N'
+					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N' ||
+					crmItem[ORDER.STAGE] === 'NEW' ||
+					crmItem[ORDER.STAGE] === 'PREPARATION'
 				) return { statusCode: 200, message: 'Invalid order source/stage' };
 
 				const { orderDto, destinationDtos } = await orderFromBitrix(
