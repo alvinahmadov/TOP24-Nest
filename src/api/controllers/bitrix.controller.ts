@@ -125,6 +125,7 @@ export default class BitrixController
 			case 'ONCRMDEALUPDATE': {
 				if(BitrixController.eventMap.has(crmId)) {
 					if(BitrixController.eventMap.get(crmId) === crm.ts) {
+						console.info('Preventing from double update.');
 						return;
 					}
 				}
@@ -134,9 +135,13 @@ export default class BitrixController
 				await this.bitrixService.synchronizeOrder(crmId, true);
 				break;
 			}
-			case 'ONCRMDEALDELETE':
+			case 'ONCRMDEALDELETE': {
+				if(BitrixController.eventMap.has(crmId)) {
+					BitrixController.eventMap.delete(crmId);
+				}
 				await this.bitrixService.deleteOrder(crmId);
 				break;
+			}
 			case 'ONCRMCOMPANYUPDATE':
 				await this.bitrixService.updateCargo(crmId);
 				break;
