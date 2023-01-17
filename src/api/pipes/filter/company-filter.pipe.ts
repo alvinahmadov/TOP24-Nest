@@ -18,7 +18,7 @@ export default class CompanyTransportFilterPipe
 			value.paymentTypes = value.paymentTypes.map(
 				pt =>
 				{
-					if(pt === 'Наличными')
+					if(pt?.toLowerCase() === 'наличными')
 						return 'Карта';
 					return pt;
 				}
