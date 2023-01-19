@@ -534,7 +534,7 @@ export interface IUserPayload {
 /**@ignore*/
 export interface IWebhookResponse {
 	event: TWebHookEvent;
-	data: { FIELDS: { ID: string; } };
+	data: { FIELDS: { [key: string]: string; } };
 	ts: string;
 	auth: {
 		domain: string;
