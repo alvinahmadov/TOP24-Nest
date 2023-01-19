@@ -8,6 +8,7 @@ import {
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
+import { ORDER }               from '@config/json';
 import { IWebhookResponse }    from '@common/interfaces';
 import {
 	isSuccessResponse,
@@ -110,10 +111,12 @@ export default class BitrixController
 	public async webhookListen(@Body() crm: IWebhookResponse) {
 		if(crm.data === undefined ||
 		   crm.data['FIELDS'] === undefined ||
-		   crm.data['FIELDS']['ID'] === undefined)
+		   crm.data['FIELDS'][ORDER.ID] === undefined)
 			return;
 
-		const crmId = Number(crm.data['FIELDS']['ID']);
+		const crmFields = crm.data['FIELDS'];
+		const crmId = Number(crmFields[ORDER.ID]);
+		const stage = crmFields[ORDER.STAGE];
 
 		switch(crm.event) {
 			case 'ONCRMDEALADD': {
@@ -123,16 +126,15 @@ export default class BitrixController
 				break;
 			}
 			case 'ONCRMDEALUPDATE': {
-				if(BitrixController.eventMap.has(crmId)) {
+				if(BitrixController.eventMap.has(crmId) || stage !== 'LOSE') {
 					if(BitrixController.eventMap.get(crmId) === crm.ts) {
 						console.info('Preventing from double update.');
 						return;
 					}
 				}
-				else
-					BitrixController.eventMap.set(crmId, crm.ts);
 
 				await this.bitrixService.synchronizeOrder(crmId, true);
+				BitrixController.eventMap.set(crmId, crm.ts);
 				break;
 			}
 			case 'ONCRMDEALDELETE': {
