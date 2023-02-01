@@ -373,7 +373,8 @@ export function filterTransports(
 	return transportsWithTrailers;
 }
 
-export function filterMatchingDrivers(driver: Driver, requirements: ICompanyTransportFilter = {}){
+// noinspection JSUnusedGlobalSymbols
+export function filterMatchingDrivers(driver: Driver, requirements: ICompanyTransportFilter = {}) {
 	return filterTransports(driver.transports, requirements)?.length > 0;
 }
 
@@ -446,7 +447,8 @@ export function filterDrivers(
 							matchesTerm(driver.phone, term),
 							matchesTerm(driver.currentAddress, term),
 							matchesTerm(driver.registrationAddress, term),
-							matchesTerm(driver.address, term)
+							matchesTerm(driver.address, term),
+							matchesTerm(driver.info, term)
 						);
 
 						if(driver.order) {
@@ -461,7 +463,11 @@ export function filterDrivers(
 						if(driver.transports) {
 							driver.transports.forEach(
 								(transport) =>
-									matchList.push(matchesTerm(transport.registrationNumber, term))
+									matchList.push(
+										matchesTerm(transport.registrationNumber, term),
+										matchesTerm(transport.comments, term),
+										matchesTerm(transport.info, term)
+									)
 							);
 						}
 					}
