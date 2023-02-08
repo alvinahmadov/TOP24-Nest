@@ -614,6 +614,13 @@ export const routeConfig: TApiRouteList = {
 					path:   'address/location',
 					method: RequestMethod.POST
 				},
+				agreement:       {
+					path:   [
+						'agreement',
+						'agreement/:companyType'
+					],
+					method: RequestMethod.GET
+				},
 				filter:          {
 					path:   [
 						'address',
