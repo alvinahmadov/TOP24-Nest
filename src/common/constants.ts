@@ -28,6 +28,11 @@ export const SWAGGER_PATH = 'api-docs/swagger';
 
 /**@ignore*/
 export const AGREEMENT_PDF_PATH: string = join(__dirname, '../../../resources/files/agreement.pdf');
+export const AGREEMENT_PATHS: string[] = [
+	join(__dirname, '../../../resources/files/Юр_Шаблон_заявки_с_маршрутом.docx'),
+	join(__dirname, '../../../resources/files/ИП_Шаблон_заявки_с_маршрутом.docx'),
+	join(__dirname, '../../../resources/files/ФЛ_Шаблон_заявки_с_маршрутом.docx')
+]
 
 /**@ignore*/
 export const FIREBASE_CONFIG_PATH = join(__dirname, '../../../src/config/json/firebase.json');

@@ -13,8 +13,12 @@ import {
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { Reference }           from '@common/constants';
 import {
+	Reference,
+	AGREEMENT_PATHS
+}                              from '@common/constants';
+import {
+	CompanyType,
 	LoadingType,
 	loadingTypeToStr
 }                              from '@common/enums';
@@ -293,5 +297,28 @@ export default class ReferenceController
 		};
 
 		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.agreement, {
+		statuses: [HttpStatus.OK]
+	})
+	public getAgreements(
+		@Res() response: ex.Response,
+		@Param('companyType', new DefaultValuePipe(CompanyType.ORG))
+			companyType: number = CompanyType.ORG
+	) {
+		let agreementFilePath: string;
+
+		if(companyType === undefined)
+			companyType = CompanyType.ORG;
+
+		if(CompanyType.ORG <= companyType &&
+		   companyType <= CompanyType.PI) {
+			agreementFilePath = AGREEMENT_PATHS[companyType as number];
+		}
+		else throw new Error('Wrong type of company');
+
+		return response.status(200)
+		               .sendFile(agreementFilePath);
 	}
 }
