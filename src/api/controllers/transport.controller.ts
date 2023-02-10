@@ -171,6 +171,24 @@ export default class TransportController
 		return sendResponse(response, apiResponse);
 	}
 
+	@ApiRoute(routes.sts, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK],
+		fileOpts: {
+			interceptors: [FileInterceptor('image')],
+			mimeTypes:    ['multipart/form-data']
+		}
+	})
+	public async uploadCertificatePhoto(
+		@Param('id', ParseUUIDPipe) id: string,
+		@UploadedFile() image: TMulterFile,
+		@Res() response: ex.Response
+	) {
+		const apiResponse = await this.transportService.uploadCertificatePhoto(id, image);
+
+		return sendResponse(response, apiResponse);
+	}
+
 	@ApiRoute(routes.diag, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
@@ -179,7 +197,7 @@ export default class TransportController
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
-	public async diagnostic(
+	public async uploadDiagnosticsPhoto(
 		@Param('id', ParseUUIDPipe) id: string,
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
@@ -197,7 +215,7 @@ export default class TransportController
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
-	public async osago(
+	public async uploadOsagoPhoto(
 		@Param('id', ParseUUIDPipe) id: string,
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response

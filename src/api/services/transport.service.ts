@@ -213,7 +213,8 @@ export default class TransportService
 
 		transportImages.push(
 			transport.osagoPhotoLink,
-			transport.diagnosticsPhotoLink
+			transport.diagnosticsPhotoLink,
+			transport.certificatePhotoLink
 		);
 
 		const images = await this.imageFileService.deleteImageList(transportImages);
@@ -366,5 +367,23 @@ export default class TransportService
 		folder: string = 'diagnostic'
 	): TAsyncApiResponse<Transport> {
 		return this.uploadPhoto(id, image, 'diagnosticsPhotoLink', Bucket.Folders.TRANSPORT, folder);
+	}
+
+	/**
+	 * @summary Upload/update transport registration certificate document scan.
+	 *
+	 * @description Uploads/updates transport registration certificate scan
+	 * files and returns link to the updated file in Yandex Storage.
+	 *
+	 * @param {String!} id Id of the cargo company transport.
+	 * @param {TMulterFile!} image Image to send.
+	 * @param {String!} folder Name of the folder to save image to.
+	 * */
+	public async uploadCertificatePhoto(
+		id: string,
+		image: TMulterFile,
+		folder: string = 'certificate'
+	): TAsyncApiResponse<Transport> {
+		return this.uploadPhoto(id, image, 'certificatePhotoLink', Bucket.Folders.TRANSPORT, folder);
 	}
 }

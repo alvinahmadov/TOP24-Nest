@@ -55,6 +55,7 @@ async function generateDestinations(count?: number): Promise<Array<dto.Destinati
 				             : enums.DestinationType.LOAD,
 				coordinates: [latitude, longitude],
 				contact:     faker.name.findName(),
+				inn:         faker.datatype.number({ min: 9999, max: 99999 }).toString(),
 				phone:       faker.phone.phoneNumber('+7 9## ### ## ##'),
 				comment:     faker.lorem.word(4)
 			}
