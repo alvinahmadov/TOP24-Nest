@@ -742,9 +742,9 @@ export const routeConfig: TApiRouteList = {
 						method: RequestMethod.DELETE,
 						api:    NApiDescriptors.transport.image
 					},
-				sts:
+				certificate:
 					{
-						path:   'sts/:id',
+						path:   'certificate/:id',
 						method: RequestMethod.POST
 					},
 				diag:
