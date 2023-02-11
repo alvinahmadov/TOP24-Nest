@@ -706,7 +706,7 @@ export interface ITransportTransformer
 	/**
 	 * @see ITransport.certificatePhotoLink
 	 * */
-	sts_link?: string;
+	sts_links?: string[];
 	/**
 	 * @see ITransport.osagoNumber
 	 * */

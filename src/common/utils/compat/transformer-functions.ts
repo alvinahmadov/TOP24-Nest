@@ -543,7 +543,7 @@ function transformTransport(transport: models.Transport)
 			is_trailer:     transport.getDataValue('isTrailer'),
 			is_dedicated:   transport.getDataValue('isDedicated'),
 			sts:            transport.getDataValue('certificateNumber'),
-			sts_link:       transport.getDataValue('certificatePhotoLink'),
+			sts_links:      transport.getDataValue('certificatePhotoLinks'),
 			weight_extra:   transport.getDataValue('weightExtra'),
 			volume_extra:   transport.getDataValue('volumeExtra'),
 			weight:         transport.getDataValue('weight'),
