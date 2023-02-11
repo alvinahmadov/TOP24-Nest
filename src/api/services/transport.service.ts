@@ -1,7 +1,7 @@
-import { Op }                  from 'sequelize';
-import { Injectable }          from '@nestjs/common';
-import { BitrixUrl, Bucket }   from '@common/constants';
-import { TransportStatus }     from '@common/enums';
+import { Op }                     from 'sequelize';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { BitrixUrl, Bucket }      from '@common/constants';
+import { TransportStatus }        from '@common/enums';
 import {
 	IApiResponses,
 	ICompanyDeleteResponse,
@@ -10,21 +10,21 @@ import {
 	TAsyncApiResponse,
 	TCreationAttribute, TMulterFile,
 	TUpdateAttribute
-}                              from '@common/interfaces';
+}                                 from '@common/interfaces';
 import {
 	formatArgs,
 	filterTransports,
-	getTranslation, renameMulterFile, isSuccessResponse
-}                              from '@common/utils';
-import { Image, Transport }    from '@models/index';
-import { TransportRepository } from '@repos/index';
+	getTranslation, renameMulterFile, isSuccessResponse, renameMulterFiles
+}                                 from '@common/utils';
+import { Image, Transport }       from '@models/index';
+import { TransportRepository }    from '@repos/index';
 import {
 	ListFilter,
 	TransportFilter
-}                              from '@api/dto';
-import Service                 from './service';
-import ImageService            from './image.service';
-import ImageFileService        from './image-file.service';
+}                                 from '@api/dto';
+import Service                    from './service';
+import ImageService               from './image.service';
+import ImageFileService           from './image-file.service';
 
 const TRANSLATIONS = getTranslation('REST', 'TRANSPORT');
 
@@ -183,7 +183,7 @@ export default class TransportService
 					cargoinnId:  transport.cargoinnId
 				}
 			);
-			
+
 			if(isSuccessResponse(apiResponse))
 				transport.images = apiResponse.data;
 		}
@@ -214,7 +214,7 @@ export default class TransportService
 		transportImages.push(
 			transport.osagoPhotoLink,
 			transport.diagnosticsPhotoLink,
-			transport.certificatePhotoLink
+			...(transport.certificatePhotoLinks ?? [])
 		);
 
 		const images = await this.imageFileService.deleteImageList(transportImages);
@@ -370,20 +370,39 @@ export default class TransportService
 	}
 
 	/**
-	 * @summary Upload/update transport registration certificate document scan.
+	 * @summary Upload/update transport registration certificate document scans.
 	 *
 	 * @description Uploads/updates transport registration certificate scan
 	 * files and returns link to the updated file in Yandex Storage.
 	 *
 	 * @param {String!} id Id of the cargo company transport.
-	 * @param {TMulterFile!} image Image to send.
+	 * @param {TMulterFile!} images Image to send.
 	 * @param {String!} folder Name of the folder to save image to.
 	 * */
-	public async uploadCertificatePhoto(
+	public async uploadCertificatePhotos(
 		id: string,
-		image: TMulterFile,
+		images: Array<TMulterFile>,
 		folder: string = 'certificate'
 	): TAsyncApiResponse<Transport> {
-		return this.uploadPhoto(id, image, 'certificatePhotoLink', Bucket.Folders.TRANSPORT, folder);
+		let transport = await this.repository.get(id);
+
+		if(!transport)
+			return this.responses['NOT_FOUND'];
+		
+		const {
+			Location: certificatePhotoLinks
+		} = await this.imageFileService
+		              .uploadFiles(
+			              renameMulterFiles(images, Bucket.Folders.TRANSPORT, id, folder)
+		              );
+
+		if(certificatePhotoLinks?.length > 0) {
+			transport = await this.repository.update(id, { certificatePhotoLinks });
+		}
+		
+		return {
+			statusCode: HttpStatus.OK,
+			data:       transport
+		};
 	}
 }

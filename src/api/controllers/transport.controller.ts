@@ -8,10 +8,14 @@ import {
 	Query,
 	Res,
 	UploadedFile,
+	UploadedFiles,
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { FileInterceptor }     from '@nestjs/platform-express';
+import {
+	FileInterceptor,
+	FilesInterceptor
+}                              from '@nestjs/platform-express';
 import { TMulterFile }         from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
@@ -171,20 +175,21 @@ export default class TransportController
 		return sendResponse(response, apiResponse);
 	}
 
-	@ApiRoute(routes.sts, {
+	@ApiRoute(routes.certificate, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
 		fileOpts: {
-			interceptors: [FileInterceptor('image')],
-			mimeTypes:    ['multipart/form-data']
+			interceptors: [FilesInterceptor('image')],
+			mimeTypes:    ['multipart/form-data'],
+			multi:        true
 		}
 	})
 	public async uploadCertificatePhoto(
 		@Param('id', ParseUUIDPipe) id: string,
-		@UploadedFile() image: TMulterFile,
+		@UploadedFiles() images: Array<TMulterFile>,
 		@Res() response: ex.Response
 	) {
-		const apiResponse = await this.transportService.uploadCertificatePhoto(id, image);
+		const apiResponse = await this.transportService.uploadCertificatePhotos(id, images);
 
 		return sendResponse(response, apiResponse);
 	}
