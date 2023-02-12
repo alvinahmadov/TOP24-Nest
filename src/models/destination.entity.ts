@@ -77,6 +77,9 @@ export default class Destination
 	 * */
 	@StringColumn()
 	contact?: string;
+	
+	@StringColumn()
+	inn?: string;
 
 	/**
 	 * Optional phone number of the contact at destination.

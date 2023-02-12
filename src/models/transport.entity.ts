@@ -176,6 +176,14 @@ export default class Transport
 	@UrlColumn()
 	osagoPhotoLink: string;
 
+	@ApiProperty(prop.certificateNumber)
+	@StringColumn({ allowNull: false })
+	certificateNumber: string;
+	
+	@ApiProperty(prop.certificatePhotoLinks)
+	@StringArrayColumn({ defaultValue: [] })
+	certificatePhotoLinks?: string[];
+
 	@ApiProperty(prop.payloads)
 	@StringArrayColumn()
 	payloads: string[];
@@ -203,10 +211,6 @@ export default class Transport
 	@ApiProperty(prop.registrationNumber)
 	@StringColumn({ allowNull: false })
 	registrationNumber: string;
-
-	@ApiProperty(prop.certificateNumber)
-	@StringColumn({ allowNull: false })
-	certificateNumber: string;
 
 	@ApiProperty(prop.riskClasses)
 	@StringArrayColumn({
@@ -260,7 +264,8 @@ export default class Transport
 		data.fields[TRANSPORT.MODEL] = this.model;
 		data.fields[TRANSPORT.REGISTR_NUMBER] = this.registrationNumber;
 		data.fields[TRANSPORT.PROD_YEAR] = this.prodYear;
-		data.fields[TRANSPORT.STS] = this.certificateNumber;
+		data.fields[TRANSPORT.CERTIFICATE.NUMBER] = this.certificateNumber;
+		data.fields[TRANSPORT.CERTIFICATE.LINK] = this.certificatePhotoLinks?.join('|');
 		data.fields[TRANSPORT.PAYLOAD.TYPE] = this.payloads
 		                                          .map(
 			                                          payload => convertBitrix<string, string>('transportPayload', payload, false)
@@ -285,10 +290,10 @@ export default class Transport
 			data.fields[TRANSPORT.DEDICATED] = CRM.TRANSPORT.DEDICATED[2].ID;
 		else
 			data.fields[TRANSPORT.DEDICATED] = CRM.TRANSPORT.DEDICATED[1].ID;
-		data.fields[TRANSPORT.OSAGO.NUM] = this.osagoNumber;
+		data.fields[TRANSPORT.OSAGO.NUMBER] = this.osagoNumber;
 		data.fields[TRANSPORT.OSAGO.EXP_DATE] = this.osagoExpiryDate;
 		data.fields[TRANSPORT.OSAGO.LINK] = this.osagoPhotoLink;
-		data.fields[TRANSPORT.DIAGNOSTIC.NUM] = this.diagnosticsNumber;
+		data.fields[TRANSPORT.DIAGNOSTIC.NUMBER] = this.diagnosticsNumber;
 		data.fields[TRANSPORT.DIAGNOSTIC.EXP_DATE] = this.diagnosticsExpiryDate;
 		data.fields[TRANSPORT.DIAGNOSTIC.LINK] = this.diagnosticsPhotoLink;
 		data.fields[TRANSPORT.COMMENTS] = this.comments;

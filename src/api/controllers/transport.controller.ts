@@ -8,10 +8,14 @@ import {
 	Query,
 	Res,
 	UploadedFile,
+	UploadedFiles,
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { FileInterceptor }     from '@nestjs/platform-express';
+import {
+	FileInterceptor,
+	FilesInterceptor
+}                              from '@nestjs/platform-express';
 import { TMulterFile }         from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
 import * as dto                from '@api/dto';
@@ -171,6 +175,25 @@ export default class TransportController
 		return sendResponse(response, apiResponse);
 	}
 
+	@ApiRoute(routes.certificate, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK],
+		fileOpts: {
+			interceptors: [FilesInterceptor('image')],
+			mimeTypes:    ['multipart/form-data'],
+			multi:        true
+		}
+	})
+	public async uploadCertificatePhoto(
+		@Param('id', ParseUUIDPipe) id: string,
+		@UploadedFiles() images: Array<TMulterFile>,
+		@Res() response: ex.Response
+	) {
+		const apiResponse = await this.transportService.uploadCertificatePhotos(id, images);
+
+		return sendResponse(response, apiResponse);
+	}
+
 	@ApiRoute(routes.diag, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
@@ -179,7 +202,7 @@ export default class TransportController
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
-	public async diagnostic(
+	public async uploadDiagnosticsPhoto(
 		@Param('id', ParseUUIDPipe) id: string,
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
@@ -197,7 +220,7 @@ export default class TransportController
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
-	public async osago(
+	public async uploadOsagoPhoto(
 		@Param('id', ParseUUIDPipe) id: string,
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response

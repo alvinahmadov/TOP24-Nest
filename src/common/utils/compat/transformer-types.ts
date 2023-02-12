@@ -588,6 +588,7 @@ export interface IDestinationTransformer
 	coordinates: TGeoCoordinate;
 	date?: Date;
 	contact?: string;
+	inn?: string;
 	phone?: string;
 	distance?: number;
 	comment?: string;
@@ -674,10 +675,6 @@ export interface ITransportTransformer
 	 * */
 	is_dedicated?: boolean;
 	/**
-	 * @see ITransport.certificateNumber
-	 * */
-	sts: string;
-	/**
 	 * @see ITransport.weightExtra
 	 * */
 	weight_extra?: number;
@@ -702,6 +699,14 @@ export interface ITransportTransformer
 	 * @see ITransport.loadingTypes
 	 * */
 	loading_types: LoadingType[];
+	/**
+	 * @see ITransport.certificateNumber
+	 * */
+	sts: string;
+	/**
+	 * @see ITransport.certificatePhotoLink
+	 * */
+	sts_links?: string[];
 	/**
 	 * @see ITransport.osagoNumber
 	 * */

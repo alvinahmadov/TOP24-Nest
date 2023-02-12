@@ -287,6 +287,7 @@ export const translateTransport = <T extends transformers.ITransportTransformer>
 		.set('registrationNumber', 'registr_num')
 		.set('prodYear', 'prod_year')
 		.set('certificateNumber', 'sts')
+		.set('certificatePhotoLinks', 'sts_links')
 		.set('riskClasses', 'risk_classes')
 		.set('loadingTypes', 'loading_types')
 		.set('fixtures', 'extra_fixtures')

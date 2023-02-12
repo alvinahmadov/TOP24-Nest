@@ -52,6 +52,7 @@ type TCrmOrderDestination = {
 	ADDRESS: string;
 	DATE: string;
 	CONTACT: string;
+	INN?: string;
 	PHONE: string;
 	COMMENT: string;
 };
@@ -228,6 +229,7 @@ function parseDestination(crmFields: TCRMFields): Promise<DestinationCreateDto[]
 						}
 						const date: Date = dateValidator(crmFields[crmElement['DATE']]),
 							contact: string = crmFields[crmElement['CONTACT']] || null,
+							inn: string = crmFields[crmElement['INN']] || null,
 							phone: string = crmFields[crmElement['PHONE']] || null,
 							comment: string = crmFields[crmElement['COMMENT']] || null,
 							shippingPhotoLinks: string[] = (shippingLinkList?.length > 0 &&
@@ -243,6 +245,7 @@ function parseDestination(crmFields: TCRMFields): Promise<DestinationCreateDto[]
 								coordinates,
 								date,
 								contact,
+								inn,
 								phone,
 								comment,
 								distance:  null,

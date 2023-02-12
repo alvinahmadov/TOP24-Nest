@@ -33,6 +33,9 @@ export class DestinationCreateDto
 
 	@IsString()
 	contact?: string;
+	
+	@IsString()
+	inn?: string = "";
 
 	@IsDate()
 	date?: Date;

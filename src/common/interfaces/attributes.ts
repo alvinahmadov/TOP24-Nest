@@ -542,12 +542,17 @@ export interface IDestination
 	 * */
 	date?: Date;
 	/**
-	 * Contact person on destination point.
+	 * Contact company name on destination point.
 	 *
 	 * @example
-	 * Иван Алексеевич Яров.
+	 * ИП "Иван Алексеевич Яров".
+	 * "Карго Релокейшн"
 	 * */
 	contact?: string;
+	/**
+	 * Taxpayer number of the contact
+	 * */
+	inn?: string;
 	/**
 	 * Phone number of contact on destination point.
 	 * */
@@ -1293,6 +1298,10 @@ export interface ITransport
 	 * Transport registration certificate number.
 	 * */
 	certificateNumber: string;
+	/**
+	 * Transport registration certificate photo link.
+	 * */
+	certificatePhotoLinks?: string[];
 	/**
 	 * Additional weight for cargo that transport can take for another order when has ongoing order.
 	 *
