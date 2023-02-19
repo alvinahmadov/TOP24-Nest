@@ -418,7 +418,7 @@ export function filterDrivers(
 	full: boolean = false,
 	offset: number = 0
 ) {
-	if(filter?.term !== undefined) {
+	if(filter?.term) {
 		if(filter.term.length < offset)
 			return [];
 
@@ -428,7 +428,14 @@ export function filterDrivers(
 		} = filter;
 
 		const matchesTerm = (a: string, b: string): boolean =>
-			(a && b) ? a.search(RegExp(b, 'guim')) >= 0 : false;
+		{
+			if(!a || !b) return false;
+			
+			if(!a.length && !b.length)
+				return false;
+			
+			return a.search(RegExp(b, 'guim')) >= 0;
+		}
 
 		return (
 			full ? drivers.map(transformDriverTransports)
@@ -472,7 +479,7 @@ export function filterDrivers(
 						}
 					}
 
-					return matchList.some(v => v === true);
+					return matchList.some(v => v);
 				}
 			);
 	}
