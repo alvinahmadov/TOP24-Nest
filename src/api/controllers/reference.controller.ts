@@ -1,5 +1,6 @@
 import * as ex                 from 'express';
 import { validate as isUuid }  from 'uuid';
+import { readFileSync }        from 'fs';
 import {
 	Body,
 	Controller,
@@ -45,6 +46,7 @@ type TCrmItem = { id: string; value: string; };
 
 const { path, tag, routes } = getRouteConfig('reference');
 const TRANSLATIONS = getTranslation('REST', 'REFERENCE');
+const USE_FS = true;
 
 const lowerCaseFn = (data: TBitrixData): TCrmItem => ({ id: data.ID, value: data.VALUE });
 const compareByIdFn = (a: TBitrixData, b: TBitrixData) => a.ID.localeCompare(b.ID);
@@ -317,8 +319,11 @@ export default class ReferenceController
 			agreementFilePath = AGREEMENT_PATHS[companyType as number];
 		}
 		else throw new Error('Wrong type of company');
-
-		return response.status(200)
-		               .sendFile(agreementFilePath);
+		
+		if(USE_FS) {
+			response.contentType('application/msword');
+			return response.send(readFileSync(agreementFilePath));
+		} else
+			return response.sendFile(agreementFilePath);
 	}
 }
