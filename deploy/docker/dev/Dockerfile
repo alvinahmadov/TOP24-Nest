@@ -45,6 +45,7 @@ FROM base AS development
 ARG NODE_OPTIONS="--max-old-space-size=2048"
 ENV NODE_OPTIONS $NODE_OPTIONS
 ENV NODE_ENV development
+ENV TZ Europe/Moscow
 
 USER $APP_USER
 
