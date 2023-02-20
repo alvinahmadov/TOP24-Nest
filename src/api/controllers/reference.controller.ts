@@ -319,11 +319,12 @@ export default class ReferenceController
 			agreementFilePath = AGREEMENT_PATHS[companyType as number];
 		}
 		else throw new Error('Wrong type of company');
-		
+
 		if(USE_FS) {
 			response.contentType('application/msword');
 			return response.send(readFileSync(agreementFilePath));
-		} else
+		}
+		else
 			return response.sendFile(agreementFilePath);
 	}
 }
