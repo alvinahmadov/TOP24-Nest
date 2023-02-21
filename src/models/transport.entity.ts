@@ -183,7 +183,7 @@ export default class Transport
 	@ApiProperty(prop.certificatePhotoLinkFront)
 	@UrlColumn()
 	certificatePhotoLinkFront?: string;
-	
+
 	@ApiProperty(prop.certificatePhotoLinkBack)
 	@UrlColumn()
 	certificatePhotoLinkBack?: string;
