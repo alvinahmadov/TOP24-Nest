@@ -180,9 +180,13 @@ export default class Transport
 	@StringColumn({ allowNull: false })
 	certificateNumber: string;
 	
-	@ApiProperty(prop.certificatePhotoLinks)
-	@StringArrayColumn({ defaultValue: [] })
-	certificatePhotoLinks?: string[];
+	@ApiProperty(prop.certificatePhotoLinkFront)
+	@UrlColumn()
+	certificatePhotoLinkFront?: string;
+	
+	@ApiProperty(prop.certificatePhotoLinkBack)
+	@UrlColumn()
+	certificatePhotoLinkBack?: string;
 
 	@ApiProperty(prop.payloads)
 	@StringArrayColumn()
@@ -265,7 +269,8 @@ export default class Transport
 		data.fields[TRANSPORT.REGISTR_NUMBER] = this.registrationNumber;
 		data.fields[TRANSPORT.PROD_YEAR] = this.prodYear;
 		data.fields[TRANSPORT.CERTIFICATE.NUMBER] = this.certificateNumber;
-		data.fields[TRANSPORT.CERTIFICATE.LINK] = this.certificatePhotoLinks?.join('|');
+		data.fields[TRANSPORT.CERTIFICATE.LINK.FRONT] = this.certificatePhotoLinkFront;
+		data.fields[TRANSPORT.CERTIFICATE.LINK.BACK] = this.certificatePhotoLinkBack;
 		data.fields[TRANSPORT.PAYLOAD.TYPE] = this.payloads
 		                                          .map(
 			                                          payload => convertBitrix<string, string>('transportPayload', payload, false)

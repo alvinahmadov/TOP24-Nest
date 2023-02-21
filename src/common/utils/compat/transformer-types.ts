@@ -704,9 +704,13 @@ export interface ITransportTransformer
 	 * */
 	sts: string;
 	/**
-	 * @see ITransport.certificatePhotoLink
+	 * @see ITransport.certificatePhotoLinkFront
 	 * */
-	sts_links?: string[];
+	sts_link_front?: string;
+	/**
+	 * @see ITransport.certificatePhotoLinkBack
+	 * */
+	sts_link_back?: string;
 	/**
 	 * @see ITransport.osagoNumber
 	 * */
