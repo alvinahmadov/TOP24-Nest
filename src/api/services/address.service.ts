@@ -5,8 +5,7 @@ import {
 	IApiResponse,
 	IApiResponses,
 	IListFilter,
-	IService,
-	TAsyncApiResponse
+	IService
 }                            from '@common/interfaces';
 import {
 	formatArgs,
@@ -37,7 +36,7 @@ export default class AddressService
 	public async getList(
 		listFilter: ListFilter,
 		filter: IAddressFilter
-	): TAsyncApiResponse<Address[]> {
+	): Promise<IApiResponse<Address[]>> {
 		const addresses = await this.repository.getList(listFilter, filter);
 
 		return {
@@ -48,7 +47,7 @@ export default class AddressService
 	}
 
 	public async getById(id: string)
-		: TAsyncApiResponse<Address> {
+		: Promise<IApiResponse<Address>> {
 		const address = await this.repository.get(id);
 
 		if(!address)
@@ -65,7 +64,7 @@ export default class AddressService
 		term: string,
 		listFilter: ListFilter = {},
 		onlyRegions: boolean = false
-	): TAsyncApiResponse<IAddress[]> {
+	): Promise<IApiResponse<IAddress[]>> {
 		let addresses: IAddress[] = [];
 		const results = await this.repository.find(term, listFilter, onlyRegions);
 
@@ -79,7 +78,8 @@ export default class AddressService
 						if(address.city) {
 							address.region = address.city;
 							address.regionType = address.cityType;
-						} else return null;
+						}
+						else return null;
 						return address;
 					}
 				).filter(a => a !== null)
@@ -98,7 +98,7 @@ export default class AddressService
 		minLength: number = 2,
 		filter: IAddressFilter = {},
 		listFilter: IListFilter = {}
-	): TAsyncApiResponse<any> {
+	): Promise<IApiResponse<any>> {
 		if(term === undefined ||
 		   term.length < minLength) {
 			return this.responses['NOT_FOUND'];
@@ -114,13 +114,13 @@ export default class AddressService
 			statusCode: 200,
 			data:       fullAddresses,
 			message:    formatArgs(TRANSLATIONS['LIST'], fullAddresses.length)
-		} as IApiResponse<any>;
+		};
 	}
 
 	public async searchByGeolocation(
 		coordinates: { latitude: number; longitude: number },
 		distance: number = 60.0
-	): TAsyncApiResponse<Address[]> {
+	): Promise<IApiResponse<Address[]>> {
 		const { latitude, longitude } = coordinates;
 
 		const result = await this.repository.findByCoordinates([latitude, longitude], distance);
