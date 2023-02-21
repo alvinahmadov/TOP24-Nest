@@ -1298,12 +1298,12 @@ export interface ITransport
 	 * Transport registration certificate number.
 	 * */
 	certificateNumber: string;
-	
+
 	/**
 	 * Transport registration certificate photo link front side.
 	 * */
 	certificatePhotoLinkFront?: string;
-	
+
 	/**
 	 * Transport registration certificate photo link back side.
 	 * */
