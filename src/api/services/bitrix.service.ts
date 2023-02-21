@@ -1,53 +1,57 @@
 import {
-	HttpStatus, Injectable,
+	HttpStatus,
+	Injectable,
 	Scope
-}                                               from '@nestjs/common';
+}                                from '@nestjs/common';
 import {
 	CARGO,
 	CARGOINN,
 	CRM,
 	ORDER,
 	TRANSPORT
-}                                               from '@config/json';
-import { WhereClause }                          from '@common/classes';
-import { BitrixUrl }                            from '@common/constants';
+}                                from '@config/json';
+import { WhereClause }           from '@common/classes';
+import { BitrixUrl }             from '@common/constants';
 import {
 	CompanyType,
 	OrderStage,
 	OrderStatus,
 	UserRole
-}                                               from '@common/enums';
+}                                from '@common/enums';
 import {
+	IApiResponse,
 	IApiResponses,
 	ICompany,
 	IOrder,
 	IService,
 	TAffectedRows,
-	TAsyncApiResponse,
 	TCRMResponse,
 	TOperationCount,
 	TUpdateAttribute
-}                                               from '@common/interfaces';
+}                                from '@common/interfaces';
 import {
 	formatArgs,
 	getCrm,
 	getTranslation,
 	isSuccessResponse,
 	orderFromBitrix
-}                                               from '@common/utils';
+}                                from '@common/utils';
 import {
 	Order,
 	Transport
-}                                               from '@models/index';
-import { DestinationRepository }                from '@repos/index';
-import { DestinationCreateDto, OrderCreateDto } from '@api/dto';
-import { NotificationGateway }                  from '@api/notifications';
-import Service                                  from './service';
-import CargoCompanyService                      from './cargo-company.service';
-import CargoCompanyInnService                   from './cargoinn-company.service';
-import OfferService                             from './offer.service';
-import OrderService                             from './order.service';
-import TransportService                         from './transport.service';
+}                                from '@models/index';
+import { DestinationRepository } from '@repos/index';
+import {
+	DestinationCreateDto,
+	OrderCreateDto
+}                                from '@api/dto';
+import { NotificationGateway }   from '@api/notifications';
+import Service                   from './service';
+import CargoCompanyService       from './cargo-company.service';
+import CargoCompanyInnService    from './cargoinn-company.service';
+import OfferService              from './offer.service';
+import OrderService              from './order.service';
+import TransportService          from './transport.service';
 import ORDER_LST_URL = BitrixUrl.ORDER_LST_URL;
 import ORDER_GET_URL = BitrixUrl.ORDER_GET_URL;
 import COMPANY_GET_URL = BitrixUrl.COMPANY_GET_URL;
@@ -155,7 +159,7 @@ export default class BitrixService
 	 * @returns {{affectedCount: number}} Affected items in database.
 	 * */
 	public async synchronizeOrders(reset?: boolean)
-		: TAsyncApiResponse<TOperationCount> {
+		: Promise<IApiResponse<TOperationCount>> {
 		let updatedCount: number = 0;
 		let createdCount: number = 0;
 		const orderIds: string[] = [];
@@ -203,7 +207,7 @@ export default class BitrixService
 		if(reset) {
 			const { data: orders } = await this.orderService.getList();
 			const orderIdsToDelete = orders.filter(
-				order => (
+				(order) => (
 					// Exclude created orders from crm
 					!orderIds.some(orderId => orderId === order.id) &&
 					// Exclude updated orders from crm
@@ -255,7 +259,7 @@ export default class BitrixService
 	public async updateCargo(
 		crmId: number,
 		cargo?: TUpdateAttribute<ICompany>
-	): TAsyncApiResponse<ICompany> {
+	): Promise<IApiResponse<ICompany>> {
 		if(cargo) {
 			const { data: item } = await this.cargoService.getByCrmId(crmId);
 			if(item) {
@@ -327,7 +331,7 @@ export default class BitrixService
 	}
 
 	public async updateTransport(crmId: number)
-		: TAsyncApiResponse<Transport | null> {
+		: Promise<IApiResponse<Transport | null>> {
 		const { result } = await this.httpClient.post<TCRMResponse>(`${CONTACT_GET_URL}?ID=${crmId}`);
 		const crmItem = getCrm(result);
 		let message: string = '';
@@ -376,7 +380,7 @@ export default class BitrixService
 	public async synchronizeOrder(
 		crmId: number,
 		isUpdateRequest: boolean = false
-	): TAsyncApiResponse<Order> {
+	): Promise<IApiResponse<Order>> {
 		try {
 			const { result } = await this.httpClient.get<TCRMResponse>(`${ORDER_GET_URL}?ID=${crmId}`);
 			const crmItem = getCrm(result);
@@ -494,7 +498,8 @@ export default class BitrixService
 	 * @summary Deletes order from bitrix
 	 * @param {Number!} crmId CRM id of order to delete from bitrix
 	 * */
-	public async deleteOrder(crmId: number): TAsyncApiResponse<TAffectedRows> {
+	public async deleteOrder(crmId: number)
+		: Promise<IApiResponse<TAffectedRows>> {
 		const { data: order } = await this.orderService.getByCrmId(crmId);
 		if(order) {
 			await this.offerService.cancelAll(order.id, order.crmTitle);
