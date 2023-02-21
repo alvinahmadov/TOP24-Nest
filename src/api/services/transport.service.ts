@@ -17,8 +17,7 @@ import {
 	filterTransports,
 	getTranslation,
 	renameMulterFile,
-	isSuccessResponse,
-	renameMulterFiles
+	isSuccessResponse
 }                                 from '@common/utils';
 import { Image, Transport }       from '@models/index';
 import { TransportRepository }    from '@repos/index';
@@ -72,7 +71,7 @@ export default class TransportService
 		const message = formatArgs(TRANSLATIONS['LIST'], data?.length);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       filterTransports(data, filter, false),
 			message:    message
 		};
@@ -92,7 +91,7 @@ export default class TransportService
 			return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       transport,
 			message:    formatArgs(TRANSLATIONS['GET'], transport.brand)
 		};
@@ -103,7 +102,7 @@ export default class TransportService
 		const transport = await this.repository.getByCrmId(crmId, full);
 		if(transport)
 			return {
-				statusCode: 200,
+				statusCode: HttpStatus.OK,
 				data:       transport,
 				message:    formatArgs(TRANSLATIONS['GET'], transport.brand)
 			};
@@ -128,7 +127,7 @@ export default class TransportService
 		const transports = await this.repository.getByDriverId(driverId, listFilter, filter);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       transports,
 			message:    formatArgs(TRANSLATIONS['LIST'], transports.length)
 		};
@@ -149,7 +148,7 @@ export default class TransportService
 			return this.repository.getRecord('create');
 
 		return {
-			statusCode: 201,
+			statusCode: HttpStatus.CREATED,
 			data:       transport,
 			message:    formatArgs(TRANSLATIONS['CREATE'], transport.id)
 		};
@@ -193,7 +192,7 @@ export default class TransportService
 		}
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       transport,
 			message:    formatArgs(TRANSLATIONS['UPDATE'], transport.id)
 		};
@@ -218,7 +217,8 @@ export default class TransportService
 		transportImages.push(
 			transport.osagoPhotoLink,
 			transport.diagnosticsPhotoLink,
-			...(transport.certificatePhotoLinks ?? [])
+			transport.certificatePhotoLinkFront,
+			transport.certificatePhotoLinkBack
 		);
 
 		const images = await this.imageFileService.deleteImageList(transportImages);
@@ -234,7 +234,7 @@ export default class TransportService
 		const { affectedCount = 0 } = await this.repository.delete(id) ?? {};
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       {
 				transport: {
 					affectedCount,
@@ -253,7 +253,7 @@ export default class TransportService
 
 		if(transport.status === TransportStatus.ACTIVE) {
 			return {
-				statusCode: 200,
+				statusCode: HttpStatus.OK,
 				data:       transport
 			};
 		}
@@ -273,7 +273,7 @@ export default class TransportService
 		);
 
 		return {
-			statusCode: 200,
+			statusCode: HttpStatus.OK,
 			data:       transport
 		};
 	}
@@ -316,7 +316,7 @@ export default class TransportService
 		}
 
 		return {
-			statusCode: 500,
+			statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
 			message:    getTranslation('FAIL', 'WRITE_FILE')
 		};
 	}
@@ -332,7 +332,7 @@ export default class TransportService
 		else return this.responses['NOT_FOUND'];
 
 		return {
-			statusCode: 404,
+			statusCode: HttpStatus.NOT_FOUND,
 			message:    `Image '${imageId}' not found!`
 		};
 	}
@@ -374,39 +374,38 @@ export default class TransportService
 	}
 
 	/**
-	 * @summary Upload/update transport registration certificate document scans.
+	 * @summary Upload/update transport registration certificate document front scan.
 	 *
-	 * @description Uploads/updates transport registration certificate scan
-	 * files and returns link to the updated file in Yandex Storage.
+	 * @description Uploads/updates transport registration certificate scan file
+	 * and returns link to the updated file in Yandex Storage.
 	 *
 	 * @param {String!} id Id of the cargo company transport.
-	 * @param {TMulterFile!} images Image to send.
-	 * @param {String!} folder Name of the folder to save image to.
+	 * @param {TMulterFile!} image Image to send.
+	 * @param {String} folder Name of the folder to save image to.
 	 * */
-	public async uploadCertificatePhotos(
+	public async uploadCertificatePhotoFront(
 		id: string,
-		images: Array<TMulterFile>,
-		folder: string = 'certificate'
+		image: TMulterFile,
+		folder: string = 'cert_front'
 	): Promise<IApiResponse<Transport | null>> {
-		let transport = await this.repository.get(id);
+		return this.uploadPhoto(id, image, 'certificatePhotoLinkFront', Bucket.Folders.TRANSPORT, folder);
+	}
 
-		if(!transport)
-			return this.responses['NOT_FOUND'];
-
-		const {
-			Location: certificatePhotoLinks
-		} = await this.imageFileService
-		              .uploadFiles(
-			              renameMulterFiles(images, Bucket.Folders.TRANSPORT, id, folder)
-		              );
-
-		if(certificatePhotoLinks?.length > 0) {
-			transport = await this.repository.update(id, { certificatePhotoLinks });
-		}
-
-		return {
-			statusCode: HttpStatus.OK,
-			data:       transport
-		};
+	/**
+	 * @summary Upload/update transport registration certificate document back scan.
+	 *
+	 * @description Uploads/updates transport registration certificate scan file
+	 * and returns link to the updated file in Yandex Storage.
+	 *
+	 * @param {String!} id Id of the cargo company transport.
+	 * @param {TMulterFile!} image Image to send.
+	 * @param {String} folder Name of the folder to save image to.
+	 * */
+	public async uploadCertificatePhotoBack(
+		id: string,
+		image: TMulterFile,
+		folder: string = 'cert_back'
+	): Promise<IApiResponse<Transport | null>> {
+		return this.uploadPhoto(id, image, 'certificatePhotoLinkBack', Bucket.Folders.TRANSPORT, folder);
 	}
 }
