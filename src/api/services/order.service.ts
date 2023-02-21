@@ -21,7 +21,6 @@ import {
 	IApiResponses,
 	IService,
 	TAffectedRows,
-	TAsyncApiResponse,
 	TCRMData,
 	TCRMResponse,
 	TDocumentMode,
@@ -100,7 +99,7 @@ export default class OrderService
 	 * @param {Boolean} full
 	 * */
 	public async getById(id: string, full?: boolean)
-		: TAsyncApiResponse<Order> {
+		: Promise<IApiResponse<Order>> {
 		const data = await this.repository.get(id, full);
 		const order = filterOrders(data) as Order;
 
@@ -121,7 +120,7 @@ export default class OrderService
 	 * @param {Boolean} full.
 	 * */
 	public async getByCrmId(crm_id: number, full?: boolean)
-		: TAsyncApiResponse<Order> {
+		: Promise<IApiResponse<Order>> {
 		const order = await this.repository.getByCrmId(crm_id, full);
 
 		if(!order)
@@ -145,7 +144,7 @@ export default class OrderService
 	public async getList(
 		listFilter: ListFilter = { from: 0 },
 		filter: OrderFilter = {}
-	): TAsyncApiResponse<Order[]> {
+	): Promise<IApiResponse<Order[]>> {
 		const data = await this.repository.getList(listFilter, filter);
 		const orders = filterOrders(data) as Order[];
 
@@ -160,7 +159,7 @@ export default class OrderService
 							order.stage >= 4
 						)
 							order.stage = 4;
-						
+
 						if(order.hasProblem) {
 							order.status = OrderStatus.CANCELLED;
 						}
@@ -187,7 +186,7 @@ export default class OrderService
 	public async getCargoList(
 		cargoId: string,
 		listFilter: ListFilter
-	): TAsyncApiResponse<Order[]> {
+	): Promise<IApiResponse<Order[]>> {
 		const data = await this.repository.getCargoList(cargoId, listFilter);
 		const orders = filterOrders(data) as Order[];
 
@@ -205,7 +204,8 @@ export default class OrderService
 	 *
 	 * @param {IOrder!} dto New data of order.
 	 * */
-	public async create(dto: OrderCreateDto): TAsyncApiResponse<Order> {
+	public async create(dto: OrderCreateDto):
+		Promise<IApiResponse<Order>> {
 		const order = await this.createModel(dto);
 
 		if(!order)
@@ -228,7 +228,7 @@ export default class OrderService
 	public async update(
 		id: string,
 		dto: OrderUpdateDto
-	): TAsyncApiResponse<Order> {
+	): Promise<IApiResponse<Order>> {
 		const order = await this.repository.update(id, dto);
 
 		if(!order)
@@ -249,7 +249,7 @@ export default class OrderService
 	 * @param {String!} id Id of order to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<TAffectedRows> {
+		: Promise<IApiResponse<TAffectedRows>> {
 		const order = await this.repository.get(id);
 
 		if(!order)
@@ -270,7 +270,7 @@ export default class OrderService
 	}
 
 	public async getByDriver(driverId: string, orderId?: string)
-		: TAsyncApiResponse<TMergedEntities> {
+		: Promise<IApiResponse<TMergedEntities>> {
 		const order = await this.repository.getDriverAssignedOrders(driverId, { id: orderId });
 		let result: {
 			order?: Order;
@@ -315,7 +315,7 @@ export default class OrderService
 			statusCode: HttpStatus.OK,
 			data:       result,
 			message:    formatArgs(ORDER_TRANSLATIONS['DRIVERS'], result.driver ? 1 : 0)
-		} as IApiResponse<TMergedEntities>;
+		};
 	}
 
 	/**
@@ -327,7 +327,7 @@ export default class OrderService
 	 * @param {String!} id Id of order to send data to bitrix.
 	 * */
 	public async send(id: string)
-		: TAsyncApiResponse<number> {
+		: Promise<IApiResponse<number>> {
 		const order = await this.repository.get(id, true);
 
 		if(!order) return this.responses['NOT_FOUND'];
@@ -416,7 +416,7 @@ export default class OrderService
 		id: string,
 		point: string,
 		files: TMulterFile[]
-	): TAsyncApiResponse<Order> {
+	): Promise<IApiResponse<Order>> {
 		let order = await this.repository.get(id);
 		let fileUploaded = false;
 		let message: string = '';
@@ -538,7 +538,7 @@ export default class OrderService
 		id: string,
 		files: TMulterFile[],
 		mode: TDocumentMode
-	): TAsyncApiResponse<Order> {
+	): Promise<IApiResponse<Order>> {
 		let order = await this.repository.get(id);
 		let fileUploaded = false;
 		let message: string;
@@ -649,7 +649,7 @@ export default class OrderService
 		id: string,
 		mode: TDocumentMode,
 		index?: number
-	): TAsyncApiResponse<Order> {
+	): Promise<IApiResponse<Order>> {
 		let order = await this.repository.get(id);
 		let isDeleted = false;
 		let deleteAll = index === undefined;

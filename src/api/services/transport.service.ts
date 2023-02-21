@@ -3,18 +3,22 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { BitrixUrl, Bucket }      from '@common/constants';
 import { TransportStatus }        from '@common/enums';
 import {
+	IApiResponse,
 	IApiResponses,
 	ICompanyDeleteResponse,
 	IService,
 	ITransport,
-	TAsyncApiResponse,
-	TCreationAttribute, TMulterFile,
+	TCreationAttribute,
+	TMulterFile,
 	TUpdateAttribute
 }                                 from '@common/interfaces';
 import {
 	formatArgs,
 	filterTransports,
-	getTranslation, renameMulterFile, isSuccessResponse, renameMulterFiles
+	getTranslation,
+	renameMulterFile,
+	isSuccessResponse,
+	renameMulterFiles
 }                                 from '@common/utils';
 import { Image, Transport }       from '@models/index';
 import { TransportRepository }    from '@repos/index';
@@ -56,7 +60,7 @@ export default class TransportService
 	public async getList(
 		listFilter: ListFilter,
 		filter: TransportFilter = {}
-	): TAsyncApiResponse<Transport[]> {
+	): Promise<IApiResponse<Transport[]>> {
 		const {
 			riskClasses = [],
 			fixtures = [],
@@ -81,7 +85,7 @@ export default class TransportService
 	 * @param full
 	 * */
 	public async getById(id: string, full?: boolean)
-		: TAsyncApiResponse<Transport> {
+		: Promise<IApiResponse<Transport | null>> {
 		const transport = await this.repository.get(id, full);
 
 		if(!transport)
@@ -95,7 +99,7 @@ export default class TransportService
 	}
 
 	public async getByCrmId(crmId: number, full?: boolean)
-		: TAsyncApiResponse<Transport | null> {
+		: Promise<IApiResponse<Transport | null>> {
 		const transport = await this.repository.getByCrmId(crmId, full);
 		if(transport)
 			return {
@@ -120,7 +124,7 @@ export default class TransportService
 		driverId: string,
 		listFilter: ListFilter = {},
 		filter?: TransportFilter
-	): TAsyncApiResponse<Transport[]> {
+	): Promise<IApiResponse<Transport[]>> {
 		const transports = await this.repository.getByDriverId(driverId, listFilter, filter);
 
 		return {
@@ -138,7 +142,7 @@ export default class TransportService
 	 * @param {ITransport!} dto New data of cargo company transport.
 	 * */
 	public async create(dto: TCreationAttribute<ITransport>)
-		: TAsyncApiResponse<Transport> {
+		: Promise<IApiResponse<Transport | null>> {
 		const transport = await this.createModel(dto);
 
 		if(!transport)
@@ -162,7 +166,7 @@ export default class TransportService
 	public async update(
 		id: string,
 		dto: TUpdateAttribute<ITransport>
-	): TAsyncApiResponse<Transport> {
+	): Promise<IApiResponse<Transport | null>> {
 		let transport = await this.repository.get(id);
 
 		if(!transport?.isTrailer && dto.status === 0) {
@@ -203,7 +207,7 @@ export default class TransportService
 	 * @param {String!} id Id of cargo company transport to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<Pick<ICompanyDeleteResponse, 'transport'>> {
+		: Promise<IApiResponse<Pick<ICompanyDeleteResponse, 'transport'>>> {
 		const transport = await this.repository.get(id);
 
 		if(!transport)
@@ -242,7 +246,7 @@ export default class TransportService
 	}
 
 	public async activateTransport(id: string)
-		: TAsyncApiResponse<Transport | null> {
+		: Promise<IApiResponse<Transport | null>> {
 		const transport = await this.repository.get(id);
 		if(!transport)
 			return this.responses['NOT_FOUND'];
@@ -288,7 +292,7 @@ export default class TransportService
 		id: string,
 		image: TMulterFile,
 		folder: string = 'image'
-	): TAsyncApiResponse<Image> {
+	): Promise<IApiResponse<Image | null>> {
 		let transport = await this.repository.get(id);
 
 		if(!transport)
@@ -347,7 +351,7 @@ export default class TransportService
 		id: string,
 		image: TMulterFile,
 		folder: string = 'osago'
-	): TAsyncApiResponse<Transport> {
+	): Promise<IApiResponse<Transport | null>> {
 		return this.uploadPhoto(id, image, 'osagoPhotoLink', Bucket.Folders.TRANSPORT, folder);
 	}
 
@@ -365,7 +369,7 @@ export default class TransportService
 		id: string,
 		image: TMulterFile,
 		folder: string = 'diagnostic'
-	): TAsyncApiResponse<Transport> {
+	): Promise<IApiResponse<Transport | null>> {
 		return this.uploadPhoto(id, image, 'diagnosticsPhotoLink', Bucket.Folders.TRANSPORT, folder);
 	}
 
@@ -383,12 +387,12 @@ export default class TransportService
 		id: string,
 		images: Array<TMulterFile>,
 		folder: string = 'certificate'
-	): TAsyncApiResponse<Transport> {
+	): Promise<IApiResponse<Transport | null>> {
 		let transport = await this.repository.get(id);
 
 		if(!transport)
 			return this.responses['NOT_FOUND'];
-		
+
 		const {
 			Location: certificatePhotoLinks
 		} = await this.imageFileService
@@ -399,7 +403,7 @@ export default class TransportService
 		if(certificatePhotoLinks?.length > 0) {
 			transport = await this.repository.update(id, { certificatePhotoLinks });
 		}
-		
+
 		return {
 			statusCode: HttpStatus.OK,
 			data:       transport

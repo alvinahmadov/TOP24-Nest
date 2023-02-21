@@ -7,8 +7,7 @@ import {
 	IApiResponse,
 	IApiResponses,
 	ICompanyDeleteResponse,
-	IService,
-	TAsyncApiResponse
+	IService
 }                                 from '@common/interfaces';
 import {
 	cargoToBitrix,
@@ -77,7 +76,7 @@ export default class CargoCompanyService
 	public async getList(
 		listFilter: ListFilter = {},
 		filter: CompanyFilter = {}
-	): TAsyncApiResponse<CargoCompany[]> {
+	): Promise<IApiResponse<CargoCompany[]>> {
 		const data = await this.repository.getList(listFilter, filter);
 
 		return {
@@ -94,7 +93,7 @@ export default class CargoCompanyService
 	 * @param {Boolean!} full Get full properties
 	 * */
 	public async getById(id: string, full?: boolean)
-		: TAsyncApiResponse<CargoCompany | null> {
+		: Promise<IApiResponse<CargoCompany | null>> {
 		const company = await this.repository.get(id, full);
 
 		if(!company)
@@ -114,7 +113,7 @@ export default class CargoCompanyService
 	 * @param {Boolean!} full Get full properties
 	 * */
 	public async getByCrmId(crmId: number, full?: boolean)
-		: TAsyncApiResponse<CargoCompany | null> {
+		: Promise<IApiResponse<CargoCompany | null>> {
 		const company = await this.repository.getByCrmId(crmId, full);
 
 		if(!company)
@@ -135,7 +134,7 @@ export default class CargoCompanyService
 	 * @param {ICargoCompany!} dto New data of cargo company.
 	 * */
 	public async create(dto: CompanyCreateDto)
-		: TAsyncApiResponse<CargoCompany> {
+		: Promise<IApiResponse<CargoCompany | null>> {
 		let userId: string;
 		let company: CargoCompany;
 
@@ -182,7 +181,7 @@ export default class CargoCompanyService
 	 * @param {Partial<ICargoCompany>!} dto Partial new data about cargo company.
 	 * */
 	public async update(id: string, dto: CompanyUpdateDto)
-		: TAsyncApiResponse<CargoCompany | null> {
+		: Promise<IApiResponse<CargoCompany | null>> {
 		const company = await this.repository.update(id, dto);
 
 		if(!company)
@@ -203,7 +202,7 @@ export default class CargoCompanyService
 	 * @param {String!} id Id of cargo company to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<ICompanyDeleteResponse> {
+		: Promise<IApiResponse<ICompanyDeleteResponse>> {
 		const company = await this.repository.get(id, true);
 
 		if(!company)
@@ -283,7 +282,7 @@ export default class CargoCompanyService
 	public async getTransports(
 		listFilter: ListFilter = {},
 		filter: CompanyTransportFilter = {}
-	): TAsyncApiResponse<Transport[]> {
+	): Promise<IApiResponse<Transport[]>> {
 		let transports: Transport[] = [];
 		let { riskClass, fromDate, toDate, directions, ...rest } = filter;
 		let companies: CargoCompany[] = await this.repository.getTransports(listFilter, rest);
@@ -299,7 +298,7 @@ export default class CargoCompanyService
 				       .forEach(
 					       ({ driver }) =>
 					       {
-						       fillDriverWithCompanyData(driver, company)
+						       fillDriverWithCompanyData(driver, company);
 					       }
 				       );
 
@@ -329,7 +328,8 @@ export default class CargoCompanyService
 	 *
 	 * @param {String!} id Id of cargo company
 	 * */
-	public async send(id: string): TAsyncApiResponse<{ crmId?: number }> {
+	public async send(id: string):
+		Promise<IApiResponse<{ crmId?: number }>> {
 		const company = await this.repository.get(id, true);
 		if(!company) {
 			return this.responses['NOT_FOUND'];
@@ -351,8 +351,13 @@ export default class CargoCompanyService
 		return result;
 	}
 
-	public async activate(id: string, options?: { disableAll: boolean, userId: string })
-		: TAsyncApiResponse<CargoCompany | null> {
+	public async activate(
+		id: string,
+		options?: {
+			disableAll: boolean,
+			userId: string
+		}
+	): Promise<IApiResponse<CargoCompany | null>> {
 		let company = await this.repository.get(id, true);
 		const { disableAll = false, userId } = options ?? {};
 		const disableCompany = async(_userId: string): Promise<boolean> =>

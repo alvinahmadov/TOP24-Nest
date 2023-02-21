@@ -6,7 +6,6 @@ import {
 	IService,
 	TAffectedRows,
 	TAffectedEntity,
-	TAsyncApiResponse,
 	TCompanyIdOptions,
 	TCreationAttribute,
 	TUpdateAttribute
@@ -47,7 +46,7 @@ export default class PaymentService
 	 * @param {String!} id Id of requested order
 	 * */
 	public async getById(id: string)
-		: TAsyncApiResponse<Payment> {
+		: Promise<IApiResponse<Payment | null>> {
 		const payment = await this.repository.get(id);
 
 		if(!payment)
@@ -57,11 +56,11 @@ export default class PaymentService
 			statusCode: 200,
 			data:       payment,
 			message:    formatArgs(TRANSLATIONS['GET'], payment.id)
-		} as IApiResponse<Payment>;
+		};
 	}
 
 	public async getByCompanyId(companyId: string)
-		: TAsyncApiResponse<Payment> {
+		: Promise<IApiResponse<Payment | null>> {
 		const payment = await this.repository.getByCompany(
 			{ cargoId: companyId, cargoinnId: companyId }
 		);
@@ -73,7 +72,7 @@ export default class PaymentService
 			statusCode: 200,
 			data:       payment,
 			message:    formatArgs(TRANSLATIONS['GET'], payment.id)
-		} as IApiResponse<Payment>;
+		};
 	}
 
 	/**
@@ -87,14 +86,14 @@ export default class PaymentService
 	public async getList(
 		listFilter: ListFilter = {},
 		filter: PaymentFilter = {}
-	): TAsyncApiResponse<Payment[]> {
+	): Promise<IApiResponse<Payment[]>> {
 		const payments = await this.repository.getList(listFilter, filter);
 
 		return {
 			statusCode: 200,
 			data:       payments,
 			message:    formatArgs(TRANSLATIONS['LIST'], payments.length)
-		} as IApiResponse<Payment[]>;
+		};
 	}
 
 	/**
@@ -106,7 +105,7 @@ export default class PaymentService
 	 * @param {IPayment!} dto New data of cargo company payment info.
 	 * */
 	public async create(dto: TCreationAttribute<IPayment>)
-		: TAsyncApiResponse<Payment> {
+		: Promise<IApiResponse<Payment | null>> {
 		const payment = await this.repository.create(dto);
 
 		if(!payment)
@@ -116,7 +115,7 @@ export default class PaymentService
 			statusCode: 201,
 			data:       payment,
 			message:    formatArgs(TRANSLATIONS['CREATE'], payment.id)
-		} as IApiResponse<Payment>;
+		};
 	}
 
 	/**
@@ -130,7 +129,7 @@ export default class PaymentService
 	public async update(
 		id: string,
 		dto: TUpdateAttribute<IPayment>
-	): TAsyncApiResponse<Payment> {
+	): Promise<IApiResponse<Payment | null>> {
 		const payment = await this.repository.update(id, dto);
 
 		if(!payment)
@@ -140,7 +139,7 @@ export default class PaymentService
 			statusCode: 200,
 			data:       payment,
 			message:    formatArgs(TRANSLATIONS['UPDATE'], payment.id)
-		} as IApiResponse<Payment>;
+		};
 	}
 
 	/**
@@ -151,7 +150,7 @@ export default class PaymentService
 	 * @param {String!} id Id of cargo company payment record to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<TAffectedEntity> {
+		: Promise<IApiResponse<TAffectedEntity>> {
 		const payment = await this.repository.get(id);
 
 		if(!payment)
@@ -183,7 +182,7 @@ export default class PaymentService
 	 * payment related to cargo record to delete
 	 * */
 	public async deleteByCompany(options?: TCompanyIdOptions)
-		: TAsyncApiResponse<TAffectedRows> {
+		: Promise<IApiResponse<TAffectedRows>> {
 		const payment = await this.repository.getByCompany(options);
 
 		if(!payment)
@@ -198,6 +197,6 @@ export default class PaymentService
 			statusCode: 200,
 			data:       result,
 			message:    formatArgs(TRANSLATIONS['DELETE'], payment.id)
-		} as IApiResponse<TAffectedRows>;
+		};
 	}
 }

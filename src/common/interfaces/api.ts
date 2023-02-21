@@ -41,10 +41,6 @@ export type TApiResponseSchemaOptions = {
 	description?: string;
 	data?: any;
 }
-
-/**@ignore*/
-export type TAsyncApiResponse<T> = Promise<IApiResponse<T>>;
-
 export type TCompanyIdOptions = { cargoId?: string; cargoinnId?: string };
 
 export type TCRMFields = Record<string, any>;

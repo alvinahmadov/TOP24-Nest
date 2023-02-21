@@ -1,9 +1,9 @@
 import { Injectable }     from '@nestjs/common';
 import {
+	IApiResponse,
 	IApiResponses,
 	IService,
-	TAffectedRows,
-	TAsyncApiResponse
+	TAffectedRows
 }                         from '@common/interfaces';
 import {
 	formatArgs,
@@ -46,7 +46,7 @@ export default class UserService
 	 * @param {boolean} full Include associated modesl
 	 * */
 	public async getById(id: string, full?: boolean)
-		: TAsyncApiResponse<User> {
+		: Promise<IApiResponse<User>> {
 		const user = await this.repository.get(id, full);
 
 		if(!user)
@@ -60,7 +60,7 @@ export default class UserService
 	}
 
 	public async getByPhone(phone: string, full?: boolean)
-		: TAsyncApiResponse<User> {
+		: Promise<IApiResponse<User>> {
 		const user = await this.repository.getByPhone(phone, full);
 
 		if(!user)
@@ -76,7 +76,7 @@ export default class UserService
 	public async getList(
 		listFilter: ListFilter = {},
 		filter: UserFilter = {}
-	): TAsyncApiResponse<User[]> {
+	): Promise<IApiResponse<User[]>> {
 		const users = await this.repository.getList(listFilter, filter);
 
 		return {
@@ -92,7 +92,7 @@ export default class UserService
 	 * @param {IUser!} dto New user's data. Required
 	 * */
 	public async create(dto: UserCreateDto)
-		: TAsyncApiResponse<User> {
+		: Promise<IApiResponse<User>> {
 		const user = await this.createModel(dto);
 
 		if(!user)
@@ -117,7 +117,7 @@ export default class UserService
 	public async update(
 		id: string,
 		dto: UserUpdateDto
-	): TAsyncApiResponse<User> {
+	): Promise<IApiResponse<User>> {
 		const user = await this.repository.update(id, dto);
 
 		if(!user)
@@ -136,7 +136,7 @@ export default class UserService
 	 * @param {String} id User id to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<TAffectedRows> {
+		: Promise<IApiResponse<TAffectedRows>> {
 		const user = await this.repository.get(id);
 
 		if(!user)

@@ -24,7 +24,6 @@ import {
 	ICompanyLoginResponse,
 	ILoginResponse,
 	ISignInPhoneData,
-	TAsyncApiResponse,
 	TMulterFile
 }                              from '@common/interfaces';
 import {
@@ -711,7 +710,7 @@ export default class CompanyController
 	}
 
 	private async getCompany(id: string, full?: boolean)
-		: TAsyncApiResponse<CargoCompany | CargoCompanyInn | null> {
+		: Promise<IApiResponse<CargoCompany | CargoCompanyInn | null>> {
 		const cargoCompany = await this.cargoService.getById(id, full);
 		const cargoInn = await this.cargoInnService.getById(id, full);
 

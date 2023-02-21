@@ -14,6 +14,7 @@ import {
 	UserRole
 }                              from '@common/enums';
 import {
+	IApiResponse,
 	IApiResponses,
 	IDriverFilter,
 	IListFilter,
@@ -22,7 +23,6 @@ import {
 	IService,
 	ITransportFilter,
 	TAffectedRows,
-	TAsyncApiResponse,
 	TOfferTransportFilter,
 	TOfferDriver,
 	TSentOffer
@@ -85,7 +85,7 @@ export default class OfferService
 	}
 
 	public async getById(id: string, full?: boolean)
-		: TAsyncApiResponse<Offer> {
+		: Promise<IApiResponse<Offer | null>> {
 		const offer = await this.repository.get(id, full);
 
 		if(!offer)
@@ -101,7 +101,7 @@ export default class OfferService
 	public async getList(
 		listFilter?: IListFilter,
 		filter?: IOfferFilter
-	): TAsyncApiResponse<Offer[]> {
+	): Promise<IApiResponse<Offer[]>> {
 		const offers = await this.repository.getList(listFilter, filter);
 
 		return {
@@ -115,7 +115,7 @@ export default class OfferService
 		orderId: string,
 		driverId: string,
 		dto: OfferUpdateDto
-	): TAsyncApiResponse<Offer | null> {
+	): Promise<IApiResponse<Offer | null>> {
 		let offer = await this.repository.getByAssociation(orderId, driverId);
 
 		if(!offer)
@@ -344,7 +344,7 @@ export default class OfferService
 	}
 
 	public async delete(id: string)
-		: TAsyncApiResponse<TAffectedRows> {
+		: Promise<IApiResponse<TAffectedRows>> {
 		const offer = await this.repository.get(id, true);
 
 		if(!offer)
@@ -415,7 +415,7 @@ export default class OfferService
 		orderId: string,
 		listFilter?: IListFilter,
 		filter?: IOfferFilter & IDriverFilter
-	): TAsyncApiResponse<Driver[]> {
+	): Promise<IApiResponse<Driver[]>> {
 		const offers = await this.repository.getOrderDrivers(orderId, listFilter, filter);
 		const drivers = offers.map(offer => offer.driver);
 
@@ -456,8 +456,8 @@ export default class OfferService
 				                     let { order, driver, orderStatus } = offer;
 
 				                     if(orderStatus === OrderStatus.PROCESSING) {
-															 if(!order.isCurrent)
-																 order.isCurrent = order.isExtraPayload || priorityCounter++ === 0;
+					                     if(!order.isCurrent)
+						                     order.isCurrent = order.isExtraPayload || priorityCounter++ === 0;
 				                     }
 				                     else
 					                     order.isCurrent = false;
@@ -523,7 +523,7 @@ export default class OfferService
 		orderId: string,
 		listFilter: IListFilter,
 		filter?: TOfferTransportFilter
-	): TAsyncApiResponse<any[]> {
+	): Promise<IApiResponse<any[]>> {
 		const transportData: any[] = [];
 		//Temporary fix
 		if(filter.orderStatus === OrderStatus.ACCEPTED) {
@@ -628,7 +628,7 @@ export default class OfferService
 		orderId: string,
 		driverId: string,
 		dto: Omit<OfferCreateDto, 'driverId' | 'orderId'>
-	): TAsyncApiResponse<Offer> {
+	): Promise<IApiResponse<Offer | null>> {
 		let offer = await this.repository.getByAssociation(orderId, driverId);
 		let exists = offer !== null;
 
@@ -657,7 +657,7 @@ export default class OfferService
 		orderId: string,
 		driverDataList: Array<TOfferDriver>,
 		full?: boolean
-	): TAsyncApiResponse<TSentOffer> {
+	): Promise<IApiResponse<TSentOffer>> {
 		const { data: order } = await this.orderService.getById(orderId);
 		const prevOffers = await this.repository.getList({ full: true }, { orderId });
 		let createCount = 0, updateCount = 0;
@@ -693,7 +693,8 @@ export default class OfferService
 		};
 
 		// noinspection JSUnusedLocalSymbols
-		const matchDrivers = drivers.filter(driver => filterTransports(driver.transports, transportRequirements)?.length > 0);
+		const matchDrivers = drivers.filter(driver => filterTransports(driver.transports, transportRequirements)?.length
+		                                              > 0);
 		// noinspection JSUnusedLocalSymbols
 		const nonMatchingDrivers = drivers.filter(driver => matchDrivers.every(d => driver.id !== d.id));
 
@@ -780,7 +781,7 @@ export default class OfferService
 		orderId: string,
 		driverId: string,
 		role?: UserRole
-	): TAsyncApiResponse<Offer> {
+	): Promise<IApiResponse<Offer | null>> {
 		let offer = await this.repository.getByAssociation(orderId, driverId);
 		console.debug(role);
 		if(offer) {
@@ -919,7 +920,7 @@ export default class OfferService
 		driverId: string,
 		reason?: string,
 		role?: UserRole
-	): TAsyncApiResponse<Offer> {
+	): Promise<IApiResponse<Offer | null>> {
 		const offer = await this.repository.getByAssociation(orderId, driverId);
 		const status = role < UserRole.CARGO ? OrderStatus.CANCELLED_BITRIX
 		                                     : OrderStatus.CANCELLED;
@@ -1041,7 +1042,7 @@ export default class OfferService
 	public async cancelAll(
 		orderId: string,
 		crmTitle: string
-	): TAsyncApiResponse<Offer[]> {
+	): Promise<IApiResponse<Offer[]>> {
 		const offers = await this.repository.getList({}, { orderId });
 		offers.forEach(
 			(offer) =>

@@ -15,7 +15,6 @@ import {
 	ICompanyDeleteResponse,
 	IDriver,
 	IService,
-	TAsyncApiResponse,
 	TCRMData,
 	TCRMResponse,
 	TGeoCoordinate,
@@ -105,7 +104,7 @@ export default class DriverService
 	 * @param {Boolean} full Get full associated models
 	 * */
 	public async getById(id: string, full?: boolean)
-		: TAsyncApiResponse<Driver | null> {
+		: Promise<IApiResponse<Driver | null>> {
 		const driver = await this.repository.get(id, full);
 
 		if(!driver)
@@ -120,7 +119,7 @@ export default class DriverService
 
 	public async getByTransport(
 		filter: TransportFilter & { driverIds?: string[] } = {}
-	): TAsyncApiResponse<Driver[]> {
+	): Promise<IApiResponse<Driver[]>> {
 		const drivers = await this.repository.getByTransports(filter);
 
 		return {
@@ -138,7 +137,7 @@ export default class DriverService
 	 * @param {IDriver!} data New data of cargo company driver.
 	 * */
 	public async create(data: DriverCreateDto)
-		: TAsyncApiResponse<Driver> {
+		: Promise<IApiResponse<Driver>> {
 		const driver = await this.createModel(data);
 
 		if(!driver)
@@ -162,7 +161,7 @@ export default class DriverService
 	public async update(
 		id: string,
 		data: DriverUpdateDto
-	): TAsyncApiResponse<Driver> {
+	): Promise<IApiResponse<Driver | null>> {
 		const driver = await this.repository.update(id, data);
 
 		if(!driver)
@@ -185,7 +184,7 @@ export default class DriverService
 	 * @param {String!} id Id of cargo company driver to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<Pick<ICompanyDeleteResponse, 'driver' | 'transport'>> {
+		: Promise<IApiResponse<Pick<ICompanyDeleteResponse, 'driver' | 'transport'>>> {
 		const driver = await this.repository.get(id, true);
 		let driverImagesCount = 0,
 			transportImagesCount = 0,
@@ -249,7 +248,7 @@ export default class DriverService
 	 *
 	 * @param {String!} id Id of driver to synchronize.
 	 * */
-	public async send(id: string): TAsyncApiResponse<number> {
+	public async send(id: string): Promise<IApiResponse<number>> {
 		const driver = await this.repository.get(id, true);
 
 		if(!driver) return this.responses['NOT_FOUND'];
@@ -389,7 +388,7 @@ export default class DriverService
 		id: string,
 		image: TMulterFile,
 		folder: string = 'avatar'
-	): TAsyncApiResponse<Driver> {
+	): Promise<IApiResponse<Driver | null>> {
 		const driver = await this.repository.get(id);
 
 		if(!driver)
@@ -412,7 +411,7 @@ export default class DriverService
 		id: string,
 		image: TMulterFile,
 		folder: string = 'front'
-	): TAsyncApiResponse<Driver> {
+	): Promise<IApiResponse<Driver | null>> {
 		const driver = await this.repository.get(id);
 
 		if(!driver)
@@ -442,7 +441,7 @@ export default class DriverService
 		id: string,
 		image: TMulterFile,
 		folder: string = 'back'
-	): TAsyncApiResponse<Driver> {
+	): Promise<IApiResponse<Driver | null>> {
 		const driver = await this.repository.get(id);
 
 		if(!driver)
