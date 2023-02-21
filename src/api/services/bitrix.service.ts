@@ -428,6 +428,10 @@ export default class BitrixService
 					orderDto.isCurrent = false;
 					orderDto.status = OrderStatus.FINISHED;
 				}
+				else if(orderDto.stage === OrderStage.DOCUMENT_SENT ||
+				        orderDto.stage === OrderStage.PAYMENT_FORMED) {
+					orderDto.onPayment = true;
+				}
 				let { data: order } = await this.orderService.getByCrmId(crmId);
 
 				if(isUpdateRequest && order) {
