@@ -46,7 +46,7 @@ type TCrmItem = { id: string; value: string; };
 
 const { path, tag, routes } = getRouteConfig('reference');
 const TRANSLATIONS = getTranslation('REST', 'REFERENCE');
-const USE_FS = true;
+const USE_FS = false;
 
 const lowerCaseFn = (data: TBitrixData): TCrmItem => ({ id: data.ID, value: data.VALUE });
 const compareByIdFn = (a: TBitrixData, b: TBitrixData) => a.ID.localeCompare(b.ID);
@@ -321,10 +321,10 @@ export default class ReferenceController
 		else throw new Error('Wrong type of company');
 
 		if(USE_FS) {
-			response.contentType('application/msword');
+			response.contentType('application/pdf');
 			return response.send(readFileSync(agreementFilePath));
 		}
 		else
-			return response.sendFile(agreementFilePath);
+			return response.sendFile(agreementFilePath, (err) => console.debug(`Error on file send: ${err.message}`));
 	}
 }
