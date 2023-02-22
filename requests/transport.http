@@ -29,9 +29,9 @@ Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"cargoId": "{{companyId}}",
+  "cargoId": "{{companyId}}",
   "driverId": "{{driverId}}",
-	"status": 1,
+  "status": 1,
   "type": "2700",
   "extra_fixtures": [
   	"792",
@@ -74,7 +74,7 @@ Content-Type: application/json
   "comments": "Haval"
 }
 
-> {%	client.global.set("transportId", response.body['id']); %}
+> {% client.global.set("transportId", response.body['id']); %}
 
 ### Update single transport by id
 // @no-cookie-jar
