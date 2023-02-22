@@ -1308,6 +1308,7 @@ export interface ITransport
 	 * Transport registration certificate photo link back side.
 	 * */
 	certificatePhotoLinkBack?: string;
+	
 	/**
 	 * Additional weight for cargo that transport can take for another order when has ongoing order.
 	 *

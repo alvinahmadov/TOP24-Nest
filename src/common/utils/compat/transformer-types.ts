@@ -704,6 +704,11 @@ export interface ITransportTransformer
 	 * */
 	sts: string;
 	/**
+	 * Only for backward compatibility.
+	 * @deprecated Use instead `sts_link_front` and `sts_link_back`
+	 * */
+	sts_links?: string[];
+	/**
 	 * @see ITransport.certificatePhotoLinkFront
 	 * */
 	sts_link_front?: string;

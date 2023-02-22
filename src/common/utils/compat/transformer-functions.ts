@@ -525,6 +525,11 @@ export function transformToPayment(data: transformers.IPaymentTransformer)
 function transformTransport(transport: models.Transport)
 	: transformers.ITransportTransformer {
 	if(transport) {
+		const sts_links: string[] = [
+			transport.getDataValue('certificatePhotoLinkFront'),
+			transport.getDataValue('certificatePhotoLinkBack'),
+		].filter(v => !!v);
+		
 		return {
 			id:             transport.getDataValue('id'),
 			cargoId:        transport.getDataValue('cargoId'),
@@ -543,6 +548,7 @@ function transformTransport(transport: models.Transport)
 			is_trailer:     transport.getDataValue('isTrailer'),
 			is_dedicated:   transport.getDataValue('isDedicated'),
 			sts:            transport.getDataValue('certificateNumber'),
+			sts_links,
 			sts_link_front: transport.getDataValue('certificatePhotoLinkFront'),
 			sts_link_back:  transport.getDataValue('certificatePhotoLinkBack'),
 			weight_extra:   transport.getDataValue('weightExtra'),
