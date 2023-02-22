@@ -401,21 +401,21 @@ export async function orderFromBitrix(crmFields: TCRMFields, options?: { debug: 
 }> {
 	if(!crmFields[ORDER.ID] || !crmFields[ORDER.ID].length)
 		return null;
-	const crmId = Number(crmFields[ORDER.ID]);
 	const { debug = false } = options;
+	const crmId: number = Number(crmFields[ORDER.ID]);
+	const title: string = crmFields[ORDER.HEADER] || crmFields[ORDER.TITLE];
 	const destinationDtos = await parseDestination(crmFields);
-	const isCanceled = typeFromCrm(crmFields[ORDER.IS_CANCELED], false);
-	const stage: number = convertBitrix('orderStage', crmFields[ORDER.STAGE], true, true)
-	                      ?? OrderStage.NEW;
+	const isCanceled: boolean = typeFromCrm(crmFields[ORDER.IS_CANCELED], false);
+	const stage: number = convertBitrix('orderStage', crmFields[ORDER.STAGE], true, true) ?? OrderStage.NEW;
 	const status: number = !isCanceled ? convertBitrix('orderStatus', crmFields[ORDER.STATUS], true, true)
 	                                     ?? OrderStatus.PENDING
 	                                   : OrderStatus.CANCELLED_BITRIX;
 
 	const orderDto: OrderCreateDto = {
 		crmId,
+		title,
 		status,
 		stage,
-		title:           crmFields[ORDER.TITLE],
 		date:            dateValidator(crmFields[ORDER.DATE_AT]),
 		price:           crmFields[ORDER.PRICE],
 		mileage:         typeFromCrm<number>(crmFields[ORDER.MILEAGE], 0),
