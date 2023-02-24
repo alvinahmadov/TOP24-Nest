@@ -466,7 +466,15 @@ export default class BitrixService
 						const order = updateResponse.data;
 						const repo = this.destinationRepo;
 
-						destinationDtos.forEach(dto => dto.orderId = order.id);
+						destinationDtos.forEach(
+							dto =>
+							{
+								dto.orderId = order.id;
+								delete dto.distance;
+								delete dto.fulfilled;
+								delete dto.atNearestDistanceToPoint;
+							}
+						);
 						await Promise.all(
 							destinationDtos
 								.map(
