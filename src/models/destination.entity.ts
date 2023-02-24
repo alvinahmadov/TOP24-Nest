@@ -77,7 +77,7 @@ export default class Destination
 	 * */
 	@StringColumn()
 	contact?: string;
-	
+
 	@StringColumn()
 	inn?: string;
 
@@ -93,6 +93,12 @@ export default class Destination
 	 * */
 	@FloatColumn({ defaultValue: 0.0 })
 	distance?: number;
+
+	/**
+	 * Has driver passed the nearest distnace (200m) to destination point?
+	 * */
+	@BooleanColumn({ defaultValue: false })
+	atNearestDistanceToPoint?: boolean;
 
 	/**
 	 * Optional comment about load/unload, cargo etc.

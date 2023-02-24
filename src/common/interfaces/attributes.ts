@@ -565,6 +565,10 @@ export interface IDestination
 	 * */
 	distance?: number;
 	/**
+	 * Set true if minimal distance of 200m passed.
+	 * */
+	atNearestDistanceToPoint?: boolean;
+	/**
 	 * Comment for destination point.
 	 *
 	 * @example

@@ -42,6 +42,9 @@ export class DestinationCreateDto
 
 	@IsDecimal()
 	distance?: number = 0.0;
+	
+	@IsBoolean()
+	atNearestDistanceToPoint?: boolean = false;
 
 	@IsBoolean()
 	fulfilled?: boolean = false;

@@ -5,6 +5,7 @@ import {
 	TIMEZONE
 }                               from '@common/constants';
 import {
+	DestinationType,
 	OrderStage,
 	OrderStatus,
 	UserRole
@@ -19,15 +20,25 @@ import {
 }                               from '@common/utils';
 import { Order }                from '@models/index';
 import EntityFCMRepository      from '@repos/fcm.repository';
+import DestinationRepository    from '@repos/destination.repository';
 import { NotificationGateway }  from '@api/notifications';
 import DriverService            from './driver.service';
 import OrderService             from './order.service';
 
 const ORDER_EVENT_TRANSLATION = getTranslation('EVENT', 'ORDER');
+const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
 const DEBUG = false;
 const LAST_24H = 1,
 	LAST_6H = 0.25,
 	LAST_1H = 0.041666666666666664;
+const DIST_200_METERS = 200 / 1000;
+const PROCESSING_STAGES: OrderStage[] = [
+	OrderStage.SIGNED_DRIVER,
+	OrderStage.SIGNED_OWNER,
+	OrderStage.CARRYING,
+	OrderStage.CONTINUE,
+	OrderStage.DELIVERED
+];
 
 // In range of [h1; h2)
 const inTimeRange = (
@@ -41,8 +52,11 @@ export default class TaskService
 	implements IService {
 	private readonly logger = new Logger(TaskService.name);
 	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: true });
-	public static readonly INTERVAL: string = !DEBUG ? CronExpression.EVERY_HOUR
-	                                                 : CronExpression.EVERY_MINUTE;
+	private readonly destinationRepo: DestinationRepository = new DestinationRepository({ log: false });
+	public static readonly DATE_INTERVAL: string = !DEBUG ? CronExpression.EVERY_HOUR
+	                                                      : CronExpression.EVERY_MINUTE;
+	public static readonly DISTANCE_INTERVAL: string = !DEBUG ? CronExpression.EVERY_10_MINUTES
+	                                                          : CronExpression.EVERY_MINUTE;
 
 	constructor(
 		protected readonly driverService: DriverService,
@@ -53,22 +67,15 @@ export default class TaskService
 		this.orderService.log = false;
 	}
 
-	@Cron(TaskService.INTERVAL, { timeZone: TIMEZONE })
+	@Cron(TaskService.DATE_INTERVAL, { timeZone: TIMEZONE })
 	public async dateTask() {
-		const now = new Date();
-		this.logger.log(`Running task "dateTask" at ${now.toLocaleString()}.`);
+		this.logger.log(`Running task "dateTask" at ${(new Date()).toLocaleString()}.`);
 		const { data: orders } = await this.orderService.getList(
 			{ full: false },
 			{
 				hasDriver: true,
 				status:    OrderStatus.PROCESSING,
-				stages:    [
-					OrderStage.SIGNED_DRIVER,
-					OrderStage.SIGNED_OWNER,
-					OrderStage.CARRYING,
-					OrderStage.CONTINUE,
-					OrderStage.DELIVERED
-				]
+				stages:    PROCESSING_STAGES
 			}
 		);
 
@@ -78,6 +85,24 @@ export default class TaskService
 		else {
 			this.logger.log('No orders to watch for!');
 		}
+	}
+
+	@Cron(TaskService.DISTANCE_INTERVAL, { timeZone: TIMEZONE })
+	public async distanceTask() {
+		this.logger.log(`Running task "distanceTask" at ${(new Date()).toLocaleString()}.`);
+		const { data: orders } = await this.orderService.getList(
+			{ full: false },
+			{
+				hasDriver: true,
+				status:    OrderStatus.PROCESSING,
+				stages:    PROCESSING_STAGES
+			}
+		);
+
+		if(orders?.length > 0)
+			await this.sendDestinationDistanceNotification(orders);
+		else
+			this.logger.log('No orders to watch for!');
 	}
 
 	private async sendDestinationDateNotification(orders: Order[]): Promise<void> {
@@ -139,6 +164,54 @@ export default class TaskService
 
 		if(notifyData.length > 0) {
 			this.logger.log('Sent timing notifications.');
+		}
+	}
+
+	private async sendDestinationDistanceNotification(orders: Order[]): Promise<void> {
+		for(const order of orders) {
+			const { data: driver } = await this.driverService.getById(order.driverId, false);
+
+			if(driver) {
+				const destination = order.destinations.find(d => d.point === driver.currentPoint);
+				if(destination && destination.distance !== null) {
+					if(!destination.atNearestDistanceToPoint &&
+					   destination.distance <= DIST_200_METERS) {
+						let message: string = '';
+
+						switch(destination.type) {
+							case DestinationType.LOAD:
+								message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_LOAD_200M'];
+								break;
+							case DestinationType.UNLOAD:
+								message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_UNLOAD_200M'];
+								break;
+							case DestinationType.COMBINED:
+								message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_COMBINED_200M'];
+								break;
+						}
+
+						await this.destinationRepo.update(destination.id, { atNearestDistanceToPoint: true });
+
+						this.notifications.sendDriverNotification(
+							{
+								id:     driver.id,
+								source: 'driver',
+								message
+							},
+							{
+								role: UserRole.CARGO,
+								save: false,
+								url:  'Main'
+							}
+						);
+						this.logger.log({
+							                id:     driver.id,
+							                source: 'driver',
+							                message
+						                });
+					}
+				}
+			}
 		}
 	}
 }

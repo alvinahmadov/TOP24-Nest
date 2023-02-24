@@ -3,12 +3,8 @@ import {
 	Inject,
 	Injectable,
 	HttpStatus
-}                              from '@nestjs/common';
-import { BitrixUrl, Bucket }   from '@common/constants';
-import {
-	DestinationType,
-	UserRole
-}                              from '@common/enums';
+}                            from '@nestjs/common';
+import { BitrixUrl, Bucket } from '@common/constants';
 import {
 	IApiResponse,
 	IApiResponses,
@@ -21,7 +17,7 @@ import {
 	TMergedEntities,
 	TMulterFile,
 	TUpdateAttribute
-}                              from '@common/interfaces';
+}                            from '@common/interfaces';
 import {
 	addressFromCoordinates,
 	buildBitrixRequestUrl,
@@ -30,27 +26,31 @@ import {
 	filterDrivers,
 	formatArgs,
 	getTranslation
-}                              from '@common/utils';
-import { Driver, Order }       from '@models/index';
+}                            from '@common/utils';
+import { Driver, Order }     from '@models/index';
 import {
 	DestinationRepository,
 	DriverRepository
-}                              from '@repos/index';
+}                            from '@repos/index';
 import {
 	DriverCreateDto,
 	DriverFilter,
 	DriverUpdateDto,
 	ListFilter,
 	TransportFilter
-}                              from '@api/dto';
-import { NotificationGateway } from '@api/notifications';
-import Service                 from './service';
-import ImageFileService        from './image-file.service';
-import OrderService            from './order.service';
+}                            from '@api/dto';
+import Service               from './service';
+import ImageFileService      from './image-file.service';
+import OrderService          from './order.service';
+// import {
+// 	DestinationType,
+// 	UserRole
+// }                              from '@common/enums';
+// import { NotificationGateway } from '@api/notifications';
 
 const TRANSLATIONS = getTranslation('REST', 'DRIVER');
-const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
-const DIST_200_METERS = 200 / 1000;
+// const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
+// const DIST_200_METERS = 200 / 1000;
 
 @Injectable()
 export default class DriverService
@@ -65,7 +65,7 @@ export default class DriverService
 		protected readonly imageFileService: ImageFileService,
 		@Inject(forwardRef(() => OrderService))
 		protected readonly orderService: OrderService,
-		private readonly gateway: NotificationGateway
+		// private readonly gateway: NotificationGateway
 	) {
 		super();
 		this.repository = new DriverRepository();
@@ -312,9 +312,11 @@ export default class DriverService
 				const destination = await this.destinationRepo.getOrderDestination(order.id, { point: driver.currentPoint });
 				const distance = calculateDistance(point, destination.coordinates);
 				await this.destinationRepo.update(destination.id, { distance });
-
 				await driver.save({ fields: ['currentAddress'] });
-				const data = { currentAddress };
+
+				return { currentAddress };
+
+				/**
 				const passedDistance = order.passedMinDistance;
 
 				if(distance <= DIST_200_METERS && !passedDistance) {
@@ -339,7 +341,7 @@ export default class DriverService
 							status:         driver.status,
 							latitude:       driver.latitude,
 							longitude:      driver.longitude,
-							currentPoint:   driver.currentAddress,
+							currentPoint:   driver.currentPoint,
 							currentAddress: data.currentAddress,
 							message
 						},
@@ -360,15 +362,17 @@ export default class DriverService
 						status:         driver.status,
 						latitude:       driver.latitude,
 						longitude:      driver.longitude,
-						currentPoint:   driver.currentAddress,
-						currentAddress: data.currentAddress
+						currentPoint:   driver.currentPoint,
+						currentAddress: driver.currentAddress
 					},
 					{
 						role: UserRole.ADMIN,
 						save: false
 					}
 				);
+				 
 				return data;
+				 */
 			}
 		}
 		return null;
