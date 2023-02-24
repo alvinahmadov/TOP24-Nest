@@ -47,6 +47,9 @@ const inTimeRange = (
 	startTime: number = 0
 ) => startTime < time && time <= endTime;
 
+const getTimeDiff = (start: Date, end: Date = new Date()): number =>
+	end.getMilliseconds() - start.getMilliseconds();
+
 @Injectable()
 export default class TaskService
 	implements IService {
@@ -69,7 +72,7 @@ export default class TaskService
 
 	@Cron(TaskService.DATE_INTERVAL, { timeZone: TIMEZONE })
 	public async dateTask() {
-		this.logger.log(`Running task "dateTask" at ${(new Date()).toLocaleString()}.`);
+		const startDate = new Date();
 		const { data: orders } = await this.orderService.getList(
 			{ full: false },
 			{
@@ -78,9 +81,11 @@ export default class TaskService
 				stages:    PROCESSING_STAGES
 			}
 		);
+		this.logger.log(`Running task "dateTask" at ${startDate.toLocaleString()} for ${orders?.length || 0} orders.`);
 
 		if(orders?.length > 0) {
 			await this.sendDestinationDateNotification(orders);
+			this.logger.log(`Finished task "dateTask" in ${getTimeDiff(startDate)} ms.`);
 		}
 		else {
 			this.logger.log('No orders to watch for!');
@@ -89,7 +94,7 @@ export default class TaskService
 
 	@Cron(TaskService.DISTANCE_INTERVAL, { timeZone: TIMEZONE })
 	public async distanceTask() {
-		this.logger.log(`Running task "distanceTask" at ${(new Date()).toLocaleString()}.`);
+		const startDate = new Date();
 		const { data: orders } = await this.orderService.getList(
 			{ full: false },
 			{
@@ -98,9 +103,12 @@ export default class TaskService
 				stages:    PROCESSING_STAGES
 			}
 		);
-
-		if(orders?.length > 0)
+		this.logger.log(`Running task "distanceTask" at ${startDate.toLocaleString()} for ${orders?.length || 0} orders.`);
+		
+		if(orders?.length > 0) {
 			await this.sendDestinationDistanceNotification(orders);
+			this.logger.log(`Finished task "distanceTask" in ${getTimeDiff(startDate)} ms.`);
+		}
 		else
 			this.logger.log('No orders to watch for!');
 	}
