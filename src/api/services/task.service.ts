@@ -104,7 +104,7 @@ export default class TaskService
 			}
 		);
 		this.logger.log(`Running task "distanceTask" at ${startDate.toLocaleString()} for ${orders?.length || 0} orders.`);
-		
+
 		if(orders?.length > 0) {
 			await this.sendDestinationDistanceNotification(orders);
 			this.logger.log(`Finished task "distanceTask" in ${getTimeDiff(startDate)} ms.`);
@@ -177,12 +177,18 @@ export default class TaskService
 
 	private async sendDestinationDistanceNotification(orders: Order[]): Promise<void> {
 		for(const order of orders) {
+			if(order.destinations.every(d => d.atNearestDistanceToPoint))
+				continue;
+
 			const { data: driver } = await this.driverService.getById(order.driverId, false);
 
 			if(driver) {
-				const destination = order.destinations.find(d => d.point === driver.currentPoint);
-				if(destination && destination.distance !== null) {
-					if(!destination.atNearestDistanceToPoint &&
+				const destination = order.destinations.find(
+					d => d.point === driver.currentPoint && !d.atNearestDistanceToPoint
+				);
+				
+				if(destination) {
+					if(destination.distance !== null &&
 					   destination.distance <= DIST_200_METERS) {
 						let message: string = '';
 
