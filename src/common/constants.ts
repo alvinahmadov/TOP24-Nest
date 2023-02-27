@@ -16,6 +16,12 @@ export const RANDOM_CODE_DIGITS = 1000;
 export const RANDOM_CODE_MAX = 9000;
 export const MILLIS = 24 * 60 * 60 * 1000;
 export const TIMEZONE = 'Europe/Moscow';
+export const ENABLE_DISTANCE_NOTIF_TASK = false;
+export const NOTIFICATION_DISTANCE = 200 / 1000;
+
+export const LAST_24_HOURS = 1;
+export const	LAST_6_HOURS = 0.25;
+export const	LAST_1_HOUR = 0.041666666666666664;
 
 /**@ignore*/
 export const HOST = env.host;
@@ -32,10 +38,7 @@ export const AGREEMENT_PATHS: string[] = [
 	join(__dirname, '../../../resources/files/pdf/Юр_Шаблон_заявки_с_маршрутом.pdf'),
 	join(__dirname, '../../../resources/files/pdf/ИП_Шаблон_заявки_с_маршрутом.pdf'),
 	join(__dirname, '../../../resources/files/pdf/ФЛ_Шаблон_заявки_с_маршрутом.pdf')
-]
-
-/**@ignore*/
-export const FIREBASE_CONFIG_PATH = join(__dirname, '../../../src/config/json/firebase.json');
+];
 
 /**@ignore*/
 export const JWT_OPTIONS: JwtModuleOptions = {
