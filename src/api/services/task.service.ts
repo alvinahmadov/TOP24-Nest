@@ -1,7 +1,12 @@
 import { Injectable, Logger }   from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import {
+	ENABLE_DISTANCE_NOTIF_TASK,
+	LAST_24_HOURS,
+	LAST_6_HOURS,
+	LAST_1_HOUR,
 	MILLIS,
+	NOTIFICATION_DISTANCE,
 	TIMEZONE
 }                               from '@common/constants';
 import {
@@ -28,10 +33,6 @@ import OrderService             from './order.service';
 const ORDER_EVENT_TRANSLATION = getTranslation('EVENT', 'ORDER');
 const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
 const DEBUG = false;
-const LAST_24H = 1,
-	LAST_6H = 0.25,
-	LAST_1H = 0.041666666666666664;
-const DIST_200_METERS = 200 / 1000;
 const PROCESSING_STAGES: OrderStage[] = [
 	OrderStage.SIGNED_DRIVER,
 	OrderStage.SIGNED_OWNER,
@@ -58,8 +59,10 @@ export default class TaskService
 	private readonly destinationRepo: DestinationRepository = new DestinationRepository({ log: false });
 	public static readonly DATE_INTERVAL: string = !DEBUG ? CronExpression.EVERY_HOUR
 	                                                      : CronExpression.EVERY_MINUTE;
-	public static readonly DISTANCE_INTERVAL: string = !DEBUG ? CronExpression.EVERY_10_MINUTES
-	                                                          : CronExpression.EVERY_MINUTE;
+	public static readonly DISTANCE_INTERVAL: string = ENABLE_DISTANCE_NOTIF_TASK ? (
+		!DEBUG ? CronExpression.EVERY_10_MINUTES
+		       : CronExpression.EVERY_MINUTE
+	) : CronExpression.EVERY_YEAR;
 
 	constructor(
 		protected readonly driverService: DriverService,
@@ -94,6 +97,11 @@ export default class TaskService
 
 	@Cron(TaskService.DISTANCE_INTERVAL, { timeZone: TIMEZONE })
 	public async distanceTask() {
+		if(!ENABLE_DISTANCE_NOTIF_TASK) {
+			this.logger.log('Not running "distanceTask"');
+			return;
+		}
+
 		const startDate = new Date();
 		const { data: orders } = await this.orderService.getList(
 			{ full: false },
@@ -122,16 +130,12 @@ export default class TaskService
 			const fcmData = await this.fcmEntityRepo.getByEntityId(order.driverId);
 
 			if(destination && fcmData) {
-				// @ts-ignore
-				let timeDiff: number = (destination.date - now) / MILLIS;
+				//@ts-ignore
+				let timeDiff: number = Math.abs(destination.date - now) / MILLIS;
 
-				if(timeDiff < 0)
-					timeDiff *= -1.0;
-
-				if(timeDiff <= LAST_24H) {
+				if(timeDiff <= LAST_24_HOURS) {
 					const notifData: IDriverGatewayData = {
 						id:      order.driverId,
-						source:  'task',
 						message: ''
 					};
 					const title = order.crmTitle ?? '';
@@ -141,19 +145,22 @@ export default class TaskService
 						left1H
 					} = order ?? {};
 
-					if(inTimeRange(timeDiff, LAST_24H, LAST_6H) && !left24H) {
+					if(inTimeRange(timeDiff, LAST_24_HOURS, LAST_6_HOURS) && !left24H) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_24H'], title);
+						notifData.source = 'task24h'
 
 						left24H = true;
 					}
-					else if(inTimeRange(timeDiff, LAST_6H, LAST_1H) && !left6H) {
+					else if(inTimeRange(timeDiff, LAST_6_HOURS, LAST_1_HOUR) && !left6H) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_6H'], title);
+						notifData.source = 'task6h'
 
 						left24H = true;
 						left6H = true;
 					}
-					else if(inTimeRange(timeDiff, LAST_1H, 0) && !left1H) {
+					else if(inTimeRange(timeDiff, LAST_1_HOUR, 0) && !left1H) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_1H'], title);
+						notifData.source = 'task1h'
 
 						left24H = true;
 						left6H = true;
@@ -186,10 +193,10 @@ export default class TaskService
 				const destination = order.destinations.find(
 					d => d.point === driver.currentPoint && !d.atNearestDistanceToPoint
 				);
-				
+
 				if(destination) {
 					if(destination.distance !== null &&
-					   destination.distance <= DIST_200_METERS) {
+					   destination.distance <= NOTIFICATION_DISTANCE) {
 						let message: string = '';
 
 						switch(destination.type) {

@@ -586,13 +586,13 @@ export interface IDestination
 }
 
 /**
- * Information about driver's actions on order fulfillment.
+ * Information about order execution state.
  * */
-export interface IDriverOperation {
+export interface IOrderExecutionState {
 	/**
 	 * Type of destination for order operations.
 	 * */
-	type: DestinationType;
+	type?: DestinationType;
 	/**
 	 * The payload is unloaded.
 	 * */
@@ -761,7 +761,7 @@ export interface IDriver
 	/**
 	 * Operational data for mobile use.
 	 * */
-	operation?: IDriverOperation;
+	operation?: IOrderExecutionState;
 	/**
 	 * Latitude of driver coordinates.
 	 *
@@ -1088,13 +1088,10 @@ export interface IOrder
 	 * */
 	payloadRiskType: string;
 	/**
-	 * Load/unload destination data for order.
+	 * Current destination point where execution state is in.
+	 * Moved field `currentPoint` from driver entity.
 	 * */
-	destinations?: IDestination[];
-	/**
-	 * Filter cache data from admin.
-	 * */
-	filter?: IOrderFilter;
+	currentPoint?: string;
 	/**
 	 * Left 24 hours to start for fulfillment.
 	 * */
@@ -1107,11 +1104,6 @@ export interface IOrder
 	 * Left 1 hour to start for fulfillment.
 	 * */
 	left1H?: boolean;
-	/**
-	 * Left minimal distance to destination.
-	 * */
-	passedMinDistance?: boolean;
-	readonly priority?: boolean;
 	/**
 	 * Driver's deferral conditions for order execution.
 	 *
@@ -1148,6 +1140,20 @@ export interface IOrder
 	 * Link to the offer agreement scan by driver sent before start of order fulfillment.
 	 * */
 	contractPhotoLink?: string | null;
+	/**
+	 * Load/unload destination data for order.
+	 * */
+	destinations?: IDestination[];
+	/**
+	 * Execution state of the order.
+	 * Moved field `operation` from driver entity.
+	 * */
+	execState?: IOrderExecutionState;
+	/**
+	 * Filter cache data from admin.
+	 * */
+	filter?: IOrderFilter;
+	readonly priority?: boolean;
 	readonly isDedicated?: boolean;
 	readonly isExtraPayload?: boolean;
 }
@@ -1312,7 +1318,7 @@ export interface ITransport
 	 * Transport registration certificate photo link back side.
 	 * */
 	certificatePhotoLinkBack?: string;
-	
+
 	/**
 	 * Additional weight for cargo that transport can take for another order when has ongoing order.
 	 *

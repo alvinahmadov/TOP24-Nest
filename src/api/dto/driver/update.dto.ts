@@ -3,7 +3,7 @@ import { ApiProperty }  from '@nestjs/swagger';
 import { DriverStatus } from '@common/enums';
 import {
 	IDriver,
-	IDriverOperation,
+	IOrderExecutionState,
 	TUpdateAttribute
 }                       from '@common/interfaces';
 import { entityConfig } from '@api/swagger/properties';
@@ -24,12 +24,6 @@ export default class DriverUpdateDto
 
 	@ApiProperty(prop.cargoinnId)
 	public cargoinnId?: string;
-
-	@ApiProperty(prop.currentAddress)
-	public currentAddress?: string;
-
-	@ApiProperty(prop.currentPoint)
-	public currentPoint?: string;
 
 	@ApiProperty(prop.email)
 	public email?: string;
@@ -57,9 +51,6 @@ export default class DriverUpdateDto
 
 	@ApiProperty(prop.name)
 	public name?: string;
-
-	@ApiProperty(prop.operation)
-	public operation?: IDriverOperation;
 
 	@ApiProperty(prop.passportGivenDate)
 	public passportGivenDate?: Date;
@@ -120,4 +111,13 @@ export default class DriverUpdateDto
 
 	@ApiProperty(prop.licenseBackLink)
 	public licenseBackLink?: string;
+
+	@ApiProperty(prop.currentAddress)
+	public currentAddress?: string;
+
+	@ApiProperty(prop.currentPoint)
+	public currentPoint?: string;
+
+	@ApiProperty(prop.operation)
+	public operation?: IOrderExecutionState;
 }

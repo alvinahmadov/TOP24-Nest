@@ -49,6 +49,7 @@ import {
 	OfferRepository
 }                              from '@repos/index';
 import {
+	DriverUpdateDto,
 	OfferCreateDto,
 	OfferFilter,
 	OfferUpdateDto,
@@ -301,15 +302,14 @@ export default class OfferService
 		}
 
 		if(dto.orderStatus === OrderStatus.FINISHED) {
+			const status = driver?.status === DriverStatus.NONE
+			               ? DriverStatus.ON_WAY
+			               : driver.status;
+
 			await this.driverService.update(driverId, {
-				status:       DriverStatus.ON_WAY,
-				operation:    {
-					type:     DestinationType.LOAD,
-					loaded:   false,
-					unloaded: false,
-					uploaded: false
-				},
-				currentPoint: 'A'
+				status,
+				operation:    order?.execState,
+				currentPoint: order?.currentPoint || 'A'
 			});
 
 			this.gateway.sendDriverNotification(
@@ -322,13 +322,6 @@ export default class OfferService
 					url:  'Main'
 				}
 			);
-
-			await this.orderService.update(orderId, {
-				left24H:           false,
-				left6H:            false,
-				left1H:            false,
-				passedMinDistance: false
-			});
 		}
 
 		const result = await this.repository.update(offer.id, dto);
@@ -865,31 +858,34 @@ export default class OfferService
 		offer: Offer
 	): Promise<boolean> {
 		const orderTitle = offer.order?.crmId?.toString() ?? '';
+		//TODO: Check multiorder exec state
 
-		await this.driverService.update(driverId, {
-			status:       DriverStatus.ON_WAY,
-			operation:    {
-				type:     DestinationType.LOAD,
-				loaded:   false,
-				unloaded: false
-			},
-			currentPoint: 'A'
-		});
+		if(offer.order && offer.order.currentPoint === 'A') {
+			await this.driverService.update(driverId, {
+				status:       DriverStatus.ON_WAY,
+				operation:    {
+					type:     DestinationType.LOAD,
+					loaded:   false,
+					unloaded: false
+				},
+				currentPoint: 'A'
+			});
+		}
 
 		this.orderService.update(
 			orderId,
 			{
-				driverId:    driverId,
-				isFree:      false,
-				isOpen:      false,
-				isCanceled:  false,
-				hasProblem:  false,
-				bidPrice:    offer.bidPrice,
-				bidPriceVat: offer.bidPriceVat,
-				bidInfo:     offer.bidComment,
-				cargoId:     offer.driver.cargoId,
-				cargoinnId:  offer.driver.cargoinnId,
-				status:      OrderStatus.PROCESSING
+				driverId:     driverId,
+				isFree:       false,
+				isOpen:       false,
+				isCanceled:   false,
+				hasProblem:   false,
+				bidPrice:     offer.bidPrice,
+				bidPriceVat:  offer.bidPriceVat,
+				bidInfo:      offer.bidComment,
+				cargoId:      offer.driver.cargoId,
+				cargoinnId:   offer.driver.cargoinnId,
+				status:       OrderStatus.PROCESSING
 			}
 		).then(
 			({ data: order }) =>
@@ -944,7 +940,6 @@ export default class OfferService
 						    left24H:           false,
 						    left6H:            false,
 						    left1H:            false,
-						    passedMinDistance: false,
 						    cancelCause:       reason ?? '',
 						    contractPhotoLink: null
 					    })
@@ -969,7 +964,7 @@ export default class OfferService
 				}
 
 				if(driver) {
-					const driverDto = {
+					const driverDto: DriverUpdateDto = {
 						status:         DriverStatus.NONE,
 						currentPoint:   '',
 						currentAddress: ''

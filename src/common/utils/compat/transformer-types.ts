@@ -11,7 +11,7 @@ import {
 } from '@common/enums';
 import {
 	IApiResponse,
-	IDriverOperation,
+	IOrderExecutionState,
 	IModel,
 	IOffer,
 	TCreationAttribute,
@@ -365,7 +365,6 @@ export interface IDriverTransformer
 	phone_second?: string;
 	info?: string;
 	status?: DriverStatus;
-	operation?: IDriverOperation;
 	/**
 	 * @see IDriver.payloadCity
 	 * */
@@ -380,6 +379,7 @@ export interface IDriverTransformer
 	payload_date?: any;
 	latitude?: number;
 	longitude?: number;
+	operation?: IOrderExecutionState;
 	/**
 	 * @see IDriver.currentAddress
 	 * */
@@ -542,6 +542,8 @@ export interface IOrderTransformer
 	 * */
 	transport_types?: string[];
 	destinations?: IDestinationTransformer[];
+	operation?: IOrderExecutionState;
+	current_point?: string;
 	/**
 	 * @see IOrder.driverDeferralConditions
 	 * */

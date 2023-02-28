@@ -304,11 +304,11 @@ export default class OrderService
 			driver = fillDriverWithCompanyData(driver);
 
 			result.driver = driver;
-
-			if(!driver.currentPoint)
-				result.driver.currentPoint = 'A';
 			const orderResponse = await this.getById(order.id, false);
 			result.order = filterOrders(orderResponse?.data) as Order;
+
+			if(!driver.currentPoint)
+				result.driver.currentPoint = result.order.currentPoint;
 		}
 
 		return {

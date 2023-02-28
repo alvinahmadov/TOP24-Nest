@@ -11,6 +11,7 @@ import {
 import { InputType }    from '@nestjs/graphql';
 import { ApiProperty }  from '@nestjs/swagger';
 import {
+	DestinationType,
 	LoadingType,
 	OrderStage,
 	OrderStatus
@@ -18,6 +19,7 @@ import {
 import {
 	IDestination,
 	IOrder,
+	IOrderExecutionState,
 	TCreationAttribute
 }                       from '@common/interfaces';
 import { OrderFilter }  from '@models/order.entity';
@@ -161,18 +163,27 @@ export default class OrderCreateDto
 
 	@ApiProperty(prop.destinations)
 	destinations?: IDestination[] = [];
-	
+
 	@ApiProperty(prop.left24H)
 	left24H?: boolean = false;
-	
+
 	@ApiProperty(prop.left6H)
 	left6H?: boolean = false;
-	
+
 	@ApiProperty(prop.left1H)
 	left1H?: boolean = false;
-	
-	@ApiProperty(prop.passedMinDistance)
-	passedMinDistance?: boolean = false;
+
+	@ApiProperty(prop.currentPoint)
+	@IsString()
+	currentPoint?: string = 'A';
+
+	@ApiProperty(prop.execState)
+	execState?: IOrderExecutionState = {
+		type:     DestinationType.LOAD,
+		loaded:   false,
+		unloaded: false,
+		uploaded: false
+	};
 
 	@ApiProperty(prop.filter)
 	filter?: OrderFilter = null;

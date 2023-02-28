@@ -124,7 +124,6 @@ export default class OrderRepository
 			left24H, notLeft24H,
 			left6H, notLeft6H,
 			left1H, notLeft1H,
-			passedMinDistance, notPassedMinDistance,
 			...rest
 		} = filter ?? {};
 
@@ -158,11 +157,9 @@ export default class OrderRepository
 					             .eq('left24H', left24H)
 					             .eq('left6H', left6H)
 					             .eq('left1H', left1H)
-					             .eq('passedMinDistance', passedMinDistance)
 					             .notEq('left24H', notLeft24H)
 					             .notEq('left6H', notLeft6H)
 					             .notEq('left1H', notLeft1H)
-					             .notEq('passedMinDistance', notPassedMinDistance)
 					             .nullOrEq('price', rest?.price)
 					             .between('pallets', 0, rest?.pallets)
 					             .gteOrNull('bidPrice', rest?.bidPrice)

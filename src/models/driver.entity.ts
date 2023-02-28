@@ -7,13 +7,11 @@ import {
 }                        from 'sequelize-typescript';
 import {
 	Field,
-	InterfaceType,
 	ObjectType
 }                        from '@nestjs/graphql';
 import { ApiProperty }   from '@nestjs/swagger';
 import { CRM, DRIVER }   from '@config/json';
 import {
-	DestinationType,
 	DriverStatus,
 	UserRole
 }                        from '@common/enums';
@@ -25,7 +23,6 @@ import {
 	FloatColumn,
 	ICRMEntity,
 	IDriver,
-	IDriverOperation,
 	Index,
 	IntColumn,
 	JsonbColumn,
@@ -39,19 +36,11 @@ import { entityConfig }  from '@api/swagger/properties';
 import EntityModel       from './entity-model';
 import CargoCompany      from './cargo.entity';
 import CargoCompanyInn   from './cargo-inn.entity';
-import Order             from './order.entity';
+import Order,
+{ OrderExecutionState }  from './order.entity';
 import Transport         from './transport.entity';
 
 const { driver: prop } = entityConfig;
-
-@InterfaceType()
-export class DriverOperation
-	implements IDriverOperation {
-	type: DestinationType;
-	unloaded?: boolean;
-	loaded?: boolean;
-	uploaded?: boolean;
-}
 
 /**
  * Cargo company driver model.
@@ -193,7 +182,7 @@ export default class Driver
 
 	@ApiProperty(prop.operation)
 	@JsonbColumn()
-	operation?: DriverOperation;
+	operation?: OrderExecutionState;
 
 	@ApiProperty(prop.payloadCity)
 	@StringColumn()

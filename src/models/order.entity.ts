@@ -15,6 +15,7 @@ import {
 import { ApiProperty }              from '@nestjs/swagger';
 import { ORDER }                    from '@config/json';
 import {
+	DestinationType,
 	LoadingType,
 	OrderStage,
 	OrderStatus
@@ -26,6 +27,7 @@ import {
 	Index,
 	IOrder,
 	IOrderFilter,
+	IOrderExecutionState,
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
@@ -136,6 +138,15 @@ export class OrderFilter
 	hasDriver?: boolean;
 	fromDate?: Date | string;
 	toDate?: Date | string;
+}
+
+@InterfaceType()
+export class OrderExecutionState
+	implements IOrderExecutionState {
+	type?: DestinationType;
+	loaded?: boolean;
+	unloaded?: boolean;
+	uploaded?: boolean;
 }
 
 /**
@@ -302,13 +313,24 @@ export default class Order
 	@FloatColumn()
 	bidPriceVat?: number;
 
+	@ApiProperty(prop.currentPoint)
+	@StringColumn({ defaultValue: '' })
+	currentPoint?: string;
+
+	@HasMany(() => Destination, 'orderId')
+	destinations?: Destination[];
+
+	@ApiProperty(prop.execState)
+	@JsonbColumn({ defaultValue: {} })
+	execState?: OrderExecutionState;
+
 	@ApiProperty(prop.filter)
 	@JsonbColumn()
 	filter?: OrderFilter;
 
 	@BooleanColumn({ defaultValue: false })
 	hasSent: boolean;
-	
+
 	@BooleanColumn({ defaultValue: false, field: 'left_24h' })
 	left24H?: boolean;
 
@@ -317,9 +339,6 @@ export default class Order
 
 	@BooleanColumn({ defaultValue: false, field: 'left_1h' })
 	left1H?: boolean;
-
-	@BooleanColumn({ defaultValue: false })
-	passedMinDistance?: boolean;
 
 	@ApiProperty(prop.driverDeferralConditions)
 	@StringColumn()
@@ -352,9 +371,6 @@ export default class Order
 	@ApiProperty(prop.driver)
 	@BelongsTo(() => Driver, 'driverId')
 	driver?: Driver;
-
-	@HasMany(() => Destination, 'orderId')
-	destinations?: Destination[];
 
 	@VirtualColumn()
 	public get priority(): boolean {

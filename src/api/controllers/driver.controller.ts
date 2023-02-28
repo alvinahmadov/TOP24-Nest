@@ -13,9 +13,13 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
-import { TransportStatus }     from '@common/enums';
+import {
+	OrderStatus,
+	TransportStatus
+}                              from '@common/enums';
 import { TMulterFile }         from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
+import Order                   from '@models/order.entity';
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
@@ -116,9 +120,30 @@ export default class DriverController
 	) {
 		const { data } = await this.orderService.getByDriver(id);
 
-		if(data && data.order) {
+		if(!data) {
+			return sendResponse(response, {
+				statusCode: 400,
+				message:    'Something wrong'
+			});
+		}
+
+		if(data.order) {
 			const driverGeo = await this.driverService.updateGeoData(data);
 			dto = Object.assign(dto, driverGeo);
+		}
+
+		if(dto.currentPoint || dto.operation) {
+			await this.orderService.updateAll<Order>(
+				{
+					currentPoint: dto.currentPoint ?? 'A',
+					execState:    dto.operation ?? {}
+				},
+				{
+					driverId:  id,
+					status:    OrderStatus.PROCESSING,
+					onPayment: false
+				}
+			);
 		}
 
 		if(dto.isReady !== undefined) {

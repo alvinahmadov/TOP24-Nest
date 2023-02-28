@@ -228,6 +228,8 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('cancelCause', 'cancel_cause')
 		.set('hasProblem', 'has_problem')
 		.set('destinations')
+		.set('execState', 'operation')
+		.set('currentPoint', 'current_point')
 		.set('bidInfo', 'bid_info')
 		.set('bidPrice', 'bid_price')
 		.set('bidPriceVat', 'bid_price_max')

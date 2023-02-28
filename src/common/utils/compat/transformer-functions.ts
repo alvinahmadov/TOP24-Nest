@@ -214,7 +214,6 @@ function transformDriver(driver: models.Driver)
 			surname:                       driver.getDataValue('lastName'),
 			is_ready:                      driver.getDataValue('isReady'),
 			date_of_birth:                 driver.getDataValue('birthDate'),
-			current_point:                 driver.getDataValue('currentPoint'),
 			phone:                         driver.getDataValue('phone'),
 			phone_second:                  driver.getDataValue('phoneSecond'),
 			taxpayer_number:               driver.getDataValue('taxpayerNumber'),
@@ -236,6 +235,7 @@ function transformDriver(driver: models.Driver)
 			link_back:                     driver.getDataValue('licenseBackLink'),
 			info:                          driver.getDataValue('info'),
 			status:                        driver.getDataValue('status'),
+			current_point:                 driver.getDataValue('currentPoint'),
 			operation:                     driver.getDataValue('operation'),
 			payload_city:                  driver.getDataValue('payloadCity'),
 			payload_region:                driver.getDataValue('payloadRegion'),
@@ -455,6 +455,8 @@ function transformOrder(order: models.Order)
 			palets:                     order.getDataValue('pallets'),
 			transport_types:            order.getDataValue('transportTypes'),
 			destinations:               transformDestinations(order.destinations),
+			operation:                  order.getDataValue('execState'),
+			current_point:              order.getDataValue('currentPoint'),
 			driver_deferral_conditions: order.getDataValue('driverDeferralConditions'),
 			owner_deferral_conditions:  order.getDataValue('ownerDeferralConditions'),
 			dedicated_machine:          order.getDataValue('dedicated'),
@@ -529,7 +531,7 @@ function transformTransport(transport: models.Transport)
 			transport.getDataValue('certificatePhotoLinkFront'),
 			transport.getDataValue('certificatePhotoLinkBack'),
 		].filter(v => !!v);
-		
+
 		return {
 			id:             transport.getDataValue('id'),
 			cargoId:        transport.getDataValue('cargoId'),
