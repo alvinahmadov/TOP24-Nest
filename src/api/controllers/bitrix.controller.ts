@@ -7,6 +7,7 @@ import {
 	Res,
 	UseFilters
 }                              from '@nestjs/common';
+import { Throttle }            from '@nestjs/throttler';
 import { ApiTags }             from '@nestjs/swagger';
 import { ORDER }               from '@config/json';
 import { IWebhookResponse }    from '@common/interfaces';
@@ -30,12 +31,19 @@ import { StaticController }    from './controller';
 
 const { path, tag, routes } = getRouteConfig('bitrix');
 
+const throttle = {
+	webhook: {
+		//one request per 2 seconds
+		limit: 1,
+		ttl:   2
+	}
+};
+
 @ApiTags(tag)
 @Controller(path)
 @UseFilters(HttpExceptionFilter)
 export default class BitrixController
 	extends StaticController {
-	private static eventMap: Map<number, string> = new Map<number, string>();
 
 	public constructor(
 		private readonly bitrixService: BitrixService,
@@ -105,18 +113,21 @@ export default class BitrixController
 		return sendResponse(response, result);
 	}
 
+	@Throttle(throttle.webhook.limit, throttle.webhook.ttl)
 	@ApiRoute(routes.webhook, {
 		statuses: [HttpStatus.OK]
 	})
 	public async webhookListen(@Body() crm: IWebhookResponse) {
 		if(crm.data === undefined ||
 		   crm.data['FIELDS'] === undefined ||
-		   crm.data['FIELDS'][ORDER.ID] === undefined)
+		   crm.data['FIELDS'][ORDER.ID] === undefined) {
+			console.info('Undefined data from bitrix webhook!');
 			return;
+		}
 
 		const crmFields = crm.data['FIELDS'];
 		const crmId = Number(crmFields[ORDER.ID]);
-		const stage = crmFields[ORDER.STAGE];
+		// const stage = crmFields[ORDER.STAGE];
 
 		switch(crm.event) {
 			case 'ONCRMDEALADD': {
@@ -126,21 +137,10 @@ export default class BitrixController
 				break;
 			}
 			case 'ONCRMDEALUPDATE': {
-				if(BitrixController.eventMap.has(crmId) || stage !== 'LOSE') {
-					if(BitrixController.eventMap.get(crmId) === crm.ts) {
-						console.info('Preventing from double update.');
-						return;
-					}
-				}
-
 				await this.bitrixService.synchronizeOrder(crmId, true);
-				BitrixController.eventMap.set(crmId, crm.ts);
 				break;
 			}
 			case 'ONCRMDEALDELETE': {
-				if(BitrixController.eventMap.has(crmId)) {
-					BitrixController.eventMap.delete(crmId);
-				}
 				await this.bitrixService.deleteOrder(crmId);
 				break;
 			}
