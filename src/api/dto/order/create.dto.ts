@@ -163,6 +163,9 @@ export default class OrderCreateDto
 
 	@ApiProperty(prop.destinations)
 	destinations?: IDestination[] = [];
+	
+	@ApiProperty(prop.hasSent)
+	hasSent?: boolean = false;
 
 	@ApiProperty(prop.left24H)
 	left24H?: boolean = false;
