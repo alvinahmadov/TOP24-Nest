@@ -776,7 +776,7 @@ export default class OfferService
 		role?: UserRole
 	): Promise<IApiResponse<Offer | null>> {
 		let offer = await this.repository.getByAssociation(orderId, driverId);
-		console.debug(role);
+		role = null;
 		if(offer) {
 			if(offer.status === OfferStatus.RESPONDED) {
 				if((
@@ -860,32 +860,30 @@ export default class OfferService
 		const orderTitle = offer.order?.crmId?.toString() ?? '';
 		//TODO: Check multiorder exec state
 
-		if(offer.order && offer.order.currentPoint === 'A') {
-			await this.driverService.update(driverId, {
-				status:       DriverStatus.ON_WAY,
-				operation:    {
-					type:     DestinationType.LOAD,
-					loaded:   false,
-					unloaded: false
-				},
-				currentPoint: 'A'
-			});
-		}
+		await this.driverService.update(driverId, {
+			status:       DriverStatus.ON_WAY,
+			operation:    offer.order.execState ?? {
+				type:     DestinationType.LOAD,
+				loaded:   false,
+				unloaded: false
+			},
+			currentPoint: offer.order.currentPoint ?? 'A'
+		});
 
 		this.orderService.update(
 			orderId,
 			{
-				driverId:     driverId,
-				isFree:       false,
-				isOpen:       false,
-				isCanceled:   false,
-				hasProblem:   false,
-				bidPrice:     offer.bidPrice,
-				bidPriceVat:  offer.bidPriceVat,
-				bidInfo:      offer.bidComment,
-				cargoId:      offer.driver.cargoId,
-				cargoinnId:   offer.driver.cargoinnId,
-				status:       OrderStatus.PROCESSING
+				driverId:    driverId,
+				isFree:      false,
+				isOpen:      false,
+				isCanceled:  false,
+				hasProblem:  false,
+				bidPrice:    offer.bidPrice,
+				bidPriceVat: offer.bidPriceVat,
+				bidInfo:     offer.bidComment,
+				cargoId:     offer.driver.cargoId,
+				cargoinnId:  offer.driver.cargoinnId,
+				status:      OrderStatus.PROCESSING
 			}
 		).then(
 			({ data: order }) =>

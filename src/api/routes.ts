@@ -508,6 +508,16 @@ export const routeConfig: TApiRouteList = {
 						method: RequestMethod.GET,
 						api:    NApiDescriptors.order.send
 					},
+				setState:
+					{
+						path:   'state/:id',
+						method: RequestMethod.PUT
+					},
+				getState:
+					{
+						path:   'state/:id',
+						method: RequestMethod.GET
+					},
 				shipping:
 					{
 						path:   'shipping/:id',
