@@ -406,7 +406,9 @@ export async function orderFromBitrix(crmFields: TCRMFields, options?: { debug: 
 	const title: string = crmFields[ORDER.HEADER] || crmFields[ORDER.TITLE];
 	const destinationDtos = await parseDestination(crmFields);
 	const isCanceled: boolean = typeFromCrm(crmFields[ORDER.IS_CANCELED], false);
-	const stage: number = convertBitrix('orderStage', crmFields[ORDER.STAGE], true, true) ?? OrderStage.NEW;
+	const stage: number = crmFields[ORDER.STAGE] === 'WON' ? OrderStage.FINISHED
+	                                                       : convertBitrix('orderStage', crmFields[ORDER.STAGE], true, true)
+	                                                         ?? OrderStage.NEW;
 	const status: number = !isCanceled ? convertBitrix('orderStatus', crmFields[ORDER.STATUS], true, true)
 	                                     ?? OrderStatus.PENDING
 	                                   : OrderStatus.CANCELLED_BITRIX;
