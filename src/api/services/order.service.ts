@@ -448,7 +448,17 @@ export default class OrderService
 				await Destination.update({ fulfilled: true }, { where: { point: { [Op.lte]: point } } });
 
 				await this.destinationRepo.update(destination.id, { shippingPhotoLinks: destination.shippingPhotoLinks });
-				order = await this.repository.get(order.id);
+				let nextPointIndex = order.destinations.findIndex(d => d.point === point);
+
+				// TODO: Because not every destination uploads shipping documents watch
+				if(nextPointIndex > -1 && ++nextPointIndex < order.destinations.length) {
+					const nextDestination = order.destinations.at(nextPointIndex);
+					// set next point as current one in order
+					order = await this.repository.update(order.id, { currentPoint: nextDestination.point });
+				}
+				else {
+					order = await this.repository.get(order.id);
+				}
 			}
 
 			if(fileUploaded) {
@@ -620,17 +630,6 @@ export default class OrderService
 		}
 
 		if(fileUploaded) {
-			// if(
-			// 	paymentPhotoLinks?.length > 0 &&
-			// 	receiptPhotoLinks?.length > 0
-			// ) {
-			// 	this.repository
-			// 	    .update(id, { stage: OrderStage.DOCUMENT_SENT, onPayment: order.onPayment })
-			// 	    .then(o => console.log(`Documents for ${mode} photos for order '${o.id}' uploaded`))
-			// 	    .catch(console.error);
-			// }
-			// else console.log('Either payment or receipt photo not uploaded!');
-
 			this.send(order.id)
 			    .then(() => this.gateway.sendOrderNotification({ id, message }))
 			    .catch(console.error);

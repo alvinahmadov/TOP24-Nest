@@ -25,9 +25,11 @@ import {
 	TAffectedRows,
 	TOfferTransportFilter,
 	TOfferDriver,
-	TSentOffer
+	TSentOffer,
+	TGeoCoordinate
 }                              from '@common/interfaces';
 import {
+	calculateDistance,
 	fillDriverWithCompanyData,
 	filterTransports,
 	formatArgs,
@@ -822,7 +824,7 @@ export default class OfferService
 						);
 					}
 
-					this.confirmDriver(orderId, driverId, offer)
+					this.confirmDriver(offer)
 					    .then((confirmed) => console.log(`Driver is ${!confirmed ? 'not' : ''} confirmed!`))
 					    .catch(console.error);
 
@@ -852,23 +854,31 @@ export default class OfferService
 		return this.responses['NOT_FOUND'];
 	}
 
-	public async confirmDriver(
-		orderId: string,
-		driverId: string,
-		offer: Offer
-	): Promise<boolean> {
+	public async confirmDriver(offer: Offer): Promise<boolean> {
 		const orderTitle = offer.order?.crmId?.toString() ?? '';
+		const driverId: string = offer.driverId,
+			orderId: string = offer.orderId;
+		const { order, driver } = offer;
+
 		//TODO: Check multiorder exec state
 
-		await this.driverService.update(driverId, {
-			status:       DriverStatus.ON_WAY,
-			operation:    offer.order.execState ?? {
-				type:     DestinationType.LOAD,
-				loaded:   false,
-				unloaded: false
-			},
-			currentPoint: offer.order.currentPoint ?? 'A'
-		});
+		if(!driver.order || driver.order.status !== OrderStatus.PROCESSING) {
+			await this.driverService.update(driverId, {
+				status:       DriverStatus.ON_WAY,
+				operation:    order.execState ?? {
+					type:     DestinationType.LOAD,
+					loaded:   false,
+					unloaded: false,
+					uploaded: false
+				},
+				currentPoint: order.currentPoint ?? 'A'
+			});
+		}
+
+		const point: TGeoCoordinate = [driver.latitude, driver.longitude];
+		const destination = await this.destinationRepo.getOrderDestination(orderId, { point: order.currentPoint });
+		const distance = calculateDistance(point, destination.coordinates);
+		await this.destinationRepo.update(destination.id, { distance });
 
 		this.orderService.update(
 			orderId,
