@@ -33,7 +33,6 @@ export function transformDriverTransports(driver: Driver): Driver {
 export function fillDriverWithCompanyData(driver: Driver, company?: ICompany): Driver {
 	if(driver) {
 		const companyKey: keyof Driver = driver.cargoId ? 'cargo' : 'cargoinn';
-		let renamed: boolean;
 
 		const fillData = (data: ICompany) =>
 		{
@@ -45,19 +44,11 @@ export function fillDriverWithCompanyData(driver: Driver, company?: ICompany): D
 					driver.phone = data?.userPhone;
 
 				if('fullName' in data) {
-					driver.name = data?.fullName;
 					driver.companyName = data?.fullName;
-					renamed = true;
 				}
 			}
 		};
-
 		fillData(company ? company : driver[companyKey]);
-
-		if(renamed) {
-			delete driver.patronymic;
-			delete driver.lastName;
-		}
 	}
 
 	return driver;
