@@ -115,9 +115,11 @@ export default class DriverUpdateDto
 	@ApiProperty(prop.currentAddress)
 	public currentAddress?: string;
 
+	/** @deprecated */
 	@ApiProperty(prop.currentPoint)
 	public currentPoint?: string;
 
+	/** @deprecated */
 	@ApiProperty(prop.operation)
 	public operation?: IOrderExecutionState;
 }

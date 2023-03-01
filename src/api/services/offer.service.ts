@@ -860,8 +860,7 @@ export default class OfferService
 			orderId: string = offer.orderId;
 		const { order, driver } = offer;
 
-		//TODO: Check multiorder exec state
-
+		//TODO: To be removed
 		if(!driver.order || driver.order.status !== OrderStatus.PROCESSING) {
 			await this.driverService.update(driverId, {
 				status:       DriverStatus.ON_WAY,
@@ -876,7 +875,7 @@ export default class OfferService
 		}
 
 		const point: TGeoCoordinate = [driver.latitude, driver.longitude];
-		const destination = await this.destinationRepo.getOrderDestination(orderId, { point: order.currentPoint });
+		const destination = await this.destinationRepo.getOrderDestination(orderId, { point: driver.currentPoint });
 		const distance = calculateDistance(point, destination.coordinates);
 		await this.destinationRepo.update(destination.id, { distance });
 

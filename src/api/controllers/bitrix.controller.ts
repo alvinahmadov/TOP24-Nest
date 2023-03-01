@@ -35,7 +35,7 @@ const throttle = {
 	webhook: {
 		//one request per 2 seconds
 		limit: 1,
-		ttl:   2
+		ttl:   3
 	}
 };
 

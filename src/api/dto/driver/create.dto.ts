@@ -116,6 +116,9 @@ export default class DriverCreateDto
 	@IsLongitude()
 	longitude?: number;
 
+	/**
+	 * @deprecated Use IOrder.execState.
+	 * */
 	@ApiProperty(prop.currentPoint)
 	@IsString()
 	currentPoint?: string = '';

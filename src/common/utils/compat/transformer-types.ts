@@ -291,6 +291,7 @@ export interface IDriverTransformer
 	date_of_birth: Date;
 	/**
 	 * @see IDriver.currentPoint
+	 * @deprecated Use IOrderTransformer.current_point.
 	 * */
 	current_point?: string;
 	phone?: string;
@@ -379,6 +380,9 @@ export interface IDriverTransformer
 	payload_date?: any;
 	latitude?: number;
 	longitude?: number;
+	/**
+	 * @deprecated Use IOrderTransformer.current_point.
+	 * */
 	operation?: IOrderExecutionState;
 	/**
 	 * @see IDriver.currentAddress

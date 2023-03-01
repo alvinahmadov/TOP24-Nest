@@ -760,6 +760,7 @@ export interface IDriver
 	info?: string;
 	/**
 	 * Operational data for mobile use.
+	 * @deprecated Use IOrder.execState.
 	 * */
 	operation?: IOrderExecutionState;
 	/**
@@ -779,6 +780,7 @@ export interface IDriver
 	/**
 	 * Destination point for driver for order implementation.
 	 *
+	 * @deprecated Use IOrder.currentPoint.
 	 * @example
 	 * A
 	 * B

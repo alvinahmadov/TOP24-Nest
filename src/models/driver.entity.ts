@@ -172,6 +172,7 @@ export default class Driver
 	@FloatColumn()
 	longitude?: number;
 
+	/** @deprecated */
 	@ApiProperty(prop.currentPoint)
 	@StringColumn()
 	currentPoint?: string;
@@ -180,6 +181,7 @@ export default class Driver
 	@StringColumn()
 	currentAddress?: string;
 
+	/** @deprecated */
 	@ApiProperty(prop.operation)
 	@JsonbColumn()
 	operation?: OrderExecutionState;

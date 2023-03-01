@@ -39,7 +39,6 @@ import {
 	renameMulterFile
 }                              from '@common/utils';
 import {
-	Destination,
 	Driver,
 	Order,
 	Transport
@@ -424,10 +423,7 @@ export default class OrderService
 		if(!order)
 			return this.responses['NOT_FOUND'];
 
-		let destination = await Destination.findOne(
-			{ where: { orderId: order.id, point } }
-		);
-
+		let destination = await this.destinationRepo.getOrderDestination(order.id, { point });
 		if(destination) {
 			const {
 				Location: shippingPhotoLinks
@@ -445,20 +441,11 @@ export default class OrderService
 				else
 					destination.shippingPhotoLinks = shippingPhotoLinks;
 
-				await Destination.update({ fulfilled: true }, { where: { point: { [Op.lte]: point } } });
-
 				await this.destinationRepo.update(destination.id, { shippingPhotoLinks: destination.shippingPhotoLinks });
-				let nextPointIndex = order.destinations.findIndex(d => d.point === point);
-
-				// TODO: Because not every destination uploads shipping documents watch
-				if(nextPointIndex > -1 && ++nextPointIndex < order.destinations.length) {
-					const nextDestination = order.destinations.at(nextPointIndex);
-					// set next point as current one in order
-					order = await this.repository.update(order.id, { currentPoint: nextDestination.point });
-				}
-				else {
-					order = await this.repository.get(order.id);
-				}
+				await this.destinationRepo.bulkUpdate({ fulfilled: true }, {
+					point:     { [Op.lte]: point },
+					fulfilled: { [Op.eq]: false }
+				});
 			}
 
 			if(fileUploaded) {

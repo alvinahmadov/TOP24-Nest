@@ -896,7 +896,8 @@ export const entityConfig: TEntityConfigList = {
 				{
 					description: 'Текущая точка на карте исполнения заказа. '
 					             + 'Определяется водительским приложением.' +
-					             '\nсм. `current_point`.'
+					             '\nсм. `current_point`.',
+					deprecated:  true
 				},
 			currentAddress:
 				{
@@ -908,7 +909,8 @@ export const entityConfig: TEntityConfigList = {
 			operation:
 				{
 					description: 'Данные об операции выполняемый водителем. '
-					             + 'Поля `loaded`, `unloaded`'
+					             + 'Поля `loaded`, `unloaded`',
+					deprecated:  true
 				},
 			payloadCity:
 				{
