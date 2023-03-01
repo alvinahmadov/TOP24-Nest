@@ -367,7 +367,7 @@ export default class DriverService
 				}
 				const point: TGeoCoordinate = [driver.latitude, driver.longitude];
 				const currentAddress = await addressFromCoordinates(driver.latitude, driver.longitude);
-				let destination = await this.destinationRepo.getOrderDestination(order.id, { point: order.currentPoint });
+				let destination = await this.destinationRepo.getOrderDestination(order.id, { point: order.currentPoint ?? 'A' });
 				const distance = calculateDistance(point, destination.coordinates);
 				destination = await this.destinationRepo.update(destination.id, { distance });
 				await this.repository.update(driver.id, { currentAddress });
