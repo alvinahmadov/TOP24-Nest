@@ -19,6 +19,7 @@ import {
 	IApiResponses,
 	ICompanyDeleteResponse,
 	IDriver,
+	IDriverGatewayData,
 	IGatewayData,
 	IService,
 	TCRMData,
@@ -68,9 +69,14 @@ const sendDistanceNotification = async(
 	repo: DestinationRepository
 ): Promise<IGatewayData | null> =>
 {
+	let notificationData: IDriverGatewayData = null;
+
 	if(destination) {
-		if(destination.distance !== null &&
-		   destination.distance <= NOTIFICATION_DISTANCE) {
+		if(destination.atNearestDistanceToPoint) {
+			console.info('Minimal distance reached, nothing to do!');
+		}
+		else if(destination.distance !== null &&
+		        destination.distance <= NOTIFICATION_DISTANCE) {
 			let message: string = '';
 
 			switch(destination.type) {
@@ -85,7 +91,7 @@ const sendDistanceNotification = async(
 					break;
 			}
 
-			const eventData = {
+			notificationData = {
 				id:     driverId,
 				source: 'driver',
 				message
@@ -95,19 +101,17 @@ const sendDistanceNotification = async(
 			    .catch(e => console.error(e));
 
 			notification.sendDriverNotification(
-				eventData,
+				notificationData,
 				{
 					role: UserRole.CARGO,
 					save: false,
 					url:  'Main'
 				}
 			);
-
-			return eventData;
 		}
 	}
 
-	return null;
+	return notificationData;
 };
 
 @Injectable()
@@ -367,7 +371,9 @@ export default class DriverService
 				}
 				const point: TGeoCoordinate = [driver.latitude, driver.longitude];
 				const currentAddress = await addressFromCoordinates(driver.latitude, driver.longitude);
-				let destination = await this.destinationRepo.getOrderDestination(order.id, { point: order.currentPoint ?? 'A' });
+				let destination = await this.destinationRepo.getOrderDestination(order.id, {
+					point: order.currentPoint ?? 'A'
+				});
 				const distance = calculateDistance(point, destination.coordinates);
 				destination = await this.destinationRepo.update(destination.id, { distance });
 				await this.repository.update(driver.id, { currentAddress });
