@@ -603,6 +603,8 @@ export interface IDestinationTransformer
 	 * @see IDestination.shippingPhotoLinks
 	 * */
 	shipping_link?: string[];
+	
+	readonly num?: number;
 }
 
 /**

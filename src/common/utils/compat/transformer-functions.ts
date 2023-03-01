@@ -296,6 +296,7 @@ function transformDestination(destination: models.Destination)
 			comment:       destination.getDataValue('comment'),
 			fulfilled:     destination.getDataValue('fulfilled'),
 			shipping_link: destination.getDataValue('shippingPhotoLinks'),
+			num:           destination.get('num', { plain: true, clone: false }),
 			createdAt:     destination.getDataValue('createdAt'),
 			updatedAt:     destination.getDataValue('updatedAt')
 		};

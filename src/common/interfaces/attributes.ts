@@ -583,6 +583,7 @@ export interface IDestination
 	 * Link to the uploaded after fulfillment photo of the shipping documents.
 	 * */
 	shippingPhotoLinks?: string[];
+	readonly num?: number;
 }
 
 /**

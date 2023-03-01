@@ -2,11 +2,12 @@ import {
 	ForeignKey,
 	IsUUID,
 	Table
-}                                  from 'sequelize-typescript';
-import { Field, ObjectType }       from '@nestjs/graphql';
-import { DestinationType }         from '@common/enums';
-import { TupleScalar, UuidScalar } from '@common/scalars';
-import { TABLE_OPTIONS }           from '@common/constants';
+}                                   from 'sequelize-typescript';
+import { Field, ObjectType }        from '@nestjs/graphql';
+import { DestinationType }          from '@common/enums';
+import { TupleScalar, UuidScalar }  from '@common/scalars';
+import { TABLE_OPTIONS }            from '@common/constants';
+import { destinationPointToNumber } from '@common/utils';
 import {
 	Index,
 	IDestination,
@@ -18,11 +19,12 @@ import {
 	StringArrayColumn,
 	StringColumn,
 	TGeoCoordinate,
-	UuidColumn
-}                                  from '@common/interfaces';
-import { DestinationUpdateDto }    from '@api/dto/order';
-import EntityModel                 from './entity-model';
-import Order                       from './order.entity';
+	UuidColumn,
+	VirtualColumn
+}                                   from '@common/interfaces';
+import { DestinationUpdateDto }     from '@api/dto/order';
+import EntityModel                  from './entity-model';
+import Order                        from './order.entity';
 
 function getDiff<T, K extends keyof T = keyof T>(
 	entity: T,
@@ -143,6 +145,11 @@ export default class Destination
 	 * */
 	@StringArrayColumn({ defaultValue: [] })
 	shippingPhotoLinks?: string[];
+
+	@VirtualColumn()
+	get num(): number {
+		return destinationPointToNumber(this.point);
+	}
 
 	public hasDiff(dto: DestinationUpdateDto) {
 		return getDiff(this, dto, [
