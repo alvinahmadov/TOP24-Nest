@@ -325,6 +325,6 @@ export default class ReferenceController
 			return response.send(readFileSync(agreementFilePath));
 		}
 		else
-			return response.sendFile(agreementFilePath, (err) => console.debug(`Error on file send: ${err.message}`));
+			return response.sendFile(agreementFilePath, (err) => console.debug(`Error on file send: ${err}`));
 	}
 }
