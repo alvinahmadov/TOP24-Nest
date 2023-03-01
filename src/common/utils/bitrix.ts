@@ -441,6 +441,13 @@ export async function orderFromBitrix(crmFields: TCRMFields, options?: { debug: 
 		isCanceled:      isCanceled,
 		hasProblem:      typeFromCrm<boolean>(crmFields[ORDER.HAS_PROBLEM], false),
 		dedicated:       convertBitrix('transportDedicated', crmFields[ORDER.DEDICATION]),
+		currentPoint:    'A',
+		execState:       {
+			type:     DestinationType.LOAD,
+			loaded:   false,
+			unloaded: false,
+			uploaded: false
+		},
 		transportTypes:  crmFields[ORDER.TRANSPORT_TYPE]
 			                 ?.map((t: string) => convertBitrix('orderTransportType', t))
 	};
