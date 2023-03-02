@@ -128,3 +128,7 @@ export const orderStatusToStr = (status: OrderStatus) =>
 /**@ignore*/
 export const orderStageToStr = (stage: OrderStage) =>
 	getTranslation('ENUM', 'ORDER', 'STAGE', OrderStage[stage]);
+
+/**@ignore*/
+export const destinationTypeToStr = (type: DestinationType) =>
+	getTranslation('ENUM', 'ORDER', 'DESTINATION', DestinationType[type]);

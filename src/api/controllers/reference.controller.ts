@@ -1,6 +1,5 @@
 import * as ex                 from 'express';
 import { validate as isUuid }  from 'uuid';
-import { readFileSync }        from 'fs';
 import {
 	Body,
 	Controller,
@@ -19,6 +18,9 @@ import {
 	AGREEMENT_PATHS
 }                              from '@common/constants';
 import {
+	DocumentTemplateBuilder
+}                              from '@common/classes';
+import {
 	CompanyType,
 	LoadingType,
 	loadingTypeToStr
@@ -34,19 +36,24 @@ import {
 	isSuccessResponse,
 	sendResponse
 }                              from '@common/utils';
+import { Driver, Order }       from '@models/index';
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { AddressFilterPipe }   from '@api/pipes';
 import { getRouteConfig }      from '@api/routes';
-import { AddressService }      from '@api/services';
+import {
+	AddressService,
+	DriverService,
+	OrderService
+}                              from '@api/services';
 import { StaticController }    from './controller';
 
 type TCrmItem = { id: string; value: string; };
 
 const { path, tag, routes } = getRouteConfig('reference');
 const TRANSLATIONS = getTranslation('REST', 'REFERENCE');
-const USE_FS = false;
+const USE_FS = true;
 
 const lowerCaseFn = (data: TBitrixData): TCrmItem => ({ id: data.ID, value: data.VALUE });
 const compareByIdFn = (a: TBitrixData, b: TBitrixData) => a.ID.localeCompare(b.ID);
@@ -58,7 +65,9 @@ const compareByValFn = (a: TBitrixData, b: TBitrixData) => a.VALUE.localeCompare
 export default class ReferenceController
 	extends StaticController {
 	public constructor(
-		private readonly addressService: AddressService
+		private readonly addressService: AddressService,
+		private readonly driverService: DriverService,
+		private readonly orderService: OrderService
 	) {
 		super();
 	}
@@ -304,12 +313,15 @@ export default class ReferenceController
 	@ApiRoute(routes.agreement, {
 		statuses: [HttpStatus.OK]
 	})
-	public getAgreements(
+	public async getAgreements(
 		@Res() response: ex.Response,
 		@Param('companyType', new DefaultValuePipe(CompanyType.ORG))
-			companyType: number = CompanyType.ORG
+			companyType: number = CompanyType.ORG,
+		@Query('order') orderId: string
 	) {
 		let agreementFilePath: string;
+		let builder: DocumentTemplateBuilder;
+		let order: Order, driver: Driver;
 
 		if(companyType === undefined)
 			companyType = CompanyType.ORG;
@@ -317,12 +329,28 @@ export default class ReferenceController
 		if(CompanyType.ORG <= companyType &&
 		   companyType <= CompanyType.PI) {
 			agreementFilePath = AGREEMENT_PATHS[companyType as number];
+
+			const orderRes = await this.orderService.getById(orderId, false);
+
+			if(isSuccessResponse(orderRes)) {
+				order = orderRes.data;
+				const driverRes = await this.driverService.getById(order.driverId, true);
+				if(isSuccessResponse(driverRes)) {
+					driver = driverRes.data;
+					builder = new DocumentTemplateBuilder(agreementFilePath);
+				}
+				else return sendResponse(response, driverRes);
+			}
+			else return sendResponse(response, orderRes);
 		}
 		else throw new Error('Wrong type of company');
 
 		if(USE_FS) {
-			response.contentType('application/pdf');
-			return response.send(readFileSync(agreementFilePath));
+			builder.build(order, driver, driver.cargo ?? driver.cargoinn);
+			const buffer = await builder.pdfBuffer;
+			return response.contentType('application/pdf')
+			               .status(200)
+			               .send(buffer);
 		}
 		else
 			return response.sendFile(agreementFilePath, (err) => console.debug(`Error on file send: ${err}`));

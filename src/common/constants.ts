@@ -32,12 +32,10 @@ export const SCHEME = env.scheme;
 /**@ignore*/
 export const SWAGGER_PATH = 'api-docs/swagger';
 
-/**@ignore*/
-export const AGREEMENT_PDF_PATH: string = join(__dirname, '../../../resources/files/agreement.pdf');
 export const AGREEMENT_PATHS: string[] = [
-	join(__dirname, '../../../resources/files/pdf/Юр_Шаблон_заявки_с_маршрутом.pdf'),
-	join(__dirname, '../../../resources/files/pdf/ИП_Шаблон_заявки_с_маршрутом.pdf'),
-	join(__dirname, '../../../resources/files/pdf/ФЛ_Шаблон_заявки_с_маршрутом.pdf')
+	join(__dirname, '../../../resources/files/templates/deal_template_0.docx'),
+	join(__dirname, '../../../resources/files/templates/deal_template_1.docx'),
+	join(__dirname, '../../../resources/files/templates/deal_template_2.docx')
 ];
 
 /**@ignore*/
