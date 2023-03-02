@@ -305,9 +305,6 @@ export default class OrderService
 			result.driver = driver;
 			const orderResponse = await this.getById(order.id, false);
 			result.order = filterOrders(orderResponse?.data) as Order;
-
-			if(!driver.currentPoint)
-				result.driver.currentPoint = result.order.currentPoint;
 		}
 
 		return {
