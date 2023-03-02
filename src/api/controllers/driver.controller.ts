@@ -14,12 +14,10 @@ import {
 import { ApiTags }             from '@nestjs/swagger';
 import { FileInterceptor }     from '@nestjs/platform-express';
 import {
-	OrderStatus,
 	TransportStatus
 }                              from '@common/enums';
 import { TMulterFile }         from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
-import Order                   from '@models/order.entity';
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
@@ -129,24 +127,8 @@ export default class DriverController
 			});
 		}
 
-		if(data.order) {
-			const driverGeo = await this.driverService.updateGeoData(data);
-			dto = Object.assign(dto, driverGeo);
-		}
-
-		if(dto.currentPoint || dto.operation) {
-			await this.orderService.updateAll<Order>(
-				{
-					currentPoint: dto.currentPoint ?? 'A',
-					execState:    dto.operation ?? {}
-				},
-				{
-					driverId:  id,
-					status:    OrderStatus.PROCESSING,
-					onPayment: false
-				}
-			);
-		}
+		const driverGeo = await this.driverService.updateGeoData(data);
+		dto = Object.assign(dto, driverGeo);
 
 		if(dto.isReady !== undefined) {
 			if(!dto.isReady) {
