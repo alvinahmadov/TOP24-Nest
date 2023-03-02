@@ -191,7 +191,7 @@ export default class TaskService
 
 			if(driver) {
 				const destination = order.destinations.find(
-					d => d.point === driver.currentPoint && !d.atNearestDistanceToPoint
+					d => d.point === order.currentPoint && !d.atNearestDistanceToPoint
 				);
 
 				if(destination) {

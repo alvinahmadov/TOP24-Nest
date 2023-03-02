@@ -296,7 +296,6 @@ export interface IDriverGatewayData
 	event?: 'driver';
 	latitude?: number;
 	longitude?: number;
-	currentPoint?: string;
 	currentAddress?: string;
 }
 

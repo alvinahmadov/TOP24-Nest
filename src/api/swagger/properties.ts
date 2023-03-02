@@ -892,25 +892,12 @@ export const entityConfig: TEntityConfigList = {
 					format:      'float',
 					example:     55.755799
 				},
-			currentPoint:
-				{
-					description: 'Текущая точка на карте исполнения заказа. '
-					             + 'Определяется водительским приложением.' +
-					             '\nсм. `current_point`.',
-					deprecated:  true
-				},
 			currentAddress:
 				{
 					description: 'Текущий адрес карте исполнения заказа. ' +
 					             'Определяется бекэндом на основе значений `longitude` и `latitude`.' +
 					             '\nсм. `current_address`.',
 					readOnly:    true
-				},
-			operation:
-				{
-					description: 'Данные об операции выполняемый водителем. '
-					             + 'Поля `loaded`, `unloaded`',
-					deprecated:  true
 				},
 			payloadCity:
 				{

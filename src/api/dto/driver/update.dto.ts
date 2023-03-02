@@ -3,7 +3,6 @@ import { ApiProperty }  from '@nestjs/swagger';
 import { DriverStatus } from '@common/enums';
 import {
 	IDriver,
-	IOrderExecutionState,
 	TUpdateAttribute
 }                       from '@common/interfaces';
 import { entityConfig } from '@api/swagger/properties';
@@ -114,12 +113,4 @@ export default class DriverUpdateDto
 
 	@ApiProperty(prop.currentAddress)
 	public currentAddress?: string;
-
-	/** @deprecated */
-	@ApiProperty(prop.currentPoint)
-	public currentPoint?: string;
-
-	/** @deprecated */
-	@ApiProperty(prop.operation)
-	public operation?: IOrderExecutionState;
 }

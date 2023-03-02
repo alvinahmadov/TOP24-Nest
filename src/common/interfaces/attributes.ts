@@ -761,9 +761,9 @@ export interface IDriver
 	info?: string;
 	/**
 	 * Operational data for mobile use.
-	 * @deprecated Use IOrder.execState.
+	 * a@deprecated Use IOrder.execState.
 	 * */
-	operation?: IOrderExecutionState;
+	// operation?: IOrderExecutionState;
 	/**
 	 * Latitude of driver coordinates.
 	 *
@@ -781,7 +781,7 @@ export interface IDriver
 	/**
 	 * Destination point for driver for order implementation.
 	 *
-	 * @deprecated Use IOrder.currentPoint.
+	 * a@deprecated Use IOrder.currentPoint.
 	 * @example
 	 * A
 	 * B
@@ -789,7 +789,7 @@ export interface IDriver
 	 * ...
 	 * Z
 	 * */
-	currentPoint?: string;
+	// currentPoint?: string;
 	/**
 	 * Current address of location of the driver.
 	 * Null when driver doesn\'t have an active order

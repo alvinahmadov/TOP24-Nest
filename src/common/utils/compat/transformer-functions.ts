@@ -235,8 +235,6 @@ function transformDriver(driver: models.Driver)
 			link_back:                     driver.getDataValue('licenseBackLink'),
 			info:                          driver.getDataValue('info'),
 			status:                        driver.getDataValue('status'),
-			current_point:                 driver.getDataValue('currentPoint'),
-			operation:                     driver.getDataValue('operation'),
 			payload_city:                  driver.getDataValue('payloadCity'),
 			payload_region:                driver.getDataValue('payloadRegion'),
 			payload_date:                  driver.getDataValue('payloadDate'),

@@ -25,7 +25,6 @@ import {
 	IDriver,
 	Index,
 	IntColumn,
-	JsonbColumn,
 	StringColumn,
 	TCRMData,
 	UrlColumn,
@@ -36,8 +35,7 @@ import { entityConfig }  from '@api/swagger/properties';
 import EntityModel       from './entity-model';
 import CargoCompany      from './cargo.entity';
 import CargoCompanyInn   from './cargo-inn.entity';
-import Order,
-{ OrderExecutionState }  from './order.entity';
+import Order             from './order.entity';
 import Transport         from './transport.entity';
 
 const { driver: prop } = entityConfig;
@@ -172,19 +170,9 @@ export default class Driver
 	@FloatColumn()
 	longitude?: number;
 
-	/** @deprecated */
-	@ApiProperty(prop.currentPoint)
-	@StringColumn()
-	currentPoint?: string;
-
 	@ApiProperty(prop.currentAddress)
 	@StringColumn()
 	currentAddress?: string;
-
-	/** @deprecated */
-	@ApiProperty(prop.operation)
-	@JsonbColumn()
-	operation?: OrderExecutionState;
 
 	@ApiProperty(prop.payloadCity)
 	@StringColumn()

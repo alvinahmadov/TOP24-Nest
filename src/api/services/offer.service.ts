@@ -5,7 +5,6 @@ import {
 }                              from '@nestjs/common';
 import env                     from '@config/env';
 import {
-	DestinationType,
 	DriverStatus,
 	OfferStatus,
 	OrderStatus,
@@ -26,10 +25,8 @@ import {
 	TOfferTransportFilter,
 	TOfferDriver,
 	TSentOffer,
-	TGeoCoordinate
 }                              from '@common/interfaces';
 import {
-	calculateDistance,
 	fillDriverWithCompanyData,
 	filterTransports,
 	formatArgs,
@@ -304,15 +301,12 @@ export default class OfferService
 		}
 
 		if(dto.orderStatus === OrderStatus.FINISHED) {
-			const status = driver?.status === DriverStatus.NONE
-			               ? DriverStatus.ON_WAY
-			               : driver.status;
+			//TODO: Don't change driver status when order is finished
 
-			await this.driverService.update(driverId, {
-				status,
-				operation:    order?.execState,
-				currentPoint: order?.currentPoint || 'A'
-			});
+			// const status = driver?.status === DriverStatus.NONE
+			//                ? DriverStatus.ON_WAY
+			//                : driver.status;
+			// await this.driverService.update(driverId, { status });
 
 			this.gateway.sendDriverNotification(
 				{
@@ -348,8 +342,6 @@ export default class OfferService
 		if(offer.driver) {
 			await this.driverService.update(offer.driverId, {
 				status:         0,
-				operation:      null,
-				currentPoint:   null,
 				currentAddress: null
 			});
 		}
@@ -552,7 +544,6 @@ export default class OfferService
 							mainTransports[activeIndex].trailer = trailer;
 						}
 					}
-					if(!driver.currentPoint) driver.currentPoint = 'A';
 					const getOptions = { plain: true, clone: false };
 
 					transportData.push(
@@ -813,7 +804,6 @@ export default class OfferService
 								status:         driver.status,
 								latitude:       driver.latitude,
 								longitude:      driver.longitude,
-								currentPoint:   driver.currentPoint,
 								currentAddress: driver.currentAddress,
 								message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], offer.order?.crmTitle)
 							},
@@ -858,26 +848,6 @@ export default class OfferService
 		const orderTitle = offer.order?.crmId?.toString() ?? '';
 		const driverId: string = offer.driverId,
 			orderId: string = offer.orderId;
-		const { order, driver } = offer;
-
-		//TODO: To be removed
-		if(!driver.order || driver.order.status !== OrderStatus.PROCESSING) {
-			await this.driverService.update(driverId, {
-				status:       DriverStatus.ON_WAY,
-				operation:    order.execState ?? {
-					type:     DestinationType.LOAD,
-					loaded:   false,
-					unloaded: false,
-					uploaded: false
-				},
-				currentPoint: order.currentPoint ?? 'A'
-			});
-		}
-
-		const point: TGeoCoordinate = [driver.latitude, driver.longitude];
-		const destination = await this.destinationRepo.getOrderDestination(orderId, { point: driver.currentPoint });
-		const distance = calculateDistance(point, destination.coordinates);
-		await this.destinationRepo.update(destination.id, { distance });
 
 		this.orderService.update(
 			orderId,
@@ -972,8 +942,7 @@ export default class OfferService
 
 				if(driver) {
 					const driverDto: DriverUpdateDto = {
-						status:         DriverStatus.NONE,
-						currentPoint:   '',
+						// status:         DriverStatus.NONE,
 						currentAddress: ''
 					};
 
@@ -989,8 +958,7 @@ export default class OfferService
 					);
 
 					if(orders && orders.length > 1) {
-						driverDto.status = DriverStatus.ON_WAY;
-						driverDto.currentPoint = 'A';
+						// driverDto.status = DriverStatus.ON_WAY;
 					}
 
 					this.driverService
