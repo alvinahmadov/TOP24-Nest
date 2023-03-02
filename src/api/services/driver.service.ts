@@ -12,6 +12,7 @@ import {
 }                              from '@common/constants';
 import {
 	DestinationType,
+	OrderStatus,
 	UserRole
 }                              from '@common/enums';
 import {
@@ -24,7 +25,6 @@ import {
 	IService,
 	TCRMData,
 	TCRMResponse,
-	TGeoCoordinate,
 	TMergedEntities,
 	TMulterFile,
 	TUpdateAttribute
@@ -41,7 +41,6 @@ import {
 import {
 	Driver,
 	Destination,
-	Order
 }                              from '@models/index';
 import {
 	DestinationRepository,
@@ -364,29 +363,39 @@ export default class DriverService
 	public async updateGeoData(entities?: TMergedEntities)
 		: Promise<TUpdateAttribute<IDriver>> {
 		if(entities) {
-			const { order, driver } = entities as { order: Order; driver: Driver; };
-			if(order) {
-				if(!driver) {
-					return null;
-				}
-				const point: TGeoCoordinate = [driver.latitude, driver.longitude];
-				const currentAddress = await addressFromCoordinates(driver.latitude, driver.longitude);
-				let destination = await this.destinationRepo.getOrderDestination(order.id, {
-					//TODO: Replace with order.currentPoint after MA changes
-					point: driver.currentPoint ?? 'A'
-				});
-				const distance = calculateDistance(point, destination.coordinates);
-				destination = await this.destinationRepo.update(destination.id, { distance });
-				await this.repository.update(driver.id, { currentAddress });
+			const { driver } = entities as { driver: Driver; };
 
-				if(destination && !ENABLE_DISTANCE_NOTIF_TASK) {
-					sendDistanceNotification(driver.id, destination, this.gateway, this.destinationRepo)
-						.then(data => data ? console.info(data) : console.info('No notification data'))
-						.catch(console.error);
-				}
-
-				return { currentAddress };
+			if(!driver) {
+				return null;
 			}
+
+			const { data: orders } = await this.orderService.getList(
+				{},
+				{
+					driverId:  driver.id,
+					status:    OrderStatus.PROCESSING,
+					onPayment: false
+				}
+			);
+
+			if(orders) {
+				for(const order of orders) {
+					let destination = await this.destinationRepo.getOrderDestination(order.id, {
+						point: order.currentPoint ?? 'A'
+					});
+					const distance = calculateDistance([driver.latitude, driver.longitude], destination.coordinates);
+					destination = await this.destinationRepo.update(destination.id, { distance });
+
+					if(destination && !ENABLE_DISTANCE_NOTIF_TASK) {
+						sendDistanceNotification(driver.id, destination, this.gateway, this.destinationRepo)
+							.then(data => data ? console.info(data) : console.info('No notification data'))
+							.catch(console.error);
+					}
+				}
+			}
+			const currentAddress = await addressFromCoordinates(driver.latitude, driver.longitude);
+			await this.repository.update(driver.id, { currentAddress });
+			return { currentAddress };
 		}
 		return null;
 	}
