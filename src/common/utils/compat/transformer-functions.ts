@@ -243,6 +243,7 @@ function transformDriver(driver: models.Driver)
 			current_address:               driver.getDataValue('currentAddress'),
 			fullname:                      driver.get('fullName'),
 			company_name:                  driver.get('companyName'),
+			current_point:                 driver.get('currentPoint'),
 			cargo:                         transformCargoCompany(driver.cargo),
 			cargoinn:                      transformCargoCompanyInn(driver.cargoinn),
 			order:                         transformOrder(driver.order),

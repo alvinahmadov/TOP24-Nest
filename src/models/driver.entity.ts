@@ -247,6 +247,14 @@ export default class Driver
 		return `${surname}${middleName}${name}`;
 	}
 
+	@VirtualColumn()
+	public get currentPoint(): string {
+		if(this.order)
+			return this.order.currentPoint;
+
+		return "";
+	}
+
 	public toCrm(
 		companyCrmId: number,
 		directions: string[]

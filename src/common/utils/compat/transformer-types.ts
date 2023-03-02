@@ -295,11 +295,6 @@ export interface IDriverTransformer
 	 * @see IDriver.birthDate
 	 * */
 	date_of_birth: Date;
-	/**
-	 * @see IDriver.currentPoint
-	 * @deprecated Use IOrderTransformer.current_point.
-	 * */
-	current_point?: string;
 	phone?: string;
 	/**
 	 * @see IDriver.taxpayerNumber
@@ -394,8 +389,10 @@ export interface IDriverTransformer
 	 * @see IDriver.currentAddress
 	 * */
 	current_address?: string;
-	fullname?: string;
-	company_name?: string;
+	readonly fullname?: string;
+	readonly company_name?: string;
+	
+	readonly current_point?: string;
 
 	cargo?: ICargoCompanyTransformer;
 	cargoinn?: ICargoCompanyInnTransformer;

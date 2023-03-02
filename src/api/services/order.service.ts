@@ -305,6 +305,7 @@ export default class OrderService
 			result.driver = driver;
 			const orderResponse = await this.getById(order.id, false);
 			result.order = filterOrders(orderResponse?.data) as Order;
+			result.driver.order = result.order;
 		}
 
 		return {
