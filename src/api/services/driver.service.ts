@@ -380,13 +380,17 @@ export default class DriverService
 
 			if(orders) {
 				for(const order of orders) {
-					let destination = await this.destinationRepo.getOrderDestination(order.id, {
-						point: order.currentPoint ?? 'A'
-					});
-					const distance = calculateDistance([driver.latitude, driver.longitude], destination.coordinates);
-					destination = await this.destinationRepo.update(destination.id, { distance });
+					const destination = await this.destinationRepo
+					                              .getOrderDestination(order.id, {
+						                              point: order.currentPoint
+					                              });
 
-					if(destination && !ENABLE_DISTANCE_NOTIF_TASK) {
+					if(!destination) continue;
+
+					destination.distance = calculateDistance([driver.latitude, driver.longitude], destination.coordinates);
+					await destination.save({ fields: ['distance'] });
+
+					if(!ENABLE_DISTANCE_NOTIF_TASK) {
 						sendDistanceNotification(driver.id, destination, this.gateway, this.destinationRepo)
 							.then(data => data ? console.info(data) : console.info('No notification data'))
 							.catch(console.error);
