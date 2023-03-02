@@ -11,7 +11,7 @@ import {
 	BooleanColumn,
 	Index,
 	IntColumn,
-	StringColumn, VirtualColumn
+	StringColumn
 }                        from '@common/interfaces';
 import { entityConfig }  from '@api/swagger/properties';
 import EntityModel       from './entity-model';

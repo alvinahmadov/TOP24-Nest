@@ -17,9 +17,7 @@ import {
 	Reference,
 	AGREEMENT_PATHS
 }                              from '@common/constants';
-import {
-	DocumentTemplateBuilder
-}                              from '@common/classes';
+import DocumentTemplateBuilder from '@common/classes/template-builder';
 import {
 	CompanyType,
 	LoadingType,
