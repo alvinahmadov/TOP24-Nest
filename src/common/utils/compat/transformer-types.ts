@@ -137,7 +137,13 @@ export interface ICompanyTransformer
 	 * @see ICompany.paymentType
 	 * */
 	nds?: string;
+	/**
+	 * @see legalAddress
+	 * */
 	address_first?: string;
+	/**
+	 * @see postalAddress
+	 * */
 	address_second?: string;
 	address_third?: string;
 	/**
