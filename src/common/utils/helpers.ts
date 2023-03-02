@@ -86,7 +86,7 @@ export function renameMulterFiles(files: TMulterFile[], ...args: string[]): TMul
 export function sendResponse<T = any>(
 	response: ex.Response,
 	result: IApiResponse<T>,
-	transform: boolean = env.api.compatMode
+	transform: boolean | number = env.api.compatMode
 ) {
 	return response.status(result?.statusCode ?? 400)
 	               .send(

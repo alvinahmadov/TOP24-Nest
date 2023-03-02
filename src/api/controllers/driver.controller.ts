@@ -24,7 +24,6 @@ import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import {
-	DefaultBoolPipe,
 	DriverPipe,
 	DriverFilterPipe
 }                              from '@api/pipes';
@@ -75,11 +74,12 @@ export default class DriverController
 	})
 	public override async list(
 		@Res() response: ex.Response,
-		@Query() listFilter?: dto.ListFilter
+		@Query() listFilter: dto.ListFilter = {}
 	) {
+		const { compat } = listFilter;
 		const result = await this.driverService.getList(listFilter);
 
-		return sendResponse(response, result);
+		return sendResponse(response, result, compat);
 	}
 
 	@ApiRoute(routes.index, {
@@ -89,11 +89,13 @@ export default class DriverController
 	public override async index(
 		@Param('id', ParseUUIDPipe) id: string,
 		@Res() response: ex.Response,
-		@Query('full', ...DefaultBoolPipe) full?: boolean
+		@Query() listFilter?: dto.ListFilter
 	) {
-		const result = await this.driverService.getById(id, full);
+		if(!listFilter) listFilter = {};
 
-		return sendResponse(response, result);
+		const result = await this.driverService.getById(id, listFilter.full);
+
+		return sendResponse(response, result, listFilter.compat);
 	}
 
 	@ApiRoute(routes.create, {

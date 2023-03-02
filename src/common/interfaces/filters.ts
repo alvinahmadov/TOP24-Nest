@@ -66,6 +66,7 @@ export interface IListFilter
 	 * @default false
 	 * */
 	full?: boolean;
+	compat?: number
 }
 
 /**
