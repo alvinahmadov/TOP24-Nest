@@ -1,12 +1,16 @@
-import { Order as SortOrder }       from 'sequelize';
-import { TableOptions }             from 'sequelize-typescript';
-import { JwtModuleOptions }         from '@nestjs/jwt';
-import { CorsOptions }              from '@nestjs/common/interfaces/external/cors-options.interface';
-import { GatewayMetadata }          from '@nestjs/websockets';
-import env                          from '@config/env';
-import { CRM }                      from '@config/index';
-import { TBitrixData, TBitrixEnum } from './interfaces';
-import { join }                     from 'path';
+import { Order as SortOrder } from 'sequelize';
+import { TableOptions }       from 'sequelize-typescript';
+import { JwtModuleOptions }   from '@nestjs/jwt';
+import { CorsOptions }        from '@nestjs/common/interfaces/external/cors-options.interface';
+import { GatewayMetadata }    from '@nestjs/websockets';
+import env                    from '@config/env';
+import { CRM }                from '@config/index';
+import {
+	IOrderExecutionState,
+	TBitrixData,
+	TBitrixEnum
+}                             from './interfaces';
+import { join }               from 'path';
 
 export const MAX_FLOAT: number = 16000000.0;
 export const MIN_FLOAT: number = 0.0;
@@ -20,8 +24,8 @@ export const ENABLE_DISTANCE_NOTIF_TASK = false;
 export const NOTIFICATION_DISTANCE = 200 / 1000;
 
 export const LAST_24_HOURS = 1;
-export const	LAST_6_HOURS = 0.25;
-export const	LAST_1_HOUR = 0.041666666666666664;
+export const LAST_6_HOURS = 0.25;
+export const LAST_1_HOUR = 0.041666666666666664;
 
 /**@ignore*/
 export const HOST = env.host;
@@ -86,6 +90,14 @@ export const CARGO_EVENT = 'cargo';
 export const ORDER_EVENT = 'order';
 
 export const DEFAULT_SORT_ORDER: SortOrder = [['created_at', 'DESC'], ['updated_at', 'DESC']];
+
+export const DEFAULT_ORDER_STATE: IOrderExecutionState = {
+	type:         0, // DestinationType.LOAD
+	actionStatus: 0, // ActionStatus.NONE
+	loaded:       false,
+	unloaded:     false,
+	uploaded:     false
+};
 
 /**@ignore*/
 export namespace BitrixUrl {

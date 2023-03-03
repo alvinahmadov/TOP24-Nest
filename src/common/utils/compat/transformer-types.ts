@@ -1,4 +1,5 @@
 import {
+	ActionStatus,
 	CompanyType,
 	DestinationType,
 	DriverStatus,
@@ -266,6 +267,31 @@ export interface ICargoCompanyInnTransformer
 }
 
 /**
+ * @see IDestination
+ * */
+export interface IDestinationTransformer
+	extends IModel,
+	        ITransformer {
+	point: string;
+	type: DestinationType;
+	address: string;
+	coordinates: TGeoCoordinate;
+	date?: Date;
+	contact?: string;
+	inn?: string;
+	phone?: string;
+	distance?: number;
+	comment?: string;
+	fulfilled?: boolean;
+	/**
+	 * @see IDestination.shippingPhotoLinks
+	 * */
+	shipping_link?: string[];
+
+	readonly num?: number;
+}
+
+/**
  * @see IDriver
  * */
 export interface IDriverTransformer
@@ -453,6 +479,15 @@ export interface IOfferTransformer
 	readonly order?: IOrderTransformer;
 }
 
+export interface IOrderExecutionStateTransformer
+	extends ITransformer {
+	type?: DestinationType;
+	action?: ActionStatus;
+	loaded?: boolean;
+	unloaded?: boolean;
+	uploaded?: boolean;
+}
+
 /**
  * @see IOrder
  * */
@@ -548,7 +583,7 @@ export interface IOrderTransformer
 	 * */
 	transport_types?: string[];
 	destinations?: IDestinationTransformer[];
-	operation?: IOrderExecutionState;
+	operation?: IOrderExecutionStateTransformer;
 	current_point?: string;
 	/**
 	 * @see IOrder.driverDeferralConditions
@@ -578,39 +613,14 @@ export interface IOrderTransformer
 	priority?: boolean;
 	readonly is_dedicated?: boolean;
 	readonly is_extra_payload?: boolean;
-	
+
 	readonly destination?: IDestinationTransformer;
-	
+
 	readonly next_destination?: IDestinationTransformer;
 
 	cargo?: ICargoCompanyTransformer;
 	cargoinn?: ICargoCompanyInnTransformer;
 	driver?: IDriverTransformer;
-}
-
-/**
- * @see IDestination
- * */
-export interface IDestinationTransformer
-	extends IModel,
-	        ITransformer {
-	point: string;
-	type: DestinationType;
-	address: string;
-	coordinates: TGeoCoordinate;
-	date?: Date;
-	contact?: string;
-	inn?: string;
-	phone?: string;
-	distance?: number;
-	comment?: string;
-	fulfilled?: boolean;
-	/**
-	 * @see IDestination.shippingPhotoLinks
-	 * */
-	shipping_link?: string[];
-	
-	readonly num?: number;
 }
 
 /**

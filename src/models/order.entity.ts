@@ -1,4 +1,4 @@
-import { FindOptions }              from 'sequelize';
+import { FindOptions }  from 'sequelize';
 import {
 	BelongsTo,
 	DefaultScope,
@@ -6,33 +6,38 @@ import {
 	HasMany,
 	IsUUID,
 	Table
-}                                   from 'sequelize-typescript';
+}                       from 'sequelize-typescript';
 import {
 	Field,
 	InterfaceType,
 	ObjectType
-}                                   from '@nestjs/graphql';
-import { ApiProperty }              from '@nestjs/swagger';
-import { ORDER }                    from '@config/json';
+}                       from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
+import { ORDER }        from '@config/json';
 import {
+	ActionStatus,
 	DestinationType,
 	LoadingType,
 	OrderStage,
 	OrderStatus
-}                                   from '@common/enums';
-import { UuidScalar }               from '@common/scalars';
-import { Reference, TABLE_OPTIONS } from '@common/constants';
+}                       from '@common/enums';
+import { UuidScalar }   from '@common/scalars';
 import {
-	ICRMEntity,
-	Index,
-	IOrder,
-	IOrderFilter,
-	IOrderExecutionState,
+	Reference,
+	DEFAULT_ORDER_STATE,
+	TABLE_OPTIONS
+}                       from '@common/constants';
+import {
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
+	ICRMEntity,
+	Index,
 	IntArrayColumn,
 	IntColumn,
+	IOrder,
+	IOrderExecutionState,
+	IOrderFilter,
 	JsonbColumn,
 	StringArrayColumn,
 	StringColumn,
@@ -40,18 +45,18 @@ import {
 	TGeoCoordinate,
 	UuidColumn,
 	VirtualColumn
-}                                   from '@common/interfaces';
-import { entityConfig }             from '@api/swagger/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 import {
 	convertBitrix,
 	isDedicatedOrder,
 	isExtraPayloadOrder
-}                                   from '@common/utils';
-import EntityModel                  from './entity-model';
-import CargoCompany                 from './cargo.entity';
-import CargoCompanyInn              from './cargo-inn.entity';
-import Destination                  from './destination.entity';
-import Driver                       from './driver.entity';
+}                       from '@common/utils';
+import EntityModel      from './entity-model';
+import CargoCompany     from './cargo.entity';
+import CargoCompanyInn  from './cargo-inn.entity';
+import Destination      from './destination.entity';
+import Driver           from './driver.entity';
 
 const { order: prop } = entityConfig;
 
@@ -144,6 +149,8 @@ export class OrderFilter
 export class OrderExecutionState
 	implements IOrderExecutionState {
 	type?: DestinationType;
+
+	actionStatus?: ActionStatus;
 	loaded?: boolean;
 	unloaded?: boolean;
 	uploaded?: boolean;
@@ -321,7 +328,7 @@ export default class Order
 	destinations?: Destination[];
 
 	@ApiProperty(prop.execState)
-	@JsonbColumn({ defaultValue: {} })
+	@JsonbColumn({ defaultValue: DEFAULT_ORDER_STATE })
 	execState?: OrderExecutionState;
 
 	@ApiProperty(prop.filter)
@@ -392,19 +399,19 @@ export default class Order
 		return !!this.crmId ? `№${this.crmId.toString()}`
 		                    : this.title;
 	}
-	
+
 	@VirtualColumn()
 	public get destination(): Destination {
 		return this.destinations?.find(d => d.point === this.currentPoint);
 	}
-	
+
 	@VirtualColumn()
 	public get nextDestination(): Destination {
 		let activeIndex = this.destinations?.findIndex(d => d.point === this.currentPoint);
-		
+
 		if(-1 < activeIndex && activeIndex < this.destinations?.length - 1)
 			return this.destinations?.at(++activeIndex);
-		
+
 		return null;
 	}
 

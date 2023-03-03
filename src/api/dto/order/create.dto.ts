@@ -7,23 +7,23 @@ import {
 	IsString,
 	IsUrl,
 	IsUUID
-}                       from 'class-validator';
-import { InputType }    from '@nestjs/graphql';
-import { ApiProperty }  from '@nestjs/swagger';
+}                              from 'class-validator';
+import { InputType }           from '@nestjs/graphql';
+import { ApiProperty }         from '@nestjs/swagger';
+import { DEFAULT_ORDER_STATE } from '@common/constants';
 import {
-	DestinationType,
 	LoadingType,
 	OrderStage,
 	OrderStatus
-}                       from '@common/enums';
+}                              from '@common/enums';
 import {
 	IDestination,
 	IOrder,
 	IOrderExecutionState,
 	TCreationAttribute
-}                       from '@common/interfaces';
-import { OrderFilter }  from '@models/order.entity';
-import { entityConfig } from '@api/swagger/properties';
+}                              from '@common/interfaces';
+import { OrderFilter }         from '@models/order.entity';
+import { entityConfig }        from '@api/swagger/properties';
 
 const { order: prop } = entityConfig;
 
@@ -163,7 +163,7 @@ export default class OrderCreateDto
 
 	@ApiProperty(prop.destinations)
 	destinations?: IDestination[] = [];
-	
+
 	@ApiProperty(prop.hasSent)
 	hasSent?: boolean = false;
 
@@ -181,12 +181,7 @@ export default class OrderCreateDto
 	currentPoint?: string = 'A';
 
 	@ApiProperty(prop.execState)
-	execState?: IOrderExecutionState = {
-		type:     DestinationType.LOAD,
-		loaded:   false,
-		unloaded: false,
-		uploaded: false
-	};
+	execState?: IOrderExecutionState = DEFAULT_ORDER_STATE;
 
 	@ApiProperty(prop.filter)
 	filter?: OrderFilter = null;

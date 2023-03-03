@@ -416,6 +416,20 @@ export function transformToOfferDriver(data: Partial<transformers.TOfferDriverTr
 	return null;
 }
 
+export function transformOrderExecutionState(state: attributes.IOrderExecutionState)
+	: transformers.IOrderExecutionStateTransformer {
+	if(state) {
+		const { actionStatus: action, ...rest } = state;
+
+		return {
+			action,
+			...rest
+		};
+	}
+
+	return null;
+}
+
 function transformOrder(order: models.Order)
 	: transformers.IOrderTransformer {
 	if(order) {
@@ -455,7 +469,7 @@ function transformOrder(order: models.Order)
 			palets:                     order.getDataValue('pallets'),
 			transport_types:            order.getDataValue('transportTypes'),
 			destinations:               transformDestinations(order.destinations),
-			operation:                  order.getDataValue('execState'),
+			operation:                  transformOrderExecutionState(order.getDataValue('execState')),
 			current_point:              order.getDataValue('currentPoint'),
 			driver_deferral_conditions: order.getDataValue('driverDeferralConditions'),
 			owner_deferral_conditions:  order.getDataValue('ownerDeferralConditions'),

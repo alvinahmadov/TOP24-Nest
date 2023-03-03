@@ -103,6 +103,25 @@ export enum OrderStage {
 	FINISHED = 13
 }
 
+export enum ActionStatus {
+	/**
+	 * Default value
+	 * */
+	NONE = 0,
+	/**
+	 * Driver is on way to destination point.
+	 * */
+	ON_WAY = 1,
+	/**
+	 * Driver has arrived to destination point.
+	 * */
+	ARRIVED = 2,
+	/**
+	 * Driver uploads document.
+	 * */
+	DOCUMENT_UPLOAD = 3
+}
+
 /**
  * Type of destination point for order.
  * */

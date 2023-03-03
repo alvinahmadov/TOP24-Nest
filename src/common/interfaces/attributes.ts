@@ -1,4 +1,5 @@
 import {
+	ActionStatus,
 	CompanyType,
 	DestinationType,
 	DriverStatus,
@@ -594,6 +595,10 @@ export interface IOrderExecutionState {
 	 * Type of destination for order operations.
 	 * */
 	type?: DestinationType;
+	/**
+	 * Status of the action for execution state
+	 * */
+	actionStatus?: ActionStatus;
 	/**
 	 * The payload is unloaded.
 	 * */

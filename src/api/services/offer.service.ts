@@ -4,8 +4,9 @@ import {
 	HttpStatus
 }                              from '@nestjs/common';
 import env                     from '@config/env';
+import { DEFAULT_ORDER_STATE } from '@common/constants';
 import {
-	DriverStatus,
+	ActionStatus,
 	OfferStatus,
 	OrderStatus,
 	OrderStage,
@@ -301,13 +302,6 @@ export default class OfferService
 		}
 
 		if(dto.orderStatus === OrderStatus.FINISHED) {
-			//TODO: Don't change driver status when order is finished
-
-			// const status = driver?.status === DriverStatus.NONE
-			//                ? DriverStatus.ON_WAY
-			//                : driver.status;
-			// await this.driverService.update(driverId, { status });
-
 			this.gateway.sendDriverNotification(
 				{
 					id:      driverId,
@@ -440,7 +434,7 @@ export default class OfferService
 		                     .map(
 			                     (offer) =>
 			                     {
-				                     let { order, driver, orderStatus } = offer;
+				                     let { order, orderStatus } = offer;
 
 				                     if(orderStatus === OrderStatus.PROCESSING) {
 					                     if(!order.isCurrent)
@@ -464,8 +458,8 @@ export default class OfferService
 					                     };
 
 					                     if(
-						                     driver.status > DriverStatus.NONE &&
-						                     driver.status < DriverStatus.DOC_LOAD
+						                     order.execState?.actionStatus > ActionStatus.NONE &&
+						                     order.execState?.actionStatus < ActionStatus.DOCUMENT_UPLOAD
 					                     ) {
 						                     orderUpdateDto.paymentPhotoLinks = order.paymentPhotoLinks = null;
 						                     orderUpdateDto.receiptPhotoLinks = order.receiptPhotoLinks = null;
@@ -852,17 +846,19 @@ export default class OfferService
 		this.orderService.update(
 			orderId,
 			{
-				driverId:    driverId,
-				isFree:      false,
-				isOpen:      false,
-				isCanceled:  false,
-				hasProblem:  false,
-				bidPrice:    offer.bidPrice,
-				bidPriceVat: offer.bidPriceVat,
-				bidInfo:     offer.bidComment,
-				cargoId:     offer.driver.cargoId,
-				cargoinnId:  offer.driver.cargoinnId,
-				status:      OrderStatus.PROCESSING
+				driverId:     driverId,
+				isFree:       false,
+				isOpen:       false,
+				isCanceled:   false,
+				hasProblem:   false,
+				bidPrice:     offer.bidPrice,
+				bidPriceVat:  offer.bidPriceVat,
+				bidInfo:      offer.bidComment,
+				cargoId:      offer.driver.cargoId,
+				cargoinnId:   offer.driver.cargoinnId,
+				status:       OrderStatus.PROCESSING,
+				execState:    DEFAULT_ORDER_STATE,
+				currentPoint: 'A'
 			}
 		).then(
 			({ data: order }) =>
@@ -941,10 +937,7 @@ export default class OfferService
 				}
 
 				if(driver) {
-					const driverDto: DriverUpdateDto = {
-						// status:         DriverStatus.NONE,
-						currentAddress: ''
-					};
+					const driverDto: DriverUpdateDto = { currentAddress: '' };
 
 					let { data: orders } = await this.orderService.getList(
 						{}, {

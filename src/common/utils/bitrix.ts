@@ -1,5 +1,8 @@
 import { CRM, ORDER, TRANSPORT }   from '@config/json';
-import { BitrixUrl }               from '@common/constants';
+import {
+	BitrixUrl,
+	DEFAULT_ORDER_STATE
+}                                  from '@common/constants';
 import {
 	AxiosStatic,
 	ApiQuery
@@ -444,12 +447,7 @@ export async function orderFromBitrix(crmFields: TCRMFields, options?: { debug: 
 		hasProblem:      typeFromCrm<boolean>(crmFields[ORDER.HAS_PROBLEM], false),
 		dedicated:       convertBitrix('transportDedicated', crmFields[ORDER.DEDICATION]),
 		currentPoint:    'A',
-		execState:       {
-			type:     DestinationType.LOAD,
-			loaded:   false,
-			unloaded: false,
-			uploaded: false
-		},
+		execState:       DEFAULT_ORDER_STATE,
 		transportTypes:  crmFields[ORDER.TRANSPORT_TYPE]
 			                 ?.map((t: string) => convertBitrix('orderTransportType', t))
 	};
