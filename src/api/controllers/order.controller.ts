@@ -195,11 +195,22 @@ export default class OrderController
 		@Res() response: ex.Response
 	) {
 		if(dto) {
-			const result = await this.orderService.update(id, dto);
+			const { data: order } = await this.orderService.getById(id, false);
+
+			if(!order)
+				return sendResponse(response, { statusCode: HttpStatus.NOT_FOUND });
+
+			if(order.execState) {
+				dto.execState = Object.assign(order.execState, dto.execState);
+			}
+
+			const { execState, currentPoint } = dto;
+
+			const result = await this.orderService.update(id, { execState, currentPoint });
 			return sendResponse(response, result);
 		}
 
-		return sendResponse(response, { statusCode: 400 });
+		return sendResponse(response, { statusCode: HttpStatus.BAD_REQUEST });
 	}
 
 	@ApiRoute(routes.getState, {
