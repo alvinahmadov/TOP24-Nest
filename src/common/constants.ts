@@ -1,3 +1,4 @@
+import { join }               from 'path';
 import { Order as SortOrder } from 'sequelize';
 import { TableOptions }       from 'sequelize-typescript';
 import { JwtModuleOptions }   from '@nestjs/jwt';
@@ -10,7 +11,6 @@ import {
 	TBitrixData,
 	TBitrixEnum
 }                             from './interfaces';
-import { join }               from 'path';
 
 export const MAX_FLOAT: number = 16000000.0;
 export const MIN_FLOAT: number = 0.0;
@@ -93,7 +93,7 @@ export const DEFAULT_SORT_ORDER: SortOrder = [['created_at', 'DESC'], ['updated_
 
 export const DEFAULT_ORDER_STATE: IOrderExecutionState = {
 	type:         0, // DestinationType.LOAD
-	actionStatus: 0, // ActionStatus.NONE
+	actionStatus: 1, // ActionStatus.ON_WAY
 	loaded:       false,
 	unloaded:     false,
 	uploaded:     false
