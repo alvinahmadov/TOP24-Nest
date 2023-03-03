@@ -1,5 +1,4 @@
 import {
-	ActionStatus,
 	CompanyType,
 	DestinationType,
 	DriverStatus,
@@ -479,15 +478,6 @@ export interface IOfferTransformer
 	readonly order?: IOrderTransformer;
 }
 
-export interface IOrderExecutionStateTransformer
-	extends ITransformer {
-	type?: DestinationType;
-	action?: ActionStatus;
-	loaded?: boolean;
-	unloaded?: boolean;
-	uploaded?: boolean;
-}
-
 /**
  * @see IOrder
  * */
@@ -583,7 +573,7 @@ export interface IOrderTransformer
 	 * */
 	transport_types?: string[];
 	destinations?: IDestinationTransformer[];
-	operation?: IOrderExecutionStateTransformer;
+	operation?: IOrderExecutionState;
 	current_point?: string;
 	/**
 	 * @see IOrder.driverDeferralConditions

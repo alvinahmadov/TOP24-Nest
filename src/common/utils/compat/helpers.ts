@@ -1,7 +1,6 @@
-import FieldTransformer,
-{ TOmitTimestamp }       from '@common/classes/field-transformer';
-import * as attributes   from '@common/interfaces/attributes';
-import * as transformers from './transformer-types';
+import FieldTransformer, { TOmitTimestamp } from '@common/classes/field-transformer';
+import * as attributes                      from '@common/interfaces/attributes';
+import * as transformers                    from './transformer-types';
 
 export const translateAdmin = <T extends transformers.IAdminTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.IAdmin> =>
@@ -192,23 +191,11 @@ export const translateOffer = <T extends transformers.IOfferTransformer>(data: T
 		.set('bidComment', 'comments')
 		.get();
 };
-export const translateOrderExecutionState =
-	<T extends transformers.IOrderExecutionStateTransformer>(data: T | Partial<T>)
-		: attributes.IOrderExecutionState =>
-	{
-		return new FieldTransformer<T, attributes.IOrderExecutionState>(data)
-			.set('type')
-			.set('actionStatus', 'action')
-			.set('loaded')
-			.set('unloaded')
-			.set('uploaded')
-			.get();
-	};
 
 export const translateOrder = <T extends transformers.IOrderTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.IOrder> =>
 {
-	const order =  new FieldTransformer<T, attributes.IOrder>(data)
+	return new FieldTransformer<T, attributes.IOrder>(data)
 		.set('id')
 		.set('cargoId')
 		.set('cargoinnId')
@@ -239,6 +226,7 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('hasProblem', 'has_problem')
 		.set('destinations')
 		.set('currentPoint', 'current_point')
+		.set('execState', 'operation')
 		.set('bidInfo', 'bid_info')
 		.set('bidPrice', 'bid_price')
 		.set('bidPriceVat', 'bid_price_max')
@@ -250,11 +238,6 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('paymentPhotoLinks', 'payment_link')
 		.set('receiptPhotoLinks', 'receipt_link')
 		.get();
-	
-	if(data.operation)
-		order.execState = translateOrderExecutionState(data.operation);
-	
-	return order;
 };
 
 export const translatePayment = <T extends transformers.IPaymentTransformer>(data: T | Partial<T>)
