@@ -440,10 +440,6 @@ export default class OrderService
 					destination.shippingPhotoLinks = shippingPhotoLinks;
 
 				await this.destinationRepo.update(destination.id, { shippingPhotoLinks: destination.shippingPhotoLinks });
-				await this.destinationRepo.bulkUpdate({ fulfilled: true }, {
-					point:     { [Op.lte]: point },
-					fulfilled: { [Op.eq]: false }
-				});
 			}
 
 			if(fileUploaded) {
