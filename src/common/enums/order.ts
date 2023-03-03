@@ -105,10 +105,6 @@ export enum OrderStage {
 
 export enum ActionStatus {
 	/**
-	 * Default value
-	 * */
-	NONE = 0,
-	/**
 	 * Driver is on way to destination point.
 	 * */
 	ON_WAY = 1,
