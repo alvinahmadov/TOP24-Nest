@@ -466,6 +466,7 @@ function transformOrder(order: models.Order)
 			filter:                     order.getDataValue('filter'),
 			is_dedicated:               order.get('isDedicated'),
 			is_extra_payload:           order.get('isExtraPayload'),
+			destination:                order.get('destination'),
 			cargo:                      transformCargoCompany(order?.cargo),
 			cargoinn:                   transformCargoCompanyInn(order?.cargoinn),
 			driver:                     transformDriver(order?.driver),

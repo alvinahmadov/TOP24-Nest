@@ -391,7 +391,6 @@ export interface IDriverTransformer
 	current_address?: string;
 	readonly fullname?: string;
 	readonly company_name?: string;
-	
 	readonly current_point?: string;
 
 	cargo?: ICargoCompanyTransformer;
@@ -579,6 +578,8 @@ export interface IOrderTransformer
 	priority?: boolean;
 	readonly is_dedicated?: boolean;
 	readonly is_extra_payload?: boolean;
+	
+	readonly destination?: IDestinationTransformer;
 
 	cargo?: ICargoCompanyTransformer;
 	cargoinn?: ICargoCompanyInnTransformer;

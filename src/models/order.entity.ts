@@ -392,6 +392,11 @@ export default class Order
 		return !!this.crmId ? `№${this.crmId.toString()}`
 		                    : this.title;
 	}
+	
+	@VirtualColumn()
+	public get destination(): Destination {
+		return this.destinations?.find(d => d.point === this.currentPoint);
+	}
 
 	public readonly toCrm = (
 		cargoCrmId: number,
