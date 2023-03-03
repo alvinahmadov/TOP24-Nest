@@ -397,6 +397,16 @@ export default class Order
 	public get destination(): Destination {
 		return this.destinations?.find(d => d.point === this.currentPoint);
 	}
+	
+	@VirtualColumn()
+	public get nextDestination(): Destination {
+		let activeIndex = this.destinations?.findIndex(d => d.point === this.currentPoint);
+		
+		if(-1 < activeIndex && activeIndex < this.destinations?.length - 1)
+			return this.destinations?.at(++activeIndex);
+		
+		return null;
+	}
 
 	public readonly toCrm = (
 		cargoCrmId: number,

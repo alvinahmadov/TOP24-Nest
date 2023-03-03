@@ -580,6 +580,8 @@ export interface IOrderTransformer
 	readonly is_extra_payload?: boolean;
 	
 	readonly destination?: IDestinationTransformer;
+	
+	readonly next_destination?: IDestinationTransformer;
 
 	cargo?: ICargoCompanyTransformer;
 	cargoinn?: ICargoCompanyInnTransformer;

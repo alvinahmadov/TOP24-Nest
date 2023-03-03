@@ -1163,6 +1163,10 @@ export interface IOrder
 	 * Active destination.
 	 * */
 	readonly destination?: IDestination;
+	/**
+	 * Next destination after active destination.
+	 * */
+	readonly nextDestination?: IDestination;
 }
 
 /**
