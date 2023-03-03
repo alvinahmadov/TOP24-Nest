@@ -457,10 +457,7 @@ export default class OfferService
 						                     isCurrent: true
 					                     };
 
-					                     if(
-						                     order.execState?.actionStatus > ActionStatus.NONE &&
-						                     order.execState?.actionStatus < ActionStatus.DOCUMENT_UPLOAD
-					                     ) {
+					                     if(order.execState?.actionStatus < ActionStatus.DOCUMENT_UPLOAD) {
 						                     orderUpdateDto.paymentPhotoLinks = order.paymentPhotoLinks = null;
 						                     orderUpdateDto.receiptPhotoLinks = order.receiptPhotoLinks = null;
 					                     }
