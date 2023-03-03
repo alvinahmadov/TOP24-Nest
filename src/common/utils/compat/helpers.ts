@@ -251,7 +251,8 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('receiptPhotoLinks', 'receipt_link')
 		.get();
 	
-	order.execState = translateOrderExecutionState(data.operation);
+	if(data.operation)
+		order.execState = translateOrderExecutionState(data.operation);
 	
 	return order;
 };
