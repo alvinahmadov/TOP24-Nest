@@ -15,11 +15,13 @@ import {
 }                    from '@common/enums';
 import { BitrixUrl } from '@common/constants';
 import {
+	getCrm,
 	setMonthSuffixRussianLocale,
 	toLocaleDateTime
 }                    from '@common/utils';
 import {
-	ICompany
+	ICompany,
+	TCRMResponse
 }                    from '@common/interfaces';
 import {
 	CargoCompany,
@@ -123,10 +125,15 @@ export default class DocumentTemplateBuilder {
 	}
 
 	private async getLogistData(crmId: string | number) {
-		const orderBitrixData = await this.httpClient.get<Record<string, any>>(`${BitrixUrl.ORDER_GET_URL}?ID=${crmId}`);
-		if(orderBitrixData && orderBitrixData['CREATED_BY_ID']) {
-			const logistCrmId = orderBitrixData['CREATED_BY_ID'];
-			const contact = await this.httpClient.get<Record<string, any>>(`${BitrixUrl.CONTACT_GET_URL}?ID=${logistCrmId}`);
+		const { result } = await this.httpClient.get<TCRMResponse>(`${BitrixUrl.ORDER_GET_URL}?ID=${crmId}`);
+		
+		const crmData = getCrm(result);
+		
+		if(crmData) {
+			const logistCrmId = crmData['CREATED_BY_ID'];
+			const { result } = await this.httpClient.get<TCRMResponse>(`${BitrixUrl.CONTACT_GET_URL}?ID=${logistCrmId}`);
+			const contact = getCrm(result);
+			
 			if(contact) {
 				const name: string = contact['NAME'];
 				const patronymic: string = contact['SECOND_NAME'];
@@ -206,7 +213,7 @@ export default class DocumentTemplateBuilder {
 			                                       .replace('ООО', '')
 			                                       .replace('ОАО', '')
 			                                       .replace('ПАО', '');
-			
+
 			this.addConfig('companyName', cargoCompany.legalName)
 			    .addConfig('companyLegalName', legalNameSanitized)
 			    .addConfig('companyEmail', cargoCompany.email)
