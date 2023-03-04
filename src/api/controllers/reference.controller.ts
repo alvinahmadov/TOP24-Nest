@@ -43,7 +43,8 @@ import { getRouteConfig }      from '@api/routes';
 import {
 	AddressService,
 	DriverService,
-	OrderService
+	OrderService,
+	PaymentService
 }                              from '@api/services';
 import { StaticController }    from './controller';
 
@@ -65,7 +66,8 @@ export default class ReferenceController
 	public constructor(
 		private readonly addressService: AddressService,
 		private readonly driverService: DriverService,
-		private readonly orderService: OrderService
+		private readonly orderService: OrderService,
+		private readonly paymentService: PaymentService
 	) {
 		super();
 	}
@@ -344,7 +346,10 @@ export default class ReferenceController
 		else throw new Error('Wrong type of company');
 
 		if(USE_FS) {
-			await builder.build(order, driver, driver.cargo ?? driver.cargoinn);
+			const company = driver.cargo ?? driver.cargoinn;
+			const { data: payment } = await this.paymentService.getByCompanyId(company.id);
+			company.payment = payment;
+			await builder.build(order, driver, company);
 			const buffer = await builder.pdfBuffer;
 			return response.contentType('application/pdf')
 			               .status(200)
