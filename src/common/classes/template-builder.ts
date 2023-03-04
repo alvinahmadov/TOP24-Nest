@@ -67,7 +67,7 @@ export default class DocumentTemplateBuilder {
 		return null;
 	}
 
-	public build(order: Order, driver: Driver, company: ICompany): this {
+	public async build(order: Order, driver: Driver, company: ICompany): Promise<this> {
 		delete this._buffer;
 
 		const date = new Date();
@@ -202,8 +202,13 @@ export default class DocumentTemplateBuilder {
 
 		if(cargoCompany) {
 			payment = cargoCompany.payment;
+			const legalNameSanitized = cargoCompany.legalName
+			                                       .replace('ООО', '')
+			                                       .replace('ОАО', '')
+			                                       .replace('ПАО', '');
+			
 			this.addConfig('companyName', cargoCompany.legalName)
-			    .addConfig('companyLegalName', cargoCompany.legalName)
+			    .addConfig('companyLegalName', legalNameSanitized)
 			    .addConfig('companyEmail', cargoCompany.email)
 			    .addConfig('companyDirector', cargoCompany.director)
 			    .addConfig('companyAddress', cargoCompany.legalAddress)
