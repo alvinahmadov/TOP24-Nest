@@ -344,7 +344,7 @@ export default class ReferenceController
 		else throw new Error('Wrong type of company');
 
 		if(USE_FS) {
-			builder.build(order, driver, driver.cargo ?? driver.cargoinn);
+			await builder.build(order, driver, driver.cargo ?? driver.cargoinn);
 			const buffer = await builder.pdfBuffer;
 			return response.contentType('application/pdf')
 			               .status(200)
