@@ -124,7 +124,7 @@ export default class DocumentTemplateBuilder {
 
 	private async getLogistData(crmId: string | number) {
 		const orderBitrixData = await this.httpClient.get<Record<string, any>>(`${BitrixUrl.ORDER_GET_URL}?ID=${crmId}`);
-		if(orderBitrixData && 'CREATED_BY_ID' in orderBitrixData) {
+		if(orderBitrixData && orderBitrixData['CREATED_BY_ID']) {
 			const logistCrmId = orderBitrixData['CREATED_BY_ID'];
 			const contact = await this.httpClient.get<Record<string, any>>(`${BitrixUrl.CONTACT_GET_URL}?ID=${logistCrmId}`);
 			if(contact) {
