@@ -14,6 +14,7 @@ import {
 	TransportStatus
 }                    from '@common/enums';
 import { BitrixUrl } from '@common/constants';
+import { Axios }     from '@common/classes/axios';
 import {
 	getCrm,
 	setMonthSuffixRussianLocale,
@@ -30,11 +31,60 @@ import {
 	Order,
 	Payment
 }                    from '@models/index';
-import { Axios }     from '@common/classes/axios';
 
 const convertPdfAsync = promisify(libre.convert);
 
 export type TTemplateSaveFormat = 'pdf' | 'docx';
+
+const placeholderKeys: string[] = [
+	'companyLegalName',
+	'companyEmail',
+	'companyDirector',
+	'companyAddress',
+	'companyPostalAddress',
+	'companyPhone',
+	'companyName',
+	'companyLastname',
+	'companyPatronymic',
+	'companyPassportSerial',
+	'companyPassportCode',
+	'companyPassportDate',
+	'companyPassportIssue',
+	'companyEmail',
+	'companyAddress',
+	'companyPostalAddress',
+	'companyPhone',
+	'currentAccount',
+	'correspondentAccount',
+	'deferralCondition',
+	'destinations',
+	'driverLastname',
+	'driverLicenseNumber',
+	'driverLicenseDate',
+	'driverName',
+	'driverPassportSerial',
+	'driverPassportCode',
+	'driverPassportDate',
+	'driverPatronymic',
+	'driverPhone',
+	'loadingType',
+	'payloadType',
+	'payloadVolume',
+	'payloadWeight',
+	'payloadPallets',
+	'price',
+	'transportBrand',
+	'transportModel',
+	'transportType',
+	'transportSerial',
+	'transportVolume',
+	'transportWeight',
+	'bankBic',
+	'bankName',
+	'taxpayerNumber',
+	'taxReasonCode',
+	'registrationNumber',
+];
 
 // noinspection JSUnusedGlobalSymbols
 /**
@@ -89,9 +139,20 @@ export default class DocumentTemplateBuilder {
 		this.replaceCompanyPlacehoders(company);
 
 		const { name, phone } = await this.getLogistData(crmId) ?? { name: '', phone: '' };
-		
+
 		this.addConfig('logist', name);
 		this.addConfig('logistPhone', phone);
+
+		placeholderKeys.forEach(
+			key =>
+			{
+				if(
+					this.config[key] === undefined ||
+					this.config[key] === 'undefined'
+				)
+					this.config[key] = '-';
+			}
+		);
 
 		this.doc.render(this.config);
 
@@ -206,9 +267,9 @@ export default class DocumentTemplateBuilder {
 		if(cargoCompany) {
 			payment = cargoCompany.payment;
 			const legalNameSanitized = cargoCompany.legalName
-			                                       .replace('ООО', '')
-			                                       .replace('ОАО', '')
-			                                       .replace('ПАО', '');
+			                                       .replace('ООО ', '')
+			                                       .replace('ОАО ', '')
+			                                       .replace('ПАО ', '');
 
 			this.addConfig('companyName', cargoCompany.legalName)
 			    .addConfig('companyLegalName', legalNameSanitized)
@@ -247,8 +308,7 @@ export default class DocumentTemplateBuilder {
 	}
 
 	private addConfig(key: string, value: any): this {
-		if(value !== undefined)
-			this.config[key] = value;
+		this.config[key] = value !== undefined ? value : '-';
 		return this;
 	}
 }
