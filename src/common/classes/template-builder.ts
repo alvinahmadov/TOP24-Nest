@@ -13,6 +13,7 @@ import {
 	loadingTypeToStr,
 	TransportStatus
 }                    from '@common/enums';
+import { BitrixUrl } from '@common/constants';
 import {
 	setMonthSuffixRussianLocale,
 	toLocaleDateTime
@@ -27,6 +28,7 @@ import {
 	Order,
 	Payment
 }                    from '@models/index';
+import { Axios }     from '@common/classes/axios';
 
 const convertPdfAsync = promisify(libre.convert);
 
@@ -42,6 +44,7 @@ export default class DocumentTemplateBuilder {
 	private doc: Docxtemplater;
 	private _buffer: Buffer;
 	private config: any;
+	protected httpClient: Axios;
 
 	constructor(input: string) {
 		const content = readFileSync(input, "binary");
@@ -49,6 +52,7 @@ export default class DocumentTemplateBuilder {
 			paragraphLoop: true,
 			linebreaks:    true
 		});
+		this.httpClient = new Axios();
 		this.config = {};
 	}
 
@@ -82,6 +86,15 @@ export default class DocumentTemplateBuilder {
 		this.replaceDriverPlacehoders(driver);
 		this.replaceCompanyPlacehoders(company);
 
+		const ths = this;
+		this.getLogistData(crmId).then(
+			({ name, phone }) =>
+			{
+				if(name) ths.config['logist'] = name;
+				if(phone) ths.config['logistPhone'] = phone;
+			}
+		);
+
 		this.doc.render(this.config);
 
 		this._buffer = this.doc.getZip()
@@ -96,15 +109,38 @@ export default class DocumentTemplateBuilder {
 	}
 
 	public async save(output: string, format: TTemplateSaveFormat = 'pdf') {
-		if(format === 'pdf') {
-			await libre.convert(this._buffer, '.' + format, undefined, (err, data) =>
-			{
-				if(!err)
-					writeFileSync(output, data);
-			});
+		if(this._buffer) {
+			if(format === 'pdf') {
+				await libre.convert(this._buffer, '.' + format, undefined, (err, data) =>
+				{
+					if(!err)
+						writeFileSync(output, data);
+				});
+			}
+			else if(format === 'docx')
+				writeFileSync(output, this._buffer);
 		}
-		else if(format === 'docx')
-			writeFileSync(output, this._buffer);
+	}
+
+	private async getLogistData(crmId: string | number) {
+		const orderBitrixData = await this.httpClient.get<Record<string, any>>(`${BitrixUrl.ORDER_GET_URL}?ID=${crmId}`);
+		if(orderBitrixData && 'CREATED_BY_ID' in orderBitrixData) {
+			const logistCrmId = orderBitrixData['CREATED_BY_ID'];
+			const contact = await this.httpClient.get<Record<string, any>>(`${BitrixUrl.CONTACT_GET_URL}?ID=${logistCrmId}`);
+			if(contact) {
+				const name: string = contact['NAME'];
+				const patronymic: string = contact['SECOND_NAME'];
+				const lastName: string = contact['LAST_NAME'];
+				const phone: string = contact['PHONE'] ? contact['PHONE'][0] : '';
+
+				return {
+					name: `${lastName ? lastName + ', ' : ''}${name}${patronymic ? ' ' + patronymic : ''}`,
+					phone
+				};
+			}
+		}
+
+		return {};
 	}
 
 	private replaceOrderPlacehoders(order: Order): void {
@@ -202,8 +238,9 @@ export default class DocumentTemplateBuilder {
 		}
 	}
 
-	private addConfig(key: string, value: any, defaultValue: any = ''): this {
-		this.config[key] = value !== undefined ? value : defaultValue;
+	private addConfig(key: string, value: any): this {
+		if(value !== undefined)
+			this.config[key] = value;
 		return this;
 	}
 }
