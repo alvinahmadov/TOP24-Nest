@@ -1,7 +1,8 @@
 ## ---- Base ---- ##
 FROM node:lts-buster AS base
 
-RUN apt-get update && apt-get install -y apt-utils locales net-tools nano 
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils locales net-tools \
+    nano libreoffice-writer 
 
 # Locale
 RUN sed -i -e \
