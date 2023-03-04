@@ -88,14 +88,10 @@ export default class DocumentTemplateBuilder {
 		this.replaceDriverPlacehoders(driver);
 		this.replaceCompanyPlacehoders(company);
 
-		const ths = this;
-		this.getLogistData(crmId).then(
-			({ name, phone }) =>
-			{
-				if(name) ths.config['logist'] = name;
-				if(phone) ths.config['logistPhone'] = phone;
-			}
-		);
+		const { name, phone } = await this.getLogistData(crmId) ?? { name: '', phone: '' };
+		
+		this.addConfig('logist', name);
+		this.addConfig('logistPhone', phone);
 
 		this.doc.render(this.config);
 
@@ -126,14 +122,14 @@ export default class DocumentTemplateBuilder {
 
 	private async getLogistData(crmId: string | number) {
 		const { result } = await this.httpClient.get<TCRMResponse>(`${BitrixUrl.ORDER_GET_URL}?ID=${crmId}`);
-		
+
 		const crmData = getCrm(result);
-		
+
 		if(crmData) {
 			const logistCrmId = crmData['CREATED_BY_ID'];
 			const { result } = await this.httpClient.get<TCRMResponse>(`${BitrixUrl.CONTACT_GET_URL}?ID=${logistCrmId}`);
 			const contact = getCrm(result);
-			
+
 			if(contact) {
 				const name: string = contact['NAME'];
 				const patronymic: string = contact['SECOND_NAME'];
