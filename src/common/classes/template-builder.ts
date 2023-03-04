@@ -134,7 +134,7 @@ export default class DocumentTemplateBuilder {
 				const name: string = contact['NAME'];
 				const patronymic: string = contact['SECOND_NAME'];
 				const lastName: string = contact['LAST_NAME'];
-				const phone: string = contact['PHONE'] ? contact['PHONE'][0] : '';
+				const phone: string = contact['PHONE'] ? contact['PHONE'][0]['VALUE'] : '';
 
 				return {
 					name: `${lastName ? lastName + ', ' : ''}${name}${patronymic ? ' ' + patronymic : ''}`,
