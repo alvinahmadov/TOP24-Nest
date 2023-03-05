@@ -17,6 +17,7 @@ import {
 	FilesInterceptor
 }                              from '@nestjs/platform-express';
 import { TMulterFile }         from '@common/interfaces';
+import { ActionStatus }        from '@common/enums';
 import {
 	isSuccessResponse,
 	sendResponse
@@ -54,7 +55,6 @@ export default class OrderController
 		private readonly orderService: OrderService
 	) {
 		super();
-		// this.orderService.gateway = this.gateway;
 	}
 
 	@ApiRoute(routes.filter, {
@@ -195,18 +195,13 @@ export default class OrderController
 		@Res() response: ex.Response
 	) {
 		if(dto) {
-			const { data: order } = await this.orderService.getById(id, false);
-
-			if(!order)
-				return sendResponse(response, { statusCode: HttpStatus.NOT_FOUND });
-
-			if(order.execState) {
-				dto.execState = Object.assign(order.execState, dto.execState);
-			}
-
-			const { execState, currentPoint } = dto;
-
-			const result = await this.orderService.update(id, { execState, currentPoint });
+			dto.execState = {
+				actionStatus: dto.execState?.actionStatus ?? ActionStatus.ON_WAY,
+				loaded:       !!dto.execState?.loaded,
+				unloaded:     !!dto.execState?.unloaded,
+				uploaded:     !!dto.execState?.uploaded
+			};
+			const result = await this.orderService.update(id, dto);
 			return sendResponse(response, result);
 		}
 
