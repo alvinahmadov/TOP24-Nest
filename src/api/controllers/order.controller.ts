@@ -207,7 +207,9 @@ export default class OrderController
 				const { data: order } = await this.orderService.getById(id, false);
 
 				if(order) {
-					const currentDestination = order.destinations.find(d => d.point === order.currentPoint);
+					const currentDestination = order.destinations.find(
+						d => d.point === dto.currentPoint ?? order.currentPoint 
+					);
 
 					if(currentDestination)
 						dto.execState.type = currentDestination.type;
