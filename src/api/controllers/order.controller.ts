@@ -195,12 +195,24 @@ export default class OrderController
 		@Res() response: ex.Response
 	) {
 		if(dto) {
+
 			dto.execState = {
 				actionStatus: dto.execState?.actionStatus ?? ActionStatus.ON_WAY,
 				loaded:       !!dto.execState?.loaded,
 				unloaded:     !!dto.execState?.unloaded,
 				uploaded:     !!dto.execState?.uploaded
 			};
+
+			if(dto.execState?.type === undefined) {
+				const { data: order } = await this.orderService.getById(id, false);
+
+				if(order) {
+					const currentDestination = order.destinations.find(d => d.point === order.currentPoint);
+
+					if(currentDestination)
+						dto.execState.type = currentDestination.type;
+				}
+			}
 			const result = await this.orderService.update(id, dto);
 			return sendResponse(response, result);
 		}
