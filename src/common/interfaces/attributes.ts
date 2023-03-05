@@ -1164,14 +1164,6 @@ export interface IOrder
 	readonly priority?: boolean;
 	readonly isDedicated?: boolean;
 	readonly isExtraPayload?: boolean;
-	/**
-	 * Active destination.
-	 * */
-	readonly destination?: IDestination;
-	/**
-	 * Next destination after active destination.
-	 * */
-	readonly nextDestination?: IDestination;
 }
 
 /**
