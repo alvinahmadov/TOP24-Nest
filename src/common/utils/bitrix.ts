@@ -38,6 +38,7 @@ export type TBitrixKey = 'transportFixtures' |
                          'orderStage' |
                          'orderPayload' |
                          'orderLoading' |
+                         'orderPaymentType' |
                          'orderTransportType' |
                          'paymentType' |
                          'riskClass' |
@@ -164,6 +165,8 @@ function selectBitrixEnum<R>(
 			return callback(CRM.ORDER.LOADING_TYPES);
 		case 'orderTransportType':
 			return callback(CRM.ORDER.TRANSPORT_TYPES);
+		case 'orderPaymentType': 
+			return callback(CRM.ORDER.PAYMENT.TYPE);
 		case 'paymentType':
 			return callback(CRM.COMPANY.PAYMENT_TYPES);
 		case 'riskClass':
@@ -439,7 +442,7 @@ export async function orderFromBitrix(crmFields: TCRMFields, options?: { debug: 
 		                 typeFromCrm<string>(crmFields[ORDER.DRIVER_DEFERRAL_CONDITIONS], ''),
 		ownerDeferralConditions:
 		                 typeFromCrm<string>(crmFields[ORDER.OWNER_DEFERRAL_CONDITIONS], ''),
-		paymentType:     convertBitrix('paymentType', crmFields[ORDER.PAYMENT_TYPE]),
+		paymentType:     convertBitrix('orderPaymentType', crmFields[ORDER.PAYMENT_TYPE]),
 		isOpen:          typeFromCrm<boolean>(crmFields[ORDER.IS_OPEN], true),
 		isFree:          typeFromCrm<boolean>(crmFields[ORDER.IS_FREE], true),
 		cancelCause:     typeFromCrm<string>(crmFields[ORDER.CANCEL_CAUSE], ''),
