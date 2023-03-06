@@ -33,8 +33,7 @@ const { path, tag, routes } = getRouteConfig('bitrix');
 
 const throttle = {
 	webhook: {
-		//one request per 2 seconds
-		limit: 1,
+		limit: 2,
 		ttl:   3
 	}
 };
