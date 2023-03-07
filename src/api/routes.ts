@@ -101,9 +101,14 @@ export const routeConfig: TApiRouteList = {
 					method: RequestMethod.PATCH,
 					api:    NApiDescriptors.bitrix.sync
 				},
-				webhook:     {
+				listenWebhook:     {
 					path:   'webhook',
 					method: RequestMethod.POST,
+					api:    NApiDescriptors.bitrix.webhook
+				},
+				respondWebhook:     {
+					path:   'webhook',
+					method: RequestMethod.GET,
 					api:    NApiDescriptors.bitrix.webhook
 				}
 			}

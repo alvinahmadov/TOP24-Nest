@@ -5,6 +5,7 @@ import {
 	HttpStatus,
 	Param,
 	Res,
+	Req,
 	UseFilters
 }                              from '@nestjs/common';
 import { Throttle }            from '@nestjs/throttler';
@@ -113,15 +114,18 @@ export default class BitrixController
 	}
 
 	@Throttle(throttle.webhook.limit, throttle.webhook.ttl)
-	@ApiRoute(routes.webhook, {
+	@ApiRoute(routes.listenWebhook, {
 		statuses: [HttpStatus.OK]
 	})
-	public async webhookListen(@Body() crm: IWebhookResponse) {
+	public async webhookListen(
+		@Body() crm: IWebhookResponse,
+		@Res() response: ex.Response
+	) {
 		if(crm.data === undefined ||
 		   crm.data['FIELDS'] === undefined ||
 		   crm.data['FIELDS'][ORDER.ID] === undefined) {
 			console.info('Undefined data from bitrix webhook!');
-			return;
+		return sendResponse(response, { statusCode: HttpStatus.NOT_ACCEPTABLE });
 		}
 
 		const crmFields = crm.data['FIELDS'];
@@ -151,6 +155,18 @@ export default class BitrixController
 				break;
 		}
 
-		return;
+		return sendResponse(response, { statusCode: HttpStatus.ACCEPTED });
+	}
+	
+	@ApiRoute(routes.respondWebhook, {
+		statuses: [HttpStatus.OK]
+	})
+	public webhookRespond(
+		@Body() body: any,
+		@Req() request: ex.Request,
+		@Res() response: ex.Response
+	) {
+		console.debug({ webhookRespond: body })
+		return sendResponse(response, { statusCode: HttpStatus.OK });
 	}
 }
