@@ -1,12 +1,16 @@
-import { Order as SortOrder }       from 'sequelize';
-import { TableOptions }             from 'sequelize-typescript';
-import { JwtModuleOptions }         from '@nestjs/jwt';
-import { CorsOptions }              from '@nestjs/common/interfaces/external/cors-options.interface';
-import { GatewayMetadata }          from '@nestjs/websockets';
-import env                          from '@config/env';
-import { CRM }                      from '@config/index';
-import { TBitrixData, TBitrixEnum } from './interfaces';
-import { join }                     from 'path';
+import { join }               from 'path';
+import { Order as SortOrder } from 'sequelize';
+import { TableOptions }       from 'sequelize-typescript';
+import { JwtModuleOptions }   from '@nestjs/jwt';
+import { CorsOptions }        from '@nestjs/common/interfaces/external/cors-options.interface';
+import { GatewayMetadata }    from '@nestjs/websockets';
+import env                    from '@config/env';
+import { CRM }                from '@config/index';
+import {
+	IOrderExecutionState,
+	TBitrixData,
+	TBitrixEnum
+}                             from './interfaces';
 
 export const MAX_FLOAT: number = 16000000.0;
 export const MIN_FLOAT: number = 0.0;
@@ -16,6 +20,12 @@ export const RANDOM_CODE_DIGITS = 1000;
 export const RANDOM_CODE_MAX = 9000;
 export const MILLIS = 24 * 60 * 60 * 1000;
 export const TIMEZONE = 'Europe/Moscow';
+export const ENABLE_DISTANCE_NOTIF_TASK = false;
+export const NOTIFICATION_DISTANCE = 200 / 1000;
+
+export const LAST_24_HOURS = 1;
+export const LAST_6_HOURS = 0.25;
+export const LAST_1_HOUR = 0.041666666666666664;
 
 /**@ignore*/
 export const HOST = env.host;
@@ -26,16 +36,11 @@ export const SCHEME = env.scheme;
 /**@ignore*/
 export const SWAGGER_PATH = 'api-docs/swagger';
 
-/**@ignore*/
-export const AGREEMENT_PDF_PATH: string = join(__dirname, '../../../resources/files/agreement.pdf');
 export const AGREEMENT_PATHS: string[] = [
-	join(__dirname, '../../../resources/files/pdf/Юр_Шаблон_заявки_с_маршрутом.pdf'),
-	join(__dirname, '../../../resources/files/pdf/ИП_Шаблон_заявки_с_маршрутом.pdf'),
-	join(__dirname, '../../../resources/files/pdf/ФЛ_Шаблон_заявки_с_маршрутом.pdf')
-]
-
-/**@ignore*/
-export const FIREBASE_CONFIG_PATH = join(__dirname, '../../../src/config/json/firebase.json');
+	join(__dirname, '../../../resources/files/templates/deal_template_0.docx'),
+	join(__dirname, '../../../resources/files/templates/deal_template_1.docx'),
+	join(__dirname, '../../../resources/files/templates/deal_template_2.docx')
+];
 
 /**@ignore*/
 export const JWT_OPTIONS: JwtModuleOptions = {
@@ -85,6 +90,14 @@ export const CARGO_EVENT = 'cargo';
 export const ORDER_EVENT = 'order';
 
 export const DEFAULT_SORT_ORDER: SortOrder = [['created_at', 'DESC'], ['updated_at', 'DESC']];
+
+export const DEFAULT_ORDER_STATE: IOrderExecutionState = {
+	type:         0, // DestinationType.LOAD
+	actionStatus: 1, // ActionStatus.ON_WAY
+	loaded:       false,
+	unloaded:     false,
+	uploaded:     false
+};
 
 /**@ignore*/
 export namespace BitrixUrl {

@@ -17,7 +17,12 @@ import {
 	FilesInterceptor
 }                              from '@nestjs/platform-express';
 import { TMulterFile }         from '@common/interfaces';
-import { sendResponse }        from '@common/utils';
+import { ActionStatus }        from '@common/enums';
+import {
+	isSuccessResponse,
+	sendResponse
+}                              from '@common/utils';
+import env                     from '@config/env';
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
@@ -50,7 +55,6 @@ export default class OrderController
 		private readonly orderService: OrderService
 	) {
 		super();
-		// this.orderService.gateway = this.gateway;
 	}
 
 	@ApiRoute(routes.filter, {
@@ -179,6 +183,71 @@ export default class OrderController
 		const result = await this.orderService.send(id);
 
 		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.setState, {
+		guards:   [AccessGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async setState(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Body(OrderPipe) dto: dto.OrderUpdateDto,
+		@Res() response: ex.Response
+	) {
+		if(dto) {
+
+			dto.execState = {
+				actionStatus: dto.execState?.actionStatus ?? ActionStatus.ON_WAY,
+				loaded:       !!dto.execState?.loaded,
+				unloaded:     !!dto.execState?.unloaded,
+				uploaded:     !!dto.execState?.uploaded
+			};
+
+			if(dto.execState?.type === undefined) {
+				const { data: order } = await this.orderService.getById(id, false);
+
+				if(order) {
+					const currentDestination = order.destinations.find(
+						d => d.point === dto.currentPoint ?? order.currentPoint 
+					);
+
+					if(currentDestination)
+						dto.execState.type = currentDestination.type;
+				}
+			}
+			const result = await this.orderService.update(id, dto);
+			return sendResponse(response, result);
+		}
+
+		return sendResponse(response, { statusCode: HttpStatus.BAD_REQUEST });
+	}
+
+	@ApiRoute(routes.getState, {
+		guards:   [AccessGuard],
+		statuses: [HttpStatus.OK]
+	})
+	public async getState(
+		@Param('id', ParseUUIDPipe) id: string,
+		@Res() response: ex.Response
+	) {
+		const order = await this.orderService.getById(id);
+
+		if(isSuccessResponse) {
+			const { execState, currentPoint } = order.data;
+			let data: any = {};
+
+			if(env.api.compatMode) {
+				data['operation'] = execState;
+				data['current_point'] = currentPoint;
+			}
+			else {
+				data = { execState, currentPoint };
+			}
+
+			return sendResponse(response, { statusCode: HttpStatus.OK, data });
+		}
+
+		return sendResponse(response, { statusCode: 400 });
 	}
 
 	@ApiRoute(routes.shipping, {

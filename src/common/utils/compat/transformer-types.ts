@@ -11,7 +11,7 @@ import {
 } from '@common/enums';
 import {
 	IApiResponse,
-	IDriverOperation,
+	IOrderExecutionState,
 	IModel,
 	IOffer,
 	TCreationAttribute,
@@ -137,7 +137,13 @@ export interface ICompanyTransformer
 	 * @see ICompany.paymentType
 	 * */
 	nds?: string;
+	/**
+	 * @see legalAddress
+	 * */
 	address_first?: string;
+	/**
+	 * @see postalAddress
+	 * */
 	address_second?: string;
 	address_third?: string;
 	/**
@@ -260,6 +266,31 @@ export interface ICargoCompanyInnTransformer
 }
 
 /**
+ * @see IDestination
+ * */
+export interface IDestinationTransformer
+	extends IModel,
+	        ITransformer {
+	point: string;
+	type: DestinationType;
+	address: string;
+	coordinates: TGeoCoordinate;
+	date?: Date;
+	contact?: string;
+	inn?: string;
+	phone?: string;
+	distance?: number;
+	comment?: string;
+	fulfilled?: boolean;
+	/**
+	 * @see IDestination.shippingPhotoLinks
+	 * */
+	shipping_link?: string[];
+
+	readonly num?: number;
+}
+
+/**
  * @see IDriver
  * */
 export interface IDriverTransformer
@@ -289,10 +320,6 @@ export interface IDriverTransformer
 	 * @see IDriver.birthDate
 	 * */
 	date_of_birth: Date;
-	/**
-	 * @see IDriver.currentPoint
-	 * */
-	current_point?: string;
 	phone?: string;
 	/**
 	 * @see IDriver.taxpayerNumber
@@ -365,7 +392,6 @@ export interface IDriverTransformer
 	phone_second?: string;
 	info?: string;
 	status?: DriverStatus;
-	operation?: IDriverOperation;
 	/**
 	 * @see IDriver.payloadCity
 	 * */
@@ -381,11 +407,16 @@ export interface IDriverTransformer
 	latitude?: number;
 	longitude?: number;
 	/**
+	 * @deprecated Use IOrderTransformer.current_point.
+	 * */
+	operation?: IOrderExecutionState;
+	/**
 	 * @see IDriver.currentAddress
 	 * */
 	current_address?: string;
-	fullname?: string;
-	company_name?: string;
+	readonly fullname?: string;
+	readonly company_name?: string;
+	readonly current_point?: string;
 
 	cargo?: ICargoCompanyTransformer;
 	cargoinn?: ICargoCompanyInnTransformer;
@@ -542,6 +573,8 @@ export interface IOrderTransformer
 	 * */
 	transport_types?: string[];
 	destinations?: IDestinationTransformer[];
+	operation?: IOrderExecutionState;
+	current_point?: string;
 	/**
 	 * @see IOrder.driverDeferralConditions
 	 * */
@@ -571,32 +604,13 @@ export interface IOrderTransformer
 	readonly is_dedicated?: boolean;
 	readonly is_extra_payload?: boolean;
 
+	readonly destination?: IDestinationTransformer;
+
+	readonly next_destination?: IDestinationTransformer;
+
 	cargo?: ICargoCompanyTransformer;
 	cargoinn?: ICargoCompanyInnTransformer;
 	driver?: IDriverTransformer;
-}
-
-/**
- * @see IDestination
- * */
-export interface IDestinationTransformer
-	extends IModel,
-	        ITransformer {
-	point: string;
-	type: DestinationType;
-	address: string;
-	coordinates: TGeoCoordinate;
-	date?: Date;
-	contact?: string;
-	inn?: string;
-	phone?: string;
-	distance?: number;
-	comment?: string;
-	fulfilled?: boolean;
-	/**
-	 * @see IDestination.shippingPhotoLinks
-	 * */
-	shipping_link?: string[];
 }
 
 /**

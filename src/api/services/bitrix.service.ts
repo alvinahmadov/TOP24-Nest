@@ -459,11 +459,13 @@ export default class BitrixService
 						);
 					}
 
-					const updateResponse = await this.orderService
-					                                 .update(order.id, { ...orderDto, hasSent: true });
+					const updateDestinations = order.destinations.some(
+						dest => dest.hasDiff(destinationDtos.find(d => d.point === dest.point))
+					);
 
-					if(isSuccessResponse(updateResponse)) {
-						const order = updateResponse.data;
+					const updateResponse = await this.orderService.update(order.id, orderDto);
+
+					if(updateDestinations) {
 						const repo = this.destinationRepo;
 
 						destinationDtos.forEach(
@@ -482,11 +484,11 @@ export default class BitrixService
 								)
 						);
 					}
+					
 					return updateResponse;
 				}
 				else {
-					const createResponse = await this.orderService
-					                                 .create(orderDto);
+					const createResponse = await this.orderService.create(orderDto);
 
 					if(isSuccessResponse(createResponse)) {
 						const order = createResponse.data;

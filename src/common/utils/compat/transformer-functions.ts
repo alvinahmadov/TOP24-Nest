@@ -214,7 +214,6 @@ function transformDriver(driver: models.Driver)
 			surname:                       driver.getDataValue('lastName'),
 			is_ready:                      driver.getDataValue('isReady'),
 			date_of_birth:                 driver.getDataValue('birthDate'),
-			current_point:                 driver.getDataValue('currentPoint'),
 			phone:                         driver.getDataValue('phone'),
 			phone_second:                  driver.getDataValue('phoneSecond'),
 			taxpayer_number:               driver.getDataValue('taxpayerNumber'),
@@ -236,7 +235,6 @@ function transformDriver(driver: models.Driver)
 			link_back:                     driver.getDataValue('licenseBackLink'),
 			info:                          driver.getDataValue('info'),
 			status:                        driver.getDataValue('status'),
-			operation:                     driver.getDataValue('operation'),
 			payload_city:                  driver.getDataValue('payloadCity'),
 			payload_region:                driver.getDataValue('payloadRegion'),
 			payload_date:                  driver.getDataValue('payloadDate'),
@@ -245,6 +243,7 @@ function transformDriver(driver: models.Driver)
 			current_address:               driver.getDataValue('currentAddress'),
 			fullname:                      driver.get('fullName'),
 			company_name:                  driver.get('companyName'),
+			current_point:                 driver.get('currentPoint'),
 			cargo:                         transformCargoCompany(driver.cargo),
 			cargoinn:                      transformCargoCompanyInn(driver.cargoinn),
 			order:                         transformOrder(driver.order),
@@ -296,6 +295,7 @@ function transformDestination(destination: models.Destination)
 			comment:       destination.getDataValue('comment'),
 			fulfilled:     destination.getDataValue('fulfilled'),
 			shipping_link: destination.getDataValue('shippingPhotoLinks'),
+			num:           destination.get('num', { plain: true, clone: false }),
 			createdAt:     destination.getDataValue('createdAt'),
 			updatedAt:     destination.getDataValue('updatedAt')
 		};
@@ -455,6 +455,7 @@ function transformOrder(order: models.Order)
 			palets:                     order.getDataValue('pallets'),
 			transport_types:            order.getDataValue('transportTypes'),
 			destinations:               transformDestinations(order.destinations),
+			current_point:              order.getDataValue('currentPoint'),
 			driver_deferral_conditions: order.getDataValue('driverDeferralConditions'),
 			owner_deferral_conditions:  order.getDataValue('ownerDeferralConditions'),
 			dedicated_machine:          order.getDataValue('dedicated'),
@@ -462,8 +463,11 @@ function transformOrder(order: models.Order)
 			receipt_link:               order.getDataValue('receiptPhotoLinks'),
 			contract_link:              order.getDataValue('contractPhotoLink'),
 			filter:                     order.getDataValue('filter'),
+			operation:                  order.get('execState'),
 			is_dedicated:               order.get('isDedicated'),
 			is_extra_payload:           order.get('isExtraPayload'),
+			destination:                order.get('destination'),
+			next_destination:           order.get('nextDestination'),
 			cargo:                      transformCargoCompany(order?.cargo),
 			cargoinn:                   transformCargoCompanyInn(order?.cargoinn),
 			driver:                     transformDriver(order?.driver),
@@ -529,7 +533,7 @@ function transformTransport(transport: models.Transport)
 			transport.getDataValue('certificatePhotoLinkFront'),
 			transport.getDataValue('certificatePhotoLinkBack'),
 		].filter(v => !!v);
-		
+
 		return {
 			id:             transport.getDataValue('id'),
 			cargoId:        transport.getDataValue('cargoId'),

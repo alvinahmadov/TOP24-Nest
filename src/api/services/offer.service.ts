@@ -4,9 +4,9 @@ import {
 	HttpStatus
 }                              from '@nestjs/common';
 import env                     from '@config/env';
+import { DEFAULT_ORDER_STATE } from '@common/constants';
 import {
-	DestinationType,
-	DriverStatus,
+	ActionStatus,
 	OfferStatus,
 	OrderStatus,
 	OrderStage,
@@ -25,7 +25,7 @@ import {
 	TAffectedRows,
 	TOfferTransportFilter,
 	TOfferDriver,
-	TSentOffer
+	TSentOffer,
 }                              from '@common/interfaces';
 import {
 	fillDriverWithCompanyData,
@@ -49,6 +49,7 @@ import {
 	OfferRepository
 }                              from '@repos/index';
 import {
+	DriverUpdateDto,
 	OfferCreateDto,
 	OfferFilter,
 	OfferUpdateDto,
@@ -301,17 +302,6 @@ export default class OfferService
 		}
 
 		if(dto.orderStatus === OrderStatus.FINISHED) {
-			await this.driverService.update(driverId, {
-				status:       DriverStatus.ON_WAY,
-				operation:    {
-					type:     DestinationType.LOAD,
-					loaded:   false,
-					unloaded: false,
-					uploaded: false
-				},
-				currentPoint: 'A'
-			});
-
 			this.gateway.sendDriverNotification(
 				{
 					id:      driverId,
@@ -322,13 +312,6 @@ export default class OfferService
 					url:  'Main'
 				}
 			);
-
-			await this.orderService.update(orderId, {
-				left24H:           false,
-				left6H:            false,
-				left1H:            false,
-				passedMinDistance: false
-			});
 		}
 
 		const result = await this.repository.update(offer.id, dto);
@@ -353,8 +336,6 @@ export default class OfferService
 		if(offer.driver) {
 			await this.driverService.update(offer.driverId, {
 				status:         0,
-				operation:      null,
-				currentPoint:   null,
 				currentAddress: null
 			});
 		}
@@ -453,7 +434,7 @@ export default class OfferService
 		                     .map(
 			                     (offer) =>
 			                     {
-				                     let { order, driver, orderStatus } = offer;
+				                     let { order, orderStatus } = offer;
 
 				                     if(orderStatus === OrderStatus.PROCESSING) {
 					                     if(!order.isCurrent)
@@ -476,10 +457,7 @@ export default class OfferService
 						                     isCurrent: true
 					                     };
 
-					                     if(
-						                     driver.status > DriverStatus.NONE &&
-						                     driver.status < DriverStatus.DOC_LOAD
-					                     ) {
+					                     if(order.execState?.actionStatus < ActionStatus.DOCUMENT_UPLOAD) {
 						                     orderUpdateDto.paymentPhotoLinks = order.paymentPhotoLinks = null;
 						                     orderUpdateDto.receiptPhotoLinks = order.receiptPhotoLinks = null;
 					                     }
@@ -557,7 +535,6 @@ export default class OfferService
 							mainTransports[activeIndex].trailer = trailer;
 						}
 					}
-					if(!driver.currentPoint) driver.currentPoint = 'A';
 					const getOptions = { plain: true, clone: false };
 
 					transportData.push(
@@ -783,7 +760,7 @@ export default class OfferService
 		role?: UserRole
 	): Promise<IApiResponse<Offer | null>> {
 		let offer = await this.repository.getByAssociation(orderId, driverId);
-		console.debug(role);
+		role = null;
 		if(offer) {
 			if(offer.status === OfferStatus.RESPONDED) {
 				if((
@@ -818,7 +795,6 @@ export default class OfferService
 								status:         driver.status,
 								latitude:       driver.latitude,
 								longitude:      driver.longitude,
-								currentPoint:   driver.currentPoint,
 								currentAddress: driver.currentAddress,
 								message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], offer.order?.crmTitle)
 							},
@@ -829,7 +805,7 @@ export default class OfferService
 						);
 					}
 
-					this.confirmDriver(orderId, driverId, offer)
+					this.confirmDriver(offer)
 					    .then((confirmed) => console.log(`Driver is ${!confirmed ? 'not' : ''} confirmed!`))
 					    .catch(console.error);
 
@@ -859,37 +835,27 @@ export default class OfferService
 		return this.responses['NOT_FOUND'];
 	}
 
-	public async confirmDriver(
-		orderId: string,
-		driverId: string,
-		offer: Offer
-	): Promise<boolean> {
+	public async confirmDriver(offer: Offer): Promise<boolean> {
 		const orderTitle = offer.order?.crmId?.toString() ?? '';
-
-		await this.driverService.update(driverId, {
-			status:       DriverStatus.ON_WAY,
-			operation:    {
-				type:     DestinationType.LOAD,
-				loaded:   false,
-				unloaded: false
-			},
-			currentPoint: 'A'
-		});
+		const driverId: string = offer.driverId,
+			orderId: string = offer.orderId;
 
 		this.orderService.update(
 			orderId,
 			{
-				driverId:    driverId,
-				isFree:      false,
-				isOpen:      false,
-				isCanceled:  false,
-				hasProblem:  false,
-				bidPrice:    offer.bidPrice,
-				bidPriceVat: offer.bidPriceVat,
-				bidInfo:     offer.bidComment,
-				cargoId:     offer.driver.cargoId,
-				cargoinnId:  offer.driver.cargoinnId,
-				status:      OrderStatus.PROCESSING
+				driverId:     driverId,
+				isFree:       false,
+				isOpen:       false,
+				isCanceled:   false,
+				hasProblem:   false,
+				bidPrice:     offer.bidPrice,
+				bidPriceVat:  offer.bidPriceVat,
+				bidInfo:      offer.bidComment,
+				cargoId:      offer.driver.cargoId,
+				cargoinnId:   offer.driver.cargoinnId,
+				status:       OrderStatus.PROCESSING,
+				execState:    DEFAULT_ORDER_STATE,
+				currentPoint: 'A'
 			}
 		).then(
 			({ data: order }) =>
@@ -944,7 +910,6 @@ export default class OfferService
 						    left24H:           false,
 						    left6H:            false,
 						    left1H:            false,
-						    passedMinDistance: false,
 						    cancelCause:       reason ?? '',
 						    contractPhotoLink: null
 					    })
@@ -969,11 +934,7 @@ export default class OfferService
 				}
 
 				if(driver) {
-					const driverDto = {
-						status:         DriverStatus.NONE,
-						currentPoint:   '',
-						currentAddress: ''
-					};
+					const driverDto: DriverUpdateDto = { currentAddress: '' };
 
 					let { data: orders } = await this.orderService.getList(
 						{}, {
@@ -987,8 +948,7 @@ export default class OfferService
 					);
 
 					if(orders && orders.length > 1) {
-						driverDto.status = DriverStatus.ON_WAY;
-						driverDto.currentPoint = 'A';
+						// driverDto.status = DriverStatus.ON_WAY;
 					}
 
 					this.driverService

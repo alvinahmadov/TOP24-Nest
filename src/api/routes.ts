@@ -101,9 +101,14 @@ export const routeConfig: TApiRouteList = {
 					method: RequestMethod.PATCH,
 					api:    NApiDescriptors.bitrix.sync
 				},
-				webhook:     {
+				listenWebhook:     {
 					path:   'webhook',
 					method: RequestMethod.POST,
+					api:    NApiDescriptors.bitrix.webhook
+				},
+				respondWebhook:     {
+					path:   'webhook',
+					method: RequestMethod.GET,
 					api:    NApiDescriptors.bitrix.webhook
 				}
 			}
@@ -507,6 +512,16 @@ export const routeConfig: TApiRouteList = {
 						path:   'send/:id',
 						method: RequestMethod.GET,
 						api:    NApiDescriptors.order.send
+					},
+				setState:
+					{
+						path:   'state/:id',
+						method: RequestMethod.PUT
+					},
+				getState:
+					{
+						path:   'state/:id',
+						method: RequestMethod.GET
 					},
 				shipping:
 					{

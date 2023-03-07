@@ -39,7 +39,6 @@ import {
 	renameMulterFile
 }                              from '@common/utils';
 import {
-	Destination,
 	Driver,
 	Order,
 	Transport
@@ -304,11 +303,9 @@ export default class OrderService
 			driver = fillDriverWithCompanyData(driver);
 
 			result.driver = driver;
-
-			if(!driver.currentPoint)
-				result.driver.currentPoint = 'A';
 			const orderResponse = await this.getById(order.id, false);
 			result.order = filterOrders(orderResponse?.data) as Order;
+			result.driver.order = result.order;
 		}
 
 		return {
@@ -424,10 +421,7 @@ export default class OrderService
 		if(!order)
 			return this.responses['NOT_FOUND'];
 
-		let destination = await Destination.findOne(
-			{ where: { orderId: order.id, point } }
-		);
-
+		let destination = await this.destinationRepo.getOrderDestination(order.id, { point });
 		if(destination) {
 			const {
 				Location: shippingPhotoLinks
@@ -445,10 +439,7 @@ export default class OrderService
 				else
 					destination.shippingPhotoLinks = shippingPhotoLinks;
 
-				await Destination.update({ fulfilled: true }, { where: { point: { [Op.lte]: point } } });
-
 				await this.destinationRepo.update(destination.id, { shippingPhotoLinks: destination.shippingPhotoLinks });
-				order = await this.repository.get(order.id);
 			}
 
 			if(fileUploaded) {
@@ -620,17 +611,6 @@ export default class OrderService
 		}
 
 		if(fileUploaded) {
-			// if(
-			// 	paymentPhotoLinks?.length > 0 &&
-			// 	receiptPhotoLinks?.length > 0
-			// ) {
-			// 	this.repository
-			// 	    .update(id, { stage: OrderStage.DOCUMENT_SENT, onPayment: order.onPayment })
-			// 	    .then(o => console.log(`Documents for ${mode} photos for order '${o.id}' uploaded`))
-			// 	    .catch(console.error);
-			// }
-			// else console.log('Either payment or receipt photo not uploaded!');
-
 			this.send(order.id)
 			    .then(() => this.gateway.sendOrderNotification({ id, message }))
 			    .catch(console.error);

@@ -57,3 +57,27 @@ export function reformatDateString<T extends IModel, K = keyof T>(
 		}
 	}
 }
+
+export function toLocaleDateTime(
+	dateOrString: Date | string,
+	mode: 'mixed' | 'date' | 'time' = 'mixed'
+): string {
+	const date = typeof dateOrString === 'string' ? new Date(dateOrString)
+	                                              : dateOrString;
+	const locale = 'ru';
+	switch(mode) {
+		case "time":
+			return date?.toLocaleTimeString(locale);
+		case "date":
+			return date?.toLocaleDateString(locale);
+		case "mixed":
+		default:
+			return date?.toLocaleString(locale);
+	}
+}
+
+export function setMonthSuffixRussianLocale(month: string): string {
+	const lastIndex = month.length - 1;
+	return month[lastIndex] === 'ь' || month[lastIndex] === 'й' ? month.substring(0, lastIndex) + 'я'
+	                                                            : month + 'а';
+}

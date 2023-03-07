@@ -7,13 +7,11 @@ import {
 }                        from 'sequelize-typescript';
 import {
 	Field,
-	InterfaceType,
 	ObjectType
 }                        from '@nestjs/graphql';
 import { ApiProperty }   from '@nestjs/swagger';
 import { CRM, DRIVER }   from '@config/json';
 import {
-	DestinationType,
 	DriverStatus,
 	UserRole
 }                        from '@common/enums';
@@ -25,10 +23,8 @@ import {
 	FloatColumn,
 	ICRMEntity,
 	IDriver,
-	IDriverOperation,
 	Index,
 	IntColumn,
-	JsonbColumn,
 	StringColumn,
 	TCRMData,
 	UrlColumn,
@@ -43,15 +39,6 @@ import Order             from './order.entity';
 import Transport         from './transport.entity';
 
 const { driver: prop } = entityConfig;
-
-@InterfaceType()
-export class DriverOperation
-	implements IDriverOperation {
-	type: DestinationType;
-	unloaded?: boolean;
-	loaded?: boolean;
-	uploaded?: boolean;
-}
 
 /**
  * Cargo company driver model.
@@ -183,17 +170,9 @@ export default class Driver
 	@FloatColumn()
 	longitude?: number;
 
-	@ApiProperty(prop.currentPoint)
-	@StringColumn()
-	currentPoint?: string;
-
 	@ApiProperty(prop.currentAddress)
 	@StringColumn()
 	currentAddress?: string;
-
-	@ApiProperty(prop.operation)
-	@JsonbColumn()
-	operation?: DriverOperation;
 
 	@ApiProperty(prop.payloadCity)
 	@StringColumn()
@@ -266,6 +245,14 @@ export default class Driver
 		const surname = this.lastName ? `${this.lastName}` : '';
 		const middleName = this.patronymic ? ` ${this.patronymic[0]}.` : '';
 		return `${surname}${middleName}${name}`;
+	}
+
+	@VirtualColumn()
+	public get currentPoint(): string {
+		if(this.order)
+			return this.order.currentPoint;
+
+		return "";
 	}
 
 	public toCrm(

@@ -67,7 +67,7 @@ const env: IEnvironment = {
 		token:   parser.str('BITRIX_TOKEN')
 	},
 	firebase:         {
-		enable:      parser.bool('FIREBASE_ENABLE', false)
+		enable: parser.bool('FIREBASE_ENABLE', false)
 	},
 	objectStorage:    {
 		type:     useLocalStorage ? 'local' : 'external',

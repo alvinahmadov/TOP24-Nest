@@ -1,5 +1,8 @@
 import { CRM, ORDER, TRANSPORT }   from '@config/json';
-import { BitrixUrl }               from '@common/constants';
+import {
+	BitrixUrl,
+	DEFAULT_ORDER_STATE
+}                                  from '@common/constants';
 import {
 	AxiosStatic,
 	ApiQuery
@@ -35,6 +38,7 @@ export type TBitrixKey = 'transportFixtures' |
                          'orderStage' |
                          'orderPayload' |
                          'orderLoading' |
+                         'orderPaymentType' |
                          'orderTransportType' |
                          'paymentType' |
                          'riskClass' |
@@ -161,6 +165,8 @@ function selectBitrixEnum<R>(
 			return callback(CRM.ORDER.LOADING_TYPES);
 		case 'orderTransportType':
 			return callback(CRM.ORDER.TRANSPORT_TYPES);
+		case 'orderPaymentType': 
+			return callback(CRM.ORDER.PAYMENT.TYPE);
 		case 'paymentType':
 			return callback(CRM.COMPANY.PAYMENT_TYPES);
 		case 'riskClass':
@@ -406,7 +412,9 @@ export async function orderFromBitrix(crmFields: TCRMFields, options?: { debug: 
 	const title: string = crmFields[ORDER.HEADER] || crmFields[ORDER.TITLE];
 	const destinationDtos = await parseDestination(crmFields);
 	const isCanceled: boolean = typeFromCrm(crmFields[ORDER.IS_CANCELED], false);
-	const stage: number = convertBitrix('orderStage', crmFields[ORDER.STAGE], true, true) ?? OrderStage.NEW;
+	const stage: number = crmFields[ORDER.STAGE] === 'WON' ? OrderStage.FINISHED
+	                                                       : convertBitrix('orderStage', crmFields[ORDER.STAGE], true, true)
+	                                                         ?? OrderStage.NEW;
 	const status: number = !isCanceled ? convertBitrix('orderStatus', crmFields[ORDER.STATUS], true, true)
 	                                     ?? OrderStatus.PENDING
 	                                   : OrderStatus.CANCELLED_BITRIX;
@@ -434,13 +442,15 @@ export async function orderFromBitrix(crmFields: TCRMFields, options?: { debug: 
 		                 typeFromCrm<string>(crmFields[ORDER.DRIVER_DEFERRAL_CONDITIONS], ''),
 		ownerDeferralConditions:
 		                 typeFromCrm<string>(crmFields[ORDER.OWNER_DEFERRAL_CONDITIONS], ''),
-		paymentType:     convertBitrix('paymentType', crmFields[ORDER.PAYMENT_TYPE]),
+		paymentType:     convertBitrix('orderPaymentType', crmFields[ORDER.PAYMENT_TYPE]),
 		isOpen:          typeFromCrm<boolean>(crmFields[ORDER.IS_OPEN], true),
 		isFree:          typeFromCrm<boolean>(crmFields[ORDER.IS_FREE], true),
 		cancelCause:     typeFromCrm<string>(crmFields[ORDER.CANCEL_CAUSE], ''),
 		isCanceled:      isCanceled,
 		hasProblem:      typeFromCrm<boolean>(crmFields[ORDER.HAS_PROBLEM], false),
 		dedicated:       convertBitrix('transportDedicated', crmFields[ORDER.DEDICATION]),
+		currentPoint:    'A',
+		execState:       DEFAULT_ORDER_STATE,
 		transportTypes:  crmFields[ORDER.TRANSPORT_TYPE]
 			                 ?.map((t: string) => convertBitrix('orderTransportType', t))
 	};

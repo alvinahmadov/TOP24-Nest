@@ -20,6 +20,8 @@ export const formatPhone = (phoneNumber?: string): string | undefined =>
 
 export const cleanToken = (str: string): string => str?.replace(cleanStringRegex, '');
 
+export const destinationPointToNumber = (point: string): number => parseInt(point, 36) - 9;
+
 export const getRandomCode = (
 	digits: number = RANDOM_CODE_DIGITS,
 	max: number = RANDOM_CODE_MAX
@@ -84,7 +86,7 @@ export function renameMulterFiles(files: TMulterFile[], ...args: string[]): TMul
 export function sendResponse<T = any>(
 	response: ex.Response,
 	result: IApiResponse<T>,
-	transform: boolean = env.api.compatMode
+	transform: boolean | number = env.api.compatMode
 ) {
 	return response.status(result?.statusCode ?? 400)
 	               .send(

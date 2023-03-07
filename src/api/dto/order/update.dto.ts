@@ -7,6 +7,7 @@ import {
 }                       from '@common/enums';
 import {
 	IOrder,
+	IOrderExecutionState,
 	IDestination,
 	IOrderFilter,
 	TUpdateAttribute
@@ -63,9 +64,6 @@ export default class OrderUpdateDto
 	@ApiProperty(prop.driverId)
 	public driverId?: string;
 
-	@ApiProperty(prop.filter)
-	public filter?: IOrderFilter;
-
 	@ApiProperty(prop.hasProblem)
 	public hasProblem?: boolean;
 
@@ -120,9 +118,6 @@ export default class OrderUpdateDto
 	@ApiProperty(prop.price)
 	public price?: string;
 
-	@ApiProperty(prop.priority)
-	public priority?: boolean;
-
 	@ApiProperty(prop.stage)
 	public stage?: OrderStage;
 
@@ -153,6 +148,12 @@ export default class OrderUpdateDto
 	@ApiProperty(prop.left1H)
 	public left1H?: boolean;
 	
-	@ApiProperty(prop.passedMinDistance)
-	public passedMinDistance?: boolean;
+	@ApiProperty(prop.currentPoint)
+	public currentPoint?: string;
+	
+	@ApiProperty(prop.execState)
+	public execState?: IOrderExecutionState;
+
+	@ApiProperty(prop.filter)
+	public filter?: IOrderFilter;
 }

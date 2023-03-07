@@ -5,8 +5,10 @@ import {
 	HttpStatus,
 	Param,
 	Res,
+	Req,
 	UseFilters
 }                              from '@nestjs/common';
+import { Throttle }            from '@nestjs/throttler';
 import { ApiTags }             from '@nestjs/swagger';
 import { ORDER }               from '@config/json';
 import { IWebhookResponse }    from '@common/interfaces';
@@ -30,12 +32,18 @@ import { StaticController }    from './controller';
 
 const { path, tag, routes } = getRouteConfig('bitrix');
 
+const throttle = {
+	webhook: {
+		limit: 2,
+		ttl:   3
+	}
+};
+
 @ApiTags(tag)
 @Controller(path)
 @UseFilters(HttpExceptionFilter)
 export default class BitrixController
 	extends StaticController {
-	private static eventMap: Map<number, string> = new Map<number, string>();
 
 	public constructor(
 		private readonly bitrixService: BitrixService,
@@ -105,18 +113,24 @@ export default class BitrixController
 		return sendResponse(response, result);
 	}
 
-	@ApiRoute(routes.webhook, {
+	@Throttle(throttle.webhook.limit, throttle.webhook.ttl)
+	@ApiRoute(routes.listenWebhook, {
 		statuses: [HttpStatus.OK]
 	})
-	public async webhookListen(@Body() crm: IWebhookResponse) {
+	public async webhookListen(
+		@Body() crm: IWebhookResponse,
+		@Res() response: ex.Response
+	) {
 		if(crm.data === undefined ||
 		   crm.data['FIELDS'] === undefined ||
-		   crm.data['FIELDS'][ORDER.ID] === undefined)
-			return;
+		   crm.data['FIELDS'][ORDER.ID] === undefined) {
+			console.info('Undefined data from bitrix webhook!');
+		return sendResponse(response, { statusCode: HttpStatus.NOT_ACCEPTABLE });
+		}
 
 		const crmFields = crm.data['FIELDS'];
 		const crmId = Number(crmFields[ORDER.ID]);
-		const stage = crmFields[ORDER.STAGE];
+		// const stage = crmFields[ORDER.STAGE];
 
 		switch(crm.event) {
 			case 'ONCRMDEALADD': {
@@ -126,21 +140,10 @@ export default class BitrixController
 				break;
 			}
 			case 'ONCRMDEALUPDATE': {
-				if(BitrixController.eventMap.has(crmId) || stage !== 'LOSE') {
-					if(BitrixController.eventMap.get(crmId) === crm.ts) {
-						console.info('Preventing from double update.');
-						return;
-					}
-				}
-
 				await this.bitrixService.synchronizeOrder(crmId, true);
-				BitrixController.eventMap.set(crmId, crm.ts);
 				break;
 			}
 			case 'ONCRMDEALDELETE': {
-				if(BitrixController.eventMap.has(crmId)) {
-					BitrixController.eventMap.delete(crmId);
-				}
 				await this.bitrixService.deleteOrder(crmId);
 				break;
 			}
@@ -152,6 +155,18 @@ export default class BitrixController
 				break;
 		}
 
-		return;
+		return sendResponse(response, { statusCode: HttpStatus.ACCEPTED });
+	}
+	
+	@ApiRoute(routes.respondWebhook, {
+		statuses: [HttpStatus.OK]
+	})
+	public webhookRespond(
+		@Body() body: any,
+		@Req() request: ex.Request,
+		@Res() response: ex.Response
+	) {
+		console.debug({ webhookRespond: body })
+		return sendResponse(response, { statusCode: HttpStatus.OK });
 	}
 }

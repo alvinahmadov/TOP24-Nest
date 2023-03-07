@@ -3,21 +3,32 @@ import {
 	Inject,
 	Injectable,
 	HttpStatus
-}                            from '@nestjs/common';
-import { BitrixUrl, Bucket } from '@common/constants';
+}                              from '@nestjs/common';
+import {
+	BitrixUrl,
+	Bucket,
+	ENABLE_DISTANCE_NOTIF_TASK,
+	NOTIFICATION_DISTANCE
+}                              from '@common/constants';
+import {
+	DestinationType,
+	OrderStatus,
+	UserRole
+}                              from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
 	ICompanyDeleteResponse,
 	IDriver,
+	IDriverGatewayData,
+	IGatewayData,
 	IService,
 	TCRMData,
 	TCRMResponse,
-	TGeoCoordinate,
 	TMergedEntities,
 	TMulterFile,
 	TUpdateAttribute
-}                            from '@common/interfaces';
+}                              from '@common/interfaces';
 import {
 	addressFromCoordinates,
 	buildBitrixRequestUrl,
@@ -26,31 +37,81 @@ import {
 	filterDrivers,
 	formatArgs,
 	getTranslation
-}                            from '@common/utils';
-import { Driver, Order }     from '@models/index';
+}                              from '@common/utils';
+import {
+	Driver,
+	Destination,
+}                              from '@models/index';
 import {
 	DestinationRepository,
 	DriverRepository
-}                            from '@repos/index';
+}                              from '@repos/index';
 import {
 	DriverCreateDto,
 	DriverFilter,
 	DriverUpdateDto,
 	ListFilter,
 	TransportFilter
-}                            from '@api/dto';
-import Service               from './service';
-import ImageFileService      from './image-file.service';
-import OrderService          from './order.service';
-// import {
-// 	DestinationType,
-// 	UserRole
-// }                              from '@common/enums';
-// import { NotificationGateway } from '@api/notifications';
+}                              from '@api/dto';
+import { NotificationGateway } from '@api/notifications';
+import Service                 from './service';
+import ImageFileService        from './image-file.service';
+import OrderService            from './order.service';
 
 const TRANSLATIONS = getTranslation('REST', 'DRIVER');
-// const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
-// const DIST_200_METERS = 200 / 1000;
+const EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
+
+const sendDistanceNotification = async(
+	driverId: string,
+	destination: Destination,
+	notification: NotificationGateway,
+	repo: DestinationRepository
+): Promise<IGatewayData | null> =>
+{
+	let notificationData: IDriverGatewayData = null;
+
+	if(destination) {
+		if(destination.atNearestDistanceToPoint) {
+			console.info('Minimal distance reached, nothing to do!');
+		}
+		else if(destination.distance !== null &&
+		        destination.distance <= NOTIFICATION_DISTANCE) {
+			let message: string = '';
+
+			switch(destination.type) {
+				case DestinationType.LOAD:
+					message = EVENT_TRANSLATIONS['ARRIVED_LOAD_200M'];
+					break;
+				case DestinationType.UNLOAD:
+					message = EVENT_TRANSLATIONS['ARRIVED_UNLOAD_200M'];
+					break;
+				case DestinationType.COMBINED:
+					message = EVENT_TRANSLATIONS['ARRIVED_COMBINED_200M'];
+					break;
+			}
+
+			notificationData = {
+				id:     driverId,
+				source: 'driver',
+				message
+			};
+			repo.update(destination.id, { atNearestDistanceToPoint: true })
+			    .then(() => console.info('Destination updated successfuly'))
+			    .catch(e => console.error(e));
+
+			notification.sendDriverNotification(
+				notificationData,
+				{
+					role: UserRole.CARGO,
+					save: false,
+					url:  'Main'
+				}
+			);
+		}
+	}
+
+	return notificationData;
+};
 
 @Injectable()
 export default class DriverService
@@ -65,7 +126,7 @@ export default class DriverService
 		protected readonly imageFileService: ImageFileService,
 		@Inject(forwardRef(() => OrderService))
 		protected readonly orderService: OrderService,
-		// private readonly gateway: NotificationGateway
+		private readonly gateway: NotificationGateway
 	) {
 		super();
 		this.repository = new DriverRepository();
@@ -302,78 +363,43 @@ export default class DriverService
 	public async updateGeoData(entities?: TMergedEntities)
 		: Promise<TUpdateAttribute<IDriver>> {
 		if(entities) {
-			const { order, driver } = entities as { order: Order; driver: Driver; };
-			if(order) {
-				if(!driver) {
-					return null;
-				}
-				const point: TGeoCoordinate = [driver.latitude, driver.longitude];
-				const currentAddress = await addressFromCoordinates(driver.latitude, driver.longitude);
-				const destination = await this.destinationRepo.getOrderDestination(order.id, { point: driver.currentPoint });
-				const distance = calculateDistance(point, destination.coordinates);
-				await this.destinationRepo.update(destination.id, { distance });
-				await driver.save({ fields: ['currentAddress'] });
+			const { driver } = entities as { driver: Driver; };
 
-				return { currentAddress };
-
-				/**
-				const passedDistance = order.passedMinDistance;
-
-				if(distance <= DIST_200_METERS && !passedDistance) {
-					let message: string = '';
-
-					switch(destination.type) {
-						case DestinationType.LOAD:
-							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_LOAD_200M'];
-							break;
-						case DestinationType.UNLOAD:
-							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_UNLOAD_200M'];
-							break;
-						case DestinationType.COMBINED:
-							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_COMBINED_200M'];
-							break;
-					}
-
-					this.gateway.sendDriverNotification(
-						{
-							id:             driver.id,
-							source:         'driver',
-							status:         driver.status,
-							latitude:       driver.latitude,
-							longitude:      driver.longitude,
-							currentPoint:   driver.currentPoint,
-							currentAddress: data.currentAddress,
-							message
-						},
-						{
-							role: UserRole.CARGO,
-							save: false,
-							url:  'Main'
-						}
-					);
-
-					await this.orderService.update(order.id, { passedMinDistance: true });
-				}
-
-				this.gateway.sendDriverNotification(
-					{
-						id:             driver.id,
-						source:         'driver',
-						status:         driver.status,
-						latitude:       driver.latitude,
-						longitude:      driver.longitude,
-						currentPoint:   driver.currentPoint,
-						currentAddress: driver.currentAddress
-					},
-					{
-						role: UserRole.ADMIN,
-						save: false
-					}
-				);
-				 
-				return data;
-				 */
+			if(!driver) {
+				return null;
 			}
+
+			const { data: orders } = await this.orderService.getList(
+				{},
+				{
+					driverId:  driver.id,
+					status:    OrderStatus.PROCESSING,
+					onPayment: false
+				}
+			);
+
+			if(orders) {
+				for(const order of orders) {
+					const destination = await this.destinationRepo
+					                              .getOrderDestination(order.id, {
+						                              point: order.currentPoint
+					                              });
+
+					if(!destination) continue;
+
+					destination.distance = calculateDistance([driver.latitude, driver.longitude], destination.coordinates);
+					await destination.save({ fields: ['distance'] });
+
+					if(!ENABLE_DISTANCE_NOTIF_TASK) {
+						sendDistanceNotification(driver.id, destination, this.gateway, this.destinationRepo)
+							.then(data => data ? console.info(data) : console.info('No notification data'))
+							.catch(console.error);
+					}
+				}
+			}
+			const currentAddress = await addressFromCoordinates(driver.latitude, driver.longitude);
+			await this.repository.update(driver.id, { currentAddress });
+			return { currentAddress };
 		}
 		return null;
 	}

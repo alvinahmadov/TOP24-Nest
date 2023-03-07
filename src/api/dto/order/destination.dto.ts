@@ -10,7 +10,6 @@ import { DestinationType } from '@common/enums';
 import {
 	TCreationAttribute,
 	IDestination,
-	IOrder,
 	TGeoCoordinate,
 	TUpdateAttribute
 }                          from '@common/interfaces';
@@ -33,7 +32,7 @@ export class DestinationCreateDto
 
 	@IsString()
 	contact?: string;
-	
+
 	@IsString()
 	inn?: string = "";
 
@@ -42,7 +41,7 @@ export class DestinationCreateDto
 
 	@IsDecimal()
 	distance?: number = 0.0;
-	
+
 	@IsBoolean()
 	atNearestDistanceToPoint?: boolean = false;
 
@@ -60,15 +59,21 @@ export class DestinationCreateDto
 }
 
 export class DestinationUpdateDto
-	implements TUpdateAttribute<IOrder> {
+	implements TUpdateAttribute<IDestination> {
+	@IsString()
+	orderId?: string;
+
+	@IsString()
+	point?: string;
+
 	@IsString()
 	address?: string;
 
 	@IsString()
-	comment?: string;
+	contact?: string;
 
 	@IsString()
-	contact?: string;
+	inn?: string;
 
 	coordinates?: TGeoCoordinate;
 
@@ -82,13 +87,10 @@ export class DestinationUpdateDto
 	fulfilled?: boolean;
 
 	@IsString()
-	orderId?: string;
-
-	@IsString()
 	phone?: string;
 
 	@IsString()
-	point?: string;
+	comment?: string;
 
 	@IsArray()
 	shippingPhotoLinks?: string[];

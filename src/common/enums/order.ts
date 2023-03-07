@@ -103,6 +103,21 @@ export enum OrderStage {
 	FINISHED = 13
 }
 
+export enum ActionStatus {
+	/**
+	 * Driver is on way to destination point.
+	 * */
+	ON_WAY = 1,
+	/**
+	 * Driver has arrived to destination point.
+	 * */
+	ARRIVED = 2,
+	/**
+	 * Driver uploads document.
+	 * */
+	DOCUMENT_UPLOAD = 3
+}
+
 /**
  * Type of destination point for order.
  * */
@@ -128,3 +143,7 @@ export const orderStatusToStr = (status: OrderStatus) =>
 /**@ignore*/
 export const orderStageToStr = (stage: OrderStage) =>
 	getTranslation('ENUM', 'ORDER', 'STAGE', OrderStage[stage]);
+
+/**@ignore*/
+export const destinationTypeToStr = (type: DestinationType) =>
+	getTranslation('ENUM', 'ORDER', 'DESTINATION', DestinationType[type]);

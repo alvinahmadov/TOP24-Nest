@@ -1,7 +1,6 @@
-import FieldTransformer,
-{ TOmitTimestamp }       from '@common/classes/field-transformer';
-import * as attributes   from '@common/interfaces/attributes';
-import * as transformers from './transformer-types';
+import FieldTransformer, { TOmitTimestamp } from '@common/classes/field-transformer';
+import * as attributes                      from '@common/interfaces/attributes';
+import * as transformers                    from './transformer-types';
 
 export const translateAdmin = <T extends transformers.IAdminTransformer>(data: T | Partial<T>)
 	: TOmitTimestamp<attributes.IAdmin> =>
@@ -146,10 +145,8 @@ export const translateDriver = <T extends transformers.IDriverTransformer>(data:
 		.set('licenseDate', 'license_date')
 		.set('licenseBackLink', 'link_back')
 		.set('licenseFrontLink', 'link_front')
-		.set('operation')
 		.set('longitude')
 		.set('latitude')
-		.set('currentPoint', 'current_point')
 		.set('currentAddress', 'current_address')
 		.set('payloadCity', 'payload_city')
 		.set('payloadRegion', 'payload_region')
@@ -228,6 +225,8 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('cancelCause', 'cancel_cause')
 		.set('hasProblem', 'has_problem')
 		.set('destinations')
+		.set('currentPoint', 'current_point')
+		.set('execState', 'operation')
 		.set('bidInfo', 'bid_info')
 		.set('bidPrice', 'bid_price')
 		.set('bidPriceVat', 'bid_price_max')

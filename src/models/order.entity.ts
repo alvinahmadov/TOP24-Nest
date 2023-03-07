@@ -1,4 +1,4 @@
-import { FindOptions }              from 'sequelize';
+import { FindOptions }  from 'sequelize';
 import {
 	BelongsTo,
 	DefaultScope,
@@ -6,31 +6,38 @@ import {
 	HasMany,
 	IsUUID,
 	Table
-}                                   from 'sequelize-typescript';
+}                       from 'sequelize-typescript';
 import {
 	Field,
 	InterfaceType,
 	ObjectType
-}                                   from '@nestjs/graphql';
-import { ApiProperty }              from '@nestjs/swagger';
-import { ORDER }                    from '@config/json';
+}                       from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
+import { ORDER }        from '@config/json';
 import {
+	ActionStatus,
+	DestinationType,
 	LoadingType,
 	OrderStage,
 	OrderStatus
-}                                   from '@common/enums';
-import { UuidScalar }               from '@common/scalars';
-import { Reference, TABLE_OPTIONS } from '@common/constants';
+}                       from '@common/enums';
+import { UuidScalar }   from '@common/scalars';
 import {
-	ICRMEntity,
-	Index,
-	IOrder,
-	IOrderFilter,
+	Reference,
+	DEFAULT_ORDER_STATE,
+	TABLE_OPTIONS
+}                       from '@common/constants';
+import {
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
+	ICRMEntity,
+	Index,
 	IntArrayColumn,
 	IntColumn,
+	IOrder,
+	IOrderExecutionState,
+	IOrderFilter,
 	JsonbColumn,
 	StringArrayColumn,
 	StringColumn,
@@ -38,18 +45,18 @@ import {
 	TGeoCoordinate,
 	UuidColumn,
 	VirtualColumn
-}                                   from '@common/interfaces';
-import { entityConfig }             from '@api/swagger/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 import {
 	convertBitrix,
 	isDedicatedOrder,
 	isExtraPayloadOrder
-}                                   from '@common/utils';
-import EntityModel                  from './entity-model';
-import CargoCompany                 from './cargo.entity';
-import CargoCompanyInn              from './cargo-inn.entity';
-import Destination                  from './destination.entity';
-import Driver                       from './driver.entity';
+}                       from '@common/utils';
+import EntityModel      from './entity-model';
+import CargoCompany     from './cargo.entity';
+import CargoCompanyInn  from './cargo-inn.entity';
+import Destination      from './destination.entity';
+import Driver           from './driver.entity';
 
 const { order: prop } = entityConfig;
 
@@ -136,6 +143,17 @@ export class OrderFilter
 	hasDriver?: boolean;
 	fromDate?: Date | string;
 	toDate?: Date | string;
+}
+
+@InterfaceType()
+export class OrderExecutionState
+	implements IOrderExecutionState {
+	type?: DestinationType;
+
+	actionStatus?: ActionStatus;
+	loaded?: boolean;
+	unloaded?: boolean;
+	uploaded?: boolean;
 }
 
 /**
@@ -302,13 +320,24 @@ export default class Order
 	@FloatColumn()
 	bidPriceVat?: number;
 
+	@ApiProperty(prop.currentPoint)
+	@StringColumn({ defaultValue: '' })
+	currentPoint?: string;
+
+	@HasMany(() => Destination, 'orderId')
+	destinations?: Destination[];
+
+	@ApiProperty(prop.execState)
+	@JsonbColumn({ defaultValue: DEFAULT_ORDER_STATE })
+	execState?: OrderExecutionState;
+
 	@ApiProperty(prop.filter)
 	@JsonbColumn()
 	filter?: OrderFilter;
 
 	@BooleanColumn({ defaultValue: false })
 	hasSent: boolean;
-	
+
 	@BooleanColumn({ defaultValue: false, field: 'left_24h' })
 	left24H?: boolean;
 
@@ -317,9 +346,6 @@ export default class Order
 
 	@BooleanColumn({ defaultValue: false, field: 'left_1h' })
 	left1H?: boolean;
-
-	@BooleanColumn({ defaultValue: false })
-	passedMinDistance?: boolean;
 
 	@ApiProperty(prop.driverDeferralConditions)
 	@StringColumn()
@@ -353,9 +379,6 @@ export default class Order
 	@BelongsTo(() => Driver, 'driverId')
 	driver?: Driver;
 
-	@HasMany(() => Destination, 'orderId')
-	destinations?: Destination[];
-
 	@VirtualColumn()
 	public get priority(): boolean {
 		return this.isCurrent;
@@ -375,6 +398,21 @@ export default class Order
 	public get crmTitle(): string {
 		return !!this.crmId ? `№${this.crmId.toString()}`
 		                    : this.title;
+	}
+
+	@VirtualColumn()
+	public get destination(): Destination {
+		return this.destinations?.find(d => d.point === this.currentPoint);
+	}
+
+	@VirtualColumn()
+	public get nextDestination(): Destination {
+		let activeIndex = this.destinations?.findIndex(d => d.point === this.currentPoint);
+
+		if(-1 < activeIndex && activeIndex < this.destinations?.length - 1)
+			return this.destinations?.at(++activeIndex);
+
+		return null;
 	}
 
 	public readonly toCrm = (

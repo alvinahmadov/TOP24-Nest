@@ -116,10 +116,6 @@ export default class DriverCreateDto
 	@IsLongitude()
 	longitude?: number;
 
-	@ApiProperty(prop.currentPoint)
-	@IsString()
-	currentPoint?: string = '';
-
 	@ApiProperty(prop.currentAddress)
 	@IsString()
 	currentAddress?: string = '';
