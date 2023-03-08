@@ -386,9 +386,6 @@ export default class BitrixService
 			const crmItem = getCrm(result);
 
 			if(crmItem) {
-				let clientContact = null;
-				const crmClientId = Number(crmItem[ORDER.CRM_CLIENT_ID] || -1);
-
 				if(
 					crmItem[ORDER.CATEGORY] !== '0' ||
 					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N' ||
@@ -400,28 +397,6 @@ export default class BitrixService
 					crmItem,
 					{ debug: !isUpdateRequest && debugBitrixOrder }
 				);
-
-				if(crmClientId > 0) {
-					const { result } = await this.httpClient.get<TCRMResponse>(
-						`${COMPANY_GET_URL}?ID=${crmClientId}`
-					);
-
-					const crmClient = getCrm(result);
-
-					if(crmClient) {
-						if(crmClient[CARGO.TYPE] === CRM.COMPANY.TYPES[CompanyType.ORG].ID) { //Юрлицо
-							clientContact = crmClient[CARGO.CEO];
-						}
-						else {
-							clientContact = crmClient[CARGOINN.NAME.FIRST];
-						}
-					}
-
-					if(clientContact) {
-						if(destinationDtos?.length > 0)
-							destinationDtos[0].contact = clientContact;
-					}
-				}
 
 				if(orderDto.stage >= OrderStage.PAYMENT_RECEIVED) {
 					orderDto.onPayment = false;
