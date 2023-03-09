@@ -118,17 +118,20 @@ export default class DriverController
 		@Body(DriverPipe) dto: dto.DriverUpdateDto,
 		@Res() response: ex.Response
 	) {
-		const { data } = await this.orderService.getByDriver(id);
-
-		if(!data) {
-			return sendResponse(response, {
-				statusCode: 400,
-				message:    'Something wrong'
-			});
+		if(
+			dto.latitude !== undefined &&
+			dto.longitude !== undefined
+		) {
+			const { data } = await this.orderService.getByDriver(id);
+			if(!data) {
+				return sendResponse(response, {
+					statusCode: 400,
+					message:    'Something wrong'
+				});
+			}
+			const driverGeo = await this.driverService.updateGeoData(data);
+			dto = Object.assign(dto, driverGeo);
 		}
-
-		const driverGeo = await this.driverService.updateGeoData(data);
-		dto = Object.assign(dto, driverGeo);
 
 		if(dto.isReady !== undefined) {
 			if(!dto.isReady) {
