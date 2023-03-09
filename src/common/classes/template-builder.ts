@@ -138,10 +138,10 @@ export default class DocumentTemplateBuilder {
 		this.replaceDriverPlacehoders(driver);
 		this.replaceCompanyPlacehoders(company);
 
-		const { name, phone } = await this.getLogistData(crmId) ?? { name: '', phone: '' };
+		const { name, logistPhone } = await this.getLogistData(crmId) ?? { name: '', phone: '' };
 
 		this.addConfig('logist', name);
-		this.addConfig('logistPhone', phone);
+		this.addConfig('logistPhone', logistPhone);
 
 		placeholderKeys.forEach(
 			key =>
@@ -182,29 +182,35 @@ export default class DocumentTemplateBuilder {
 	}
 
 	private async getLogistData(crmId: string | number) {
+		let logistName: string = '-',
+			logistPatronymic: string = '-',
+			logistLastName: string = '-',
+			logistPhone: string = '-';
+
 		const { result } = await this.httpClient.get<TCRMResponse>(`${BitrixUrl.ORDER_GET_URL}?ID=${crmId}`);
 
 		const crmData = getCrm(result);
 
 		if(crmData) {
-			const logistCrmId = crmData['CREATED_BY_ID'];
-			const { result } = await this.httpClient.get<TCRMResponse>(`${BitrixUrl.CONTACT_GET_URL}?ID=${logistCrmId}`);
-			const contact = getCrm(result);
+			const data = await this.httpClient.get<TCRMResponse>(
+				`${BitrixUrl.CONTACT_GET_URL}?ID=${crmData['CREATED_BY_ID']}`
+			);
 
-			if(contact) {
-				const name: string = contact['NAME'];
-				const patronymic: string = contact['SECOND_NAME'];
-				const lastName: string = contact['LAST_NAME'];
-				const phone: string = contact['PHONE'] ? contact['PHONE'][0]['VALUE'] : '';
+			if(data) {
+				const contact = getCrm(data.result);
 
-				return {
-					name: `${lastName ? lastName + ', ' : ''}${name}${patronymic ? ' ' + patronymic : ''}`,
-					phone
-				};
+				if(contact) {
+					logistName = contact['NAME'];
+					logistPatronymic = contact['SECOND_NAME'];
+					logistLastName = contact['LAST_NAME'];
+					logistPhone = contact['PHONE'] ? contact['PHONE'][0]['VALUE'] : '';
+				}
 			}
 		}
-
-		return {};
+		return {
+			name: `${logistLastName}, ${logistName} ${logistPatronymic}`,
+			logistPhone
+		};
 	}
 
 	private replaceOrderPlacehoders(order: Order): void {

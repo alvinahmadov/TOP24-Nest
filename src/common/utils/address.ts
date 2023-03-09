@@ -22,21 +22,32 @@ export async function addressFromCoordinates(
 	latitude: number,
 	longitude: number
 ): Promise<string> {
-	const url = `${env.osm.url}/reverse?lat=${latitude}&lon=${longitude}&format=json`;
-	const config: AxiosRequestConfig = { headers: { 'Accept-Language': 'ru-RU' } };
+	if(
+		latitude !== null &&
+		longitude !== null
+	) {
+		const url = `${env.osm.url}/reverse?lat=${latitude}&lon=${longitude}&format=json`;
+		const config: AxiosRequestConfig = { headers: { 'Accept-Language': 'ru-RU' } };
 
-	const { address } = await AxiosStatic.get<IOSMData>(url, config);
+		const addressData = await AxiosStatic.get<IOSMData>(url, config);
 
-	return [
-		address?.road,
-		address?.town,
-		address?.county,
-		address?.state,
-		address?.region,
-		address?.country,
-		address?.postcode
-	].filter(a => !!a)
-	 .join(',');
+		if(addressData) {
+			const { address } = addressData;
+
+			return [
+				address?.road,
+				address?.town,
+				address?.county,
+				address?.state,
+				address?.region,
+				address?.country,
+				address?.postcode
+			].filter(a => !!a)
+			 .join(',');
+		}
+	}
+
+	return '';
 }
 
 export function calculateDistance(
