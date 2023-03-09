@@ -123,14 +123,10 @@ export default class DriverController
 			dto.longitude !== undefined
 		) {
 			const { data } = await this.orderService.getByDriver(id);
-			if(!data) {
-				return sendResponse(response, {
-					statusCode: 400,
-					message:    'Something wrong'
-				});
+			if(data) {
+				const driverGeo = await this.driverService.updateGeoData(data);
+				dto = Object.assign(dto, driverGeo);
 			}
-			const driverGeo = await this.driverService.updateGeoData(data);
-			dto = Object.assign(dto, driverGeo);
 		}
 
 		if(dto.isReady !== undefined) {
