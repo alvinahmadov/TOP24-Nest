@@ -163,11 +163,11 @@ export default class Driver
 	phoneSecond?: string;
 
 	@ApiProperty(prop.latitude)
-	@FloatColumn()
+	@FloatColumn({ defaultValue: 0.0 })
 	latitude?: number;
 
 	@ApiProperty(prop.longitude)
-	@FloatColumn()
+	@FloatColumn({ defaultValue: 0.0 })
 	longitude?: number;
 
 	@ApiProperty(prop.currentAddress)

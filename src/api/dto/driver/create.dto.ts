@@ -110,11 +110,11 @@ export default class DriverCreateDto
 
 	@ApiProperty(prop.latitude)
 	@IsLatitude()
-	latitude?: number;
+	latitude?: number = 0.0;
 
 	@ApiProperty(prop.longitude)
 	@IsLongitude()
-	longitude?: number;
+	longitude?: number = 0.0;
 
 	@ApiProperty(prop.currentAddress)
 	@IsString()
