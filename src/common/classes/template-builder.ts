@@ -193,7 +193,7 @@ export default class DocumentTemplateBuilder {
 
 		if(crmData) {
 			const data = await this.httpClient.get<TCRMResponse>(
-				`${BitrixUrl.CONTACT_GET_URL}?ID=${crmData['CREATED_BY_ID']}`
+				`${BitrixUrl.CONTACT_GET_URL}?ID=${crmData['MODIFY_BY_ID']}`
 			);
 
 			if(data) {

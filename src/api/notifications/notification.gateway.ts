@@ -334,7 +334,6 @@ export default class NotificationGateway
 				},
 				notification: {
 					title: '24ТОП',
-					tag:   data.source ?? 'default',
 					body:  data.message,
 					icon:  env.app.icon
 				}
@@ -344,8 +343,23 @@ export default class NotificationGateway
 			this.firebase
 			    .messaging
 			    .sendToDevice(token, payload)
-			    .then(res => this.logger.log(res))
-			    .catch(err => this.logger.error(err));
+			    .then(
+				    (res) =>
+				    {
+					    if(res) {
+						    if(res.successCount > 0) {
+							    this.logger.log('Notification success:', { notificationData: data });
+						    }
+						    if(res.failureCount > 0) {
+							    this.logger.warn('Notification failure:', { notificationData: data });
+						    }
+					    }
+				    }
+			    )
+			    .catch(
+				    (error) =>
+					    this.logger.error('Notification error:', { notificationData: data, error })
+			    );
 		}
 	}
 }
