@@ -4,6 +4,7 @@ import {
 	IDriver,
 	IDriverFilter,
 	IListFilter,
+	IOrder,
 	IRepository,
 	IRepositoryOptions,
 	ITransport,
@@ -139,7 +140,11 @@ export default class DriverRepository
 							model:   Transport,
 							include: [{ model: Image }]
 						},
-						{ model: Order }
+						{ 
+							model: Order,
+							required: false,
+							where: this.whereClause<IOrder>().eq('status', orderStatus).query 
+						}
 					] : driverDefaultIncludeables
 				}
 			),
