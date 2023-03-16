@@ -25,6 +25,7 @@ import {
 	IDriver,
 	Index,
 	IntColumn,
+	JsonbColumn,
 	StringColumn,
 	TCRMData,
 	UrlColumn,
@@ -213,6 +214,10 @@ export default class Driver
 	@ApiProperty(prop.info)
 	@StringColumn()
 	info?: string;
+
+	@ApiProperty(prop.data)
+	@JsonbColumn({ defaultValue: {} })
+	data?: any;
 
 	@ApiProperty(prop.hasSent)
 	@BooleanColumn({ defaultValue: false })

@@ -764,6 +764,7 @@ export interface IDriver
 	 * Работаю только с пн. до пт. от 09:00 до 18:00. В другое время не беспокоить
 	 * */
 	info?: string;
+	data?: any;
 	/**
 	 * Operational data for mobile use.
 	 * a@deprecated Use IOrder.execState.
