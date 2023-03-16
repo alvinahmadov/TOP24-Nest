@@ -105,6 +105,9 @@ export interface IEnvironment {
 	osm?: {
 		url?: string;
 	};
+	ors?: {
+		apiKey?: string;
+	}
 	kladr?: {
 		token?: string;
 		url?: string;
@@ -204,6 +207,8 @@ export interface IEnvParseOutput
 	KLADR_API_KEY?: string;
 	KLADR_API_URL?: string;
 	OSM_URL?: string;
+	
+	ORS_API_KEY?: string;
 	SMSCAPI_LOGIN?: string;
 	SMSCAPI_PASSW?: string;
 	YANDEX_CLOUD_API_TOKEN?: string;

@@ -1,13 +1,17 @@
-import { join }                    from 'path';
-import { EnvironmentParser }       from '@common/classes';
-import { IEnvironment, TLogLevel } from '@common/interfaces';
+import { join }              from 'path';
+import { EnvironmentParser } from '@common/classes';
+import {
+	IEnvironment,
+	IEnvParseOutput,
+	TLogLevel
+}                            from '@common/interfaces';
 
 export const DEFAULT_SCHEME: string = 'http://';
 export const DEFAULT_HOST: string = 'localhost';
 export const DEFAULT_PORT: number = 8080;
 export const DEFAULT_MEMORY: number = 2048;
 
-const parser: EnvironmentParser = new EnvironmentParser('.env');
+const parser: EnvironmentParser<IEnvParseOutput> = new EnvironmentParser('.env');
 
 const isProd = parser.equal('NODE_ENV', 'production');
 const useLocalStorage = parser.equal('OBJECT_STORAGE', 'local');
@@ -88,6 +92,9 @@ const env: IEnvironment = {
 	},
 	osm:              {
 		url: parser.str('OSM_URL')
+	},
+	ors:              {
+		apiKey: parser.str('ORS_API_KEY')
 	},
 	kladr:            {
 		token: parser.str('KLADR_API_KEY'),

@@ -6,8 +6,11 @@ import {
 	IParsedEnvConfigOutput
 }                  from '@common/interfaces';
 
-export default class EnvironmentParser {
-	protected readonly config: IEnvParseOutput;
+export default class EnvironmentParser<
+	P extends IEnvParseOutput, 
+	K extends keyof P = keyof P
+> {
+	protected readonly config: P;
 
 	constructor(path: string = '.env') {
 		const envFilePath = path.includes('/') ? path : resolve(process.cwd(), path);
@@ -20,16 +23,16 @@ export default class EnvironmentParser {
 			if(!parsed) {
 				console.error(error);
 			}
-			this.config = parsed;
+			this.config = parsed as P;
 		}
 		else {
 			console.info('Using environment variables from process.env');
-			this.config = process.env as IEnvParseOutput;
+			this.config = process.env as P;
 		}
 	}
 
 	private get<T>(
-		key: keyof IEnvParseOutput,
+		key: K,
 		defaultValue?: T
 	) {
 		if(this.config[key] !== undefined)
@@ -39,7 +42,7 @@ export default class EnvironmentParser {
 	}
 
 	public str(
-		key: keyof IEnvParseOutput,
+		key: K,
 		defaultValue?: string
 	): string {
 		const value: string = this.get(key, defaultValue);
@@ -51,7 +54,7 @@ export default class EnvironmentParser {
 	}
 
 	public num(
-		key: keyof IEnvParseOutput,
+		key: K,
 		defaultValue?: number
 	): number {
 		const value = this.get(key, defaultValue);
@@ -63,7 +66,7 @@ export default class EnvironmentParser {
 	}
 
 	public bool(
-		key: keyof IEnvParseOutput,
+		key: K,
 		defaultValue: boolean = false
 	): boolean {
 		const value: string | boolean = this.get(key, defaultValue);
@@ -75,13 +78,13 @@ export default class EnvironmentParser {
 	}
 
 	public equal<T>(
-		key: keyof IEnvParseOutput,
+		key: K,
 		value: T
 	): boolean {
 		return this.config[key] as unknown as T === value;
 	}
 
-	public hasValue(key: keyof IEnvParseOutput): boolean {
+	public hasValue(key: K): boolean {
 		return this.config[key] !== undefined && this.config[key] !== '';
 	}
 }
