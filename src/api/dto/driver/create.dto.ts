@@ -11,6 +11,9 @@ import {
 import faker            from '@faker-js/faker';
 import { InputType }    from '@nestjs/graphql';
 import { ApiProperty }  from '@nestjs/swagger';
+import {
+	DEFAULT_COORDINATES
+}                       from '@common/constants';
 import { DriverStatus } from '@common/enums';
 import {
 	IDriver,
@@ -110,11 +113,11 @@ export default class DriverCreateDto
 
 	@ApiProperty(prop.latitude)
 	@IsLatitude()
-	latitude?: number = 0.0;
+	latitude?: number = DEFAULT_COORDINATES.lat;
 
 	@ApiProperty(prop.longitude)
 	@IsLongitude()
-	longitude?: number = 0.0;
+	longitude?: number = DEFAULT_COORDINATES.lon;
 
 	@ApiProperty(prop.currentAddress)
 	@IsString()

@@ -16,7 +16,10 @@ import {
 	UserRole
 }                        from '@common/enums';
 import { UuidScalar }    from '@common/scalars';
-import { TABLE_OPTIONS } from '@common/constants';
+import {
+	DEFAULT_COORDINATES,
+	TABLE_OPTIONS
+} from '@common/constants';
 import {
 	BooleanColumn,
 	DateColumn,
@@ -164,11 +167,11 @@ export default class Driver
 	phoneSecond?: string;
 
 	@ApiProperty(prop.latitude)
-	@FloatColumn({ defaultValue: 0.0 })
+	@FloatColumn({ defaultValue: DEFAULT_COORDINATES.lat })
 	latitude?: number;
 
 	@ApiProperty(prop.longitude)
-	@FloatColumn({ defaultValue: 0.0 })
+	@FloatColumn({ defaultValue: DEFAULT_COORDINATES.lon })
 	longitude?: number;
 
 	@ApiProperty(prop.currentAddress)

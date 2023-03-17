@@ -20,6 +20,10 @@ export const RANDOM_CODE_DIGITS = 1000;
 export const RANDOM_CODE_MAX = 9000;
 export const MILLIS = 24 * 60 * 60 * 1000;
 export const TIMEZONE = 'Europe/Moscow';
+export const DEFAULT_COORDINATES = {
+	lat:  55.750450636518245,
+	lon: 37.61749427765608
+};
 export const ENABLE_DISTANCE_NOTIF_TASK = false;
 export const NOTIFICATION_DISTANCE = 200 / 1000;
 
