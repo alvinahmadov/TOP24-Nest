@@ -438,6 +438,9 @@ export default class BitrixService
 						dest => dest.hasDiff(destinationDtos.find(d => d.point === dest.point))
 					);
 
+					delete orderDto.currentPoint;
+					delete orderDto.execState;
+
 					const updateResponse = await this.orderService.update(order.id, orderDto);
 
 					if(updateDestinations) {
