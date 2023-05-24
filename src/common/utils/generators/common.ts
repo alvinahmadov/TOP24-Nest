@@ -187,3 +187,17 @@ export function generateSerialNumber(format: number[]) {
 	}
 	return result.trim();
 }
+
+export function getFixedFromLoadingType() {
+	const loadingSet = new Set<number>();
+	const result: number[] = [];
+	const size = faker.helpers.arrayElement([1, 2, 3, 4]);
+	for(let i = 0; i < size; i++) {
+		loadingSet.add(faker.helpers.arrayElement(LOADING_TYPES));
+	}
+	for(const loadingType of loadingSet) {
+		result.push(loadingType);
+	}
+
+	return result.sort((a, b) => a - b);
+}
