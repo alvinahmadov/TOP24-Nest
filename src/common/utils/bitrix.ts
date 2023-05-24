@@ -1,18 +1,18 @@
-import { CRM, ORDER, TRANSPORT }   from '@config/json';
+import { CRM, ORDER, TRANSPORT } from '@config/json';
 import {
 	BitrixUrl,
 	DEFAULT_ORDER_STATE
-}                                  from '@common/constants';
+}                                from '@common/constants';
 import {
 	AxiosStatic,
 	ApiQuery
-}                                  from '@common/classes';
+}                                from '@common/classes';
 import {
 	DestinationType,
 	LoadingType,
 	OrderStage,
 	OrderStatus
-}                                  from '@common/enums';
+}                                from '@common/enums';
 import {
 	IApiResponse,
 	ICRMEntity,
@@ -21,13 +21,17 @@ import {
 	TBitrixEnum,
 	TCRMData,
 	TCRMFields
-}                                  from '@common/interfaces';
-import { dateValidator, isNumber } from '@common/utils';
+}                                from '@common/interfaces';
+import {
+	dateValidator,
+	formatDatePartsToString,
+	isNumber
+}                                from '@common/utils';
 import {
 	DestinationCreateDto,
 	OrderCreateDto
-}                                  from '@api/dto';
-import { splitAddress }            from './address';
+}                                from '@api/dto';
+import { splitAddress }          from './address';
 
 let debugConvert: boolean = false;
 
@@ -130,24 +134,12 @@ function typeFromCrm<T extends number | string | boolean>(
  * */
 function toCrmDate(date: Date): string {
 	let fmtDateString: string = date.toLocaleDateString();
-	let day, month, year;
 	const dateChunks = fmtDateString.split('/');
 
-	if(dateChunks.length == 3 && dateChunks[2].length == 4) {
-		if(Number(dateChunks[1]) > 12) {
-			day = dateChunks[1];
-			month = dateChunks[0];
-			year = dateChunks[2];
-		}
-		else {
-			day = dateChunks[0];
-			month = dateChunks[1];
-			year = dateChunks[2];
-		}
-		fmtDateString = `${year}-${month}-${day}`;
-	}
-
-	return fmtDateString;
+	const result = formatDatePartsToString(dateChunks);
+	if(!result.length)
+		return fmtDateString;
+	return result;
 }
 
 function selectBitrixEnum<R>(
