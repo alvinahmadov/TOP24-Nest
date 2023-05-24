@@ -17,7 +17,10 @@ import {
 	FilesInterceptor
 }                              from '@nestjs/platform-express';
 import { TMulterFile }         from '@common/interfaces';
-import { ActionStatus }        from '@common/enums';
+import {
+	ActionStatus,
+	DestinationType
+}                              from '@common/enums';
 import {
 	isSuccessResponse,
 	sendResponse
@@ -195,25 +198,23 @@ export default class OrderController
 		@Res() response: ex.Response
 	) {
 		if(dto) {
+			const { data: order } = await this.orderService.getById(id, false);
 
-			dto.execState = {
-				actionStatus: dto.execState?.actionStatus ?? ActionStatus.ON_WAY,
-				loaded:       !!dto.execState?.loaded,
-				unloaded:     !!dto.execState?.unloaded,
-				uploaded:     !!dto.execState?.uploaded
-			};
+			if(!order)
+				return { statusCode: HttpStatus.NOT_FOUND };
 
-			if(dto.execState?.type === undefined) {
-				const { data: order } = await this.orderService.getById(id, false);
+			if(!dto.execState) {
+				dto.execState = {
+					type:         DestinationType.LOAD,
+					actionStatus: ActionStatus.ON_WAY,
+					loaded:       false,
+					unloaded:     false,
+					uploaded:     false
+				};
+			}
 
-				if(order) {
-					const currentDestination = order.destinations.find(
-						d => d.point === dto.currentPoint ?? order.currentPoint 
-					);
-
-					if(currentDestination)
-						dto.execState.type = currentDestination.type;
-				}
+			if(order.destination.type === DestinationType.COMBINED) {
+				dto.execState.set(order.execState);
 			}
 			const result = await this.orderService.update(id, dto);
 			return sendResponse(response, result);
