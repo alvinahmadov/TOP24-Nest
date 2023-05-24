@@ -356,6 +356,8 @@ export default class Order
 		if(this.stage && (OrderStage.AGREED_OWNER < this.stage && this.stage < OrderStage.CARRYING)) {
 			data.fields[ORDER.STAGE] = convertBitrix('orderStage', this.stage, false, true);
 		}
+		if(this.isCanceled)
+			data.fields[ORDER.IS_CANCELED] = 'Y';
 		data.fields[ORDER.IS_OPEN] = this.isOpen ? 'Y' : 'N';
 		data.fields[ORDER.IS_FREE] = this.isFree ? 'Y' : 'N';
 		data.fields[ORDER.CANCEL_CAUSE] = this.cancelCause || null;
