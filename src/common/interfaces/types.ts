@@ -93,7 +93,7 @@ export interface IEnvironment {
 		key: string;
 		token: string;
 	};
-	firebase:         {
+	firebase: {
 		enable?: boolean;
 	};
 	objectStorage?: {
@@ -115,7 +115,7 @@ export interface IEnvironment {
 	};
 	ors?: {
 		apiKey?: string;
-	}
+	};
 	kladr?: {
 		token?: string;
 		url?: string;
