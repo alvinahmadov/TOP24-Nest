@@ -22,7 +22,7 @@ import {
 	IOrderExecutionState,
 	TCreationAttribute
 }                              from '@common/interfaces';
-import { OrderFilter }         from '@models/order.entity';
+import { OrderFilter }         from '@common/classes/order';
 import { entityConfig }        from '@api/swagger/properties';
 
 const { order: prop } = entityConfig;
