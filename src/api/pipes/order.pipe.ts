@@ -13,7 +13,8 @@ export default class OrderPipe
 			value.bidPrice = 1.0;
 		if(value.bidPriceVat === 0)
 			value.bidPriceVat = 1.0;
-
+		if(value.hasProblem)
+			value.isCanceled = true;
 		return value;
 	}
 }
