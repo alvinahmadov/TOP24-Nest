@@ -4,7 +4,7 @@ import faker                      from '@faker-js/faker';
 import env                        from '@config/env';
 import * as enums                 from '@common/enums';
 import { Reference }              from '@common/constants';
-import { addressFromCoordinates } from '@common/utils';
+import * as utils                 from '@common/utils';
 
 /**@ignore*/
 const PORT = env.port;
@@ -157,6 +157,14 @@ export namespace Http {
 }
 
 /**@ignore*/
+export const lat = (min: number = 50.0, delta = 10) =>
+	min > 0 ? Number(faker.address.latitude(min + Math.abs(delta), min, 5))
+					: Number(faker.address.latitude(60.0, 50.0, 5));
+export const lon = (min: number = 50.0, delta = 10) =>
+	min > 0 ? Number(faker.address.longitude(min + Math.abs(delta), min, 5))
+					: Number(faker.address.longitude(60.0, 50.0, 5));
+
+/**@ignore*/
 export function dateBetween(yearMin: number, yearMax: number): Date {
 	return faker.date.between(new Date(yearMin), new Date(yearMax));
 }
@@ -170,7 +178,16 @@ export function generateAddressFromCoordinates(
 	latitude: number = 55.751244,
 	longitude: number = 37.618423
 ) {
-	return addressFromCoordinates(latitude, longitude);
+	return utils.addressFromCoordinates(latitude, longitude);
+}
+
+export function generateEmailAddress(name?: string, lastName?: string) {
+	do {
+		const email = faker.internet.email(name, lastName, undefined, { allowSpecialCharacters: false });
+		if(utils.isValidEmail(email))
+			return email;
+	}
+	while(true);
 }
 
 /**@ignore*/

@@ -4,6 +4,8 @@ import {
 	ActionStatus,
 	DestinationType
 }                             from '@common/enums';
+import * as enums             from '@common/enums';
+import { Position }           from 'geojson';
 
 //////////////
 //  Types  //
@@ -22,7 +24,42 @@ export type TBitrixData = {
 
 export type TBitrixEnum = Array<TBitrixData>;
 
+export type TCompanyIdOptions = { cargoId?: string; cargoinnId?: string };
+
+export type TGenerationGeodata = {
+	latitude: number;
+	longitude: number;
+}
+
+export type TDriverGenerateOptions = {
+	startPos?: TGenerationGeodata;
+	distanceDelta?: number;
+}
+
+
+export type TCompanyGenerateOptions = {
+	count?: number;
+	type?: enums.CompanyType;
+	driver?: TDriverGenerateOptions
+}
+
+export type TDestinationGenerateOptions = {
+	maxSize?: number;
+	distanceDelta?: number;
+	startPos?: TGenerationGeodata;
+}
+
+export interface IDriverSimulateData {
+	position: Position;
+	passed?: boolean;
+}
+
 export type TObjectStorageType = 'external' | 'local';
+
+export type TOrderGenerateOptions = {
+	count?: number;
+	dest?: TDestinationGenerateOptions;
+}
 
 /**@ignore*/
 export type TLanguageConfig = { [langCode: string]: any };
@@ -41,6 +78,14 @@ export type TRenderColorOptions = 'red' |
                                   'white' |
                                   'yellow' |
                                   'magenta';
+
+export type TSimulateOptions = {
+	count: number;
+	interval: number;
+	reset?: boolean;
+	company?: TCompanyGenerateOptions;
+	order?: TOrderGenerateOptions;
+}
 
 //////////////////
 //  Interfaces  //

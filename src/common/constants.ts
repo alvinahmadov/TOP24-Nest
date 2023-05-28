@@ -9,7 +9,9 @@ import { CRM }                from '@config/index';
 import {
 	IOrderExecutionState,
 	TBitrixData,
-	TBitrixEnum
+	TBitrixEnum,
+	TCompanyGenerateOptions,
+	TOrderGenerateOptions
 }                             from './interfaces';
 
 export const MAX_FLOAT: number = 16000000.0;
@@ -20,10 +22,6 @@ export const RANDOM_CODE_DIGITS = 1000;
 export const RANDOM_CODE_MAX = 9000;
 export const MILLIS = 24 * 60 * 60 * 1000;
 export const TIMEZONE = 'Europe/Moscow';
-export const DEFAULT_COORDINATES = {
-	lat:  55.750450636518245,
-	lon: 37.61749427765608
-};
 export const ENABLE_DISTANCE_NOTIF_TASK = false;
 export const NOTIFICATION_DISTANCE = 200 / 1000;
 
@@ -93,6 +91,11 @@ export const DRIVER_EVENT = 'driver';
 export const CARGO_EVENT = 'cargo';
 export const ORDER_EVENT = 'order';
 
+export const DEFAULT_COORDINATES = {
+	lat: 55.750450636518245,
+	lon: 37.61749427765608
+};
+
 export const DEFAULT_SORT_ORDER: SortOrder = [['created_at', 'DESC'], ['updated_at', 'DESC']];
 
 export const DEFAULT_ORDER_STATE: IOrderExecutionState = {
@@ -102,6 +105,32 @@ export const DEFAULT_ORDER_STATE: IOrderExecutionState = {
 	unloaded:     false,
 	uploaded:     false
 };
+
+export namespace GeneratorOptions {
+	export const COMPANY_DEFAULTS: TCompanyGenerateOptions = {
+		count:  1,
+		type:   undefined,
+		driver: {
+			distanceDelta: .05,
+			startPos:      {
+				latitude:  DEFAULT_COORDINATES.lat,
+				longitude: DEFAULT_COORDINATES.lon
+			}
+		}
+	};
+
+	export const ORDER_DEFAULTS: TOrderGenerateOptions = {
+		count: 1,
+		dest:  {
+			maxSize:       3,
+			distanceDelta: .05,
+			startPos:      {
+				latitude:  DEFAULT_COORDINATES.lat,
+				longitude: DEFAULT_COORDINATES.lon
+			}
+		},
+	};
+}
 
 /**@ignore*/
 export namespace BitrixUrl {
