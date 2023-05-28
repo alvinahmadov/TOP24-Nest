@@ -607,11 +607,11 @@ function transformUser(user: models.User, deep?: boolean)
 			type:      user.getDataValue('role'),
 			confirmed: user.getDataValue('confirmed'),
 			cargo_companies:
-			           !!deep ? user.cargoCompanies.map(transformCargoCompany)
-			                  : undefined,
+								 !!deep ? user.cargoCompanies.map(transformCargoCompany)
+												: undefined,
 			cargoinn_companies:
-			           !!deep ? user.cargoInnCompanies.map(transformCargoCompanyInn)
-			                  : undefined,
+								 !!deep ? user.cargoInnCompanies.map(transformCargoCompanyInn)
+												: undefined,
 			createdAt: user.getDataValue('createdAt'),
 			updatedAt: user.getDataValue('updatedAt')
 		};

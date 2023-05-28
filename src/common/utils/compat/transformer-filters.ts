@@ -18,13 +18,13 @@ import { formatDateString }        from '../date';
  * */
 export interface IAdminTransformerFilter
 	extends IFilter,
-	        IModelSortable,
-	        Partial<transformers.IAdminTransformer> {}
+					IModelSortable,
+					Partial<transformers.IAdminTransformer> {}
 
 export interface IAddressTransformerFilter
 	extends IFilter,
-	        IModelSortable,
-	        Partial<transformers.IAddressTransformer> {
+					IModelSortable,
+					Partial<transformers.IAddressTransformer> {
 	provider?: string;
 	search?: string;
 	short?: boolean;
@@ -39,8 +39,8 @@ export interface IAddressTransformerFilter
  * */
 export interface ICargoCompanyTransformerFilter
 	extends IFilter,
-	        IModelSortable,
-	        Partial<transformers.ICargoCompanyTransformer> {}
+					IModelSortable,
+					Partial<transformers.ICargoCompanyTransformer> {}
 
 /**
  * CargoInn model filters
@@ -49,12 +49,12 @@ export interface ICargoCompanyTransformerFilter
  * */
 export interface ICargoCompanyInnTransformerFilter
 	extends IFilter,
-	        IModelSortable,
-	        Partial<transformers.ICargoCompanyInnTransformer> {}
+					IModelSortable,
+					Partial<transformers.ICargoCompanyInnTransformer> {}
 
 export interface ICompanyTransportTransformerFilter
 	extends IFilter,
-	        ITransportTransformerFilter {
+					ITransportTransformerFilter {
 	cargoId?: string;
 	cargoinnId?: string;
 	risk_class?: string;
@@ -77,16 +77,16 @@ export interface ICompanyTransportTransformerFilter
  * */
 export interface IDriverTransformerFilter
 	extends IFilter,
-	        IModelSortable,
-	        Partial<transformers.IDriverTransformer> {
+					IModelSortable,
+					Partial<transformers.IDriverTransformer> {
 	order_status?: OrderStatus;
 	statuses?: DriverStatus[];
 }
 
 export interface IGatewayEventTransformerFilter
 	extends IFilter,
-	        IModelSortable,
-	        Partial<transformers.IGatewayEventTransformer> {
+					IModelSortable,
+					Partial<transformers.IGatewayEventTransformer> {
 	events?: string[];
 	sources?: string[];
 }
@@ -96,8 +96,8 @@ export interface IGatewayEventTransformerFilter
  * */
 export interface IOrderTransformerFilter
 	extends IFilter,
-	        IModelSortable,
-	        Partial<transformers.IOrderTransformer> {
+					IModelSortable,
+					Partial<transformers.IOrderTransformer> {
 	weight_min?: number;
 	weight_max?: number;
 	volume_min?: number;
@@ -124,8 +124,8 @@ export interface IOrderTransformerFilter
 
 export interface IOfferTransformerFilter
 	extends IFilter,
-	        IModelSortable,
-	        Partial<transformers.IOfferTransformer> {
+					IModelSortable,
+					Partial<transformers.IOfferTransformer> {
 	statuses?: OfferStatus[];
 	order_statuses?: OrderStatus[];
 	driver_status?: DriverStatus;
@@ -139,8 +139,8 @@ export interface IOfferTransformerFilter
  * */
 export interface ITransportTransformerFilter
 	extends IFilter,
-	        IModelSortable,
-	        Partial<transformers.ITransportTransformer> {
+					IModelSortable,
+					Partial<transformers.ITransportTransformer> {
 	weight_min?: number;
 	weight_max?: number;
 	volume_min?: number;
@@ -180,7 +180,7 @@ export function transformToAddressFilter(data: IAddressTransformerFilter)
 			onlyCities:  data.only_cities,
 			short:       data.short,
 			provider:    data.provider,
-			search: data.search
+			search:      data.search
 		};
 	}
 
