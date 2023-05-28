@@ -1,32 +1,30 @@
-import { Request }  from 'express';
-import { Position } from 'geojson';
+import { Request } from 'express';
 // @ts-ignore
-import { Multer }   from 'multer';
+import { Multer }  from 'multer';
 import {
 	CanActivate,
 	HttpStatus,
 	LoggerService,
 	NestInterceptor,
 	RequestMethod
-}                   from '@nestjs/common';
+}                  from '@nestjs/common';
 import {
 	ApiOperationOptions,
 	ApiPropertyOptions,
 	ApiQueryOptions,
 	ApiResponseOptions
-}                   from '@nestjs/swagger';
+}                  from '@nestjs/swagger';
 import {
 	IAdmin,
 	ICompany,
 	IModel
-}                   from './attributes';
+}                  from './attributes';
 import {
 	DriverStatus,
 	OrderStage,
 	OrderStatus,
 	UserRole
-}                   from '../enums';
-import * as enums   from '@common/enums';
+}                  from '../enums';
 
 //////////////
 //  Types  //
