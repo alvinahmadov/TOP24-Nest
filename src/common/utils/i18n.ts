@@ -33,8 +33,7 @@ export function getTranslation(...keys: string[]) {
 	let config = readLangConfigs(join(__dirname + configPath))[env.app.lang ?? 'ru'];
 
 	keys?.forEach(
-		(key) =>
-		{
+		(key) => {
 			if(config[key] !== undefined) {
 				config = config[key];
 			}

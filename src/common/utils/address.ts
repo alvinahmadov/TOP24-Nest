@@ -64,8 +64,8 @@ export function calculateDistance(
 		lat2 = degreesToRadians(endPoint[0]);
 
 	const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-	          Math.sin(dLng / 2) * Math.sin(dLng / 2) *
-	          Math.cos(lat1) * Math.cos(lat2);
+						Math.sin(dLng / 2) * Math.sin(dLng / 2) *
+						Math.cos(lat1) * Math.cos(lat2);
 	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 	const result = EARTH_RADIUS * c;
 
@@ -106,10 +106,10 @@ export async function searchAddressByKladr(
 	const { from: offset, count: limit } = listFilter ?? {};
 
 	qBuilder.addQuery('query', query)
-	        .addQuery('withParent', 1)
-	        .addQuery('oneString', 1)
-	        .addQuery('limit', limit)
-	        .addQuery('offset', offset);
+					.addQuery('withParent', 1)
+					.addQuery('oneString', 1)
+					.addQuery('limit', limit)
+					.addQuery('offset', offset);
 
 	const data = await AxiosStatic.get<IKladrResponse>(qBuilder.query);
 
@@ -173,11 +173,11 @@ export async function searchAddressByOSM(
 	const { count: limit } = listFilter ?? {};
 
 	qBuilder.addQuery('q', query)
-	        .addQuery('limit', limit)
-	        .addQuery('addressdetails', 1)
-	        .addQuery('format', 'jsonv2')
-	        .addQuery('accept-language', 'ru')
-	        .addQuery('countrycodes', 'ru');
+					.addQuery('limit', limit)
+					.addQuery('addressdetails', 1)
+					.addQuery('format', 'jsonv2')
+					.addQuery('accept-language', 'ru')
+					.addQuery('countrycodes', 'ru');
 
 	const osmData = await AxiosStatic.get<IOSMData[]>(qBuilder.query);
 

@@ -33,8 +33,7 @@ export const getApiResponseContentOf = (
 	key: 'oneOf' | 'anyOf' | 'allOf',
 	classRefs?: Type[],
 	options?: TApiResponseSchemaOptions
-): { content: ContentObject } =>
-{
+): { content: ContentObject } => {
 	let value: { content: ContentObject } = { content: null };
 
 	switch(mediaType) {
@@ -83,8 +82,7 @@ export function getResponseSchema(
 export const getApiResponseSchema = (
 	classRef?: Type,
 	options?: TApiResponseSchemaOptions
-): ApiResponseSchemaHost =>
-{
+): ApiResponseSchemaHost => {
 	return {
 		schema: env.api.compatMode ? (
 			(!!options?.isArray)
@@ -99,8 +97,8 @@ export const getApiResponseSchema = (
 					nullable: false
 				},
 				data:       (!!options?.isArray)
-				            ? { type: 'array', items: { $ref: getSchemaPath(classRef) } }
-				            : { $ref: getSchemaPath(classRef) },
+										? { type: 'array', items: { $ref: getSchemaPath(classRef) } }
+										: { $ref: getSchemaPath(classRef) },
 				message:    {
 					type:     'string',
 					nullable: true
@@ -128,8 +126,7 @@ export const getApiResponseSchemaOf = (
 	key: 'oneOf' | 'anyOf' | 'allOf',
 	classRefs?: Type[],
 	options?: TApiResponseSchemaOptions
-): ApiResponseSchemaHost =>
-{
+): ApiResponseSchemaHost => {
 	return {
 		schema: env.api.compatMode ? (
 			(!!options?.isArray)
@@ -145,8 +142,8 @@ export const getApiResponseSchemaOf = (
 					nullable: false
 				},
 				data:       (!!options?.isArray)
-				            ? { type: 'array', items: getItems(key, classRefs) }
-				            : getItems(key, classRefs),
+										? { type: 'array', items: getItems(key, classRefs) }
+										: getItems(key, classRefs),
 				message:    {
 					type:     'string',
 					nullable: true

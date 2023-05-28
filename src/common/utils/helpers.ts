@@ -89,8 +89,5 @@ export function sendResponse<T = any>(
 	transform: boolean | number = env.api.compatMode
 ) {
 	return response.status(result?.statusCode ?? 400)
-	               .send(
-		               transform ? transformApiResult(result)
-		                         : result
-	               );
+								 .send(transform ? transformApiResult(result) : result);
 }
