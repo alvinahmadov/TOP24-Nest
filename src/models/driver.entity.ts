@@ -4,28 +4,32 @@ import {
 	HasMany,
 	HasOne,
 	Table
-}                        from 'sequelize-typescript';
+}                       from 'sequelize-typescript';
 import {
 	Field,
 	ObjectType
-}                        from '@nestjs/graphql';
-import { ApiProperty }   from '@nestjs/swagger';
-import { CRM, DRIVER }   from '@config/json';
+}                       from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
+import {
+	CRM,
+	DRIVER
+}                       from '@config/json';
 import {
 	DriverStatus,
 	UserRole
-}                        from '@common/enums';
-import { UuidScalar }    from '@common/scalars';
+}                       from '@common/enums';
+import { UuidScalar }   from '@common/scalars';
 import {
 	DEFAULT_COORDINATES,
 	TABLE_OPTIONS
-} from '@common/constants';
+}                       from '@common/constants';
 import {
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
 	ICRMEntity,
 	IDriver,
+	IDriverSimulateData,
 	Index,
 	IntColumn,
 	JsonbColumn,
@@ -34,13 +38,13 @@ import {
 	UrlColumn,
 	UuidColumn,
 	VirtualColumn
-}                        from '@common/interfaces';
-import { entityConfig }  from '@api/swagger/properties';
-import EntityModel       from './entity-model';
-import CargoCompany      from './cargo.entity';
-import CargoCompanyInn   from './cargo-inn.entity';
-import Order             from './order.entity';
-import Transport         from './transport.entity';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
+import EntityModel      from './entity-model';
+import CargoCompany     from './cargo.entity';
+import CargoCompanyInn  from './cargo-inn.entity';
+import Order            from './order.entity';
+import Transport        from './transport.entity';
 
 const { driver: prop } = entityConfig;
 
@@ -75,9 +79,9 @@ export default class Driver
 	@ApiProperty(prop.crmId)
 	@Index
 	@IntColumn({
-		           unique:       true,
-		           defaultValue: null
-	           })
+		unique:       true,
+		defaultValue: null
+	})
 	crmId?: number;
 
 	@ApiProperty(prop.name)
@@ -94,9 +98,9 @@ export default class Driver
 
 	@ApiProperty(prop.email)
 	@StringColumn({
-		              unique:   true,
-		              validate: { isEmail: true }
-	              })
+		unique:   true,
+		validate: { isEmail: true }
+	})
 	email: string;
 
 	@ApiProperty(prop.birthDate)
@@ -109,9 +113,9 @@ export default class Driver
 
 	@ApiProperty(prop.status)
 	@IntColumn({
-		           allowNull:    false,
-		           defaultValue: DriverStatus.NONE
-	           })
+		allowNull:    false,
+		defaultValue: DriverStatus.NONE
+	})
 	status: DriverStatus;
 
 	@ApiProperty(prop.passportSerialNumber)
@@ -220,7 +224,7 @@ export default class Driver
 
 	@ApiProperty(prop.data)
 	@JsonbColumn({ defaultValue: {} })
-	data?: any;
+	data?: IDriverSimulateData[];
 
 	@ApiProperty(prop.hasSent)
 	@BooleanColumn({ defaultValue: false })
