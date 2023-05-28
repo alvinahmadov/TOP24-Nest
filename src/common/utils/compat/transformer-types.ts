@@ -11,9 +11,9 @@ import {
 } from '@common/enums';
 import {
 	IApiResponse,
-	IOrderExecutionState,
 	IModel,
 	IOffer,
+	IOrderExecutionState,
 	TCreationAttribute,
 	TGeoCoordinate
 } from '@common/interfaces';

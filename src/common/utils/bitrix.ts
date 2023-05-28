@@ -1,18 +1,22 @@
-import { CRM, ORDER, TRANSPORT } from '@config/json';
+import {
+	CRM,
+	ORDER,
+	TRANSPORT
+}                       from '@config/json';
 import {
 	BitrixUrl,
 	DEFAULT_ORDER_STATE
-}                                from '@common/constants';
+}                       from '@common/constants';
 import {
-	AxiosStatic,
-	ApiQuery
-}                                from '@common/classes';
+	ApiQuery,
+	AxiosStatic
+}                       from '@common/classes';
 import {
 	DestinationType,
 	LoadingType,
 	OrderStage,
 	OrderStatus
-}                                from '@common/enums';
+}                       from '@common/enums';
 import {
 	IApiResponse,
 	ICRMEntity,
@@ -21,17 +25,17 @@ import {
 	TBitrixEnum,
 	TCRMData,
 	TCRMFields
-}                                from '@common/interfaces';
+}                       from '@common/interfaces';
 import {
 	dateValidator,
 	formatDatePartsToString,
 	isNumber
-}                                from '@common/utils';
+}                       from '@common/utils';
 import {
 	DestinationCreateDto,
 	OrderCreateDto
-}                                from '@api/dto';
-import { splitAddress }          from './address';
+}                       from '@api/dto';
+import { splitAddress } from './address';
 
 let debugConvert: boolean = false;
 

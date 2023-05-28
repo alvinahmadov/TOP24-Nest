@@ -6,12 +6,13 @@ import {
 	Reference
 }                             from '@common/constants';
 import {
-	AxiosStatic,
-	ApiQuery
+	ApiQuery,
+	AxiosStatic
 }                             from '@common/classes';
 import {
 	IAddress,
-	IKladrResponse, IListFilter,
+	IKladrResponse,
+	IListFilter,
 	IOSMData,
 	TGeoCoordinate
 }                             from '@common/interfaces';

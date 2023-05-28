@@ -1,10 +1,13 @@
-import { CRM }                   from '@config/json/crm_enums.json';
-import { ICompany, TBitrixData } from '@common/interfaces';
+import { CRM } from '@config/json/crm_enums.json';
+import {
+	ICompany,
+	TBitrixData
+}              from '@common/interfaces';
 import {
 	Driver,
 	Order,
 	Transport
-}                                from '@models/index';
+}              from '@models/index';
 
 function isDedicatedOrExtraPayload(value: string, order: Order) {
 	const dedicated: TBitrixData = CRM.ORDER.DEDICATION

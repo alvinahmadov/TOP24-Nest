@@ -4,18 +4,18 @@ import { TRenderColorOptions } from '@common/interfaces';
 
 /**@ignore*/
 type TRendererOptionsKeys = 'dashColor' |
-							'keysColor' |
-							'stringColor' |
-							'numberColor';
+														'keysColor' |
+														'stringColor' |
+														'numberColor';
 
 /**@ignore*/
 type TRenderOptions = Omit<pj.RendererOptions, TRendererOptionsKeys> &
-					  {
-						  stringColor?: TRenderColorOptions;
-						  keysColor?: TRenderColorOptions;
-						  numberColor?: TRenderColorOptions;
-						  dashColor?: TRenderColorOptions;
-					  }
+											{
+												stringColor?: TRenderColorOptions;
+												keysColor?: TRenderColorOptions;
+												numberColor?: TRenderColorOptions;
+												dashColor?: TRenderColorOptions;
+											}
 
 export class CustomLogger extends ConsoleLogger {
 	public static readonly rendererOptions: TRenderOptions = {

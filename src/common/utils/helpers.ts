@@ -1,10 +1,16 @@
-import path                                    from 'path';
-import { v4 as uuid }                          from 'uuid';
-import * as ex                                 from 'express';
-import env                                     from '@config/env';
-import { RANDOM_CODE_DIGITS, RANDOM_CODE_MAX } from '@common/constants';
-import { IApiResponse, TMulterFile }           from '@common/interfaces';
-import { transformApiResult }                  from '@common/utils/compat';
+import path                   from 'path';
+import { v4 as uuid }         from 'uuid';
+import * as ex                from 'express';
+import env                    from '@config/env';
+import {
+	RANDOM_CODE_DIGITS,
+	RANDOM_CODE_MAX
+}                             from '@common/constants';
+import {
+	IApiResponse,
+	TMulterFile
+}                             from '@common/interfaces';
+import { transformApiResult } from '@common/utils/compat';
 
 const phoneRegex = RegExp(/[\s+()]+/gi);
 const cleanStringRegex = RegExp(/(\s|\n)/g);

@@ -1,4 +1,7 @@
-import { IModel, TUpdateAttribute } from '@common/interfaces';
+import {
+	IModel,
+	TUpdateAttribute
+} from '@common/interfaces';
 
 export function formatDatePartsToString(dateChunks: string[]) {
 	let day: string, month: string, year: string;

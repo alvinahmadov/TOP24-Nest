@@ -1,23 +1,26 @@
-import { MAX_FLOAT, MIN_FLOAT } from '@common/constants';
+import {
+	MAX_FLOAT,
+	MIN_FLOAT
+}                from '@common/constants';
 import {
 	loadingTypeToStr,
 	OrderStage,
 	TransportStatus
-}                               from '@common/enums';
+}                from '@common/enums';
 import {
 	ICompany,
 	ICompanyTransportFilter,
 	IDriverFilter,
 	IOrder,
 	ITransportFilter
-}                               from '@common/interfaces';
+}                from '@common/interfaces';
 import {
 	min,
 	transformDriverTransports
-}                               from '@common/utils';
-import Driver                   from '@models/driver.entity';
-import Order                    from '@models/order.entity';
-import Transport                from '@models/transport.entity';
+}                from '@common/utils';
+import Driver    from '@models/driver.entity';
+import Order     from '@models/order.entity';
+import Transport from '@models/transport.entity';
 
 const debugTransportFilter = false;
 const debugDirectionFilter = false;
@@ -301,7 +304,7 @@ export function filterTransports(
 		checkAgainst(transport.riskClasses, riskClasses, 'risk class', undefined, 'filterTransports');
 	const checkLoadingTypes = (transport: Transport): boolean =>
 		checkAgainst(transport.loadingTypes, loadingTypes.map(t => Number(t)),
-								 'loading type', loadingTypeToStr, 'filterTransports');
+			'loading type', loadingTypeToStr, 'filterTransports');
 	const checkPayloads = (transport: Transport): boolean =>
 		checkAgainst(transport.payloads ?? [], payloads, 'payloads', undefined, 'filterTransports');
 
