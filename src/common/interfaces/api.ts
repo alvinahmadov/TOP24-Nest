@@ -1,30 +1,32 @@
-import { Request } from 'express';
+import { Request }  from 'express';
+import { Position } from 'geojson';
 // @ts-ignore
-import { Multer }  from 'multer';
+import { Multer }   from 'multer';
 import {
 	CanActivate,
 	HttpStatus,
 	LoggerService,
 	NestInterceptor,
 	RequestMethod
-}                  from '@nestjs/common';
+}                   from '@nestjs/common';
 import {
 	ApiOperationOptions,
 	ApiPropertyOptions,
 	ApiQueryOptions,
 	ApiResponseOptions
-}                  from '@nestjs/swagger';
+}                   from '@nestjs/swagger';
 import {
 	IAdmin,
 	ICompany,
 	IModel
-}                  from './attributes';
+}                   from './attributes';
 import {
 	DriverStatus,
 	OrderStage,
 	OrderStatus,
 	UserRole
-}                  from '../enums';
+}                   from '../enums';
+import * as enums   from '@common/enums';
 
 //////////////
 //  Types  //
@@ -41,7 +43,6 @@ export type TApiResponseSchemaOptions = {
 	description?: string;
 	data?: any;
 }
-export type TCompanyIdOptions = { cargoId?: string; cargoinnId?: string };
 
 export type TCRMFields = Record<string, any>;
 export type TCRMParams = Record<string, string>;
@@ -103,13 +104,6 @@ export type TMulterFile = Express.Multer.File;
 export type TMediaType = 'application/xml' |
 												 'application/json' |
 												 string;
-
-export type TOpenRouteServiceProfile = "driving-car" |
-																			 "driving-hgv" |
-																			 "foot-walking" |
-																			 "foot-hiking" |
-																			 "wheelchair" |
-																			 string;
 
 export type TOperationCount = {
 	createdCount: number;
@@ -200,12 +194,12 @@ export interface IApiRouteMetadata<M = any> {
 	 * Api path to fetch
 	 * */
 	path: string | string[];
-	
+
 	/**
 	 * Method type to use for api endpoint
 	 * */
 	method: RequestMethod;
-	
+
 	api?: IApiSwaggerDescription;
 }
 
@@ -259,13 +253,13 @@ export interface ICRMEntity {
 	 * CRM id of company from bitrix service.
 	 * */
 	crmId?: number;
-	
+
 	/**
 	 * Indicate that data has been sent to the bitrix service for remote update
 	 * and prevent repeat of update actions from webhooks.
 	 * */
 	hasSent?: boolean;
-	
+
 	/**
 	 * Convert entity data to bitrix data for sending.
 	 * */
@@ -383,7 +377,7 @@ export interface IKladrResponse {
 /**@ignore*/
 export interface ILoggable {
 	readonly logger: LoggerService;
-	
+
 	log: <R>(
 		callback: TLoggerCallback<R>,
 		identifier: TLogIdentifier,
@@ -475,17 +469,17 @@ export interface IService {}
 export interface IImageFileService
 	extends IService {
 	uploadFile(file: TMulterFile): Promise<IAWSUploadResponse | Error>;
-	
+
 	uploadFiles(
 		files: TMulterFile[],
 		bucketId?: string
 	): Promise<{ Location: string[] }>;
-	
+
 	deleteImage(
 		location: string,
 		bucketId?: string
 	): Promise<number>;
-	
+
 	deleteImageList(
 		locations: string[],
 		bucketId?: string
