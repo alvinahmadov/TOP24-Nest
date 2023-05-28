@@ -71,21 +71,21 @@ export type TDocumentMode = 'payment' | 'contract' | 'receipt' | string;
 
 /**@ignore*/
 export type TFormat = 'url' |
-                      'uuid' |
-                      'date' |
-                      'float' |
-                      'integer' |
-                      'string' |
-                      string;
+											'uuid' |
+											'date' |
+											'float' |
+											'integer' |
+											'string' |
+											string;
 
 /**@ignore*/
 export type TImageMimeType = 'image/gif' |
-                             'image/png' |
-                             'image/jpeg' |
-                             'image/jpg' |
-                             'image/webp' |
-                             'image/svg+xml' |
-                             string;
+														 'image/png' |
+														 'image/jpeg' |
+														 'image/jpg' |
+														 'image/webp' |
+														 'image/svg+xml' |
+														 string;
 
 export type TLogIdentifier = {
 	id?: string;
@@ -101,8 +101,15 @@ export type TMulterFile = Express.Multer.File;
 
 /**@ignore*/
 export type TMediaType = 'application/xml' |
-                         'application/json' |
-                         string;
+												 'application/json' |
+												 string;
+
+export type TOpenRouteServiceProfile = "driving-car" |
+																			 "driving-hgv" |
+																			 "foot-walking" |
+																			 "foot-hiking" |
+																			 "wheelchair" |
+																			 string;
 
 export type TOperationCount = {
 	createdCount: number;
@@ -121,12 +128,12 @@ export type TRouteAccess = {
 
 // noinspection MagicNumberJS
 export type TStatusCode = 200 |
-                          201 |
-                          400 |
-                          401 |
-                          403 |
-                          500 |
-                          number;
+													201 |
+													400 |
+													401 |
+													403 |
+													500 |
+													number;
 
 export type TStringOrNumber = string | number;
 
@@ -136,10 +143,10 @@ export type TObjectStorageAuth = {
 }
 
 export type TWebHookEvent = 'ONCRMDEALADD' |
-                            'ONCRMDEALUPDATE' |
-                            'ONCRMDEALDELETE' |
-                            'ONCRMCOMPANYUPDATE' |
-                            'ONCRMCONTACTUPDATE';
+														'ONCRMDEALUPDATE' |
+														'ONCRMDEALDELETE' |
+														'ONCRMCOMPANYUPDATE' |
+														'ONCRMCONTACTUPDATE';
 
 //////////////////
 //  Interfaces  //
@@ -193,12 +200,12 @@ export interface IApiRouteMetadata<M = any> {
 	 * Api path to fetch
 	 * */
 	path: string | string[];
-
+	
 	/**
 	 * Method type to use for api endpoint
 	 * */
 	method: RequestMethod;
-
+	
 	api?: IApiSwaggerDescription;
 }
 
@@ -252,13 +259,13 @@ export interface ICRMEntity {
 	 * CRM id of company from bitrix service.
 	 * */
 	crmId?: number;
-
+	
 	/**
 	 * Indicate that data has been sent to the bitrix service for remote update
 	 * and prevent repeat of update actions from webhooks.
 	 * */
 	hasSent?: boolean;
-
+	
 	/**
 	 * Convert entity data to bitrix data for sending.
 	 * */
@@ -278,13 +285,13 @@ export interface IGatewayStatusData<E extends number | string> {
 
 export interface ICargoGatewayData
 	extends IGatewayData,
-	        IGatewayStatusData<string> {
+					IGatewayStatusData<string> {
 	status?: string;
 }
 
 export interface IOrderGatewayData
 	extends IGatewayData,
-	        IGatewayStatusData<OrderStatus> {
+					IGatewayStatusData<OrderStatus> {
 	stage?: OrderStage | { value: OrderStage; text?: string; };
 	event?: 'order';
 	point?: string;
@@ -292,7 +299,7 @@ export interface IOrderGatewayData
 
 export interface IDriverGatewayData
 	extends IGatewayData,
-	        IGatewayStatusData<DriverStatus> {
+					IGatewayStatusData<DriverStatus> {
 	event?: 'driver';
 	latitude?: number;
 	longitude?: number;
@@ -321,10 +328,10 @@ export interface IKladrData {
 	 * Type of content.
 	 * */
 	contentType?: 'city' |
-	              'street' |
-	              'region' |
-	              'district' |
-	              string;
+								'street' |
+								'region' |
+								'district' |
+								string;
 	/**
 	 * Full name of kladr address object.
 	 * */
@@ -376,7 +383,7 @@ export interface IKladrResponse {
 /**@ignore*/
 export interface ILoggable {
 	readonly logger: LoggerService;
-
+	
 	log: <R>(
 		callback: TLoggerCallback<R>,
 		identifier: TLogIdentifier,
@@ -468,17 +475,17 @@ export interface IService {}
 export interface IImageFileService
 	extends IService {
 	uploadFile(file: TMulterFile): Promise<IAWSUploadResponse | Error>;
-
+	
 	uploadFiles(
 		files: TMulterFile[],
 		bucketId?: string
 	): Promise<{ Location: string[] }>;
-
+	
 	deleteImage(
 		location: string,
 		bucketId?: string
 	): Promise<number>;
-
+	
 	deleteImageList(
 		locations: string[],
 		bucketId?: string
