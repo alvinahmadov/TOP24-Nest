@@ -1,27 +1,27 @@
-import { faker }              from '@faker-js/faker';
-import { GeneratorOptions }   from '@common/constants';
-import * as interfaces        from '@common/interfaces';
-import * as enums             from '@common/enums';
-import * as dto               from '@api/dto';
-import * as common            from './common';
-import { generateTransports } from './transport';
+import { faker }                   from '@faker-js/faker';
+import { GeneratorOptions }        from '@common/constants';
+import * as interfaces             from '@common/interfaces';
+import * as enums                  from '@common/enums';
+import * as dto                    from '@api/dto';
+import * as common                 from './common';
+import { generateTransports }      from './transport';
 
 type TDriverGeneratorResult = {
 	driver: dto.DriverCreateDto,
 	transports: dto.TransportCreateDto[]
 };
 
-const { COMPANY_DEFAULTS: { driver: DRIVER_DEFAULT_OPTIONS } } = GeneratorOptions;
-const { lat, lon } = common;
+const { COMPANY_DEFAULTS } = GeneratorOptions;
+const { lat, lon, getDriverOptions } = common;
 
 /**@ignore*/
 const randomDriverStatus = () => faker.helpers.arrayElement(common.DRIVER_STATUSES);
 
 export async function generateDriver(
 	company: interfaces.ICompany,
-	options: interfaces.TDriverGenerateOptions = DRIVER_DEFAULT_OPTIONS
+	options?: interfaces.IDriverGenerateOptions
 ): Promise<TDriverGeneratorResult> {
-	const { startPos, distanceDelta } = options;
+	const { startPos, distanceDelta } = getDriverOptions(options, COMPANY_DEFAULTS);
 	const name: string = faker.name.firstName('male');
 	const patronymic: string = faker.name.middleName('male');
 	const lastName: string = faker.name.lastName('male');
