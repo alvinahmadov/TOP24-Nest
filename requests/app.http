@@ -13,12 +13,6 @@ Content-Type: application/json
 PATCH {{host}}/migrate
 Content-Type: application/json
 
-### Get agreement pdf file
-// @no-log
-// @no-cookie-jar
-GET {{host}}/agreement
-Content-Type: application/json
-
 ### Generate random companies
 // @no-log
 // @no-cookie-jar
@@ -27,8 +21,15 @@ Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"count": 1,
-	"type": 0
+	"count": 5,
+	"reset": true,
+	"driver": {
+		"distanceDelta": 0.3,
+		"startPos": {
+			"latitude": 55.750450636518245,
+			"longitude": 37.61749427765608
+		}
+	}
 }
 
 ### Generate random orders
@@ -39,30 +40,76 @@ Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"count": 1,
-	"maxDestination": 3
+	"count": 5,
+	"reset": true,
+	"dest": {
+		"maxSize": 5,
+		"distanceDelta": 0.3,
+		"startPos": {
+			"latitude": 55.750450636518245,
+			"longitude": 37.61749427765608
+		}
+	}
+}
+
+### Generate simulation
+// @no-log
+// @no-cookie-jar
+POST {{api}}/generator/simulate/start
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"count": 5,
+	"reset": true,
+	"dest": {
+		"maxSize": 5,
+		"distanceDelta": 0.3,
+		"startPos": {
+			"latitude": 55.750450636518245,
+			"longitude": 37.61749427765608
+		}
+	},
+	"driver": {
+		"distanceDelta": 0.3,
+		"startPos": {
+			"latitude": 55.750450636518245,
+			"longitude": 37.61749427765608
+		}
+	}
+}
+
+### Stop generated simulation
+// @no-log
+// @no-cookie-jar
+POST {{api}}/generator/simulate/stop
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+{
+	"reset": true
 }
 
 ### Get fields of crm deal
 // @no-log 
 // @no-cookie-jar
-GET {{bitrixUrl}}/rest/32/{{bitrixKey}}/crm.deal.fields
+GET {{bitrixUrl}}/{{bitrixKey}}/crm.deal.fields
 Content-Type: application/json
 
 ### Get fields of crm company
 // @no-log 
 // @no-cookie-jar
-GET {{bitrixUrl}}/rest/32/{{bitrixKey}}/crm.company.fields
+GET {{bitrixUrl}}/{{bitrixKey}}/crm.company.fields
 Content-Type: application/json
 
 ### Get fields of crm contact
 // @no-log 
 // @no-cookie-jar
-GET {{bitrixUrl}}/rest/32/{{bitrixKey}}/crm.contact.fields
+GET {{bitrixUrl}}/{{bitrixKey}}/crm.contact.fields
 Content-Type: application/json
 
 ### Get crm deal by id
 // @no-log 
 // @no-cookie-jar
-GET {{bitrixUrl}}/rest/32/{{bitrixKey}}/crm.deal.get?ID={{crmId}}
+GET {{bitrixUrl}}/{{bitrixKey}}/crm.deal.get?ID={{crmId}}
 Content-Type: application/json
