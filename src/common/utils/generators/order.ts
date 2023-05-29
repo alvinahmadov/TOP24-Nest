@@ -1,8 +1,7 @@
 import faker                      from '@faker-js/faker';
 import * as enums                 from '@common/enums';
 import * as interfaces            from '@common/interfaces';
-import { GeneratorOptions }       from '@common/constants';
-import { addressFromCoordinates } from '@common/utils/address';
+import { addressFromCoordinates } from '@common/utils';
 import * as dto                   from '@api/dto';
 import * as common                from './common';
 
@@ -10,28 +9,28 @@ import * as common                from './common';
 const minPrice: number = 10000,
 	maxPrice: number = 200000;
 
-const { ORDER_DEFAULTS } = GeneratorOptions;
-const { lat, lon } = common;
+const { lat, lon, getOrderOptions, getDestinationOptions } = common;
 
 /**@ignore*/
 const generatePrice = (): number => faker.datatype.number({ min: minPrice, max: maxPrice });
 
-async function generateDestinations(options: interfaces.TDestinationGenerateOptions = ORDER_DEFAULTS.dest)
+async function generateDestinations(options: interfaces.IDestinationGenerateOptions)
 	: Promise<Array<dto.DestinationCreateDto>> {
-	let { maxSize: count } = options;
-	const { distanceDelta: delta } = options;
+	const { maxSize, startPos, distanceDelta: delta } = options;
 	const destinations: dto.DestinationCreateDto[] = [];
-	const dateRange = 5;
-	let latitude = lat(options.startPos.latitude, delta),
-		longitude = lon(options.startPos.longitude, delta);
+	const dateRange: number = 5;
+	const precision: number = 10e-6;
+	let count = faker.datatype.number({ min: 2, max: maxSize ?? common.LETTERS.length });
+	let latitude = lat(startPos.latitude, delta),
+		longitude = lon(startPos.longitude, delta);
 	let date: Date = faker.date.soon(dateRange);
-	if(count === undefined) count = faker.datatype.number({ min: 2, max: 10 });
 	if(count > common.LETTERS.length) count = common.LETTERS.length;
 
 	for(let i = 0; i < count; i++) {
 		const address = await addressFromCoordinates(latitude, longitude);
-		let latitudeModifier = faker.datatype.number({ min: -(delta ?? .5), max: delta ?? .5 }),
-			longitudeModifier = faker.datatype.number({ min: -(delta ?? .5), max: delta ?? .5 });
+		const latitudeModifier = faker.datatype.float({ min: -(delta), max: delta, precision });
+		const longitudeModifier = faker.datatype.float({ min: -(delta), max: delta, precision });
+
 		destinations.push(
 			{
 				orderId:     null,
@@ -60,9 +59,10 @@ async function generateDestinations(options: interfaces.TDestinationGenerateOpti
 	return destinations;
 }
 
-export async function generateOrder(options: interfaces.TOrderGenerateOptions = ORDER_DEFAULTS)
+export async function generateOrder(options?: interfaces.IOrderGenerateOptions)
 	: Promise<dto.OrderCreateDto> {
-	const paramRange = { min: 1, max: 10, precision: 2 };
+	const destOptions = getDestinationOptions(options);
+	const paramRange = { min: 1, max: 10, precision: 0.1 };
 	const isBid = faker.datatype.boolean();
 	const orderNumber = faker.datatype.number({ min: 999, max: 10000 });
 	const price: number = generatePrice();
@@ -75,7 +75,7 @@ export async function generateOrder(options: interfaces.TOrderGenerateOptions = 
 	return {
 		date:            faker.date.recent(10),
 		dedicated:       faker.helpers.arrayElement(['Догруз', 'Не важно', 'Выделенная машина']),
-		destinations:    await generateDestinations(options.dest),
+		destinations:    await generateDestinations(destOptions),
 		isBid,
 		bidPrice:        isBid ? price + 10000 : 0,
 		bidPriceVAT:     isBid ? price + 15000 : 0,
@@ -107,12 +107,12 @@ export async function generateOrder(options: interfaces.TOrderGenerateOptions = 
 	} as dto.OrderCreateDto;
 }
 
-export function generateOrders(options: interfaces.TOrderGenerateOptions = ORDER_DEFAULTS) {
-	let { count } = options;
+export function generateOrders(options: interfaces.IOrderGenerateOptions) {
+	let { count } = getOrderOptions(options);
 	if(!count)
 		count = faker.datatype.number({ min: 1, max: 5 });
 	return Promise.all(
 		Array.from(Array(count))
-				 .map(() => generateOrder(options))
+				 .map(() => generateOrder(getOrderOptions(options)))
 	);
 }
