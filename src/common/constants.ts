@@ -12,7 +12,7 @@ import {
 	IOrderGenerateOptions,
 	TBitrixData,
 	TBitrixEnum,
-	TGenerationGeodata
+	IGeoPosition
 }                             from './interfaces';
 
 export const MAX_FLOAT: number = 16000000.0;
@@ -108,7 +108,7 @@ export const DEFAULT_ORDER_STATE: IOrderExecutionState = {
 };
 
 export namespace GeneratorOptions {
-	const startPos: TGenerationGeodata = {
+	const startPos: IGeoPosition = {
 		latitude:  DEFAULT_COORDINATES.lat,
 		longitude: DEFAULT_COORDINATES.lon
 	};

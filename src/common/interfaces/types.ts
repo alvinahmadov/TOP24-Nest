@@ -1,11 +1,22 @@
-import { DotenvParseOutput }  from 'dotenv';
-import { TObjectStorageAuth } from './api';
+// @ts-ignore
+import { Multer }            from 'multer';
+import { Request }           from 'express';
+import { DotenvParseOutput } from 'dotenv';
 import {
-	ActionStatus,
-	DestinationType
-}                             from '@common/enums';
-import * as enums             from '@common/enums';
-import { Position }           from 'geojson';
+	CanActivate,
+	HttpStatus,
+	LoggerService,
+	NestInterceptor,
+	RequestMethod
+}                            from '@nestjs/common';
+import {
+	ApiOperationOptions,
+	ApiPropertyOptions,
+	ApiQueryOptions,
+	ApiResponseOptions
+}                            from '@nestjs/swagger';
+import { IModel }            from './attributes';
+import { UserRole }          from '../enums';
 
 //////////////
 //  Types  //
@@ -15,6 +26,10 @@ type latitude = number;
 type longitude = number;
 
 export type URL = string;
+
+/**@ignore*/
+export type TApiProperty<T extends IModel, K extends keyof T = keyof T> =
+	{ [P in K]: Omit<ApiPropertyOptions, 'format'> & { format?: TFormat }; }
 
 export type TBitrixData = {
 	ID: string;
@@ -26,78 +41,201 @@ export type TBitrixEnum = Array<TBitrixData>;
 
 export type TCompanyIdOptions = { cargoId?: string; cargoinnId?: string };
 
-export type TGenerationGeodata = {
-	latitude: number;
-	longitude: number;
+export type TCRMFields = Record<string, any>;
+
+export type TCRMData = {
+	fields: TCRMFields;
+	params: TCRMParams;
 }
 
-export type TDriverGenerateOptions = {
-	startPos?: TGenerationGeodata;
-	distanceDelta?: number;
+export type TCRMParams = Record<string, string>;
+
+/**@ignore*/
+export type TCRMResponse = {
+	result: TCRMFields | string | boolean;
+	next?: number;
+	total?: number;
+	time: {
+		start: number;
+		finish: number;
+		duration: number;
+		processing: number;
+		date_start: Date | string;
+		date_finish: Date | string;
+		operating?: number;
+	};
 }
 
+export type TDocumentMode = 'payment' | 'contract' | 'receipt' | string;
 
-export type TCompanyGenerateOptions = {
-	count?: number;
-	type?: enums.CompanyType;
-	driver?: TDriverGenerateOptions
-}
+/**@ignore*/
+export type TFormat = 'url' |
+											'uuid' |
+											'date' |
+											'float' |
+											'integer' |
+											'string' |
+											string;
 
-export type TDestinationGenerateOptions = {
-	maxSize?: number;
-	distanceDelta?: number;
-	startPos?: TGenerationGeodata;
-}
+export type TGeoCoordinate = [latitude, longitude];
 
-export interface IDriverSimulateData {
-	position: Position;
-	passed?: boolean;
-}
-
-export type TObjectStorageType = 'external' | 'local';
-
-export type TOrderGenerateOptions = {
-	count?: number;
-	dest?: TDestinationGenerateOptions;
-}
+/**@ignore*/
+export type TImageMimeType = 'image/gif' |
+														 'image/png' |
+														 'image/jpeg' |
+														 'image/jpg' |
+														 'image/webp' |
+														 'image/svg+xml' |
+														 string;
 
 /**@ignore*/
 export type TLanguageConfig = { [langCode: string]: any };
 
+/**@ignore*/
+export type TLoggerCallback<R> = (...args: any[]) => R;
+
+export type TLogIdentifier = {
+	id?: string;
+	errorId?: string;
+	method?: string;
+};
+
 export type TLogLevel = 'log' | 'error' | 'warn' | 'debug' | 'verbose';
 
-export type TGeoCoordinate = [latitude, longitude];
+/**@ignore*/
+export type TMediaType = 'application/xml' |
+												 'application/json' |
+												 string;
 
+/**@ignore*/
+export type TMulterFile = Express.Multer.File;
+
+/**@ignore*/
+export type TObjectStorageType = 'external' | 'local';
+
+/**@ignore*/
+export type TQueryConfig = Record<string, TStringOrNumber | Array<TStringOrNumber>>;
+
+/**@ignore*/
 export type TRenderColorOptions = 'red' |
-                                  'blue' |
-                                  'cyan' |
-                                  'gray' |
-                                  'grey' |
-                                  'black' |
-                                  'green' |
-                                  'white' |
-                                  'yellow' |
-                                  'magenta';
+																	'blue' |
+																	'cyan' |
+																	'gray' |
+																	'grey' |
+																	'black' |
+																	'green' |
+																	'white' |
+																	'yellow' |
+																	'magenta';
 
-export type TSimulateOptions = {
-	count: number;
-	interval: number;
-	reset?: boolean;
-	company?: TCompanyGenerateOptions;
-	order?: TOrderGenerateOptions;
-}
+/**@ignore*/
+export type TStringOrNumber = string | number;
+
+/**@ignore*/
+export type TWebHookEvent = 'ONCRMDEALADD' |
+														'ONCRMDEALUPDATE' |
+														'ONCRMDEALDELETE' |
+														'ONCRMCOMPANYUPDATE' |
+														'ONCRMCONTACTUPDATE';
 
 //////////////////
 //  Interfaces  //
 //////////////////
 
-export interface IAdminCredentials {
-	email: string;
-	password: string;
+/**@ignore*/
+export interface IApiResponseSchemaOptions {
+	message?: string;
+	isArray?: boolean;
+	description?: string;
+	data?: any;
+}
+
+export interface IApiRoute<M> {
+	[route: string]: IApiRouteMetadata<M>;
+}
+
+/**@ignore*/
+export interface IApiRouteInfoParams {
+	guards?: (CanActivate | Function)[];
+	statuses?: HttpStatus[];
+	fileOpts?: {
+		mimeTypes: TMediaType[];
+		interceptors: (NestInterceptor | Function)[];
+		multi?: boolean
+	};
+}
+
+/**@ignore*/
+export interface IApiRouteMetadata<M = any> {
+	/**
+	 * Api path to fetch
+	 * */
+	path: string | string[];
+
+	/**
+	 * Method type to use for api endpoint
+	 * */
+	method: RequestMethod;
+
+	api?: IApiSwaggerDescription;
+}
+
+export interface IApiRouteConfig<M = any> {
+	path: string | string[];
+	routes: IApiRoute<M>;
+	description?: string;
+}
+
+export interface IApiSwaggerDescription {
+	operation?: ApiOperationOptions;
+	responses?: Record<number, ApiResponseOptions>;
+	queryOptions?: ApiQueryOptions | ApiQueryOptions[];
+}
+
+export interface IAuthRequest
+	extends Request {
+	user: IUserPayload;
 }
 
 export interface IAutoGeneratedEntity {
 	isAutogenerated?: boolean;
+}
+
+/**@ignore*/
+export interface IAWSUploadResponse {
+	Location: string;
+	ETag?: string;
+	VersionId?: any;
+	Key?: string;
+	Bucket?: string;
+}
+
+/**@ignore*/
+export interface IBucketItem {
+	buffer?: Buffer;
+	name?: string;
+	save_name?: string;
+	path?: string;
+	ignore?: string[];
+	mimetype?: TImageMimeType;
+}
+
+export interface ICRMEntity {
+	/**
+	 * CRM id of company from bitrix service.
+	 * */
+	crmId?: number;
+
+	/**
+	 * Indicate that data has been sent to the bitrix service for remote update
+	 * and prevent repeat of update actions from webhooks.
+	 * */
+	hasSent?: boolean;
+
+	/**
+	 * Convert entity data to bitrix data for sending.
+	 * */
+	readonly toCrm?: (...args: any[]) => void | TCRMData;
 }
 
 /**@ignore*/
@@ -143,7 +281,7 @@ export interface IEnvironment {
 	};
 	objectStorage?: {
 		readonly type?: TObjectStorageType;
-		auth: TObjectStorageAuth;
+		auth: IObjectStorageAuth;
 		url: string;
 		bucketId?: string;
 		region?: string;
@@ -260,7 +398,6 @@ export interface IEnvParseOutput
 	KLADR_API_KEY?: string;
 	KLADR_API_URL?: string;
 	OSM_URL?: string;
-	
 	ORS_API_KEY?: string;
 	SMSCAPI_LOGIN?: string;
 	SMSCAPI_PASSW?: string;
@@ -275,29 +412,84 @@ export interface IEnvParseOutput
 	SMTP_USER?: string;
 }
 
-/**
- * Information about order execution state.
- * */
-export interface IOrderExecutionState {
-	/**
-	 * Type of destination for order operations.
-	 * */
-	type?: DestinationType;
-	/**
-	 * Status of the action for execution state
-	 * */
-	actionStatus?: ActionStatus;
-	/**
-	 * The payload is unloaded.
-	 * */
-	unloaded?: boolean;
-	/**
-	 * The payload is loaded.
-	 * */
-	loaded?: boolean;
-	uploaded?: boolean;
+export interface IGeoPosition {
+	latitude: number;
+	longitude: number;
+}
 
-	set?: (state: IOrderExecutionState) => void;
+export interface IImageFileService
+	extends IService {
+	uploadFile(file: TMulterFile): Promise<IAWSUploadResponse | Error>;
+
+	uploadFiles(
+		files: TMulterFile[],
+		bucketId?: string
+	): Promise<{ Location: string[] }>;
+
+	deleteImage(
+		location: string,
+		bucketId?: string
+	): Promise<number>;
+
+	deleteImageList(
+		locations: string[],
+		bucketId?: string
+	): Promise<number>;
+}
+
+/**@ignore*/
+export interface ILoggable {
+	readonly logger: LoggerService;
+
+	log: <R>(
+		callback: TLoggerCallback<R>,
+		identifier: TLogIdentifier,
+		extraArgs: { [k: string]: any }
+	) => any;
+}
+
+export interface IObjectStorageAuth {
+	accessKeyId: string;
+	secretKey: string;
+}
+
+/**@ignore*/
+export interface IObjectStorageParams {
+	/**
+	 * Authentication data
+	 * */
+	auth: IObjectStorageAuth;
+	/**
+	 * Id or name of the bucket of object storage
+	 * */
+	bucketId: string;
+	/**
+	 * The url to the object storage endpoint
+	 * */
+	endpoint_url?: string;
+	/**
+	 * Region of the object storage host
+	 * */
+	region?: string;
+	httpOptions?: {
+		/**
+		 * the URL to proxy requests through.
+		 */
+		proxy?: string;
+		/**
+		 * The maximum time in milliseconds that the connection phase of the request
+		 * should be allowed to take. This only limits the connection phase and has
+		 * no impact once the socket has established a connection.
+		 * Used in node.js environments only.
+		 */
+		connectTimeout?: number;
+		/**
+		 * The number of milliseconds a request can take before automatically being terminated.
+		 * Defaults to two minutes (120000).
+		 */
+		timeout?: number;
+	};
+	debug?: boolean;
 }
 
 /**@ignore*/
@@ -306,22 +498,58 @@ export interface IParsedEnvConfigOutput {
 	parsed?: IEnvParseOutput;
 }
 
+export interface IRepository {}
+
 /**@ignore*/
 export interface IRepositoryOptions {
 	log?: boolean;
 }
 
-export interface ISignInData {
-	code?: string;
-	repeat?: boolean;
+/**@ignore*/
+export interface IRouteAccess {
+	path: string;
+	method?: RequestMethod;
 }
 
-export interface ISignInEmailData
-	extends ISignInData {
-	email: string;
+export interface IService {}
+
+/**@ignore*/
+export interface ISwaggerOptionsRecord {
+	defaultModelsExpandDepth?: number;
+	defaultModelExpandDepth?: number;
+	docExpansion?: 'list' | 'full' | 'none';
+	filter?: boolean | string;
+	showExtensions?: boolean;
+	displayOperationId?: boolean;
+	showCommonExtensions?: boolean;
+	operationsSorter?: 'alpha' | 'method' | Function;
+	tagsSorter?: 'alpha' | 'method' | Function;
+	persistAuthorization?: boolean;
 }
 
-export interface ISignInPhoneData
-	extends ISignInData {
-	phone: string;
+/**@ignore*/
+export interface ISwaggerTag {
+	name: string;
+	description?: string;
+	externalDocs?: any;
+}
+
+export interface IUserPayload {
+	id: string;
+	role: UserRole;
+	reff?: number;
+}
+
+/**@ignore*/
+export interface IWebhookResponse {
+	event: TWebHookEvent;
+	data: { FIELDS: { [key: string]: string; } };
+	ts: string;
+	auth: {
+		domain: string;
+		client_endpoint: string;
+		server_endpoint: string;
+		member_id: string;
+		application_token: string;
+	};
 }
