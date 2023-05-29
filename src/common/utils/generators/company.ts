@@ -1,7 +1,7 @@
 import faker, { GenderType }       from '@faker-js/faker';
 import { GeneratorOptions }        from '@common/constants';
 import * as enums                  from '@common/enums';
-import { TCompanyGenerateOptions } from '@common/interfaces';
+import { ICompanyGenerateOptions } from '@common/interfaces';
 import * as utils                  from '@common/utils';
 import * as dto                    from '@api/dto';
 import * as common                 from './common';
@@ -13,12 +13,11 @@ type CompanyData = { company: dto.CompanyCreateDto, payment: dto.PaymentCreateDt
 type CompanyInnData = { company: dto.CompanyInnCreateDto, payment: dto.PaymentCreateDto };
 
 const { COMPANY_DEFAULTS } = GeneratorOptions;
-const { lat, lon } = common;
+const { lat, lon, getDriverOptions } = common;
 
-async function generateCargoCompany(options: TCompanyGenerateOptions = COMPANY_DEFAULTS): Promise<CompanyData> {
-	console.debug("generateCargoCompany", options);
-	let { type } = options;
-	const { driver: { startPos, distanceDelta: delta } } = options;
+async function generateCargoCompany(options?: ICompanyGenerateOptions): Promise<CompanyData> {
+	let { type } = options ?? COMPANY_DEFAULTS;
+	const { startPos, distanceDelta: delta } = getDriverOptions(options, COMPANY_DEFAULTS);
 
 	const gender1 = faker.name.gender(true).toLowerCase() as GenderType;
 	const gender2 = faker.name.gender(true).toLowerCase() as GenderType;
@@ -83,10 +82,9 @@ async function generateCargoCompany(options: TCompanyGenerateOptions = COMPANY_D
 	return { company: cargoCompanyData, payment };
 }
 
-async function generateInnCargoCompany(options: TCompanyGenerateOptions = COMPANY_DEFAULTS): Promise<CompanyInnData> {
-	console.debug("generateInnCargoCompany", options);
-	let { type } = options;
-	const { driver: { startPos, distanceDelta: delta } } = options;
+async function generateInnCargoCompany(options: ICompanyGenerateOptions = COMPANY_DEFAULTS): Promise<CompanyInnData> {
+	let { type } = options ?? COMPANY_DEFAULTS;
+	const { startPos, distanceDelta: delta } = getDriverOptions(options);
 
 	const gender = faker.name.gender(true).toLowerCase() as GenderType;
 	const name: string = faker.name.firstName(gender);
@@ -145,7 +143,7 @@ async function generateInnCargoCompany(options: TCompanyGenerateOptions = COMPAN
 	return { company: cargoCompanyInnData, payment };
 }
 
-export async function generateCompanies(options: TCompanyGenerateOptions = COMPANY_DEFAULTS) {
+export async function generateCompanies(options: ICompanyGenerateOptions = COMPANY_DEFAULTS) {
 	if(options.type === undefined) {
 		options.type = faker.helpers.arrayElement(
 			[
