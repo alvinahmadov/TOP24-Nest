@@ -64,12 +64,6 @@ export interface ICodeResponse {
 	code: string;
 }
 
-export interface ICompanyLoginResponse
-	extends ILoginResponse {
-	company?: ICompany;
-	code?: string;
-}
-
 export interface ICompanyDeleteResponse {
 	company: {
 		affectedCount: number;
@@ -89,16 +83,38 @@ export interface ICompanyDeleteResponse {
 	};
 }
 
+export interface ICompanyLoginResponse
+	extends ILoginResponse {
+	company?: ICompany;
+	code?: string;
+}
+
 export interface IDestinationGenerateOptions {
 	maxSize?: number;
 	distanceDelta?: number;
 	startPos?: IGeoPosition;
 }
 
+export interface IGeneratorOptions {
+	count?: number;
+	reset?: boolean;
+}
+
+export interface ICompanyGenerateOptions
+	extends IGeneratorOptions {
+	type?: CompanyType;
+	driver?: IDriverGenerateOptions;
+}
+
 export interface IDriverGenerateOptions
 	extends IGeneratorOptions {
 	startPos?: IGeoPosition;
 	distanceDelta?: number;
+}
+
+export interface IOrderGenerateOptions
+	extends IGeneratorOptions {
+	dest?: IDestinationGenerateOptions;
 }
 
 export interface IGatewayData {
@@ -110,29 +126,6 @@ export interface IGatewayData {
 
 export interface IGatewayStatusData<E extends number | string> {
 	status?: E | { value: E; text?: string; };
-}
-
-export interface IGeneratorOptions {
-	count?: number;
-	reset?: boolean;
-}
-
-export interface IOrderGenerateOptions
-	extends IGeneratorOptions {
-	dest?: IDestinationGenerateOptions;
-}
-
-export interface ISimulateOptions
-	extends IGeneratorOptions {
-	interval: number;
-	company?: ICompanyGenerateOptions;
-	order?: IOrderGenerateOptions;
-}
-
-export interface ICompanyGenerateOptions
-	extends IGeneratorOptions {
-	type?: CompanyType;
-	driver?: IDriverGenerateOptions;
 }
 
 export interface ICargoGatewayData
@@ -283,6 +276,13 @@ export interface ISignInEmailData
 export interface ISignInPhoneData
 	extends ISignInData {
 	phone: string;
+}
+
+export interface ISimulateOptions
+	extends IGeneratorOptions {
+	interval: number;
+	company?: ICompanyGenerateOptions;
+	order?: IOrderGenerateOptions;
 }
 
 export interface IUserLoginData {
