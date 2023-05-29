@@ -1,10 +1,20 @@
-import axios,
-{ AxiosRequestConfig }            from 'axios';
-import faker                      from '@faker-js/faker';
-import env                        from '@config/env';
-import * as enums                 from '@common/enums';
-import { Reference }              from '@common/constants';
-import * as utils                 from '@common/utils';
+import axios, { AxiosRequestConfig } from 'axios';
+import faker                         from '@faker-js/faker';
+import env                           from '@config/env';
+import * as enums                    from '@common/enums';
+import {
+	DEFAULT_COORDINATES,
+	GeneratorOptions,
+	Reference
+}                                    from '@common/constants';
+import * as utils                    from '@common/utils';
+import {
+	ICompanyGenerateOptions,
+	IDestinationGenerateOptions,
+	IOrderGenerateOptions
+}                                    from '@common/interfaces';
+
+const { COMPANY_DEFAULTS, ORDER_DEFAULTS } = GeneratorOptions;
 
 /**@ignore*/
 const PORT = env.port;
@@ -12,6 +22,8 @@ const PORT = env.port;
 const HOST = env.host;
 /**@ignore*/
 const SCHEME = env.scheme;
+
+const PRECISION: number = 5;
 
 /**@ignore*/
 interface RequestConfig extends AxiosRequestConfig {
@@ -157,12 +169,52 @@ export namespace Http {
 }
 
 /**@ignore*/
-export const lat = (min: number = 50.0, delta = 10) =>
-	min > 0 ? Number(faker.address.latitude(min + Math.abs(delta), min, 5))
-					: Number(faker.address.latitude(60.0, 50.0, 5));
-export const lon = (min: number = 50.0, delta = 10) =>
-	min > 0 ? Number(faker.address.longitude(min + Math.abs(delta), min, 5))
-					: Number(faker.address.longitude(60.0, 50.0, 5));
+export const lat = (min?: number, delta?: number) =>
+	min > 0 ? Number(faker.address.latitude((min ?? 50.0) + Math.abs(delta ?? 1), min, PRECISION))
+					: Number(faker.address.latitude(60.0, 50.0, PRECISION));
+export const lon = (min?: number, delta?: number) =>
+	min > 0 ? Number(faker.address.longitude((min ?? 50.0) + Math.abs(delta ?? 1), min, PRECISION))
+					: Number(faker.address.longitude(60.0, 50.0, PRECISION));
+
+export const getDriverOptions = (
+	options?: ICompanyGenerateOptions,
+	defaults: ICompanyGenerateOptions = COMPANY_DEFAULTS
+) => {
+	const { driver } = options ?? defaults;
+	const {
+		startPos = defaults.driver.startPos,
+		distanceDelta = defaults.driver.distanceDelta
+	} = driver ?? defaults.driver;
+
+	return { startPos, distanceDelta };
+};
+
+export const getOrderOptions = (
+	options?: IOrderGenerateOptions,
+	defaults: IOrderGenerateOptions = ORDER_DEFAULTS
+): IOrderGenerateOptions => {
+	const {
+		count = defaults.count,
+		reset = defaults.reset,
+		dest = defaults.dest
+	} = options ?? defaults;
+
+	return { count, reset, dest };
+};
+
+export const getDestinationOptions = (
+	options?: IOrderGenerateOptions,
+	defaults: IOrderGenerateOptions = ORDER_DEFAULTS
+): IDestinationGenerateOptions => {
+	const { dest } = getOrderOptions(options, defaults);
+	const {
+		maxSize = defaults.dest.maxSize,
+		distanceDelta = defaults.dest.distanceDelta,
+		startPos = defaults.dest.startPos
+	} = dest ?? defaults.dest;
+
+	return { maxSize, distanceDelta, startPos };
+};
 
 /**@ignore*/
 export function dateBetween(yearMin: number, yearMax: number): Date {
@@ -175,10 +227,18 @@ export function generateAddress() {
 }
 
 export function generateAddressFromCoordinates(
-	latitude: number = 55.751244,
-	longitude: number = 37.618423
+	latitude: number = DEFAULT_COORDINATES.lat,
+	longitude: number = DEFAULT_COORDINATES.lon
 ) {
-	return utils.addressFromCoordinates(latitude, longitude);
+	return new Promise<string>(async(resolve, reject) => {
+		try {
+			const address = await utils.addressFromCoordinates(latitude, longitude);
+			resolve(address);
+		} catch(e) {
+			console.error(e);
+			reject(e.message);
+		}
+	});
 }
 
 export function generateEmailAddress(name?: string, lastName?: string) {
