@@ -1,7 +1,8 @@
 // @ts-ignore
 import { Multer }            from 'multer';
-import { Request }           from 'express';
 import { DotenvParseOutput } from 'dotenv';
+import { Request }           from 'express';
+import { Position }          from 'geojson';
 import {
 	CanActivate,
 	HttpStatus,
@@ -11,12 +12,14 @@ import {
 }                            from '@nestjs/common';
 import {
 	ApiOperationOptions,
-	ApiPropertyOptions,
 	ApiQueryOptions,
 	ApiResponseOptions
 }                            from '@nestjs/swagger';
-import { IModel }            from './attributes';
-import { UserRole }          from '../enums';
+import {
+	ActionStatus,
+	DestinationType,
+	UserRole
+}                            from '../enums';
 
 //////////////
 //  Types  //
@@ -26,10 +29,6 @@ type latitude = number;
 type longitude = number;
 
 export type URL = string;
-
-/**@ignore*/
-export type TApiProperty<T extends IModel, K extends keyof T = keyof T> =
-	{ [P in K]: Omit<ApiPropertyOptions, 'format'> & { format?: TFormat }; }
 
 export type TBitrixData = {
 	ID: string;
@@ -236,6 +235,11 @@ export interface ICRMEntity {
 	 * Convert entity data to bitrix data for sending.
 	 * */
 	readonly toCrm?: (...args: any[]) => void | TCRMData;
+}
+
+export interface IDriverSimulateData {
+	position: Position;
+	passed?: boolean;
 }
 
 /**@ignore*/
@@ -492,10 +496,74 @@ export interface IObjectStorageParams {
 	debug?: boolean;
 }
 
+/**
+ * Information about order execution state.
+ * */
+export interface IOrderExecutionState {
+	/**
+	 * Type of destination for order operations.
+	 * */
+	type?: DestinationType;
+	/**
+	 * Status of the action for execution state
+	 * */
+	actionStatus?: ActionStatus;
+	/**
+	 * The payload is unloaded.
+	 * */
+	unloaded?: boolean;
+	/**
+	 * The payload is loaded.
+	 * */
+	loaded?: boolean;
+	uploaded?: boolean;
+
+	set?: (state: IOrderExecutionState) => void;
+}
+
 /**@ignore*/
 export interface IParsedEnvConfigOutput {
 	error?: Error;
 	parsed?: IEnvParseOutput;
+}
+
+export interface IPassportData {
+	/**
+	 * Passport Serial Number.
+	 *
+	 * @example
+	 * 4218 555555
+	 * */
+	passportSerialNumber: string;
+	/**
+	 * Code of subdivision of passport given place.
+	 * */
+	passportSubdivisionCode: string;
+	/**
+	 * Passport given date.
+	 *
+	 * @example
+	 * 22.09.2015
+	 * */
+	passportGivenDate: Date;
+	/**
+	 * Passport issued place.
+	 *
+	 * @example
+	 * УМВД России по Липецкой области
+	 * */
+	passportIssuedBy: string;
+	/**
+	 * Given address in the passport.
+	 *
+	 * @example
+	 * Москва, 117312, ул. Вавилова, д. 19
+	 * */
+	passportRegistrationAddress: string;
+	/**
+	 * URL of passport scan image
+	 * */
+	passportPhotoLink?: string;
 }
 
 export interface IRepository {}

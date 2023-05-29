@@ -1,4 +1,3 @@
-import { Position }     from 'geojson';
 import { HttpStatus }   from '@nestjs/common';
 import {
 	IAdmin,
@@ -6,9 +5,7 @@ import {
 }                       from './attributes';
 import { IGeoPosition } from './types';
 import {
-	ActionStatus,
 	CompanyType,
-	DestinationType,
 	DriverStatus,
 	OrderStage,
 	OrderStatus
@@ -102,11 +99,6 @@ export interface IDriverGenerateOptions
 	extends IGeneratorOptions {
 	startPos?: IGeoPosition;
 	distanceDelta?: number;
-}
-
-export interface IDriverSimulateData {
-	position: Position;
-	passed?: boolean;
 }
 
 export interface IGatewayData {
@@ -243,31 +235,6 @@ export interface IKladrResponse {
 export interface ILoginResponse {
 	accessToken: string;
 	refreshToken?: string;
-}
-
-/**
- * Information about order execution state.
- * */
-export interface IOrderExecutionState {
-	/**
-	 * Type of destination for order operations.
-	 * */
-	type?: DestinationType;
-	/**
-	 * Status of the action for execution state
-	 * */
-	actionStatus?: ActionStatus;
-	/**
-	 * The payload is unloaded.
-	 * */
-	unloaded?: boolean;
-	/**
-	 * The payload is loaded.
-	 * */
-	loaded?: boolean;
-	uploaded?: boolean;
-
-	set?: (state: IOrderExecutionState) => void;
 }
 
 /**@ignore*/
