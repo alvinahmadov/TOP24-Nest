@@ -7,11 +7,12 @@ import { GatewayMetadata }    from '@nestjs/websockets';
 import env                    from '@config/env';
 import { CRM }                from '@config/index';
 import {
+	ICompanyGenerateOptions,
 	IOrderExecutionState,
+	IOrderGenerateOptions,
 	TBitrixData,
 	TBitrixEnum,
-	TCompanyGenerateOptions,
-	TOrderGenerateOptions
+	TGenerationGeodata
 }                             from './interfaces';
 
 export const MAX_FLOAT: number = 16000000.0;
@@ -107,27 +108,28 @@ export const DEFAULT_ORDER_STATE: IOrderExecutionState = {
 };
 
 export namespace GeneratorOptions {
-	export const COMPANY_DEFAULTS: TCompanyGenerateOptions = {
+	const startPos: TGenerationGeodata = {
+		latitude:  DEFAULT_COORDINATES.lat,
+		longitude: DEFAULT_COORDINATES.lon
+	};
+
+	export const COMPANY_DEFAULTS: ICompanyGenerateOptions = {
 		count:  1,
 		type:   undefined,
+		reset:  false,
 		driver: {
-			distanceDelta: .05,
-			startPos:      {
-				latitude:  DEFAULT_COORDINATES.lat,
-				longitude: DEFAULT_COORDINATES.lon
-			}
+			distanceDelta: 0.5,
+			startPos
 		}
 	};
 
-	export const ORDER_DEFAULTS: TOrderGenerateOptions = {
+	export const ORDER_DEFAULTS: IOrderGenerateOptions = {
 		count: 1,
+		reset: false,
 		dest:  {
 			maxSize:       3,
 			distanceDelta: .05,
-			startPos:      {
-				latitude:  DEFAULT_COORDINATES.lat,
-				longitude: DEFAULT_COORDINATES.lon
-			}
+			startPos
 		},
 	};
 }
