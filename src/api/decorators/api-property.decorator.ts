@@ -11,7 +11,6 @@ export default <T extends IModel>(property: TApiProperty<T> | ApiPropertyOptions
 		propertyKey: string | symbol
 	) =>
 	{
-		console.debug('propertyKey', propertyKey);
 		if(propertyKey in property) {
 			ApiProperty((property as any)[propertyKey])(target, propertyKey);
 		}

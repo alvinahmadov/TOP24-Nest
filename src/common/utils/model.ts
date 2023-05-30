@@ -13,7 +13,6 @@ function isDedicatedOrExtraPayload(value: string, order: Order) {
 	const dedicated: TBitrixData = CRM.ORDER.DEDICATION
 																		.find((d: TBitrixData) => d.VALUE === value);
 	if(!dedicated) {
-		console.debug(`Не найдено значение "${value}" для заказа!`);
 		return false;
 	}
 	return order.dedicated === dedicated.VALUE ||
