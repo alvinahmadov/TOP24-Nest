@@ -11,8 +11,9 @@ import * as utils                    from '@common/utils';
 import {
 	ICompanyGenerateOptions,
 	IDestinationGenerateOptions,
+	IDriverGenerateOptions,
 	IOrderGenerateOptions
-}                                    from '@common/interfaces';
+} from '@common/interfaces';
 
 const { COMPANY_DEFAULTS, ORDER_DEFAULTS } = GeneratorOptions;
 
@@ -177,14 +178,15 @@ export const lon = (min?: number, delta?: number) =>
 					: Number(faker.address.longitude(60.0, 50.0, PRECISION));
 
 export const getDriverOptions = (
-	options?: ICompanyGenerateOptions,
+	options?: IDriverGenerateOptions,
 	defaults: ICompanyGenerateOptions = COMPANY_DEFAULTS
 ) => {
-	const { driver } = options ?? defaults;
+	if(!options)
+		options = defaults.driver;
 	const {
 		startPos = defaults.driver.startPos,
 		distanceDelta = defaults.driver.distanceDelta
-	} = driver ?? defaults.driver;
+	} = options ?? defaults.driver;
 
 	return { startPos, distanceDelta };
 };

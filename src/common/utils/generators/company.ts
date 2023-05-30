@@ -17,7 +17,7 @@ const { lat, lon, getDriverOptions } = common;
 
 async function generateCargoCompany(options?: ICompanyGenerateOptions): Promise<CompanyData> {
 	let { type } = options ?? COMPANY_DEFAULTS;
-	const { startPos, distanceDelta: delta } = getDriverOptions(options, COMPANY_DEFAULTS);
+	const { startPos, distanceDelta: delta } = getDriverOptions(options.driver, COMPANY_DEFAULTS);
 
 	const gender1 = faker.name.gender(true).toLowerCase() as GenderType;
 	const gender2 = faker.name.gender(true).toLowerCase() as GenderType;
@@ -84,7 +84,7 @@ async function generateCargoCompany(options?: ICompanyGenerateOptions): Promise<
 
 async function generateInnCargoCompany(options: ICompanyGenerateOptions = COMPANY_DEFAULTS): Promise<CompanyInnData> {
 	let { type } = options ?? COMPANY_DEFAULTS;
-	const { startPos, distanceDelta: delta } = getDriverOptions(options);
+	const { startPos, distanceDelta: delta } = getDriverOptions(options.driver);
 
 	const gender = faker.name.gender(true).toLowerCase() as GenderType;
 	const name: string = faker.name.firstName(gender);
