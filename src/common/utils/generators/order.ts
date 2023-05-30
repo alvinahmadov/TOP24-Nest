@@ -1,7 +1,6 @@
 import faker                      from '@faker-js/faker';
 import * as enums                 from '@common/enums';
 import * as interfaces            from '@common/interfaces';
-import { addressFromCoordinates } from '@common/utils';
 import * as dto                   from '@api/dto';
 import * as common                from './common';
 
@@ -9,7 +8,7 @@ import * as common                from './common';
 const minPrice: number = 10000,
 	maxPrice: number = 200000;
 
-const { lat, lon, getOrderOptions, getDestinationOptions } = common;
+const { lat, lon, USE_GENERIC_ADDRESS: useGeneric } = common;
 
 /**@ignore*/
 const generatePrice = (): number => faker.datatype.number({ min: minPrice, max: maxPrice });
@@ -27,7 +26,7 @@ async function generateDestinations(options: interfaces.IDestinationGenerateOpti
 	if(count > common.LETTERS.length) count = common.LETTERS.length;
 
 	for(let i = 0; i < count; i++) {
-		const address = await addressFromCoordinates(latitude, longitude);
+		const address = await common.generateAddressFromCoordinates({ latitude, longitude, useGeneric });
 		const latitudeModifier = faker.datatype.float({ min: -(delta), max: delta, precision });
 		const longitudeModifier = faker.datatype.float({ min: -(delta), max: delta, precision });
 
@@ -61,7 +60,7 @@ async function generateDestinations(options: interfaces.IDestinationGenerateOpti
 
 export async function generateOrder(options?: interfaces.IOrderGenerateOptions)
 	: Promise<dto.OrderCreateDto> {
-	const destOptions = getDestinationOptions(options);
+	const destOptions = common.getDestinationOptions(options);
 	const paramRange = { min: 1, max: 10, precision: 0.1 };
 	const isBid = faker.datatype.boolean();
 	const orderNumber = faker.datatype.number({ min: 999, max: 10000 });
@@ -108,11 +107,11 @@ export async function generateOrder(options?: interfaces.IOrderGenerateOptions)
 }
 
 export function generateOrders(options: interfaces.IOrderGenerateOptions) {
-	let { count } = getOrderOptions(options);
+	let { count } = common.getOrderOptions(options);
 	if(!count)
 		count = faker.datatype.number({ min: 1, max: 5 });
 	return Promise.all(
 		Array.from(Array(count))
-				 .map(() => generateOrder(getOrderOptions(options)))
+				 .map(() => generateOrder(common.getOrderOptions(options)))
 	);
 }

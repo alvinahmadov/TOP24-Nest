@@ -103,12 +103,13 @@ export const DESTINATION_TYPES = [
 /**@ignore*/
 export const LETTERS: string = 'ABCDEFGHIJKLMNOPQRSTUV';
 
+export const USE_GENERIC_ADDRESS: boolean = false;
+
 /**@ignore*/
 let AccessToken: string;
 
 /**@ignore*/
 export async function authorize() {
-	console.debug('Authorization');
 	const { data: { accessToken } } = await axios.post(
 		ADMIN_HOSTLOGIN, {
 			email:    env.admin.adminEmail,
@@ -229,12 +230,26 @@ export function generateAddress() {
 }
 
 export function generateAddressFromCoordinates(
-	latitude: number = DEFAULT_COORDINATES.lat,
-	longitude: number = DEFAULT_COORDINATES.lon
+	{
+		latitude = DEFAULT_COORDINATES.lat,
+		longitude = DEFAULT_COORDINATES.lon,
+		useGeneric = false
+	}: {
+		latitude: number;
+		longitude: number;
+		useGeneric?: boolean;
+	} = {
+		latitude:   DEFAULT_COORDINATES.lat,
+		longitude:  DEFAULT_COORDINATES.lon,
+		useGeneric: false
+	}
 ) {
 	return new Promise<string>(async(resolve, reject) => {
 		try {
-			const address = await utils.addressFromCoordinates(latitude, longitude);
+			let address: string = "Generic";
+			if(!useGeneric) {
+				address = await utils.addressFromCoordinates(latitude, longitude);
+			}
 			resolve(address);
 		} catch(e) {
 			console.error(e);

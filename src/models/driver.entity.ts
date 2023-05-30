@@ -37,7 +37,7 @@ import {
 	TCRMData,
 	UrlColumn,
 	UuidColumn,
-	VirtualColumn
+	VirtualColumn,
 }                       from '@common/interfaces';
 import { entityConfig } from '@api/swagger/properties';
 import EntityModel      from './entity-model';
@@ -268,6 +268,11 @@ export default class Driver
 			return this.order.currentPoint;
 
 		return "";
+	}
+
+	public asTuplePosition(reverse?: boolean): [number, number] {
+		return !!reverse ? [this.longitude, this.latitude]
+										 : [this.latitude, this.longitude];
 	}
 
 	public toCrm(

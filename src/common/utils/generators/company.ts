@@ -13,7 +13,7 @@ type CompanyData = { company: dto.CompanyCreateDto, payment: dto.PaymentCreateDt
 type CompanyInnData = { company: dto.CompanyInnCreateDto, payment: dto.PaymentCreateDto };
 
 const { COMPANY_DEFAULTS } = GeneratorOptions;
-const { lat, lon, getDriverOptions } = common;
+const { lat, lon, getDriverOptions, USE_GENERIC_ADDRESS: useGeneric } = common;
 
 async function generateCargoCompany(options?: ICompanyGenerateOptions): Promise<CompanyData> {
 	let { type } = options ?? COMPANY_DEFAULTS;
@@ -57,12 +57,18 @@ async function generateCargoCompany(options?: ICompanyGenerateOptions): Promise<
 		registrationNumber:          faker.finance.account(12),
 		paymentType:                 faker.helpers.arrayElement(['НДС 20%', 'Без НДС', ' Наличными']),
 		legalAddress:                await common.generateAddressFromCoordinates(
-			lat(startPos.latitude, delta),
-			lon(startPos.longitude, delta)
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
 		),
 		postalAddress:               await common.generateAddressFromCoordinates(
-			lat(startPos.latitude, delta),
-			lon(startPos.longitude, delta)
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
 		),
 		passportGivenDate:           common.dateBetween(2000, 2020),
 		passportPhotoLink:           faker.image.business(300, 300, true),
@@ -114,23 +120,35 @@ async function generateInnCargoCompany(options: ICompanyGenerateOptions = COMPAN
 		passportSelfieLink:          faker.image.imageUrl(),
 		passportSignLink:            faker.image.imageUrl(),
 		address:                     await common.generateAddressFromCoordinates(
-			lat(startPos.latitude, delta),
-			lon(startPos.longitude, delta)
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
 		),
 		postalAddress:               await common.generateAddressFromCoordinates(
-			lat(startPos.latitude, delta),
-			lon(startPos.longitude, delta)
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
 		),
 		actualAddress:               await common.generateAddressFromCoordinates(
-			lat(startPos.latitude, delta),
-			lon(startPos.longitude, delta)
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
 		),
 		confirmed:                   false,
 		directions:                  faker.helpers.arrayElements(common.DIRECTIONS, 3),
 		passportGivenDate:           common.dateBetween(2000, 2020),
 		passportRegistrationAddress: await common.generateAddressFromCoordinates(
-			lat(startPos.latitude, delta),
-			lon(startPos.longitude, delta)
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
 		),
 		passportSerialNumber:        faker.random.alphaNumeric(7),
 		passportSubdivisionCode:     common.generateSerialNumber([3, 4]),

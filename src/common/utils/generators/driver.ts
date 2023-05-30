@@ -12,7 +12,7 @@ type TDriverGeneratorResult = {
 };
 
 const { COMPANY_DEFAULTS } = GeneratorOptions;
-const { lat, lon, getDriverOptions } = common;
+const { lat, lon } = common;
 
 /**@ignore*/
 const randomDriverStatus = () => faker.helpers.arrayElement(common.DRIVER_STATUSES);
@@ -21,7 +21,7 @@ export async function generateDriver(
 	company: interfaces.ICompany,
 	options?: interfaces.IDriverGenerateOptions
 ): Promise<TDriverGeneratorResult> {
-	const { startPos, distanceDelta } = getDriverOptions(options, COMPANY_DEFAULTS);
+	const { startPos, distanceDelta } = common.getDriverOptions(options, COMPANY_DEFAULTS);
 	const name: string = faker.name.firstName('male');
 	const patronymic: string = faker.name.middleName('male');
 	const lastName: string = faker.name.lastName('male');

@@ -3,19 +3,25 @@ import {
 	IsUUID,
 	Table
 }                                   from 'sequelize-typescript';
-import { Field, ObjectType }        from '@nestjs/graphql';
+import {
+	Field,
+	ObjectType
+}                                   from '@nestjs/graphql';
 import { DestinationType }          from '@common/enums';
-import { TupleScalar, UuidScalar }  from '@common/scalars';
+import {
+	TupleScalar,
+	UuidScalar
+}                                   from '@common/scalars';
 import { TABLE_OPTIONS }            from '@common/constants';
 import { destinationPointToNumber } from '@common/utils';
 import {
-	Index,
-	IDestination,
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
-	RealArrayColumn,
+	IDestination,
+	Index,
 	IntColumn,
+	RealArrayColumn,
 	StringArrayColumn,
 	StringColumn,
 	TGeoCoordinate,
@@ -149,6 +155,14 @@ export default class Destination
 	@VirtualColumn()
 	get num(): number {
 		return destinationPointToNumber(this.point);
+	}
+
+	get latitude() {
+		return this.coordinates[0];
+	}
+
+	get longitude() {
+		return this.coordinates[1];
 	}
 
 	public hasDiff(dto: DestinationUpdateDto) {
