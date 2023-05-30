@@ -1,8 +1,8 @@
 ## ---- Base ---- ##
 FROM node:lts-buster AS base
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils locales net-tools \
-    nano libreoffice-writer 
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils locales cron net-tools nano libreoffice-writer 
+RUN npm install -g npm@latest yarn@latest --loglevel=error
 
 # Locale
 RUN sed -i -e \

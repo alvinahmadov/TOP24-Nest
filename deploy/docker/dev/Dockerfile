@@ -1,14 +1,12 @@
 ## ---- Base ---- ##
 FROM node:lts-buster AS base
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils locales net-tools \
-    nano libreoffice-writer
-RUN npm install -g npm@latest --loglevel=error
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils locales cron net-tools nano libreoffice-writer 
+RUN npm install -g npm@latest yarn@latest --loglevel=error
 
 # Locale
 RUN sed -i -e \
-  's/# ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen \
-   && locale-gen
+  's/# ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
 
 ENV APP_USER=node
 ENV APP_HOME=/srv/app
@@ -19,7 +17,7 @@ USER $APP_USER
 
 WORKDIR $APP_HOME
 
-COPY --chown=$APP_USER:$APP_USER package.json package-lock.json ./
+COPY --chown=$APP_USER:$APP_USER package.json ./
 
 ## ---- Build ---- ##
 FROM base AS build
@@ -37,7 +35,7 @@ ENV GENERATE_SOURCEMAP false
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 ENV TZ Europe/Moscow
 
-RUN npm run build && npm run doc
+RUN yarn run build && yarn run doc
 
 ## ---- Development ---- ##
 FROM base AS development
@@ -59,4 +57,4 @@ COPY --chown=$APP_USER:$APP_USER . .
 
 EXPOSE 8080
 
-CMD npm run start
+CMD yarn run start
