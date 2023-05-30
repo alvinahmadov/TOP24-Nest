@@ -60,23 +60,28 @@ Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"count": 5,
-	"reset": true,
-	"dest": {
-		"maxSize": 5,
-		"distanceDelta": 0.3,
-		"startPos": {
-			"latitude": 55.750450636518245,
-			"longitude": 37.61749427765608
-		}
-	},
-	"driver": {
-		"distanceDelta": 0.3,
-		"startPos": {
-			"latitude": 55.750450636518245,
-			"longitude": 37.61749427765608
-		}
-	}
+  "count": 1,
+  "interval": 5,
+  "reset": true,
+  "company": {
+    "driver": {
+      "distanceDelta": 0.001,
+      "startPos": {
+        "latitude": 55.750450636518245,
+        "longitude": 37.61749427765608
+      }
+    }
+  },
+  "order": {
+    "dest": {
+      "maxSize": 5,
+      "distanceDelta": 0.001,
+      "startPos": {
+        "latitude": 55.750450636518245,
+        "longitude": 37.61749427765608
+      }
+    }
+  }
 }
 
 ### Stop generated simulation
