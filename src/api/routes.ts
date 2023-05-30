@@ -340,7 +340,7 @@ export const routeConfig: TApiRouteList = {
 								 },
 				simulateEnd:
 								 {
-									 path:   'simulate/stop',
+									 path:   'simulate/end',
 									 method: RequestMethod.POST
 								 }
 			}
