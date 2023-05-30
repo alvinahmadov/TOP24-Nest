@@ -115,7 +115,7 @@ export interface IDriverGenerateOptions {
 export interface IDriverSimulateData {
 	position: Position;
 	passed?: boolean;
-	index?: number;
+	readonly index?: number;
 }
 
 export interface IOrderGenerateOptions
