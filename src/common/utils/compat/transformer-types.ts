@@ -13,6 +13,7 @@ import {
 	IApiResponse,
 	IModel,
 	IOffer,
+	IDriverSimulateData,
 	IOrderExecutionState,
 	TCreationAttribute,
 	TGeoCoordinate
@@ -414,6 +415,7 @@ export interface IDriverTransformer
 	 * @see IDriver.currentAddress
 	 * */
 	current_address?: string;
+	data?: IDriverSimulateData[];
 	readonly fullname?: string;
 	readonly company_name?: string;
 	readonly current_point?: string;
