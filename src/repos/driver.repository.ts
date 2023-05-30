@@ -98,7 +98,6 @@ export default class DriverRepository
 			isReady,
 			...rest
 		} = filter ?? {};
-
 		let hasTerm: boolean = term !== undefined && term !== '';
 
 		if(hasTerm) {
@@ -140,12 +139,19 @@ export default class DriverRepository
 							model:   Transport,
 							include: [{ model: Image }]
 						},
-						{ 
-							model: Order,
+						{
+							model:    Order,
 							required: false,
-							where: this.whereClause<IOrder>().eq('status', orderStatus).query 
+							where:    this.whereClause<IOrder>().eq('status', orderStatus).query
 						}
-					] : driverDefaultIncludeables
+					] : [
+						(orderStatus !== undefined ? {
+							model:    Order,
+							required: false,
+							where:    this.whereClause<IOrder>().eq('status', orderStatus).query
+						} : {}),
+						...driverDefaultIncludeables
+					]
 				}
 			),
 			{ id: 'getList' },
