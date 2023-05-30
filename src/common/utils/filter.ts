@@ -311,7 +311,8 @@ export function filterTransports(
 	const checkDedicated = (transport: Transport): boolean => {
 		if(filter.isDedicated) {
 			if(transport.payloadExtra) {
-				console.debug(`filterTransports: No match for dedicated transport, requested 'isDedicated: ${filter.isDedicated}'.`);
+				if(debugTransportFilter)
+					console.debug(`filterTransports: No match for dedicated transport, requested 'isDedicated: ${filter.isDedicated}'.`);
 				return false;
 			}
 		}
