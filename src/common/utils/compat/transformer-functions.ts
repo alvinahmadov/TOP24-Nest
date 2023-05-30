@@ -241,6 +241,7 @@ function transformDriver(driver: models.Driver)
 			latitude:                      driver.getDataValue('latitude'),
 			longitude:                     driver.getDataValue('longitude'),
 			current_address:               driver.getDataValue('currentAddress'),
+			data:                          driver.get('data'),
 			fullname:                      driver.get('fullName'),
 			company_name:                  driver.get('companyName'),
 			current_point:                 driver.get('currentPoint'),
