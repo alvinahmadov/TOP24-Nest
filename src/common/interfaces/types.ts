@@ -2,7 +2,6 @@
 import { Multer }            from 'multer';
 import { DotenvParseOutput } from 'dotenv';
 import { Request }           from 'express';
-import { Position }          from 'geojson';
 import {
 	CanActivate,
 	HttpStatus,
@@ -235,11 +234,6 @@ export interface ICRMEntity {
 	 * Convert entity data to bitrix data for sending.
 	 * */
 	readonly toCrm?: (...args: any[]) => void | TCRMData;
-}
-
-export interface IDriverSimulateData {
-	position: Position;
-	passed?: boolean;
 }
 
 /**@ignore*/

@@ -1,4 +1,5 @@
 import { HttpStatus }   from '@nestjs/common';
+import { Position }     from 'geojson';
 import {
 	IAdmin,
 	ICompany,
@@ -106,10 +107,15 @@ export interface ICompanyGenerateOptions
 	driver?: IDriverGenerateOptions;
 }
 
-export interface IDriverGenerateOptions
-	extends IGeneratorOptions {
+export interface IDriverGenerateOptions {
 	startPos?: IGeoPosition;
 	distanceDelta?: number;
+}
+
+export interface IDriverSimulateData {
+	position: Position;
+	passed?: boolean;
+	index?: number;
 }
 
 export interface IOrderGenerateOptions
@@ -279,7 +285,7 @@ export interface ISignInPhoneData
 }
 
 export interface ISimulateOptions
-	extends IGeneratorOptions {
+	extends Required<IGeneratorOptions> {
 	interval: number;
 	company?: ICompanyGenerateOptions;
 	order?: IOrderGenerateOptions;
