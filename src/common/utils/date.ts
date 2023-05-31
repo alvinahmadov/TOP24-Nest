@@ -56,7 +56,7 @@ export function dateValidator(dateString: string) {
 	return date;
 }
 
-export function reformatDateString<T extends IModel, K = keyof T>(
+export function reformatDateString<T extends IModel, K extends string | number | symbol = keyof T>(
 	data: TUpdateAttribute<T>,
 	...keys: K[]
 ): void {
