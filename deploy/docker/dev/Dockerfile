@@ -2,7 +2,7 @@
 FROM node:lts-buster AS base
 
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils locales cron net-tools nano libreoffice-writer 
-RUN npm install -g npm@latest yarn@latest --loglevel=error
+RUN npm install -g npm@latest --loglevel=error
 
 # Locale
 RUN sed -i -e \
@@ -17,7 +17,7 @@ USER $APP_USER
 
 WORKDIR $APP_HOME
 
-COPY --chown=$APP_USER:$APP_USER package.json ./
+COPY --chown=$APP_USER:$APP_USER package.json package-lock.json ./
 
 ## ---- Build ---- ##
 FROM base AS build
@@ -35,7 +35,7 @@ ENV GENERATE_SOURCEMAP false
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 ENV TZ Europe/Moscow
 
-RUN yarn run build && yarn run doc
+RUN npm run build && npm run doc
 
 ## ---- Development ---- ##
 FROM base AS development
@@ -57,4 +57,4 @@ COPY --chown=$APP_USER:$APP_USER . .
 
 EXPOSE 8080
 
-CMD yarn run start
+CMD npm run start

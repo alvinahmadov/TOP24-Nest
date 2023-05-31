@@ -2,7 +2,7 @@
 FROM node:lts-buster AS base
 
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils locales cron net-tools nano libreoffice-writer 
-RUN npm install -g npm@latest yarn@latest --loglevel=error
+RUN npm install -g npm@latest --loglevel=error
 
 # Locale
 RUN sed -i -e \
@@ -23,7 +23,7 @@ USER $APP_USER
 
 WORKDIR $APP_HOME
 
-COPY --chown=$APP_USER:$APP_USER package.json ./
+COPY --chown=$APP_USER:$APP_USER package.json package-lock.json ./
 
 ## ---- Build ---- ##
 FROM base AS build
