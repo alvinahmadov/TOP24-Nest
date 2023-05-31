@@ -512,7 +512,7 @@ export interface IOrderExecutionState {
 	loaded?: boolean;
 	uploaded?: boolean;
 
-	set?: (state: IOrderExecutionState) => void;
+	set?(state: IOrderExecutionState): void;
 }
 
 /**@ignore*/
