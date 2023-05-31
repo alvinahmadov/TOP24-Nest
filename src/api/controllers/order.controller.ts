@@ -21,6 +21,7 @@ import {
 	ActionStatus,
 	DestinationType
 }                              from '@common/enums';
+import { OrderExecutionState } from '@common/classes/order';
 import {
 	isSuccessResponse,
 	sendResponse
@@ -217,7 +218,7 @@ export default class OrderController
 			}
 
 			if(dto.execState.type === DestinationType.COMBINED) {
-				dto.execState.set(order.execState);
+				OrderExecutionState.set(dto.execState, order.execState);
 			}
 			const result = await this.orderService.update(id, dto);
 			return sendResponse(response, result);

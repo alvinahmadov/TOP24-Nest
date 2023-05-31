@@ -511,8 +511,6 @@ export interface IOrderExecutionState {
 	 * */
 	loaded?: boolean;
 	uploaded?: boolean;
-
-	set?(state: IOrderExecutionState): void;
 }
 
 /**@ignore*/
