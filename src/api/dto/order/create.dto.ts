@@ -19,10 +19,12 @@ import {
 import {
 	IDestination,
 	IOrder,
-	IOrderExecutionState,
 	TCreationAttribute
 }                              from '@common/interfaces';
-import { OrderFilter }         from '@common/classes/order';
+import {
+	OrderExecutionState,
+	OrderFilter
+}                              from '@common/classes/order';
 import { entityConfig }        from '@api/swagger/properties';
 
 const { order: prop } = entityConfig;
@@ -181,7 +183,7 @@ export default class OrderCreateDto
 	currentPoint?: string = 'A';
 
 	@ApiProperty(prop.execState)
-	execState?: IOrderExecutionState = DEFAULT_ORDER_STATE;
+	execState?: OrderExecutionState = DEFAULT_ORDER_STATE;
 
 	@ApiProperty(prop.filter)
 	filter?: OrderFilter = null;

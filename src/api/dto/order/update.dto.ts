@@ -1,18 +1,18 @@
-import { InputType }    from '@nestjs/graphql';
-import { ApiProperty }  from '@nestjs/swagger';
+import { InputType }           from '@nestjs/graphql';
+import { ApiProperty }         from '@nestjs/swagger';
 import {
 	LoadingType,
 	OrderStage,
 	OrderStatus
-}                       from '@common/enums';
+}                              from '@common/enums';
 import {
-	IOrder,
-	IOrderExecutionState,
 	IDestination,
+	IOrder,
 	IOrderFilter,
 	TUpdateAttribute
-}                       from '@common/interfaces';
-import { entityConfig } from '@api/swagger/properties';
+}                              from '@common/interfaces';
+import { OrderExecutionState } from '@common/classes/order';
+import { entityConfig }        from '@api/swagger/properties';
 
 const { order: prop } = entityConfig;
 
@@ -138,21 +138,21 @@ export default class OrderUpdateDto
 
 	@ApiProperty(prop.width)
 	public width?: number;
-	
+
 	@ApiProperty(prop.left24H)
 	public left24H?: boolean;
-	
+
 	@ApiProperty(prop.left6H)
 	public left6H?: boolean;
-	
+
 	@ApiProperty(prop.left1H)
 	public left1H?: boolean;
-	
+
 	@ApiProperty(prop.currentPoint)
 	public currentPoint?: string;
-	
+
 	@ApiProperty(prop.execState)
-	public execState?: IOrderExecutionState;
+	public execState?: OrderExecutionState;
 
 	@ApiProperty(prop.filter)
 	public filter?: IOrderFilter;

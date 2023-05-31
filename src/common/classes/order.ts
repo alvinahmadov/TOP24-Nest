@@ -20,7 +20,7 @@ export class OrderExecutionState
 	unloaded?: boolean;
 	uploaded?: boolean;
 
-	set = (state: IOrderExecutionState): void => {
+	set? = (state: IOrderExecutionState): void => {
 		try {
 			if(this.loaded === undefined)
 				this.loaded = !!state?.loaded;
