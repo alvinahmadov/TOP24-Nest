@@ -27,6 +27,11 @@ export type TOperationCount = {
 	deletedCount: number;
 }
 
+export type TEventName = 'cargo' |
+												 'driver' |
+												 'offer' |
+												 'order';
+
 // noinspection MagicNumberJS
 export type TStatusCode = 200 |
 													201 |
@@ -125,7 +130,7 @@ export interface IOrderGenerateOptions
 
 export interface IGatewayData {
 	id: string;
-	event?: string;
+	event?: TEventName;
 	source?: string;
 	message?: string;
 }
@@ -137,6 +142,7 @@ export interface IGatewayStatusData<E extends number | string> {
 export interface ICargoGatewayData
 	extends IGatewayData,
 					IGatewayStatusData<string> {
+	event?: 'cargo';
 	status?: string;
 }
 

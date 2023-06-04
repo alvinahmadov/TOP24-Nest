@@ -108,6 +108,15 @@ export type TMediaType = 'application/xml' |
 /**@ignore*/
 export type TMulterFile = Express.Multer.File;
 
+export type TNotifGatewayOptions = {
+	roles: UserRole[];
+	url?: string;
+	event?: 'cargo' |
+					'driver' |
+					'offer' |
+					'order';
+}
+
 /**@ignore*/
 export type TObjectStorageType = 'external' | 'local';
 
@@ -234,6 +243,12 @@ export interface ICRMEntity {
 	 * Convert entity data to bitrix data for sending.
 	 * */
 	readonly toCrm?: (...args: any[]) => void | TCRMData;
+}
+
+export interface IDeviceInfo<T> {
+	user: T;
+	role: UserRole;
+	token: string;
 }
 
 /**@ignore*/
@@ -444,6 +459,15 @@ export interface ILoggable {
 		identifier: TLogIdentifier,
 		extraArgs: { [k: string]: any }
 	) => any;
+}
+
+export interface INotificationUserRole {
+	role?: UserRole;
+}
+
+export interface INotificationTokenData {
+	fcmToken?: string;
+	jwtToken?: string;
 }
 
 export interface IObjectStorageAuth {

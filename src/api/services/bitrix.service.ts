@@ -21,7 +21,9 @@ import {
 import {
 	IApiResponse,
 	IApiResponses,
+	ICargoGatewayData,
 	ICompany,
+	IDriverGatewayData,
 	IOrder,
 	IService,
 	TAffectedRows,
@@ -45,7 +47,10 @@ import {
 	DestinationCreateDto,
 	OrderCreateDto
 }                                from '@api/dto';
-import { NotificationGateway }   from '@api/notifications';
+import {
+	FirebaseNotificationGateway,
+	SocketNotificationGateway
+}                                from '@api/notifications';
 import Service                   from './service';
 import CargoCompanyService       from './cargo-company.service';
 import CargoCompanyInnService    from './cargoinn-company.service';
@@ -86,7 +91,8 @@ export default class BitrixService
 		protected readonly orderService: OrderService,
 		protected readonly offerService: OfferService,
 		protected readonly transportService: TransportService,
-		private readonly gateway: NotificationGateway
+		private readonly fcmGateway: FirebaseNotificationGateway,
+		private readonly socketGateway: SocketNotificationGateway,
 	) {
 		super();
 	}
@@ -218,16 +224,16 @@ export default class BitrixService
 			const {
 				affectedCount: deletedCount
 			} = await this.orderService
-			              .deleteAll(
-				              WhereClause
-					              .get<IOrder>()
-					              .in('id', orderIdsToDelete)
-					              .query
-			              );
+										.deleteAll(
+											WhereClause
+												.get<IOrder>()
+												.in('id', orderIdsToDelete)
+												.query
+										);
 
 			return {
 				statusCode: createdCount > updatedCount ? HttpStatus.CREATED
-				                                        : HttpStatus.OK,
+																								: HttpStatus.OK,
 				data:       {
 					createdCount,
 					updatedCount,
@@ -238,7 +244,7 @@ export default class BitrixService
 
 		return {
 			statusCode: createdCount > updatedCount ? HttpStatus.CREATED
-			                                        : HttpStatus.OK,
+																							: HttpStatus.OK,
 			data:       {
 				createdCount,
 				updatedCount,
@@ -282,17 +288,18 @@ export default class BitrixService
 					if(cargo.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
 
 					await cargo.save({ fields: ['confirmed'] })
-					           .then((res) =>
-					                 {
-						                 this.gateway.sendCargoNotification(
-							                 {
-								                 id:     res.id,
-								                 event:  'cargo',
-								                 source: 'bitrix',
-								                 message
-							                 }
-						                 );
-					                 });
+										 .then((res) => {
+											 const options = { roles: [UserRole.CARGO] };
+											 const data: ICargoGatewayData = {
+												 id:     res.id,
+												 event:  'cargo',
+												 source: 'bitrix',
+												 message
+											 };
+
+											 this.socketGateway.sendCargoNotification(data, options);
+											 this.fcmGateway.sendCargoNotification(data, options);
+										 });
 
 					return {
 						statusCode: 200,
@@ -306,17 +313,18 @@ export default class BitrixService
 					if(cargoinn.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
 
 					await cargoinn.save({ fields: ['confirmed'] })
-					              .then((res) =>
-					                    {
-						                    this.gateway.sendCargoNotification(
-							                    {
-								                    id:     res.id,
-								                    event:  'cargo',
-								                    source: 'bitrix',
-								                    message
-							                    }
-						                    );
-					                    });
+												.then((res) => {
+													const options = { roles: [UserRole.CARGO] };
+													const data: ICargoGatewayData = {
+														id:     res.id,
+														event:  'cargo',
+														source: 'bitrix',
+														message
+													};
+
+													this.socketGateway.sendCargoNotification(data, options);
+													this.fcmGateway.sendCargoNotification(data, options);
+												});
 
 					return {
 						statusCode: 200,
@@ -343,20 +351,17 @@ export default class BitrixService
 			if(transport) {
 				transport.confirmed = Number(crmItem[TRANSPORT.CONFIRMED]) === 1;
 				await transport.save({ fields: ['confirmed'] })
-				               .then(() =>
-				                     {
-					                     this.gateway.sendDriverNotification(
-						                     {
-							                     id:     transport.driverId,
-							                     source: 'bitrix',
-							                     message
-						                     },
-						                     {
-							                     role: UserRole.CARGO,
-							                     url:  'Main'
-						                     }
-					                     );
-				                     });
+											 .then(() => {
+												 const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
+												 const data: IDriverGatewayData = {
+													 id:     transport.driverId,
+													 source: 'bitrix',
+													 message
+												 };
+
+												 this.socketGateway.sendDriverNotification(data, options);
+												 this.fcmGateway.sendDriverNotification(data, options);
+											 });
 
 				return {
 					statusCode: 200,
@@ -404,7 +409,7 @@ export default class BitrixService
 					orderDto.status = OrderStatus.FINISHED;
 				}
 				else if(orderDto.stage === OrderStage.DOCUMENT_SENT ||
-				        orderDto.stage === OrderStage.PAYMENT_FORMED) {
+								orderDto.stage === OrderStage.PAYMENT_FORMED) {
 					orderDto.onPayment = true;
 				}
 				let { data: order } = await this.orderService.getByCrmId(crmId);
@@ -422,16 +427,14 @@ export default class BitrixService
 					}
 
 					if(orderDto.stage === OrderStage.DOCUMENT_SENT) {
-						this.gateway.sendDriverNotification(
-							{
-								id:      order.driverId,
-								message: formatArgs(ORDER_EVENT_TRANSLATIONS['DOCUMENT_SENT'], 'г. Краснодар', 'ООО 24ТОП')
-							},
-							{
-								role: UserRole.CARGO,
-								url:  'Main'
-							}
-						);
+						const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
+						const data: IDriverGatewayData = {
+							id:      order.driverId,
+							message: formatArgs(ORDER_EVENT_TRANSLATIONS['DOCUMENT_SENT'], 'г. Краснодар', 'ООО 24ТОП')
+						};
+
+						this.socketGateway.sendDriverNotification(data, options);
+						this.fcmGateway.sendDriverNotification(data, options);
 					}
 
 					const updateDestinations = order.destinations.some(
@@ -447,8 +450,7 @@ export default class BitrixService
 						const repo = this.destinationRepo;
 
 						destinationDtos.forEach(
-							dto =>
-							{
+							dto => {
 								dto.orderId = order.id;
 								delete dto.distance;
 								delete dto.fulfilled;
@@ -462,7 +464,7 @@ export default class BitrixService
 								)
 						);
 					}
-					
+
 					return updateResponse;
 				}
 				else {

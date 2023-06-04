@@ -1,15 +1,15 @@
 import { Op }                  from 'sequelize';
 import {
-	Injectable,
-	HttpStatus
+	HttpStatus,
+	Injectable
 }                              from '@nestjs/common';
 import env                     from '@config/env';
 import { DEFAULT_ORDER_STATE } from '@common/constants';
 import {
 	ActionStatus,
 	OfferStatus,
-	OrderStatus,
 	OrderStage,
+	OrderStatus,
 	TransportStatus,
 	UserRole
 }                              from '@common/enums';
@@ -23,8 +23,8 @@ import {
 	IService,
 	ITransportFilter,
 	TAffectedRows,
-	TOfferTransportFilter,
 	TOfferDriver,
+	TOfferTransportFilter,
 	TSentOffer,
 }                              from '@common/interfaces';
 import {
@@ -35,10 +35,10 @@ import {
 	isSuccessResponse
 }                              from '@common/utils';
 import {
-	transformEntity,
 	IDriverTransformer,
 	IOrderTransformer,
-	ITransportTransformer
+	ITransportTransformer,
+	transformEntity
 }                              from '@common/utils/compat';
 import {
 	Driver,
@@ -56,7 +56,10 @@ import {
 	OrderFilter,
 	OrderUpdateDto
 }                              from '@api/dto';
-import { NotificationGateway } from '@api/notifications';
+import {
+	FirebaseNotificationGateway,
+	SocketNotificationGateway
+}                              from '@api/notifications';
 import Service                 from './service';
 import DriverService           from './driver.service';
 import OrderService            from './order.service';
@@ -79,7 +82,8 @@ export default class OfferService
 	constructor(
 		protected readonly driverService: DriverService,
 		protected readonly orderService: OrderService,
-		private readonly gateway: NotificationGateway
+		private readonly fcmGateway: FirebaseNotificationGateway,
+		private readonly socketGateway: SocketNotificationGateway
 	) {
 		super();
 		this.repository = new OfferRepository();
@@ -183,18 +187,18 @@ export default class OfferService
 					}
 					else {
 						const message = OFFER_TRANSLATIONS['ACCEPTED'];
+						const options = {
+							roles: [UserRole.CARGO],
+							url:   'Main'
+						};
+						const data = {
+							id:     driverId,
+							source: 'offer',
+							message
+						};
 
-						this.gateway.sendDriverNotification(
-							{
-								id:     driverId,
-								source: 'offer',
-								message
-							},
-							{
-								role: UserRole.CARGO,
-								url:  'Main'
-							}
-						);
+						this.fcmGateway.sendDriverNotification(data, options);
+						this.socketGateway.sendDriverNotification(data, options);
 					}
 				}
 			}
@@ -205,7 +209,7 @@ export default class OfferService
 				let orderDto: OrderUpdateDto = { status: dto.orderStatus };
 
 				if(dto.orderStatus === OrderStatus.FINISHED &&
-				   order.stage === OrderStage.SIGNED_DRIVER) {
+					 order.stage === OrderStage.SIGNED_DRIVER) {
 					if(order.paymentPhotoLinks?.length > 0) {
 						orderDto.onPayment = true;
 					}
@@ -218,20 +222,21 @@ export default class OfferService
 
 				if(isSuccessResponse(apiResponse)) {
 					const { data: order } = apiResponse;
-					this.gateway.sendOrderNotification(
-						{
-							id:      order.id,
-							stage:   order.stage,
-							status:  order.status,
-							source:  'offer',
-							message: formatArgs(
-								EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
-								order.crmId?.toString() ?? '',
-								driver.fullName
-							)
-						},
-						UserRole.ADMIN
-					);
+					const options = { roles: [UserRole.ADMIN, UserRole.LOGIST] };
+					const data = {
+						id:      order.id,
+						stage:   order.stage,
+						status:  order.status,
+						source:  'offer',
+						message: formatArgs(
+							EVENT_ORDER_TRANSLATIONS['ACCEPTED'],
+							order.crmId?.toString() ?? '',
+							driver.fullName
+						)
+					};
+
+					this.fcmGateway.sendOrderNotification(data, options);
+					this.socketGateway.sendOrderNotification(data, options);
 				}
 			}
 		}
@@ -260,56 +265,54 @@ export default class OfferService
 					dto.bidComment = null;
 
 					this.orderService
-					    .update(orderId, { status: dto.orderStatus })
-					    .then((res) =>
-					          {
-						          if(isSuccessResponse(res)) {
-							          eventObject.status = res.data.status;
+							.update(orderId, { status: dto.orderStatus })
+							.then((res) => {
+								if(isSuccessResponse(res)) {
+									eventObject.status = res.data.status;
+									const options = {
+										roles: [UserRole.CARGO],
+										url:   'Main'
+									};
+									const data = {
+										id:      driverId,
+										source:  'offer',
+										message: formatArgs(EVENT_DRIVER_TRANSLATIONS['CANCELLED'], order?.crmTitle)
+									};
 
-							          this.gateway.sendDriverNotification(
-								          {
-									          id:      driverId,
-									          source:  'offer',
-									          message: formatArgs(EVENT_DRIVER_TRANSLATIONS['CANCELLED'], order?.crmTitle)
-								          },
-								          {
-									          role: UserRole.CARGO,
-									          url:  'Main'
-								          }
-							          );
-						          }
-					          });
+									this.socketGateway.sendDriverNotification(data, options);
+									this.fcmGateway.sendDriverNotification(data, options);
+								}
+							});
 				}
 			}
 
-			this.gateway.sendOrderNotification(eventObject, UserRole.LOGIST);
+			this.socketGateway.sendOrderNotification(eventObject, { roles: [UserRole.LOGIST] });
 		}
 
 		if(dto.orderStatus === OrderStatus.ACCEPTED) {
 			dto.status = OfferStatus.RESPONDED;
 
-			this.gateway.sendDriverNotification(
+			this.fcmGateway.sendDriverNotification(
 				{
 					id:      driverId,
 					source:  'offer',
 					message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], order?.crmTitle)
 				},
 				{
-					role: UserRole.CARGO,
-					url:  'Main'
-				}
-			);
+					roles: [UserRole.CARGO],
+					url:   'Main'
+				});
 		}
 
 		if(dto.orderStatus === OrderStatus.FINISHED) {
-			this.gateway.sendDriverNotification(
+			this.fcmGateway.sendDriverNotification(
 				{
 					id:      driverId,
 					message: EVENT_ORDER_TRANSLATIONS['FINISHED']
 				},
 				{
-					role: UserRole.CARGO,
-					url:  'Main'
+					roles: [UserRole.CARGO],
+					url:   'Main'
 				}
 			);
 		}
@@ -366,23 +369,22 @@ export default class OfferService
 				paymentPhotoLinks: null,
 				receiptPhotoLinks: null
 			})
-			    .then(async({ data: o }) =>
-			          {
-				          this.destinationRepo.bulkUpdate(
-					          {
-						          shippingPhotoLinks: null,
-						          fulfilled:          false
-					          },
-					          {
-						          orderId: o.id
-					          }
-				          ).then(
-					          ([affectedCount]) => console.info('Updated ' + affectedCount + ' destinations')
-				          ).catch(console.error);
+					.then(async({ data: o }) => {
+						this.destinationRepo.bulkUpdate(
+							{
+								shippingPhotoLinks: null,
+								fulfilled:          false
+							},
+							{
+								orderId: o.id
+							}
+						).then(
+							([affectedCount]) => console.info('Updated ' + affectedCount + ' destinations')
+						).catch(console.error);
 
-				          await this.orderService.send(o.id);
-			          })
-			    .catch(console.error);
+						await this.orderService.send(o.id);
+					})
+					.catch(console.error);
 		}
 
 		return {
@@ -419,64 +421,62 @@ export default class OfferService
 		const date = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
 		const orders = offers.filter(offer => offer !== null && offer.order !== null)
-		                     .filter(offer => offer.order.stage > OrderStage.PREPARATION && !offer.order.isCanceled)
-		                     .sort((offer1, offer2) =>
-		                           {
-			                           const date1 = offer1.order.destinations[0].date;
-			                           const date2 = offer2.order.destinations[0].date;
+												 .filter(offer => offer.order.stage > OrderStage.PREPARATION && !offer.order.isCanceled)
+												 .sort((offer1, offer2) => {
+													 const date1 = offer1.order.destinations[0].date;
+													 const date2 = offer2.order.destinations[0].date;
 
-			                           if(isProcessing(offer1) && isProcessing(offer2)) {
-				                           return date1.valueOf() - date2.valueOf();
-			                           }
-			                           return 0;
-		                           })
-		                     .filter(offer => offer.order.destinations[0].date >= date)
-		                     .map(
-			                     (offer) =>
-			                     {
-				                     let { order, orderStatus } = offer;
+													 if(isProcessing(offer1) && isProcessing(offer2)) {
+														 return date1.valueOf() - date2.valueOf();
+													 }
+													 return 0;
+												 })
+												 .filter(offer => offer.order.destinations[0].date >= date)
+												 .map(
+													 (offer) => {
+														 let { order, orderStatus } = offer;
 
-				                     if(orderStatus === OrderStatus.PROCESSING) {
-					                     if(!order.isCurrent)
-						                     order.isCurrent = order.isExtraPayload || priorityCounter++ === 0;
-				                     }
-				                     else
-					                     order.isCurrent = false;
+														 if(orderStatus === OrderStatus.PROCESSING) {
+															 if(!order.isCurrent)
+																 order.isCurrent = order.isExtraPayload || priorityCounter++ === 0;
+														 }
+														 else
+															 order.isCurrent = false;
 
-				                     if(
-					                     order.stage === OrderStage.SIGNED_DRIVER &&
-					                     orderStatus === OrderStatus.ACCEPTED
-				                     ) {
-					                     order.status = OrderStatus.ACCEPTED;
-					                     offer.orderStatus = OrderStatus.PROCESSING;
-				                     }
-				                     else order.status = orderStatus;
+														 if(
+															 order.stage === OrderStage.SIGNED_DRIVER &&
+															 orderStatus === OrderStatus.ACCEPTED
+														 ) {
+															 order.status = OrderStatus.ACCEPTED;
+															 offer.orderStatus = OrderStatus.PROCESSING;
+														 }
+														 else order.status = orderStatus;
 
-				                     if(order.isCurrent) {
-					                     let orderUpdateDto: OrderUpdateDto = {
-						                     isCurrent: true
-					                     };
+														 if(order.isCurrent) {
+															 let orderUpdateDto: OrderUpdateDto = {
+																 isCurrent: true
+															 };
 
-					                     if(order.execState?.actionStatus < ActionStatus.DOCUMENT_UPLOAD) {
-						                     orderUpdateDto.paymentPhotoLinks = order.paymentPhotoLinks = null;
-						                     orderUpdateDto.receiptPhotoLinks = order.receiptPhotoLinks = null;
-					                     }
+															 if(order.execState?.actionStatus < ActionStatus.DOCUMENT_UPLOAD) {
+																 orderUpdateDto.paymentPhotoLinks = order.paymentPhotoLinks = null;
+																 orderUpdateDto.receiptPhotoLinks = order.receiptPhotoLinks = null;
+															 }
 
-					                     this.orderService.update(order.id, orderUpdateDto);
-				                     }
+															 this.orderService.update(order.id, orderUpdateDto);
+														 }
 
-				                     return {
-					                     ...(
-						                     env.api.compatMode
-						                     ? <IOrderTransformer>transformEntity(order)
-						                     : order.get({ plain: true, clone: false })
-					                     ),
-					                     priority:         order.priority,
-					                     [offerStatusKey]: offer.status,
-					                     transports:       offer.transports
-				                     };
-			                     }
-		                     );
+														 return {
+															 ...(
+																 env.api.compatMode
+																 ? <IOrderTransformer>transformEntity(order)
+																 : order.get({ plain: true, clone: false })
+															 ),
+															 priority:         order.priority,
+															 [offerStatusKey]: offer.status,
+															 transports:       offer.transports
+														 };
+													 }
+												 );
 
 		if(offers.every(o => o.status < OfferStatus.SEEN)) {
 			await this.repository.bulkUpdate(
@@ -516,8 +516,7 @@ export default class OfferService
 		const offers = await this.repository.getOrderTransports(orderId, listFilter, filter);
 
 		offers.forEach(
-			offer =>
-			{
+			offer => {
 				if(offer.driver) {
 					const driver = fillDriverWithCompanyData(offer.driver);
 					const { transports: driverTransports = [] } = driver;
@@ -540,20 +539,19 @@ export default class OfferService
 					transportData.push(
 						...mainTransports
 							.map(
-								transport =>
-								{
+								transport => {
 									const {
 										status,
 										cargoId,
 										cargoinnId,
 										..._driver
 									} = env.api.compatMode
-									    ? transformEntity(driver) as IDriverTransformer
-									    : driver.get(getOptions);
+											? transformEntity(driver) as IDriverTransformer
+											: driver.get(getOptions);
 
 									const _transport = env.api.compatMode
-									                   ? transformEntity(transport) as ITransportTransformer
-									                   : transport.get(getOptions);
+																		 ? transformEntity(transport) as ITransportTransformer
+																		 : transport.get(getOptions);
 									const orderStatus = offer.orderStatus;
 									const offerStatus = offer.status;
 
@@ -616,18 +614,18 @@ export default class OfferService
 
 		offer = await (
 			!exists ? this.createModel({ driverId: driverId, orderId: orderId, ...dto })
-			        : this.repository.update(offer.id, { driverId: driverId, ...dto })
+							: this.repository.update(offer.id, { driverId: driverId, ...dto })
 		);
 
 		if(offer)
 			return {
 				statusCode: !exists ? HttpStatus.CREATED
-				                    : HttpStatus.OK,
+														: HttpStatus.OK,
 				data:       offer
 			};
 
 		return !exists ? this.repository.getRecord('create')
-		               : this.repository.getRecord('update');
+									 : this.repository.getRecord('update');
 	}
 
 	public async sendToDrivers(
@@ -671,7 +669,7 @@ export default class OfferService
 
 		// noinspection JSUnusedLocalSymbols
 		const matchDrivers = drivers.filter(driver => filterTransports(driver.transports, transportRequirements)?.length
-		                                              > 0);
+																									> 0);
 		// noinspection JSUnusedLocalSymbols
 		const nonMatchingDrivers = drivers.filter(driver => matchDrivers.every(d => driver.id !== d.id));
 
@@ -694,10 +692,10 @@ export default class OfferService
 			.filter(
 				driverData => prevOffers.some(
 					offer => offer.driverId === driverData.driverId &&
-					         (
-						         offer.orderStatus !== driverData.orderStatus ||
-						         offer.status > OfferStatus.SENT
-					         )
+									 (
+										 offer.orderStatus !== driverData.orderStatus ||
+										 offer.status > OfferStatus.SENT
+									 )
 				)
 			).map(driverData => ({ orderId: orderId, ...driverData }));
 
@@ -716,15 +714,15 @@ export default class OfferService
 			const offers = await this.repository.bulkCreate(offersToCreate);
 			if(offers?.length === offersToCreate.length)
 				offers.forEach(
-					offer => this.gateway.sendDriverNotification(
+					offer => this.fcmGateway.sendDriverNotification(
 						{
 							id:      offer.driverId,
 							source:  'offer',
 							message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order?.crmTitle)
 						},
 						{
-							role: UserRole.CARGO,
-							url:  'Main'
+							roles: [UserRole.CARGO],
+							url:   'Main'
 						}
 					)
 				);
@@ -732,16 +730,17 @@ export default class OfferService
 
 		offers = await this.repository.getOrderDrivers(orderId, { full: full === undefined ? true : full });
 
-		this.gateway.sendOrderNotification(
+		this.socketGateway.sendOrderNotification(
 			{
 				id:     order.id,
 				source: 'offer',
 				status: order.status,
 				stage:  order.stage,
 				point:  order.destinations
-				             .filter(d => !d.fulfilled)[0]
-					        ?.point ?? 'A'
-			}
+										 .filter(d => !d.fulfilled)[0]
+									?.point ?? 'A'
+			},
+			{ roles: [UserRole.ADMIN] }
 		);
 
 		return {
@@ -764,9 +763,9 @@ export default class OfferService
 		if(offer) {
 			if(offer.status === OfferStatus.RESPONDED) {
 				if((
-					   offer.order?.status < OrderStatus.PROCESSING ||
-					   offer.order?.status === OrderStatus.CANCELLED
-				   ) && offer.driver?.isReady === true) {
+						 offer.order?.status < OrderStatus.PROCESSING ||
+						 offer.order?.status === OrderStatus.CANCELLED
+					 ) && offer.driver?.isReady === true) {
 					if(offer.driver) {
 						const { driver } = offer;
 						if(
@@ -775,20 +774,20 @@ export default class OfferService
 							driver.order.status === OrderStatus.PROCESSING &&
 							driver.order.isCurrent)
 						) {
-							this.gateway.sendDriverNotification(
+							this.fcmGateway.sendDriverNotification(
 								{
 									id:      driverId,
 									source:  'offer',
 									message: EVENT_DRIVER_TRANSLATIONS['HAS_EXISTING']
 								},
 								{
-									role: UserRole.CARGO,
-									url:  'Main'
+									roles: [UserRole.CARGO],
+									url:   'Main'
 								}
 							);
 						}
 
-						this.gateway.sendDriverNotification(
+						this.fcmGateway.sendDriverNotification(
 							{
 								id:             driver.id,
 								source:         'offer',
@@ -799,15 +798,15 @@ export default class OfferService
 								message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], offer.order?.crmTitle)
 							},
 							{
-								role: UserRole.CARGO,
-								url:  'Main'
+								roles: [UserRole.CARGO],
+								url:   'Main'
 							}
 						);
 					}
 
 					this.confirmDriver(offer)
-					    .then((confirmed) => console.log(`Driver is ${!confirmed ? 'not' : ''} confirmed!`))
-					    .catch(console.error);
+							.then((confirmed) => console.log(`Driver is ${!confirmed ? 'not' : ''} confirmed!`))
+							.catch(console.error);
 
 					offer = await this.repository.update(
 						offer.id,
@@ -858,22 +857,21 @@ export default class OfferService
 				currentPoint: 'A'
 			}
 		).then(
-			({ data: order }) =>
-			{
+			({ data: order }) => {
 				if(order) {
-					this.gateway.sendOrderNotification(
+					this.socketGateway.sendOrderNotification(
 						{
 							id:      orderId,
 							status:  order.status,
 							stage:   order.stage,
 							message: formatArgs(EVENT_ORDER_TRANSLATIONS['ACCEPT'], orderTitle)
 						},
-						UserRole.ADMIN
+						{ roles: [UserRole.ADMIN] }
 					);
 					this.orderService
-					    .send(offer.orderId)
-					    .then(({ data }) => console.log('Order crm updated ' + data))
-					    .catch(console.error);
+							.send(offer.orderId)
+							.then(({ data }) => console.log('Order crm updated ' + data))
+							.catch(console.error);
 				}
 			}
 		);
@@ -889,7 +887,7 @@ export default class OfferService
 	): Promise<IApiResponse<Offer | null>> {
 		const offer = await this.repository.getByAssociation(orderId, driverId);
 		const status = role < UserRole.CARGO ? OrderStatus.CANCELLED_BITRIX
-		                                     : OrderStatus.CANCELLED;
+																				 : OrderStatus.CANCELLED;
 
 		if(offer) {
 			if(offer.orderStatus < OrderStatus.CANCELLED) {
@@ -901,36 +899,36 @@ export default class OfferService
 					await this.orderService.deleteDocuments(order.id, 'contract');
 
 					this.orderService
-					    .update(order.id, {
-						    status:            !order.isCanceled ? status
-						                                         : OrderStatus.CANCELLED_BITRIX,
-						    isOpen:            true,
-						    isFree:            true,
-						    isCurrent:         false,
-						    left24H:           false,
-						    left6H:            false,
-						    left1H:            false,
-						    cancelCause:       reason ?? '',
-						    contractPhotoLink: null
-					    })
-					    .then(({ data: order }) =>
-					          {
-						          if(order) {
-							          this.gateway.sendOrderNotification(
-								          {
-									          id:      order.id,
-									          status:  order.status,
-									          stage:   order.stage,
-									          message: formatArgs(
-										          EVENT_ORDER_TRANSLATIONS['CANCELLED_DRIVER'],
-										          driver?.fullName,
-										          order?.crmId
-									          )
-								          }
-							          );
-						          }
-					          })
-					    .catch(r => console.error(r));
+							.update(order.id, {
+								status:            !order.isCanceled ? status
+																										 : OrderStatus.CANCELLED_BITRIX,
+								isOpen:            true,
+								isFree:            true,
+								isCurrent:         false,
+								left24H:           false,
+								left6H:            false,
+								left1H:            false,
+								cancelCause:       reason ?? '',
+								contractPhotoLink: null
+							})
+							.then(({ data: order }) => {
+								if(order) {
+									this.socketGateway.sendOrderNotification(
+										{
+											id:      order.id,
+											status:  order.status,
+											stage:   order.stage,
+											message: formatArgs(
+												EVENT_ORDER_TRANSLATIONS['CANCELLED_DRIVER'],
+												driver?.fullName,
+												order?.crmId
+											)
+										},
+										{ roles: [UserRole.LOGIST] }
+									);
+								}
+							})
+							.catch(r => console.error(r));
 				}
 
 				if(driver) {
@@ -952,31 +950,30 @@ export default class OfferService
 					}
 
 					this.driverService
-					    .update(driverId, driverDto)
-					    .then(
-						    ({ data: driver }) =>
-						    {
-							    if(driver && role === UserRole.CARGO)
-								    this.gateway.sendDriverNotification(
-									    {
-										    id:      driver.id,
-										    status:  driver.status,
-										    source:  'offer',
-										    message: formatArgs(EVENT_DRIVER_TRANSLATIONS['CANCELLED'], order?.crmTitle)
-									    },
-									    {
-										    role: UserRole.CARGO,
-										    url:  'Main'
-									    }
-								    );
-						    }
-					    )
-					    .catch(r => console.error(r));
+							.update(driverId, driverDto)
+							.then(
+								({ data: driver }) => {
+									if(driver && role === UserRole.CARGO)
+										this.fcmGateway.sendDriverNotification(
+											{
+												id:      driver.id,
+												status:  driver.status,
+												source:  'offer',
+												message: formatArgs(EVENT_DRIVER_TRANSLATIONS['CANCELLED'], order?.crmTitle)
+											},
+											{
+												roles: [UserRole.CARGO],
+												url:   'Main'
+											}
+										);
+								}
+							)
+							.catch(r => console.error(r));
 				}
 
 				this.orderService
-				    .send(offer.orderId)
-				    .catch(console.error);
+						.send(offer.orderId)
+						.catch(console.error);
 
 				return {
 					statusCode: HttpStatus.OK,
@@ -1006,15 +1003,15 @@ export default class OfferService
 		const offers = await this.repository.getList({}, { orderId });
 		offers.forEach(
 			(offer) =>
-				this.gateway.sendDriverNotification(
+				this.fcmGateway.sendDriverNotification(
 					{
 						id:      offer.driverId,
 						source:  'bitrix',
 						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmTitle)
 					},
 					{
-						role: UserRole.CARGO,
-						url:  'Main'
+						roles: [UserRole.CARGO],
+						url:   'Main'
 					}
 				)
 		);

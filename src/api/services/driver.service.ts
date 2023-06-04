@@ -7,7 +7,6 @@ import {
 import {
 	BitrixUrl,
 	Bucket,
-	ENABLE_DISTANCE_NOTIF_TASK,
 	NOTIFICATION_DISTANCE
 }                              from '@common/constants';
 import {
@@ -53,7 +52,11 @@ import {
 	ListFilter,
 	TransportFilter
 }                              from '@api/dto';
-import { NotificationGateway } from '@api/notifications';
+import {
+	FirebaseNotificationGateway,
+	SocketNotificationGateway,
+	NorificationGateway
+}                              from '@api/notifications';
 import Service                 from './service';
 import ImageFileService        from './image-file.service';
 import OrderService            from './order.service';
@@ -64,11 +67,12 @@ const EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
 const sendDistanceNotification = async(
 	driverId: string,
 	destination: Destination,
-	notification: NotificationGateway,
-	repo: DestinationRepository
+	repo: DestinationRepository,
+	gateways?: NorificationGateway[]
 ): Promise<IGatewayData | null> =>
 {
 	let notificationData: IDriverGatewayData = null;
+	const options = { roles: [UserRole.CARGO], url: 'Main' };
 
 	if(destination) {
 		if(destination.atNearestDistanceToPoint) {
@@ -96,17 +100,9 @@ const sendDistanceNotification = async(
 				message
 			};
 			repo.update(destination.id, { atNearestDistanceToPoint: true })
-			    .then(() => console.info('Destination updated successfuly'))
-			    .catch(e => console.error(e));
-
-			notification.sendDriverNotification(
-				notificationData,
-				{
-					role: UserRole.CARGO,
-					save: false,
-					url:  'Main'
-				}
-			);
+					.then(() => console.info('Destination updated successfuly'))
+					.catch(e => console.error(e));
+			gateways.forEach(g => g.sendDriverNotification(notificationData, options));
 		}
 	}
 
@@ -126,7 +122,8 @@ export default class DriverService
 		protected readonly imageFileService: ImageFileService,
 		@Inject(forwardRef(() => OrderService))
 		protected readonly orderService: OrderService,
-		private readonly gateway: NotificationGateway
+		private readonly fcmGateway: FirebaseNotificationGateway,
+		private readonly socketGateway: SocketNotificationGateway,
 	) {
 		super();
 		this.repository = new DriverRepository();
@@ -381,20 +378,24 @@ export default class DriverService
 			if(orders) {
 				for(const order of orders) {
 					const destination = await this.destinationRepo
-					                              .getOrderDestination(order.id, {
-						                              point: order.currentPoint
-					                              });
+																				.getOrderDestination(order.id, {
+																					point: order.currentPoint
+																				});
 
 					if(!destination) continue;
 
 					destination.distance = calculateDistance([driver.latitude, driver.longitude], destination.coordinates);
 					await destination.save({ fields: ['distance'] });
+					const gateways = [this.fcmGateway, this.socketGateway];
 
-					if(!ENABLE_DISTANCE_NOTIF_TASK) {
-						sendDistanceNotification(driver.id, destination, this.gateway, this.destinationRepo)
-							.then(data => data ? console.info(data) : console.info('No notification data'))
-							.catch(console.error);
-					}
+					sendDistanceNotification(
+						driver.id,
+						destination,
+						this.destinationRepo,
+						gateways
+					)
+						.then(data => data ? console.info(data) : console.info('No notification data'))
+						.catch(console.error);
 				}
 			}
 			const currentAddress = await addressFromCoordinates(driver.latitude, driver.longitude);
