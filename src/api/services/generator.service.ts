@@ -9,7 +9,8 @@ import {
 	companyTypeToStr,
 	OrderStage,
 	OrderStatus,
-	TransportStatus
+	TransportStatus,
+	UserRole
 }                             from '@common/enums';
 import {
 	DEFAULT_ORDER_STATE,
@@ -41,6 +42,9 @@ import {
 }                             from '@models/index';
 import * as repos             from '@repos/index';
 import * as dto               from '@api/dto';
+import {
+	SocketNotificationGateway
+}                             from '@api/notifications';
 import CargoCompanyService    from './cargo-company.service';
 import CargoCompanyInnService from './cargoinn-company.service';
 import DriverService          from './driver.service';
@@ -58,6 +62,7 @@ async function startSimulateCallback(
 	driverRepo: repos.DriverRepository,
 	orderRepo: repos.OrderRepository,
 	destRepo: repos.DestinationRepository,
+	gateway: SocketNotificationGateway,
 	onFinished: () => void
 ) {
 	const drivers = await driverRepo?.getList({},
@@ -71,6 +76,7 @@ async function startSimulateCallback(
 
 	for(const driver of drivers) {
 		const activeData: IDriverSimulateData[] = driver.data.filter(({ passed }) => !passed);
+		let orderTitle = '';
 		if(activeData && activeData.length > 0) {
 			const simData = activeData[0];
 			simData.passed = true;
@@ -82,6 +88,7 @@ async function startSimulateCallback(
 			};
 			if(driver.order) {
 				const { order } = driver;
+				orderTitle = order.title;
 				const destination = order.destination;
 				const orderDto: dto.OrderUpdateDto = {};
 				if(destination && !destination.fulfilled) {
@@ -101,9 +108,39 @@ async function startSimulateCallback(
 					}
 				}
 			}
+
+			gateway.sendDriverNotification(
+				{
+					id:        driver.id,
+					event:     'driver',
+					source:    'gen',
+					latitude:  driver.latitude,
+					longitude: driver.longitude
+				},
+				{ roles: [UserRole.LOGIST] }
+			);
 			driverPromises.push(driverRepo.update(driver.id, driverDto));
 		}
 		else {
+			let dist: number = 0, dur: number = 0;
+			if(driver.info) {
+				const [p1, p2] = driver.info.split('$');
+				try {
+					dist = Number(p1);
+					dur = Number(p2);
+				} catch(e) {}
+			}
+			gateway.sendDriverNotification(
+				{
+					id:        driver.id,
+					event:     'driver',
+					source:    `Симуляцию завершена.`,
+					message:   `Водитель '${driver.fullName}' завершил симуляцию выполнения заказа '${orderTitle}': расстояние ${dist}, время ${dur}.`,
+					latitude:  driver.latitude,
+					longitude: driver.longitude
+				},
+				{ roles: [UserRole.LOGIST] }
+			);
 			onFinished();
 		}
 	}
@@ -125,6 +162,7 @@ export default class GeneratorService
 		protected readonly paymentService: PaymentService,
 		protected readonly transportService: TransportService,
 		protected readonly imageService: ImageService,
+		protected readonly socketGateway: SocketNotificationGateway,
 		protected readonly schedulerRegistry: SchedulerRegistry
 	) {}
 
@@ -343,20 +381,25 @@ export default class GeneratorService
 					elevation:    false,
 					instructions: false,
 					radiuses:     [5000],
+					units:        'km',
 					options:      {
-						avoid_features: ["ferries", "tollways"],
-						avoid_borders:  "none"
+						avoid_borders: "none"
 					},
 					language:     'ru'
 				}
 			)).positions;
+			const distance = ors.distance;
+			const duration = ors.duration;
 			const simulateData: IDriverSimulateData[] = positions.map((position, index) => ({
 				index,
 				passed: false,
 				position
 			}));
 
-			driverPromises.push(this.driverService.update(driver.id, { data: simulateData }));
+			driverPromises.push(this.driverService.update(driver.id, {
+				data: simulateData,
+				info: `${distance}$${duration}`
+			}));
 		}
 
 		await Promise.all([
@@ -369,7 +412,7 @@ export default class GeneratorService
 		this.startInterval(
 			'simulate',
 			options.interval,
-			() => startSimulateCallback(driverRepo, orderRepo, destRepo, onFinished)
+			() => startSimulateCallback(driverRepo, orderRepo, destRepo, this.socketGateway, onFinished)
 		);
 
 		return {
