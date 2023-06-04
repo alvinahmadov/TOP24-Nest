@@ -81,4 +81,12 @@ export class OpenRouteService {
 		}
 		return [];
 	}
+
+	public get distance(): number {
+		return this.direction.feature.properties.distance;
+	}
+
+	public get duration(): number {
+		return this.direction.feature.properties.duration;
+	}
 }
