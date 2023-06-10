@@ -370,11 +370,8 @@ export default class Order
 		data.fields[ORDER.LINK.CONTRACT] = this.contractPhotoLink ?? null;
 		if(this.destinations) {
 			for(const destination of this.destinations) {
-				const DESTINATION = ORDER.DESTINATIONS.find(({ NAME }) => NAME === destination.point);
-
-				if(DESTINATION) {
-					data.fields[DESTINATION.SHIPPING_LINK] = destination.shippingPhotoLinks?.join(', ');
-				}
+				if(destination.toCrm)
+					destination.toCrm(data);
 			}
 		}
 		data.fields[ORDER.HAS_PROBLEM] = this.hasProblem ? 'Y' : 'N';

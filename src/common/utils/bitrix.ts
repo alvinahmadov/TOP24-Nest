@@ -209,6 +209,7 @@ function parseDestination(crmFields: TCRMFields): Promise<DestinationCreateDto[]
 		(resolve, reject) => {
 			const destinations: DestinationCreateDto[] = [];
 			try {
+				const crmId: number = Number(crmFields[ORDER.ID]);
 				const addDestElement = (index: number, crmElement: TCrmOrderDestination) => {
 					const shippingLinkList: string[] = crmFields[ORDER.LINK.SHIPPING];
 
@@ -237,9 +238,7 @@ function parseDestination(crmFields: TCRMFields): Promise<DestinationCreateDto[]
 																						 [];
 						destinations.push(
 							{
-								orderId:   null,
-								point:     name,
-								type:      dType,
+								crmId,
 								address,
 								coordinates,
 								date,
@@ -247,8 +246,9 @@ function parseDestination(crmFields: TCRMFields): Promise<DestinationCreateDto[]
 								inn,
 								phone,
 								comment,
-								distance:  null,
-								fulfilled: false,
+								point:   name,
+								type:    dType,
+								orderId: null,
 								shippingPhotoLinks
 							}
 						);

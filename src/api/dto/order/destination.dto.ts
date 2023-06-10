@@ -20,6 +20,9 @@ export class DestinationCreateDto
 	orderId: string;
 
 	@IsInt()
+	crmId?: number;
+
+	@IsInt()
 	type: DestinationType;
 
 	@IsString()
@@ -62,6 +65,9 @@ export class DestinationUpdateDto
 	implements TUpdateAttribute<IDestination> {
 	@IsString()
 	orderId?: string;
+
+	@IsInt()
+	crmId?: number;
 
 	@IsString()
 	point?: string;

@@ -7,6 +7,7 @@ import {
 	Field,
 	ObjectType
 }                                   from '@nestjs/graphql';
+import { ORDER }                    from '@config/json';
 import { DestinationType }          from '@common/enums';
 import {
 	TupleScalar,
@@ -24,6 +25,7 @@ import {
 	RealArrayColumn,
 	StringArrayColumn,
 	StringColumn,
+	TCRMData,
 	TGeoCoordinate,
 	UuidColumn,
 	VirtualColumn
@@ -31,6 +33,7 @@ import {
 import { DestinationUpdateDto }     from '@api/dto/order';
 import EntityModel                  from './entity-model';
 import Order                        from './order.entity';
+import { ApiProperty }              from '@nestjs/swagger';
 
 function getDiff<T, K extends keyof T = keyof T>(
 	entity: T,
@@ -74,6 +77,13 @@ export default class Destination
 	@Index
 	@UuidColumn({ onDelete: 'CASCADE' })
 	orderId?: string;
+
+	@Index
+	@IntColumn({
+		unique:       false,
+		defaultValue: null
+	})
+	crmId?: number;
 
 	/**
 	 * Name of the point (alphabet character)
@@ -164,6 +174,22 @@ export default class Destination
 	get longitude() {
 		return this.coordinates[1];
 	}
+
+	public readonly toCrm? = (data?: TCRMData): void => {
+		const DESTINATION = ORDER.DESTINATIONS.find(({ NAME }) => NAME === this.point);
+		if(DESTINATION) {
+			if(Array.isArray(data.fields[DESTINATION.SHIPPING_LINK])) {
+				if(data.fields[DESTINATION.SHIPPING_LINK]?.length > 0) {
+					data.fields[DESTINATION.SHIPPING_LINK].push(this.shippingPhotoLinks?.join(', '));
+				}
+			}
+			else if(typeof data.fields[DESTINATION.SHIPPING_LINK] === 'string') {
+				if(!data.fields[DESTINATION.SHIPPING_LINK]?.length)
+					data.fields[DESTINATION.SHIPPING_LINK] = "";
+				data.fields[DESTINATION.SHIPPING_LINK] += this.shippingPhotoLinks?.join(', ');
+			}
+		}
+	};
 
 	public hasDiff(dto: DestinationUpdateDto) {
 		return getDiff(this, dto, [

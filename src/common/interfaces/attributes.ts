@@ -476,8 +476,10 @@ export interface ICargoCompanyInn
  * Load/unload destination data for order.
  * */
 export interface IDestination
-	extends IModel {
+	extends IModel,
+					ICRMEntity {
 	orderId?: string;
+	crmId?: number;
 	/**
 	 * Point of destination
 	 *
