@@ -33,7 +33,6 @@ import {
 import { DestinationUpdateDto }     from '@api/dto/order';
 import EntityModel                  from './entity-model';
 import Order                        from './order.entity';
-import { ApiProperty }              from '@nestjs/swagger';
 
 function getDiff<T, K extends keyof T = keyof T>(
 	entity: T,
