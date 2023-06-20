@@ -21,7 +21,6 @@ import {
 	ActionStatus,
 	DestinationType
 }                              from '@common/enums';
-import { OrderExecutionState } from '@common/classes/order';
 import {
 	isSuccessResponse,
 	sendResponse
