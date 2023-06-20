@@ -23,11 +23,14 @@ export class OrderExecutionState
 	static set(lhs: IOrderExecutionState, state: IOrderExecutionState): void {
 		try {
 			if(lhs.loaded === undefined)
-				lhs.loaded = !!state?.loaded;
+				if(state?.loaded !== undefined)
+					lhs.loaded = state.loaded;
 			if(lhs.unloaded === undefined)
-				lhs.unloaded = !!state?.unloaded;
+				if(state?.unloaded !== undefined)
+					lhs.unloaded = state.unloaded;
 			if(lhs.uploaded === undefined)
-				lhs.uploaded = !!state?.uploaded;
+				if(state?.uploaded !== undefined)
+					lhs.uploaded = state.uploaded;
 		} catch(e) {}
 	};
 }

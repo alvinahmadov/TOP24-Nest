@@ -218,7 +218,8 @@ export default class OrderController
 			}
 
 			if(dto.execState.type === DestinationType.COMBINED) {
-				OrderExecutionState.set(dto.execState, order.execState);
+				if(dto.execState.loaded && !dto.execState.unloaded)
+					dto.execState.unloaded = true;
 			}
 			const result = await this.orderService.update(id, dto);
 			return sendResponse(response, result);
