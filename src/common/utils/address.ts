@@ -30,21 +30,25 @@ export async function addressFromCoordinates(
 		const url = `${env.osm.url}/reverse?lat=${latitude}&lon=${longitude}&format=json`;
 		const config: AxiosRequestConfig = { headers: { 'Accept-Language': 'ru-RU' } };
 
-		const addressData = await AxiosStatic.get<IOSMData>(url, config);
+		try {
+			const addressData = await AxiosStatic.get<IOSMData>(url, config);
 
-		if(addressData) {
-			const { address } = addressData;
+			if(addressData) {
+				const { address } = addressData;
 
-			return [
-				address?.road,
-				address?.town,
-				address?.county,
-				address?.state,
-				address?.region,
-				address?.country,
-				address?.postcode
-			].filter(a => !!a)
-			 .join(',');
+				return [
+					address?.road,
+					address?.town,
+					address?.county,
+					address?.state,
+					address?.region,
+					address?.country,
+					address?.postcode
+				].filter(a => !!a)
+				 .join(',');
+			}
+		} catch(e) {
+			console.error(e);
 		}
 	}
 
