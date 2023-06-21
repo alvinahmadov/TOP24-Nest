@@ -168,7 +168,7 @@ export default class FirebaseNotificationGateway
 		const { roles, event } = options;
 		let sent = false;
 
-		if(roles.length && event)
+		if(roles.length && event) {
 			FirebaseNotificationGateway.users.forEach(({ role, token }) => {
 				if(roles.includes(role)) {
 					if(token) {
@@ -178,15 +178,16 @@ export default class FirebaseNotificationGateway
 				}
 			});
 
-		if(!sent) {
-			this.fcmEntityRepo
-					.getByEntityId(data.id)
-					.then(
-						fcm =>
-							fcm ? this.sendToDevice(fcm.token, data, options)
-									: console.warn('Entity doesn\'t have saved token!')
-					)
-					.catch(console.error);
+			if(!sent) {
+				this.fcmEntityRepo
+						.getByEntityId(data.id)
+						.then(
+							fcm =>
+								fcm ? this.sendToDevice(fcm.token, data, options)
+										: console.warn('Entity doesn\'t have saved token!')
+						)
+						.catch(console.error);
+			}
 		}
 
 		this.logger.log('Sending driver info: ', data, roles);
