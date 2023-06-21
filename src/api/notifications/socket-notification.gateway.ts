@@ -57,11 +57,13 @@ const capitalize = (str: string) => {
 @WebSocketGateway(SOCKET_OPTIONS)
 @Injectable()
 export default class SocketNotificationGateway
-	extends NorificationGateway<TUserData>
+	extends NorificationGateway
 	implements OnGatewayConnection,
 						 OnGatewayDisconnect {
 	@WebSocketServer()
 	public server: IOServer<any, IServerEvents, any, IUserPayload>;
+
+	protected static readonly users: Map<string, TUserData> = new Map<string, TUserData>();
 
 	constructor(protected readonly authService: AuthService) {
 		super(SocketNotificationGateway.name);
@@ -79,7 +81,7 @@ export default class SocketNotificationGateway
 
 			if(result) {
 				client.join(id);
-				this.users.set(id, { id, role });
+				SocketNotificationGateway.users.set(id, { id, role });
 				this.logger.log(`User '${id}' joined to socket '${client.id}'.`);
 				return;
 			}
@@ -150,7 +152,7 @@ export default class SocketNotificationGateway
 
 		let sent: boolean;
 
-		this.users.forEach(({ id, role }) => {
+		SocketNotificationGateway.users.forEach(({ id, role }) => {
 			if(roles?.includes(role)) {
 				this.server.to(id).emit(event, data);
 				sent = true;

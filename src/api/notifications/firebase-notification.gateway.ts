@@ -54,9 +54,10 @@ type TUserData = INotificationUserRole & { phone?: string; fullName?: string; };
 
 @Injectable()
 export default class FirebaseNotificationGateway
-	extends NorificationGateway<TDeviceInfo> {
+	extends NorificationGateway {
 	private static readonly enableFirebase: boolean = env.firebase.enable;
 
+	protected static readonly users: Map<string, TDeviceInfo> = new Map<string, TDeviceInfo>();
 	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: false });
 
 	constructor(
@@ -165,28 +166,30 @@ export default class FirebaseNotificationGateway
 
 	protected sendNotification(data: IGatewayData, options: TNotifGatewayOptions): void {
 		const { roles, event } = options;
+		let sent = false;
 
 		if(roles.length && event)
-			this.users.forEach(({ role, token }, id) => {
+			FirebaseNotificationGateway.users.forEach(({ role, token }) => {
 				if(roles.includes(role)) {
 					if(token) {
+						sent = true;
 						this.sendToDevice(token, data, options);
-					}
-					else {
-						this.fcmEntityRepo
-								.getByEntityId(id)
-								.then(
-									fcm =>
-										fcm ? this.sendToDevice(fcm.token, data, options)
-												: console.warn('Entity doesn\'t have saved token!')
-								)
-								.catch(console.error);
 					}
 				}
 			});
 
-		this.logger.log('Sending driver info: ', data, roles);
+		if(!sent) {
+			this.fcmEntityRepo
+					.getByEntityId(data.id)
+					.then(
+						fcm =>
+							fcm ? this.sendToDevice(fcm.token, data, options)
+									: console.warn('Entity doesn\'t have saved token!')
+					)
+					.catch(console.error);
+		}
 
+		this.logger.log('Sending driver info: ', data, roles);
 	}
 
 	private async createAuthUser<
@@ -230,7 +233,7 @@ export default class FirebaseNotificationGateway
 		}
 
 		if(user) {
-			this.users.set(user.uid, { user, token, role: userEntity.role });
+			FirebaseNotificationGateway.users.set(user.uid, { user, token, role: userEntity.role });
 			return true;
 		}
 
