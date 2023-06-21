@@ -145,16 +145,16 @@ export default class OfferService
 				) {
 					// the new order is not extra
 					if(order.dedicated === 'Догруз') {
-						/**
+						/*
 						const transport = driver.transports.find(
 							t => t.status === TransportStatus.ACTIVE &&
-							     !t.isTrailer
+									 !t.isTrailer
 						);
 						const trailer = driver.transports.find(
 							t => t.status === TransportStatus.ACTIVE &&
-							     t.isTrailer
+									 t.isTrailer
 						);
-						const filter: ICompanyTransportFilter = {
+						const filter = {
 							weightMin: order.weight,
 							volumeMin: order.volume,
 							heightMin: order.height,
@@ -173,13 +173,16 @@ export default class OfferService
 							) {
 								const message = formatArgs(EVENT_DRIVER_TRANSLATIONS['NO_MATCH'], messageObj.message);
 
-								this.gateway.sendDriverNotification(
+								this.fcmGateway.sendDriverNotification(
 									{
 										id:     driverId,
 										source: 'offer',
 										message
 									},
-									UserRole.CARGO
+									{
+										roles: [UserRole.DRIVER, UserRole.CARGO],
+										url:   'Main'
+									}
 								);
 							}
 						}
@@ -188,7 +191,7 @@ export default class OfferService
 					else {
 						const message = OFFER_TRANSLATIONS['ACCEPTED'];
 						const options = {
-							roles: [UserRole.CARGO],
+							roles: [UserRole.DRIVER, UserRole.CARGO],
 							url:   'Main'
 						};
 						const data = {
@@ -270,7 +273,7 @@ export default class OfferService
 								if(isSuccessResponse(res)) {
 									eventObject.status = res.data.status;
 									const options = {
-										roles: [UserRole.CARGO],
+										roles: [UserRole.DRIVER, UserRole.CARGO],
 										url:   'Main'
 									};
 									const data = {
@@ -299,7 +302,7 @@ export default class OfferService
 					message: formatArgs(EVENT_DRIVER_TRANSLATIONS['OFFER'], order?.crmTitle)
 				},
 				{
-					roles: [UserRole.CARGO],
+					roles: [UserRole.DRIVER, UserRole.CARGO],
 					url:   'Main'
 				});
 		}
@@ -311,7 +314,7 @@ export default class OfferService
 					message: EVENT_ORDER_TRANSLATIONS['FINISHED']
 				},
 				{
-					roles: [UserRole.CARGO],
+					roles: [UserRole.DRIVER, UserRole.CARGO],
 					url:   'Main'
 				}
 			);
@@ -721,7 +724,7 @@ export default class OfferService
 							message: formatArgs(EVENT_DRIVER_TRANSLATIONS['SENT'], order?.crmTitle)
 						},
 						{
-							roles: [UserRole.CARGO],
+							roles: [UserRole.DRIVER, UserRole.CARGO],
 							url:   'Main'
 						}
 					)
@@ -767,6 +770,10 @@ export default class OfferService
 						 offer.order?.status === OrderStatus.CANCELLED
 					 ) && offer.driver?.isReady === true) {
 					if(offer.driver) {
+						const options = {
+							roles: [UserRole.DRIVER, UserRole.CARGO],
+							url:   'Main'
+						};
 						const { driver } = offer;
 						if(
 							driver.order &&
@@ -780,10 +787,7 @@ export default class OfferService
 									source:  'offer',
 									message: EVENT_DRIVER_TRANSLATIONS['HAS_EXISTING']
 								},
-								{
-									roles: [UserRole.CARGO],
-									url:   'Main'
-								}
+								options
 							);
 						}
 
@@ -797,10 +801,7 @@ export default class OfferService
 								currentAddress: driver.currentAddress,
 								message:        formatArgs(EVENT_DRIVER_TRANSLATIONS['SELECTED'], offer.order?.crmTitle)
 							},
-							{
-								roles: [UserRole.CARGO],
-								url:   'Main'
-							}
+							options
 						);
 					}
 
@@ -962,7 +963,7 @@ export default class OfferService
 												message: formatArgs(EVENT_DRIVER_TRANSLATIONS['CANCELLED'], order?.crmTitle)
 											},
 											{
-												roles: [UserRole.CARGO],
+												roles: [UserRole.DRIVER, UserRole.CARGO],
 												url:   'Main'
 											}
 										);
@@ -1010,7 +1011,7 @@ export default class OfferService
 						message: formatArgs(EVENT_ORDER_TRANSLATIONS['CANCELLED'], crmTitle)
 					},
 					{
-						roles: [UserRole.CARGO],
+						roles: [UserRole.DRIVER, UserRole.CARGO],
 						url:   'Main'
 					}
 				)

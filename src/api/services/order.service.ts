@@ -728,7 +728,7 @@ export default class OrderService
 		);
 
 		if(affectedCount > 0) {
-			const options = { roles: [UserRole.CARGO], url: 'Main' };
+			const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
 			const data: IDriverGatewayData = {
 				id:      null,
 				message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], orderTitle)
