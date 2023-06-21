@@ -6,10 +6,10 @@ import {
 }                        from '@nestjs/common';
 import { Axios }         from '@common/classes';
 import {
+	IApiResponse,
 	IApiResponses,
 	IModel,
 	IService,
-	TAsyncApiResponse,
 	TCreationAttribute,
 	TUpdateAttribute,
 	TMulterFile
@@ -41,7 +41,7 @@ export default abstract class Service<M extends Model,
 		this.logger = new Logger(Service.name, { timestamp: true });
 		this.httpClient = new Axios();
 	}
-	
+
 	public set log(value: boolean) {
 		if(this.repository) {
 			this.repository.useLogger = value;
@@ -97,7 +97,7 @@ export default abstract class Service<M extends Model,
 		linkName: keyof M,
 		folderId: string,
 		...paths: string[]
-	): TAsyncApiResponse<M> {
+	): Promise<IApiResponse<M>> {
 		const model = await this.repository.get(id);
 		if(model) {
 			if(model[linkName]) {

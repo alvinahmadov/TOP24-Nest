@@ -1,11 +1,11 @@
 import { Injectable }        from '@nestjs/common';
 import {
+	IAddress,
 	IAddressFilter,
 	IApiResponse,
 	IApiResponses,
 	IListFilter,
-	IService,
-	TAsyncApiResponse
+	IService
 }                            from '@common/interfaces';
 import {
 	formatArgs,
@@ -32,11 +32,11 @@ export default class AddressService
 		super();
 		this.repository = new AddressRepository();
 	}
-	
+
 	public async getList(
 		listFilter: ListFilter,
 		filter: IAddressFilter
-	): TAsyncApiResponse<Address[]> {
+	): Promise<IApiResponse<Address[]>> {
 		const addresses = await this.repository.getList(listFilter, filter);
 
 		return {
@@ -47,7 +47,7 @@ export default class AddressService
 	}
 
 	public async getById(id: string)
-		: TAsyncApiResponse<Address> {
+		: Promise<IApiResponse<Address>> {
 		const address = await this.repository.get(id);
 
 		if(!address)
@@ -57,21 +57,40 @@ export default class AddressService
 			statusCode: 200,
 			data:       address,
 			message:    formatArgs(TRANSLATIONS['GET'], address.value)
-		} as IApiResponse<Address>;
+		};
 	}
 
 	public async search(
 		term: string,
 		listFilter: ListFilter = {},
 		onlyRegions: boolean = false
-	): TAsyncApiResponse<Address[]> {
-		const addresses = await this.repository.find(term, listFilter, onlyRegions);
+	): Promise<IApiResponse<IAddress[]>> {
+		let addresses: IAddress[] = [];
+		const results = await this.repository.find(term, listFilter, onlyRegions);
+
+		if(onlyRegions && results.length > 0) {
+			const regionAddress = results[0].get({ clone: true, plain: true });
+			addresses = [
+				regionAddress,
+				...results.map(
+					address =>
+					{
+						if(address.city) {
+							address.region = address.city;
+							address.regionType = address.cityType;
+						}
+						else return null;
+						return address;
+					}
+				).filter(a => a !== null)
+			];
+		}
 
 		return {
 			statusCode: 200,
 			data:       addresses,
 			message:    formatArgs(TRANSLATIONS['LIST'], addresses.length)
-		} as IApiResponse<Address[]>;
+		};
 	}
 
 	public async searchByApi(
@@ -79,7 +98,7 @@ export default class AddressService
 		minLength: number = 2,
 		filter: IAddressFilter = {},
 		listFilter: IListFilter = {}
-	): TAsyncApiResponse<any> {
+	): Promise<IApiResponse<any>> {
 		if(term === undefined ||
 		   term.length < minLength) {
 			return this.responses['NOT_FOUND'];
@@ -95,13 +114,13 @@ export default class AddressService
 			statusCode: 200,
 			data:       fullAddresses,
 			message:    formatArgs(TRANSLATIONS['LIST'], fullAddresses.length)
-		} as IApiResponse<any>;
+		};
 	}
 
 	public async searchByGeolocation(
 		coordinates: { latitude: number; longitude: number },
 		distance: number = 60.0
-	): TAsyncApiResponse<Address[]> {
+	): Promise<IApiResponse<Address[]>> {
 		const { latitude, longitude } = coordinates;
 
 		const result = await this.repository.findByCoordinates([latitude, longitude], distance);

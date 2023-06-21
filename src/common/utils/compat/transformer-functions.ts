@@ -214,7 +214,6 @@ function transformDriver(driver: models.Driver)
 			surname:                       driver.getDataValue('lastName'),
 			is_ready:                      driver.getDataValue('isReady'),
 			date_of_birth:                 driver.getDataValue('birthDate'),
-			current_point:                 driver.getDataValue('currentPoint'),
 			phone:                         driver.getDataValue('phone'),
 			phone_second:                  driver.getDataValue('phoneSecond'),
 			taxpayer_number:               driver.getDataValue('taxpayerNumber'),
@@ -236,15 +235,16 @@ function transformDriver(driver: models.Driver)
 			link_back:                     driver.getDataValue('licenseBackLink'),
 			info:                          driver.getDataValue('info'),
 			status:                        driver.getDataValue('status'),
-			operation:                     driver.getDataValue('operation'),
 			payload_city:                  driver.getDataValue('payloadCity'),
 			payload_region:                driver.getDataValue('payloadRegion'),
 			payload_date:                  driver.getDataValue('payloadDate'),
 			latitude:                      driver.getDataValue('latitude'),
 			longitude:                     driver.getDataValue('longitude'),
 			current_address:               driver.getDataValue('currentAddress'),
+			data:                          driver.get('data'),
 			fullname:                      driver.get('fullName'),
 			company_name:                  driver.get('companyName'),
+			current_point:                 driver.get('currentPoint'),
 			cargo:                         transformCargoCompany(driver.cargo),
 			cargoinn:                      transformCargoCompanyInn(driver.cargoinn),
 			order:                         transformOrder(driver.order),
@@ -290,11 +290,13 @@ function transformDestination(destination: models.Destination)
 			coordinates:   destination.getDataValue('coordinates'),
 			date:          destination.getDataValue('date'),
 			contact:       destination.getDataValue('contact'),
+			inn:           destination.getDataValue('inn'),
 			phone:         destination.getDataValue('phone'),
 			distance:      destination.getDataValue('distance'),
 			comment:       destination.getDataValue('comment'),
 			fulfilled:     destination.getDataValue('fulfilled'),
 			shipping_link: destination.getDataValue('shippingPhotoLinks'),
+			num:           destination.get('num', { plain: true, clone: false }),
 			createdAt:     destination.getDataValue('createdAt'),
 			updatedAt:     destination.getDataValue('updatedAt')
 		};
@@ -454,6 +456,7 @@ function transformOrder(order: models.Order)
 			palets:                     order.getDataValue('pallets'),
 			transport_types:            order.getDataValue('transportTypes'),
 			destinations:               transformDestinations(order.destinations),
+			current_point:              order.getDataValue('currentPoint'),
 			driver_deferral_conditions: order.getDataValue('driverDeferralConditions'),
 			owner_deferral_conditions:  order.getDataValue('ownerDeferralConditions'),
 			dedicated_machine:          order.getDataValue('dedicated'),
@@ -461,8 +464,11 @@ function transformOrder(order: models.Order)
 			receipt_link:               order.getDataValue('receiptPhotoLinks'),
 			contract_link:              order.getDataValue('contractPhotoLink'),
 			filter:                     order.getDataValue('filter'),
+			operation:                  order.get('execState'),
 			is_dedicated:               order.get('isDedicated'),
 			is_extra_payload:           order.get('isExtraPayload'),
+			destination:                order.get('destination'),
+			next_destination:           order.get('nextDestination'),
 			cargo:                      transformCargoCompany(order?.cargo),
 			cargoinn:                   transformCargoCompanyInn(order?.cargoinn),
 			driver:                     transformDriver(order?.driver),
@@ -524,6 +530,11 @@ export function transformToPayment(data: transformers.IPaymentTransformer)
 function transformTransport(transport: models.Transport)
 	: transformers.ITransportTransformer {
 	if(transport) {
+		const sts_links: string[] = [
+			transport.getDataValue('certificatePhotoLinkFront'),
+			transport.getDataValue('certificatePhotoLinkBack'),
+		].filter(v => !!v);
+
 		return {
 			id:             transport.getDataValue('id'),
 			cargoId:        transport.getDataValue('cargoId'),
@@ -542,6 +553,9 @@ function transformTransport(transport: models.Transport)
 			is_trailer:     transport.getDataValue('isTrailer'),
 			is_dedicated:   transport.getDataValue('isDedicated'),
 			sts:            transport.getDataValue('certificateNumber'),
+			sts_links,
+			sts_link_front: transport.getDataValue('certificatePhotoLinkFront'),
+			sts_link_back:  transport.getDataValue('certificatePhotoLinkBack'),
 			weight_extra:   transport.getDataValue('weightExtra'),
 			volume_extra:   transport.getDataValue('volumeExtra'),
 			weight:         transport.getDataValue('weight'),
@@ -594,11 +608,9 @@ function transformUser(user: models.User, deep?: boolean)
 			type:      user.getDataValue('role'),
 			confirmed: user.getDataValue('confirmed'),
 			cargo_companies:
-			           !!deep ? user.cargoCompanies.map(transformCargoCompany)
-			                  : undefined,
+								 !!deep ? user.cargoCompanies.map(transformCargoCompany) : undefined,
 			cargoinn_companies:
-			           !!deep ? user.cargoInnCompanies.map(transformCargoCompanyInn)
-			                  : undefined,
+								 !!deep ? user.cargoInnCompanies.map(transformCargoCompanyInn) : undefined,
 			createdAt: user.getDataValue('createdAt'),
 			updatedAt: user.getDataValue('updatedAt')
 		};

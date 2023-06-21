@@ -3,8 +3,7 @@ import {
 	IApiResponse,
 	IApiResponses,
 	IService,
-	TAffectedRows,
-	TAsyncApiResponse
+	TAffectedRows
 }                          from '@common/interfaces';
 import {
 	formatArgs,
@@ -46,7 +45,7 @@ export default class AdminService
 	 * @param {string} id Id of user to get
 	 * */
 	public async getById(id: string)
-		: TAsyncApiResponse<Admin> {
+		: Promise<IApiResponse<Admin>> {
 		const user = await this.repository.get(id);
 
 		if(!user)
@@ -56,20 +55,20 @@ export default class AdminService
 			statusCode: 200,
 			data:       user,
 			message:    formatArgs(TRANSLATIONS['GET'], user.phone)
-		} as IApiResponse<Admin>;
+		};
 	}
 
 	public async getList(
 		listFilter: ListFilter = {},
 		filter: AdminFilter = {}
-	): TAsyncApiResponse<Admin[]> {
+	): Promise<IApiResponse<Admin[]>> {
 		const users = await this.repository.getList(listFilter, filter);
 
 		return {
 			statusCode: 200,
 			data:       users,
 			message:    formatArgs(TRANSLATIONS['LIST'], users.length)
-		} as IApiResponse<Admin[]>;
+		};
 	}
 
 	/**
@@ -78,7 +77,7 @@ export default class AdminService
 	 * @param {IAdmin!} dto New user's data. Required
 	 * */
 	public async create(dto: AdminCreateDto)
-		: TAsyncApiResponse<Admin> {
+		: Promise<IApiResponse<Admin>> {
 		const user = await this.createModel(dto);
 
 		if(!user)
@@ -88,7 +87,7 @@ export default class AdminService
 			statusCode: 201,
 			data:       user,
 			message:    formatArgs(TRANSLATIONS['CREATE'], user.name ?? user.phone)
-		} as IApiResponse<Admin>;
+		};
 	}
 
 	/**
@@ -103,7 +102,7 @@ export default class AdminService
 	public async update(
 		id: string,
 		dto: AdminUpdateDto
-	): TAsyncApiResponse<Admin> {
+	): Promise<IApiResponse<Admin>> {
 		const user = await this.repository.update(id, dto);
 
 		if(!user)
@@ -113,7 +112,7 @@ export default class AdminService
 			statusCode: 200,
 			data:       user,
 			message:    formatArgs(TRANSLATIONS['UPDATE'], user.phone)
-		} as IApiResponse<Admin>;
+		};
 	}
 
 	/**
@@ -122,7 +121,7 @@ export default class AdminService
 	 * @param {String} id User id to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<TAffectedRows> {
+		: Promise<IApiResponse<TAffectedRows>> {
 		const user = await this.repository.get(id);
 
 		if(!user)
@@ -135,6 +134,6 @@ export default class AdminService
 			statusCode: 200,
 			data:       result,
 			message:    formatArgs(TRANSLATIONS['DELETE'], phone)
-		} as IApiResponse<TAffectedRows>;
+		};
 	}
 }

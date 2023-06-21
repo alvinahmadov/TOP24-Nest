@@ -11,9 +11,10 @@ Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"cargoId": "{{companyId}}",
 	"driverId": "{{driverId}}"
 }
+
+> {% client.global.set('transportId', response.body[0]['id']); %}
 
 ### Get single transport by id
 // @no-cookie-jar
@@ -28,9 +29,9 @@ Authorization: {{accessToken}}
 Content-Type: application/json
 
 {
-	"cargoId": "{{companyId}}",
+  "cargoId": "{{companyId}}",
   "driverId": "{{driverId}}",
-	"status": 1,
+  "status": 1,
   "type": "2700",
   "extra_fixtures": [
   	"792",
@@ -42,8 +43,8 @@ Content-Type: application/json
   "registr_num": "мо 956 н 123",
   "prod_year": 2016,
   "payloads": [
-    "64"
-  	"2794",
+    "64",
+  	"2794"
  	],
   "payload_extra": false,
   "is_trailer": false,
@@ -73,7 +74,7 @@ Content-Type: application/json
   "comments": "Haval"
 }
 
-> {%	client.global.set("transportId", response.body['id']); %}
+> {% client.global.set("transportId", response.body['id']); %}
 
 ### Update single transport by id
 // @no-cookie-jar
@@ -103,12 +104,6 @@ POST {{api}}/transport/activate/{{transportId}}
 Authorization: {{accessToken}}
 Content-Type: application/json
 
-### Delete transport image by id
-// @no-cookie-jar
-DELETE {{api}}/transport/image/{{transportId}}/{{imageId}}
-Authorization: {{accessToken}}
-Content-Type: application/json
-
 ### Upload transport image by transport id
 // @no-cookie-jar
 POST {{api}}/transport/image/{{transportId}}
@@ -117,6 +112,31 @@ Content-Type: multipart/form-data; boundary=WebAppBoundary
 
 --WebAppBoundary
 Content-Disposition: form-data; name="image"; filename="front.jpg"
+
+< ../resources/img/sample.jpg
+--WebAppBoundary--
+
+### Delete transport image by id
+// @no-cookie-jar
+DELETE {{api}}/transport/image/{{transportId}}/{{imageId}}
+Authorization: {{accessToken}}
+Content-Type: application/json
+
+### Upload transport registration certificate document scan
+// @no-log 
+// @no-cookie-jar
+POST {{api}}/transport/certificate/{{transportId}}
+Authorization: {{accessToken}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="order_shipping_A.png"
+
+< ../resources/img/sample.jpg
+--WebAppBoundary--
+
+--WebAppBoundary
+Content-Disposition: form-data; name="image"; filename="order_shipping_01.jpg"
 
 < ../resources/img/sample.jpg
 --WebAppBoundary--

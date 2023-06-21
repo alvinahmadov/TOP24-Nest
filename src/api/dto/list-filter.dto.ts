@@ -1,6 +1,7 @@
 import { InputType }   from '@nestjs/graphql';
-import { IListFilter } from '@common/interfaces';
 import { ApiProperty } from '@nestjs/swagger';
+import { IListFilter } from '@common/interfaces';
+import env             from '@config/env';
 
 @InputType()
 export default class ListFilter
@@ -23,4 +24,11 @@ export default class ListFilter
 		             default:     false
 	             })
 	full?: boolean = false;
+
+	@ApiProperty({
+		             description: 'Enabled/disable compat mode in return resul',
+		             required:    false,
+		             default:     1
+	             })
+	compat?: number = Number(env.api.compatMode);
 }

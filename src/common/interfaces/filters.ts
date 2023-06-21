@@ -58,7 +58,7 @@ export interface IPagination {
  * */
 export interface IListFilter
 	extends IFilter,
-	        IPagination {
+					IPagination {
 	/**
 	 * If there any associated another modle related to
 	 * current model include them also in result.
@@ -66,6 +66,7 @@ export interface IListFilter
 	 * @default false
 	 * */
 	full?: boolean;
+	compat?: number;
 }
 
 /**
@@ -75,7 +76,7 @@ export interface IListFilter
  * */
 export interface IAdminFilter
 	extends IFilter,
-	        TModelFilter<IAdmin> {}
+					TModelFilter<IAdmin> {}
 
 /**
  * Address model filters
@@ -84,7 +85,7 @@ export interface IAdminFilter
  * */
 export interface IAddressFilter
 	extends IFilter,
-	        TModelFilter<IAddress> {
+					TModelFilter<IAddress> {
 	search?: string;
 	provider?: string;
 	onlyRegions?: boolean;
@@ -99,7 +100,7 @@ export interface IAddressFilter
  * */
 export interface ICargoCompanyFilter
 	extends IFilter,
-	        TModelFilter<ICargoCompany> {}
+					TModelFilter<ICargoCompany> {}
 
 /**
  * CargoInn model filters
@@ -108,11 +109,11 @@ export interface ICargoCompanyFilter
  * */
 export interface ICargoCompanyInnFilter
 	extends IFilter,
-	        TModelFilter<ICargoCompanyInn> {}
+					TModelFilter<ICargoCompanyInn> {}
 
 export interface IDestinationFilter
 	extends IFilter,
-	        TModelFilter<IDestination> {
+					TModelFilter<IDestination> {
 	fromDate?: Date | string;
 	toDate?: Date | string;
 	distanceMin?: number;
@@ -126,23 +127,18 @@ export interface IDestinationFilter
  * */
 export interface IDriverFilter
 	extends IFilter,
-	        TModelFilter<IDriver> {
+					TModelFilter<IDriver> {
 	orderStatus?: OrderStatus;
 	statuses?: DriverStatus[];
 }
 
-export interface IEntityFCMFilter 
-extends IFilter,
-        TModelFilter<IEntityFCM> {
-	notPassed24H?: boolean;
-	notPassed6H?: boolean;
-	notPassed1H?: boolean;
-	notPassedDistance?: boolean;
-}
+export interface IEntityFCMFilter
+	extends IFilter,
+					TModelFilter<IEntityFCM> {}
 
 export interface IGatewayEventFilter
 	extends IFilter,
-	        TModelFilter<IGatewayEvent> {
+					TModelFilter<IGatewayEvent> {
 	events?: ('cargo' | 'driver' | 'order' | string)[];
 	sources?: string[];
 }
@@ -154,7 +150,7 @@ export interface IGatewayEventFilter
  * */
 export interface IImageFilter
 	extends IFilter,
-	        TModelFilter<IImage> {}
+					TModelFilter<IImage> {}
 
 /**
  * @summary Payment model filters
@@ -163,20 +159,20 @@ export interface IImageFilter
  * */
 export interface IPaymentFilter
 	extends IFilter,
-	        TModelFilter<IPayment> {}
+					TModelFilter<IPayment> {}
 
 /**
  * Order model filters
  * */
 export interface IOrderFilter
 	extends IFilter,
-	        TModelFilter<Omit<IOrder,
-		        'width' |
-		        'height' |
-		        'volume' |
-		        'length' |
-		        'weight' |
-		        'status'>> {
+					TModelFilter<Omit<IOrder,
+						'width' |
+						'height' |
+						'volume' |
+						'length' |
+						'weight' |
+						'status'>> {
 	weightMin?: number;
 	weightMax?: number;
 	volumeMin?: number;
@@ -204,11 +200,19 @@ export interface IOrderFilter
 	hasDriver?: boolean;
 	fromDate?: Date | string;
 	toDate?: Date | string;
+	left24H?: boolean;
+	left6H?: boolean;
+	left1H?: boolean;
+	passedMinDistance?: boolean;
+	notLeft24H?: boolean;
+	notLeft6H?: boolean;
+	notLeft1H?: boolean;
+	notPassedMinDistance?: boolean;
 }
 
 export interface IOfferFilter
 	extends IFilter,
-	        TModelFilter<IOffer> {
+					TModelFilter<IOffer> {
 	driverIds?: string[];
 	orderIds?: string[];
 	orderStatuses?: OrderStatus[];
@@ -225,7 +229,7 @@ export interface IOfferFilter
  * */
 export interface ITransportFilter
 	extends IFilter,
-	        TModelFilter<ITransport> {
+					TModelFilter<ITransport> {
 	weightMin?: number;
 	weightMax?: number;
 	volumeMin?: number;
@@ -251,7 +255,7 @@ export interface ITransportFilter
  * */
 export interface ICompanyTransportFilter
 	extends IFilter,
-	        ITransportFilter {
+					ITransportFilter {
 	cargoId?: string;
 	cargoinnId?: string;
 	riskClass?: string;
@@ -268,8 +272,8 @@ export interface ICompanyTransportFilter
 
 export interface IUserFilter
 	extends IFilter,
-	        TModelFilter<IUser> {}
+					TModelFilter<IUser> {}
 
 export type TOfferTransportFilter = Pick<IOfferFilter, 'transportStatus' | 'orderStatuses'> &
-                                    Omit<IDriverFilter, 'statuses'>
-                                    & { offerStatuses?: OfferStatus[] };
+																		Omit<IDriverFilter, 'statuses'>
+																		& { offerStatuses?: OfferStatus[] };

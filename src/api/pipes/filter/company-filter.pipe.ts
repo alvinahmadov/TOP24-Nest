@@ -14,9 +14,19 @@ export default class CompanyTransportFilterPipe
 		let value: ICompanyTransportFilter = !env.api.compatMode ? data
 		                                                         : transformToCompanyTransportFilter(data);
 
+		if(value.paymentTypes)
+			value.paymentTypes = value.paymentTypes.map(
+				pt =>
+				{
+					if(pt?.toLowerCase() === 'наличными')
+						return 'Карта';
+					return pt;
+				}
+			);
+
 		if(data.pallets)
 			value.pallets = data.pallets;
-		
+
 		if(value.dedicated === 'Да')
 			value.payloadExtra = false;
 
@@ -29,7 +39,7 @@ export default class CompanyTransportFilterPipe
 		checkAndConvertArrayBitrix(value, 'riskClasses', 'transportRiskClass');
 
 		delete value.isTrailer;
-		
+
 		return value;
 	}
 }

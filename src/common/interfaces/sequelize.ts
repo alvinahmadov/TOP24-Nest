@@ -11,7 +11,7 @@ import {
 }                                      from 'sequelize-typescript';
 
 type IndexDecoratorOptions = IndexOptions &
-                             Pick<IndexFieldOptions, Exclude<keyof IndexFieldOptions, 'name'>>;
+														 Pick<IndexFieldOptions, Exclude<keyof IndexFieldOptions, 'name'>>;
 type AnnotationFunction = <T>(
 	target: T,
 	propertyName: string
@@ -73,7 +73,7 @@ export const FloatColumn = (options: Omit<TColumnOptions, 'validate'> = {}): Fun
 	MergeColumnOptions({ type: DataType.FLOAT, validate: { isFloat: true } }, options);
 
 export const RealArrayColumn = (options: Omit<TColumnOptions, 'validate'> = {}): Function =>
-	MergeColumnOptions({ type: DataType.ARRAY(DataType.REAL) }, options);
+	MergeColumnOptions({ type: DataType.ARRAY(DataType.FLOAT) }, options);
 
 export const BooleanColumn = (options: TColumnOptions = {}): Function =>
 	MergeColumnOptions({ type: DataType.BOOLEAN }, options);

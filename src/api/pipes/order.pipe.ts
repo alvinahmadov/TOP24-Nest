@@ -8,12 +8,13 @@ export default class OrderPipe
 	implements PipeTransform {
 	transform(data: any): IOrder {
 		let value: IOrder = !env.api.compatMode ? data : transformToOrder(data);
-		
+
 		if(value.bidPrice === 0)
 			value.bidPrice = 1.0;
 		if(value.bidPriceVat === 0)
 			value.bidPriceVat = 1.0;
-		
+		if(value.hasProblem)
+			value.isCanceled = true;
 		return value;
 	}
 }

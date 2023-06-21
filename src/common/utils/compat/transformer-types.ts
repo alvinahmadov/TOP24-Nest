@@ -11,9 +11,10 @@ import {
 } from '@common/enums';
 import {
 	IApiResponse,
-	IDriverOperation,
 	IModel,
 	IOffer,
+	IDriverSimulateData,
+	IOrderExecutionState,
 	TCreationAttribute,
 	TGeoCoordinate
 } from '@common/interfaces';
@@ -32,7 +33,7 @@ export interface ITransformer {
  * */
 export interface IUserTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	/**
 	 * @see IUser.role
 	 * */
@@ -57,7 +58,7 @@ export interface IAdminTransformer
 
 export interface IAddressTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	country: string;
 	postal_code?: string;
 	federal_district?: string;
@@ -87,7 +88,7 @@ export interface IAddressTransformer
  * */
 export interface ICompanyTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	userId: string;
 	name: string;
 	email: string;
@@ -137,7 +138,13 @@ export interface ICompanyTransformer
 	 * @see ICompany.paymentType
 	 * */
 	nds?: string;
+	/**
+	 * @see legalAddress
+	 * */
 	address_first?: string;
+	/**
+	 * @see postalAddress
+	 * */
 	address_second?: string;
 	address_third?: string;
 	/**
@@ -260,11 +267,36 @@ export interface ICargoCompanyInnTransformer
 }
 
 /**
+ * @see IDestination
+ * */
+export interface IDestinationTransformer
+	extends IModel,
+					ITransformer {
+	point: string;
+	type: DestinationType;
+	address: string;
+	coordinates: TGeoCoordinate;
+	date?: Date;
+	contact?: string;
+	inn?: string;
+	phone?: string;
+	distance?: number;
+	comment?: string;
+	fulfilled?: boolean;
+	/**
+	 * @see IDestination.shippingPhotoLinks
+	 * */
+	shipping_link?: string[];
+
+	readonly num?: number;
+}
+
+/**
  * @see IDriver
  * */
 export interface IDriverTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	/**
@@ -289,10 +321,6 @@ export interface IDriverTransformer
 	 * @see IDriver.birthDate
 	 * */
 	date_of_birth: Date;
-	/**
-	 * @see IDriver.currentPoint
-	 * */
-	current_point?: string;
 	phone?: string;
 	/**
 	 * @see IDriver.taxpayerNumber
@@ -365,7 +393,6 @@ export interface IDriverTransformer
 	phone_second?: string;
 	info?: string;
 	status?: DriverStatus;
-	operation?: IDriverOperation;
 	/**
 	 * @see IDriver.payloadCity
 	 * */
@@ -381,11 +408,17 @@ export interface IDriverTransformer
 	latitude?: number;
 	longitude?: number;
 	/**
+	 * @deprecated Use IOrderTransformer.current_point.
+	 * */
+	operation?: IOrderExecutionState;
+	/**
 	 * @see IDriver.currentAddress
 	 * */
 	current_address?: string;
-	fullname?: string;
-	company_name?: string;
+	data?: IDriverSimulateData[];
+	readonly fullname?: string;
+	readonly company_name?: string;
+	readonly current_point?: string;
 
 	cargo?: ICargoCompanyTransformer;
 	cargoinn?: ICargoCompanyInnTransformer;
@@ -407,7 +440,7 @@ export interface IGatewayEventTransformer
  * */
 export interface IImageTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	transportId?: string;
@@ -422,7 +455,7 @@ export interface IImageTransformer
  * */
 export interface IOfferTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	orderId: string;
 	driverId: string;
 	status: OfferStatus;
@@ -452,7 +485,7 @@ export interface IOfferTransformer
  * */
 export interface IOrderTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	driverId?: string;
@@ -542,6 +575,8 @@ export interface IOrderTransformer
 	 * */
 	transport_types?: string[];
 	destinations?: IDestinationTransformer[];
+	operation?: IOrderExecutionState;
+	current_point?: string;
 	/**
 	 * @see IOrder.driverDeferralConditions
 	 * */
@@ -571,31 +606,13 @@ export interface IOrderTransformer
 	readonly is_dedicated?: boolean;
 	readonly is_extra_payload?: boolean;
 
+	readonly destination?: IDestinationTransformer;
+
+	readonly next_destination?: IDestinationTransformer;
+
 	cargo?: ICargoCompanyTransformer;
 	cargoinn?: ICargoCompanyInnTransformer;
 	driver?: IDriverTransformer;
-}
-
-/**
- * @see IDestination
- * */
-export interface IDestinationTransformer
-	extends IModel,
-	        ITransformer {
-	point: string;
-	type: DestinationType;
-	address: string;
-	coordinates: TGeoCoordinate;
-	date?: Date;
-	contact?: string;
-	phone?: string;
-	distance?: number;
-	comment?: string;
-	fulfilled?: boolean;
-	/**
-	 * @see IDestination.shippingPhotoLinks
-	 * */
-	shipping_link?: string[];
 }
 
 /**
@@ -603,7 +620,7 @@ export interface IDestinationTransformer
  * */
 export interface IPaymentTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	/**
@@ -635,7 +652,7 @@ export interface IPaymentTransformer
  * */
 export interface ITransportTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	driverId?: string;
@@ -674,10 +691,6 @@ export interface ITransportTransformer
 	 * */
 	is_dedicated?: boolean;
 	/**
-	 * @see ITransport.certificateNumber
-	 * */
-	sts: string;
-	/**
 	 * @see ITransport.weightExtra
 	 * */
 	weight_extra?: number;
@@ -702,6 +715,23 @@ export interface ITransportTransformer
 	 * @see ITransport.loadingTypes
 	 * */
 	loading_types: LoadingType[];
+	/**
+	 * @see ITransport.certificateNumber
+	 * */
+	sts: string;
+	/**
+	 * Only for backward compatibility.
+	 * @deprecated Use instead `sts_link_front` and `sts_link_back`
+	 * */
+	sts_links?: string[];
+	/**
+	 * @see ITransport.certificatePhotoLinkFront
+	 * */
+	sts_link_front?: string;
+	/**
+	 * @see ITransport.certificatePhotoLinkBack
+	 * */
+	sts_link_back?: string;
 	/**
 	 * @see ITransport.osagoNumber
 	 * */
@@ -741,8 +771,8 @@ export interface ITransportTransformer
 export type TOfferDriverTransformer = Omit<TCreationAttribute<IOfferTransformer>, 'orderId'>;
 
 export type TTransformerResponse<T> = IModel |
-                                      IModel[] |
-                                      ITransformer[] |
-                                      IApiResponse<T> |
-                                      (T & any[]) |
-                                      TTransformerApiResponse;
+																			IModel[] |
+																			ITransformer[] |
+																			IApiResponse<T> |
+																			(T & any[]) |
+																			TTransformerApiResponse;

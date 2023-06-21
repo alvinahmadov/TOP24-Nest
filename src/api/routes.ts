@@ -76,34 +76,39 @@ export const routeConfig: TApiRouteList = {
 			path:        'bitrix',
 			description: 'Bitrix related operations.',
 			routes:      {
-				updateCargo: {
+				updateCargo:    {
 					path:   'cargo/:crmId',
 					method: RequestMethod.PUT,
 					api:    NApiDescriptors.bitrix.updateCargo
 				},
-				updateOrder: {
+				updateOrder:    {
 					path:   'order/:crmId',
 					method: RequestMethod.PUT,
 					api:    NApiDescriptors.bitrix.updateOrder
 				},
-				deleteOrder: {
+				deleteOrder:    {
 					path:   'order/:crmId',
 					method: RequestMethod.DELETE,
 					api:    NApiDescriptors.bitrix.deleteOrder
 				},
-				orders:      {
+				orders:         {
 					path:   'orders',
 					method: RequestMethod.GET,
 					api:    NApiDescriptors.bitrix.orders
 				},
-				sync:        {
+				sync:           {
 					path:   'orders',
 					method: RequestMethod.PATCH,
 					api:    NApiDescriptors.bitrix.sync
 				},
-				webhook:     {
+				listenWebhook:  {
 					path:   'webhook',
 					method: RequestMethod.POST,
+					api:    NApiDescriptors.bitrix.webhook
+				},
+				respondWebhook: {
+					path:   'webhook',
+					method: RequestMethod.GET,
 					api:    NApiDescriptors.bitrix.webhook
 				}
 			}
@@ -327,7 +332,17 @@ export const routeConfig: TApiRouteList = {
 					path:   'orders',
 					method: RequestMethod.POST,
 					api:    NApiDescriptors.generator.order
-				}
+				},
+				simulateStart:
+								 {
+									 path:   'simulate/start',
+									 method: RequestMethod.POST
+								 },
+				simulateEnd:
+								 {
+									 path:   'simulate/end',
+									 method: RequestMethod.POST
+								 }
 			}
 		},
 	image:
@@ -374,7 +389,7 @@ export const routeConfig: TApiRouteList = {
 				'order_association'
 			],
 			description: 'Offer operations between order and driver.'
-			             + '',
+									 + '',
 			routes:      {
 				list:      {
 					path:   '',
@@ -452,7 +467,7 @@ export const routeConfig: TApiRouteList = {
 		{
 			path:        'order',
 			description: 'Order related operations. '
-			             + 'Order data fetched from bitrix server to backend.',
+									 + 'Order data fetched from bitrix server to backend.',
 			routes:      {
 				list:
 					{
@@ -507,6 +522,16 @@ export const routeConfig: TApiRouteList = {
 						path:   'send/:id',
 						method: RequestMethod.GET,
 						api:    NApiDescriptors.order.send
+					},
+				setState:
+					{
+						path:   'state/:id',
+						method: RequestMethod.PUT
+					},
+				getState:
+					{
+						path:   'state/:id',
+						method: RequestMethod.GET
 					},
 				shipping:
 					{
@@ -613,6 +638,13 @@ export const routeConfig: TApiRouteList = {
 				addressLocation: {
 					path:   'address/location',
 					method: RequestMethod.POST
+				},
+				agreement:       {
+					path:   [
+						'agreement',
+						'agreement/:companyType'
+					],
+					method: RequestMethod.GET
 				},
 				filter:          {
 					path:   [
@@ -734,6 +766,21 @@ export const routeConfig: TApiRouteList = {
 						path:   'image/:transportId/:id',
 						method: RequestMethod.DELETE,
 						api:    NApiDescriptors.transport.image
+					},
+				certificate:
+					{
+						path:   'certificate/:id',
+						method: RequestMethod.POST
+					},
+				certificateFront:
+					{
+						path:   'cert_front/:id',
+						method: RequestMethod.POST
+					},
+				certificateBack:
+					{
+						path:   'cert_back/:id',
+						method: RequestMethod.POST
 					},
 				diag:
 					{

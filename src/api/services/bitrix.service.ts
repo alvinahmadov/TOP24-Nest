@@ -1,53 +1,62 @@
 import {
-	HttpStatus, Injectable,
+	HttpStatus,
+	Injectable,
 	Scope
-}                                               from '@nestjs/common';
+}                                from '@nestjs/common';
 import {
 	CARGO,
 	CARGOINN,
 	CRM,
 	ORDER,
 	TRANSPORT
-}                                               from '@config/json';
-import { WhereClause }                          from '@common/classes';
-import { BitrixUrl }                            from '@common/constants';
+}                                from '@config/json';
+import { WhereClause }           from '@common/classes';
+import { BitrixUrl }             from '@common/constants';
 import {
 	CompanyType,
 	OrderStage,
 	OrderStatus,
 	UserRole
-}                                               from '@common/enums';
+}                                from '@common/enums';
 import {
+	IApiResponse,
 	IApiResponses,
+	ICargoGatewayData,
 	ICompany,
+	IDriverGatewayData,
 	IOrder,
 	IService,
 	TAffectedRows,
-	TAsyncApiResponse,
 	TCRMResponse,
 	TOperationCount,
 	TUpdateAttribute
-}                                               from '@common/interfaces';
+}                                from '@common/interfaces';
 import {
 	formatArgs,
 	getCrm,
 	getTranslation,
 	isSuccessResponse,
 	orderFromBitrix
-}                                               from '@common/utils';
+}                                from '@common/utils';
 import {
 	Order,
 	Transport
-}                                               from '@models/index';
-import { DestinationRepository }                from '@repos/index';
-import { DestinationCreateDto, OrderCreateDto } from '@api/dto';
-import { NotificationGateway }                  from '@api/notifications';
-import Service                                  from './service';
-import CargoCompanyService                      from './cargo-company.service';
-import CargoCompanyInnService                   from './cargoinn-company.service';
-import OfferService                             from './offer.service';
-import OrderService                             from './order.service';
-import TransportService                         from './transport.service';
+}                                from '@models/index';
+import { DestinationRepository } from '@repos/index';
+import {
+	DestinationCreateDto,
+	OrderCreateDto
+}                                from '@api/dto';
+import {
+	FirebaseNotificationGateway,
+	SocketNotificationGateway
+}                                from '@api/notifications';
+import Service                   from './service';
+import CargoCompanyService       from './cargo-company.service';
+import CargoCompanyInnService    from './cargoinn-company.service';
+import OfferService              from './offer.service';
+import OrderService              from './order.service';
+import TransportService          from './transport.service';
 import ORDER_LST_URL = BitrixUrl.ORDER_LST_URL;
 import ORDER_GET_URL = BitrixUrl.ORDER_GET_URL;
 import COMPANY_GET_URL = BitrixUrl.COMPANY_GET_URL;
@@ -82,7 +91,8 @@ export default class BitrixService
 		protected readonly orderService: OrderService,
 		protected readonly offerService: OfferService,
 		protected readonly transportService: TransportService,
-		private readonly gateway: NotificationGateway
+		private readonly fcmGateway: FirebaseNotificationGateway,
+		private readonly socketGateway: SocketNotificationGateway,
 	) {
 		super();
 	}
@@ -155,7 +165,7 @@ export default class BitrixService
 	 * @returns {{affectedCount: number}} Affected items in database.
 	 * */
 	public async synchronizeOrders(reset?: boolean)
-		: TAsyncApiResponse<TOperationCount> {
+		: Promise<IApiResponse<TOperationCount>> {
 		let updatedCount: number = 0;
 		let createdCount: number = 0;
 		const orderIds: string[] = [];
@@ -203,7 +213,7 @@ export default class BitrixService
 		if(reset) {
 			const { data: orders } = await this.orderService.getList();
 			const orderIdsToDelete = orders.filter(
-				order => (
+				(order) => (
 					// Exclude created orders from crm
 					!orderIds.some(orderId => orderId === order.id) &&
 					// Exclude updated orders from crm
@@ -214,16 +224,16 @@ export default class BitrixService
 			const {
 				affectedCount: deletedCount
 			} = await this.orderService
-			              .deleteAll(
-				              WhereClause
-					              .get<IOrder>()
-					              .in('id', orderIdsToDelete)
-					              .query
-			              );
+										.deleteAll(
+											WhereClause
+												.get<IOrder>()
+												.in('id', orderIdsToDelete)
+												.query
+										);
 
 			return {
 				statusCode: createdCount > updatedCount ? HttpStatus.CREATED
-				                                        : HttpStatus.OK,
+																								: HttpStatus.OK,
 				data:       {
 					createdCount,
 					updatedCount,
@@ -234,7 +244,7 @@ export default class BitrixService
 
 		return {
 			statusCode: createdCount > updatedCount ? HttpStatus.CREATED
-			                                        : HttpStatus.OK,
+																							: HttpStatus.OK,
 			data:       {
 				createdCount,
 				updatedCount,
@@ -255,7 +265,7 @@ export default class BitrixService
 	public async updateCargo(
 		crmId: number,
 		cargo?: TUpdateAttribute<ICompany>
-	): TAsyncApiResponse<ICompany> {
+	): Promise<IApiResponse<ICompany>> {
 		if(cargo) {
 			const { data: item } = await this.cargoService.getByCrmId(crmId);
 			if(item) {
@@ -278,17 +288,18 @@ export default class BitrixService
 					if(cargo.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
 
 					await cargo.save({ fields: ['confirmed'] })
-					           .then((res) =>
-					                 {
-						                 this.gateway.sendCargoNotification(
-							                 {
-								                 id:     res.id,
-								                 event:  'cargo',
-								                 source: 'bitrix',
-								                 message
-							                 }
-						                 );
-					                 });
+										 .then((res) => {
+											 const options = { roles: [UserRole.CARGO] };
+											 const data: ICargoGatewayData = {
+												 id:     res.id,
+												 event:  'cargo',
+												 source: 'bitrix',
+												 message
+											 };
+
+											 this.socketGateway.sendCargoNotification(data, options);
+											 this.fcmGateway.sendCargoNotification(data, options);
+										 });
 
 					return {
 						statusCode: 200,
@@ -302,17 +313,18 @@ export default class BitrixService
 					if(cargoinn.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
 
 					await cargoinn.save({ fields: ['confirmed'] })
-					              .then((res) =>
-					                    {
-						                    this.gateway.sendCargoNotification(
-							                    {
-								                    id:     res.id,
-								                    event:  'cargo',
-								                    source: 'bitrix',
-								                    message
-							                    }
-						                    );
-					                    });
+												.then((res) => {
+													const options = { roles: [UserRole.CARGO] };
+													const data: ICargoGatewayData = {
+														id:     res.id,
+														event:  'cargo',
+														source: 'bitrix',
+														message
+													};
+
+													this.socketGateway.sendCargoNotification(data, options);
+													this.fcmGateway.sendCargoNotification(data, options);
+												});
 
 					return {
 						statusCode: 200,
@@ -327,7 +339,7 @@ export default class BitrixService
 	}
 
 	public async updateTransport(crmId: number)
-		: TAsyncApiResponse<Transport | null> {
+		: Promise<IApiResponse<Transport | null>> {
 		const { result } = await this.httpClient.post<TCRMResponse>(`${CONTACT_GET_URL}?ID=${crmId}`);
 		const crmItem = getCrm(result);
 		let message: string = '';
@@ -339,20 +351,17 @@ export default class BitrixService
 			if(transport) {
 				transport.confirmed = Number(crmItem[TRANSPORT.CONFIRMED]) === 1;
 				await transport.save({ fields: ['confirmed'] })
-				               .then(() =>
-				                     {
-					                     this.gateway.sendDriverNotification(
-						                     {
-							                     id:     transport.driverId,
-							                     source: 'bitrix',
-							                     message
-						                     },
-						                     {
-							                     role: UserRole.CARGO,
-							                     url:  'Main'
-						                     }
-					                     );
-				                     });
+											 .then(() => {
+												 const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
+												 const data: IDriverGatewayData = {
+													 id:     transport.driverId,
+													 source: 'bitrix',
+													 message
+												 };
+
+												 this.socketGateway.sendDriverNotification(data, options);
+												 this.fcmGateway.sendDriverNotification(data, options);
+											 });
 
 				return {
 					statusCode: 200,
@@ -376,31 +385,17 @@ export default class BitrixService
 	public async synchronizeOrder(
 		crmId: number,
 		isUpdateRequest: boolean = false
-	): TAsyncApiResponse<Order> {
+	): Promise<IApiResponse<Order>> {
 		try {
 			const { result } = await this.httpClient.get<TCRMResponse>(`${ORDER_GET_URL}?ID=${crmId}`);
 			const crmItem = getCrm(result);
 
 			if(crmItem) {
-				let clientContact = null;
-				const crmClientId = Number(crmItem[ORDER.CRM_CLIENT_ID] || -1);
-
-				if(crmItem[ORDER.STAGE] === 'LOSE') {
-					const crmId = Number(crmItem[ORDER.ID]);
-					const apiResponse = await this.orderService.getByCrmId(crmId);
-
-					if(isSuccessResponse(apiResponse)) {
-						const { data: order } = apiResponse;
-						await this.offerService.cancelAll(order.id, order.crmTitle);
-					}
-
-					return { statusCode: 200, message: 'Order is cancelled from bitrix.' };
-				}
-
 				if(
 					crmItem[ORDER.CATEGORY] !== '0' ||
-					crmItem[ORDER.STAGE] === 'WON' ||
-					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N'
+					crmItem['IS_MANUAL_OPPORTUNITY'] === 'N' ||
+					crmItem[ORDER.STAGE] === 'NEW' ||
+					crmItem[ORDER.STAGE] === 'PREPARATION'
 				) return { statusCode: 200, message: 'Invalid order source/stage' };
 
 				const { orderDto, destinationDtos } = await orderFromBitrix(
@@ -408,32 +403,14 @@ export default class BitrixService
 					{ debug: !isUpdateRequest && debugBitrixOrder }
 				);
 
-				if(crmClientId > 0) {
-					const { result } = await this.httpClient.get<TCRMResponse>(
-						`${COMPANY_GET_URL}?ID=${crmClientId}`
-					);
-
-					const crmClient = getCrm(result);
-
-					if(crmClient) {
-						if(crmClient[CARGO.TYPE] === CRM.COMPANY.TYPES[CompanyType.ORG].ID) { //Юрлицо
-							clientContact = crmClient[CARGO.CEO];
-						}
-						else {
-							clientContact = crmClient[CARGOINN.NAME.FIRST];
-						}
-					}
-
-					if(clientContact) {
-						if(destinationDtos?.length > 0)
-							destinationDtos[0].contact = clientContact;
-					}
-				}
-
 				if(orderDto.stage >= OrderStage.PAYMENT_RECEIVED) {
 					orderDto.onPayment = false;
 					orderDto.isCurrent = false;
 					orderDto.status = OrderStatus.FINISHED;
+				}
+				else if(orderDto.stage === OrderStage.DOCUMENT_SENT ||
+								orderDto.stage === OrderStage.PAYMENT_FORMED) {
+					orderDto.onPayment = true;
 				}
 				let { data: order } = await this.orderService.getByCrmId(crmId);
 
@@ -442,34 +419,44 @@ export default class BitrixService
 						return this.orderService.update(order.id, { hasSent: false });
 					}
 
-					if(orderDto.isCanceled) {
-						if(order.driverId) {
+					if(orderDto.isCanceled || orderDto.stage === OrderStage.LOSE) {
+						if(orderDto.isCanceled && order.driverId) {
 							await this.offerService.declineOffer(order.id, order.driverId, undefined, UserRole.LOGIST);
 						}
 						await this.offerService.cancelAll(order.id, order.crmTitle);
 					}
 
 					if(orderDto.stage === OrderStage.DOCUMENT_SENT) {
-						this.gateway.sendDriverNotification(
-							{
-								id:      order.driverId,
-								message: formatArgs(ORDER_EVENT_TRANSLATIONS['DOCUMENT_SENT'], 'г. Краснодар', 'ООО 24ТОП')
-							},
-							{
-								role: UserRole.CARGO,
-								url:  'Main'
-							}
-						);
+						const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
+						const data: IDriverGatewayData = {
+							id:      order.driverId,
+							message: formatArgs(ORDER_EVENT_TRANSLATIONS['DOCUMENT_SENT'], 'г. Краснодар', 'ООО 24ТОП')
+						};
+
+						this.socketGateway.sendDriverNotification(data, options);
+						this.fcmGateway.sendDriverNotification(data, options);
 					}
 
-					const updateResponse = await this.orderService
-					                                 .update(order.id, { ...orderDto, hasSent: true });
+					const updateDestinations = order.destinations.some(
+						dest => dest.hasDiff(destinationDtos.find(d => d.point === dest.point))
+					);
 
-					if(isSuccessResponse(updateResponse)) {
-						const order = updateResponse.data;
+					delete orderDto.currentPoint;
+					delete orderDto.execState;
+
+					const updateResponse = await this.orderService.update(order.id, orderDto);
+
+					if(updateDestinations) {
 						const repo = this.destinationRepo;
 
-						destinationDtos.forEach(dto => dto.orderId = order.id);
+						destinationDtos.forEach(
+							dto => {
+								dto.orderId = order.id;
+								delete dto.distance;
+								delete dto.fulfilled;
+								delete dto.atNearestDistanceToPoint;
+							}
+						);
 						await Promise.all(
 							destinationDtos
 								.map(
@@ -477,11 +464,11 @@ export default class BitrixService
 								)
 						);
 					}
+
 					return updateResponse;
 				}
 				else {
-					const createResponse = await this.orderService
-					                                 .create(orderDto);
+					const createResponse = await this.orderService.create(orderDto);
 
 					if(isSuccessResponse(createResponse)) {
 						const order = createResponse.data;
@@ -505,7 +492,8 @@ export default class BitrixService
 	 * @summary Deletes order from bitrix
 	 * @param {Number!} crmId CRM id of order to delete from bitrix
 	 * */
-	public async deleteOrder(crmId: number): TAsyncApiResponse<TAffectedRows> {
+	public async deleteOrder(crmId: number)
+		: Promise<IApiResponse<TAffectedRows>> {
 		const { data: order } = await this.orderService.getByCrmId(crmId);
 		if(order) {
 			await this.offerService.cancelAll(order.id, order.crmTitle);

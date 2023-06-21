@@ -1,10 +1,11 @@
 import { config }            from 'dotenv';
 import * as pgStringParser   from 'pg-connection-string';
 import { EnvironmentParser } from '@common/classes';
+import { IEnvParseOutput }   from '@common/interfaces';
 
 config();
 
-const parser: EnvironmentParser = new EnvironmentParser('.env');
+const parser: EnvironmentParser<IEnvParseOutput> = new EnvironmentParser('.env');
 
 /**@ignore*/
 const herokuData = parser.hasValue('DATABASE_URL')

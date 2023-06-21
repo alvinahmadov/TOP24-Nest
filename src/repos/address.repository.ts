@@ -130,28 +130,28 @@ export default class AddressRepository
 		listFilter?: IListFilter,
 		onlyRegions: boolean = false
 	): Promise<Address[]> {
+		term = term?.toLowerCase() ?? '';
+		const {
+			from:  offset,
+			count: limit
+		} = listFilter ?? {};
+				
 		return this.log(
-			async() =>
+			() =>
 			{
-				term = term?.toLowerCase() ?? '';
-				const {
-					from:  offset,
-					count: limit
-				} = listFilter ?? {};
-
-				if(onlyRegions) {
-					return this.model.sequelize.query<Address>(
-						`SELECT DISTINCT ON(region) * FROM addresses WHERE region ILIKE '${term}%'`,
-						{ type: QueryTypes.SELECT }
-					);
-				}
+				// if(onlyRegions) {
+				// 	return this.model.sequelize.query<Address>(
+				// 		`SELECT DISTINCT ON(region) * FROM addresses WHERE region ILIKE '${term}%'`,
+				// 		{ type: QueryTypes.SELECT }
+				// 	);
+				// }
 
 				return this.model.findAll(
 					{
 						where: this.whereClause('or')
-						           .iLike('city', `${term}%`, false)
-						           .iLike('region', `${term}%`, false)
-						           .iLike('settlement', `${term}%`, false)
+						           .iLike('city', term, false)
+						           .iLike('region', term, false)
+						           .iLike('settlement', term, false)
 							       .query,
 						order: [['region', 'ASC']],
 						offset,

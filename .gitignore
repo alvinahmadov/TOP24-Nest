@@ -46,7 +46,7 @@ swagger.yaml
 
 /misc
 /docs
-/resources/storage/*/
+/resources/storage/*
 /db/migrations/*.js
 /seeders/*.js
 !/seeders/seeds/*.js

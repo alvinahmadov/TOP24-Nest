@@ -1,23 +1,26 @@
-import { MAX_FLOAT, MIN_FLOAT } from '@common/constants';
+import {
+	MAX_FLOAT,
+	MIN_FLOAT
+}                from '@common/constants';
 import {
 	loadingTypeToStr,
 	OrderStage,
 	TransportStatus
-}                               from '@common/enums';
+}                from '@common/enums';
 import {
 	ICompany,
 	ICompanyTransportFilter,
 	IDriverFilter,
 	IOrder,
 	ITransportFilter
-}                               from '@common/interfaces';
+}                from '@common/interfaces';
 import {
 	min,
 	transformDriverTransports
-}                               from '@common/utils';
-import Driver                   from '@models/driver.entity';
-import Order                    from '@models/order.entity';
-import Transport                from '@models/transport.entity';
+}                from '@common/utils';
+import Driver    from '@models/driver.entity';
+import Order     from '@models/order.entity';
+import Transport from '@models/transport.entity';
 
 const debugTransportFilter = false;
 const debugDirectionFilter = false;
@@ -34,8 +37,7 @@ const checkAgainst = (
 	name: string,
 	cb?: (v: any) => string,
 	identifier?: string
-): boolean =>
-{
+): boolean => {
 	if(!hasValues(filterValues))
 		return true;
 
@@ -59,8 +61,7 @@ const checkAgainst = (
 	return true;
 };
 
-const checkAgainstIn = (value: any, filterValues: any[], name: string, identifier?: string): boolean =>
-{
+const checkAgainstIn = (value: any, filterValues: any[], name: string, identifier?: string): boolean => {
 	if(!hasValues(filterValues))
 		return true;
 
@@ -133,16 +134,14 @@ export function filterDirections(
 
 	let contains: boolean[] = [];
 
-	const checkCompanyDirection = (companyDirection: string) =>
-	{
+	const checkCompanyDirection = (companyDirection: string) => {
 		if(companyDirection === null)
 			return;
 
 		const directionParts = companyDirection.split(sep);
 
 		directions.forEach(
-			(direction: string) =>
-			{
+			(direction: string) => {
 				for(const companyDirectionPart of directionParts) {
 					const res = RegExp(direction.trim(), 'gium')
 						.test(companyDirectionPart.trim());
@@ -194,13 +193,16 @@ export function checkTransportRequirements(
 		pallets: filter?.pallets ?? 0
 	};
 
-	const setMessage = (paramName: string, { min = MIN_FLOAT, max = MAX_FLOAT }: { min?: number, max?: number }, param: number) =>
+	const setMessage = (paramName: string, { min = MIN_FLOAT, max = MAX_FLOAT }: {
+		min?: number,
+		max?: number
+	}, param: number) =>
 		`Ваш транспорт не соответствует по параметру ${paramName} груза: (Г) [${min}, ${max}] против (Т) ${param}.`;
 
 	const weight = (transport.weightExtra > 0 ? transport.weightExtra : transport.weight) +
-	               (trailer?.weight ?? 0),
+								 (trailer?.weight ?? 0),
 		volume = (transport.volumeExtra > 0 ? transport.volumeExtra : transport.volume) +
-		         (trailer?.volume ?? 0),
+						 (trailer?.volume ?? 0),
 		pallets = (transport.pallets ?? 0) + (trailer?.pallets ?? 0);
 
 	let height = transport.height,
@@ -216,12 +218,12 @@ export function checkTransportRequirements(
 			length = min(transport.length, trailer.length);
 	}
 
-	const matchesWeight = paramFilter.weightMin <= weight && weight <= paramFilter.weightMax,
-		matchesVolume = paramFilter.volumeMin <= volume && volume <= paramFilter.volumeMax,
-		matchesHeight = paramFilter.heightMin <= height && height <= paramFilter.heightMax,
-		matchesWidth = paramFilter.widthMin <= width && width <= paramFilter.widthMax,
-		matchesLength = paramFilter.lengthMin <= length && length <= paramFilter.lengthMax,
-		matchesPallet = paramFilter.pallets <= pallets;
+	const matchesWeight = paramFilter.weightMin <= weight && weight < paramFilter.weightMax,
+		matchesVolume = paramFilter.volumeMin <= volume && volume < paramFilter.volumeMax,
+		matchesHeight = paramFilter.heightMin <= height && height < paramFilter.heightMax,
+		matchesWidth = paramFilter.widthMin <= width && width < paramFilter.widthMax,
+		matchesLength = paramFilter.lengthMin <= length && length < paramFilter.lengthMax,
+		matchesPallet = paramFilter.pallets > 0 ? pallets < paramFilter.pallets : true;
 
 	if(!messageObj) messageObj = { message: '' };
 
@@ -283,8 +285,7 @@ export function filterTransports(
 	const isActive = (transport: Transport) => !!onlyActive ? transport.status === TransportStatus.ACTIVE : true;
 	const isTrailer = (transport: Transport) => transport.isTrailer;
 
-	const getSummedParams = (transport: Transport, trailer?: Transport): Transport =>
-	{
+	const getSummedParams = (transport: Transport, trailer?: Transport): Transport => {
 		if(transport.weightExtra > 0) transport.weight = transport.weightExtra;
 		if(transport.volumeExtra > 0) transport.volume = transport.volumeExtra;
 
@@ -303,23 +304,22 @@ export function filterTransports(
 		checkAgainst(transport.riskClasses, riskClasses, 'risk class', undefined, 'filterTransports');
 	const checkLoadingTypes = (transport: Transport): boolean =>
 		checkAgainst(transport.loadingTypes, loadingTypes.map(t => Number(t)),
-		             'loading type', loadingTypeToStr, 'filterTransports');
+			'loading type', loadingTypeToStr, 'filterTransports');
 	const checkPayloads = (transport: Transport): boolean =>
 		checkAgainst(transport.payloads ?? [], payloads, 'payloads', undefined, 'filterTransports');
 
-	const checkDedicated = (transport: Transport): boolean =>
-	{
+	const checkDedicated = (transport: Transport): boolean => {
 		if(filter.isDedicated) {
 			if(transport.payloadExtra) {
-				console.debug(`filterTransports: No match for dedicated transport, requested 'isDedicated: ${filter.isDedicated}'.`);
+				if(debugTransportFilter)
+					console.debug(`filterTransports: No match for dedicated transport, requested 'isDedicated: ${filter.isDedicated}'.`);
 				return false;
 			}
 		}
 		return true;
 	};
 
-	const checkExtraPayload = (transport: Transport): boolean =>
-	{
+	const checkExtraPayload = (transport: Transport): boolean => {
 		if(filter.payloadExtra) {
 			if(!transport.payloadExtra) {
 				console.debug(`filterTransports: No match for extra payload transport, requested 'isPayloadExtra: ${filter.payloadExtra}'.`);
@@ -349,7 +349,7 @@ export function filterTransports(
 
 	for(const mainTransport of mainTransports) {
 		const transportTrailer = trailers.find(trailer => trailer.driverId === mainTransport.driverId &&
-		                                                  trailer.status === TransportStatus.ACTIVE);
+																											trailer.status === TransportStatus.ACTIVE);
 
 		let transport: Transport = null;
 		if(
@@ -373,7 +373,8 @@ export function filterTransports(
 	return transportsWithTrailers;
 }
 
-export function filterMatchingDrivers(driver: Driver, requirements: ICompanyTransportFilter = {}){
+// noinspection JSUnusedGlobalSymbols
+export function filterMatchingDrivers(driver: Driver, requirements: ICompanyTransportFilter = {}) {
 	return filterTransports(driver.transports, requirements)?.length > 0;
 }
 
@@ -417,7 +418,7 @@ export function filterDrivers(
 	full: boolean = false,
 	offset: number = 0
 ) {
-	if(filter?.term !== undefined) {
+	if(filter?.term) {
 		if(filter.term.length < offset)
 			return [];
 
@@ -426,16 +427,21 @@ export function filterDrivers(
 			term
 		} = filter;
 
-		const matchesTerm = (a: string, b: string): boolean =>
-			(a && b) ? a.search(RegExp(b, 'guim')) >= 0 : false;
+		const matchesTerm = (a: string, b: string): boolean => {
+			if(!a || !b) return false;
+
+			if(!a.length && !b.length)
+				return false;
+
+			return a.search(RegExp(b, 'guim')) >= 0;
+		};
 
 		return (
 			full ? drivers.map(transformDriverTransports)
-			     : drivers
+					 : drivers
 		)
 			.filter(
-				(driver: Driver) =>
-				{
+				(driver: Driver) => {
 					const matchList: boolean[] = [];
 
 					if(driver) {
@@ -446,7 +452,8 @@ export function filterDrivers(
 							matchesTerm(driver.phone, term),
 							matchesTerm(driver.currentAddress, term),
 							matchesTerm(driver.registrationAddress, term),
-							matchesTerm(driver.address, term)
+							matchesTerm(driver.address, term),
+							matchesTerm(driver.info, term)
 						);
 
 						if(driver.order) {
@@ -461,12 +468,16 @@ export function filterDrivers(
 						if(driver.transports) {
 							driver.transports.forEach(
 								(transport) =>
-									matchList.push(matchesTerm(transport.registrationNumber, term))
+									matchList.push(
+										matchesTerm(transport.registrationNumber, term),
+										matchesTerm(transport.comments, term),
+										matchesTerm(transport.info, term)
+									)
 							);
 						}
 					}
 
-					return matchList.some(v => v === true);
+					return matchList.some(v => v);
 				}
 			);
 	}

@@ -1,6 +1,9 @@
 import { Injectable, Logger }   from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import {
+	LAST_24_HOURS,
+	LAST_6_HOURS,
+	LAST_1_HOUR,
 	MILLIS,
 	TIMEZONE
 }                               from '@common/constants';
@@ -19,15 +22,21 @@ import {
 }                               from '@common/utils';
 import { Order }                from '@models/index';
 import EntityFCMRepository      from '@repos/fcm.repository';
-import { NotificationGateway }  from '@api/notifications';
+import {
+	FirebaseNotificationGateway
+}                               from '@api/notifications';
 import DriverService            from './driver.service';
 import OrderService             from './order.service';
 
 const ORDER_EVENT_TRANSLATION = getTranslation('EVENT', 'ORDER');
-
-const LAST_24H = 1,
-	LAST_6H = 0.25,
-	LAST_1H = 0.041666666666666664;
+const DEBUG = false;
+const PROCESSING_STAGES: OrderStage[] = [
+	OrderStage.SIGNED_DRIVER,
+	OrderStage.SIGNED_OWNER,
+	OrderStage.CARRYING,
+	OrderStage.CONTINUE,
+	OrderStage.DELIVERED
+];
 
 // In range of [h1; h2)
 const inTimeRange = (
@@ -36,42 +45,42 @@ const inTimeRange = (
 	startTime: number = 0
 ) => startTime < time && time <= endTime;
 
+const getTimeDiff = (start: Date, end: Date = new Date()): number =>
+	end.getMilliseconds() - start.getMilliseconds();
+
 @Injectable()
 export default class TaskService
 	implements IService {
 	private readonly logger = new Logger(TaskService.name);
 	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: true });
+	public static readonly DATE_INTERVAL: string = !DEBUG ? CronExpression.EVERY_HOUR
+	                                                      : CronExpression.EVERY_MINUTE;
 
 	constructor(
 		protected readonly driverService: DriverService,
 		protected readonly orderService: OrderService,
-		protected readonly notifications: NotificationGateway
+		protected readonly fcmGateway: FirebaseNotificationGateway
 	) {
 		this.driverService.log = false;
 		this.orderService.log = false;
 	}
 
-	@Cron(CronExpression.EVERY_HOUR, { timeZone: TIMEZONE })
+	@Cron(TaskService.DATE_INTERVAL, { timeZone: TIMEZONE })
 	public async dateTask() {
-		const now = new Date();
-		this.logger.log(`Running task "dateTask" at ${now.toLocaleString()}.`);
+		const startDate = new Date();
 		const { data: orders } = await this.orderService.getList(
 			{ full: false },
 			{
 				hasDriver: true,
 				status:    OrderStatus.PROCESSING,
-				stages:    [
-					OrderStage.SIGNED_DRIVER,
-					OrderStage.SIGNED_OWNER,
-					OrderStage.CARRYING,
-					OrderStage.CONTINUE,
-					OrderStage.DELIVERED
-				]
+				stages:    PROCESSING_STAGES
 			}
 		);
+		this.logger.log(`Running task "dateTask" at ${startDate.toLocaleString()} for ${orders?.length || 0} orders.`);
 
 		if(orders?.length > 0) {
 			await this.sendDestinationDateNotification(orders);
+			this.logger.log(`Finished task "dateTask" in ${getTimeDiff(startDate)} ms.`);
 		}
 		else {
 			this.logger.log('No orders to watch for!');
@@ -87,52 +96,52 @@ export default class TaskService
 			const fcmData = await this.fcmEntityRepo.getByEntityId(order.driverId);
 
 			if(destination && fcmData) {
-				// @ts-ignore
-				let timeDiff: number = (destination.date - now) / MILLIS;
+				//@ts-ignore
+				let timeDiff: number = Math.abs(destination.date - now) / MILLIS;
 
-				if(timeDiff < 0)
-					timeDiff *= -1.0;
-
-				if(timeDiff <= LAST_24H) {
+				if(timeDiff <= LAST_24_HOURS) {
 					const notifData: IDriverGatewayData = {
 						id:      order.driverId,
-						source:  'task',
 						message: ''
 					};
 					const title = order.crmTitle ?? '';
 					let {
-						passed24H,
-						passed6H,
-						passed1H
-					} = fcmData ?? {};
+						left24H,
+						left6H,
+						left1H
+					} = order ?? {};
 
-					if(inTimeRange(timeDiff, LAST_24H, LAST_6H) && !passed24H) {
+					if(inTimeRange(timeDiff, LAST_24_HOURS, LAST_6_HOURS) && !left24H) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_24H'], title);
+						notifData.source = 'task24h'
 
-						passed24H = true;
+						left24H = true;
 					}
-					else if(inTimeRange(timeDiff, LAST_6H, LAST_1H) && !passed6H) {
+					else if(inTimeRange(timeDiff, LAST_6_HOURS, LAST_1_HOUR) && !left6H) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_6H'], title);
+						notifData.source = 'task6h'
 
-						passed24H = true;
-						passed6H = true;
+						left24H = true;
+						left6H = true;
 					}
-					else if(inTimeRange(timeDiff, LAST_1H, 0) && !passed1H) {
+					else if(inTimeRange(timeDiff, LAST_1_HOUR, 0) && !left1H) {
 						notifData.message = formatArgs(ORDER_EVENT_TRANSLATION['LAST_1H'], title);
+						notifData.source = 'task1h';
 
-						passed24H = true;
-						passed6H = true;
-						passed1H = true;
+						left24H = true;
+						left6H = true;
+						left1H = true;
 					}
 					else return;
 
 					notifyData.push(notifData);
-					this.notifications.sendDriverNotification(notifData, { role: UserRole.CARGO, url: 'Main' });
+					this.fcmGateway.sendDriverNotification(
+						notifData,
+						{ roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' }
+					);
 
 					if(fcmData)
-						this.fcmEntityRepo
-						    .update(fcmData.id, { passed24H, passed6H, passed1H })
-						    .catch(console.error);
+						await this.orderService.update(order.id, { left24H, left6H, left1H });
 				}
 			}
 		}

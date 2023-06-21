@@ -4,6 +4,7 @@ import {
 	IDriver,
 	IDriverFilter,
 	IListFilter,
+	IOrder,
 	IRepository,
 	IRepositoryOptions,
 	ITransport,
@@ -97,7 +98,6 @@ export default class DriverRepository
 			isReady,
 			...rest
 		} = filter ?? {};
-
 		let hasTerm: boolean = term !== undefined && term !== '';
 
 		if(hasTerm) {
@@ -106,25 +106,34 @@ export default class DriverRepository
 		}
 		const conjunct: 'and' | 'or' | null = (strict === undefined || strict === true) ? 'and' : 'or';
 
+		const includables: Includeable[] = [...driverDefaultIncludeables];
+
+		if(orderStatus !== undefined)
+			includables.push({
+				model:    Order,
+				required: false,
+				where:    this.whereClause<IOrder>().eq('status', orderStatus).query
+			});
+
 		return this.log(
 			() => this.model.findAll(
 				{
 					where:   hasTerm
-					         ? this.whereClause(conjunct)
-					               .eq('cargoId', rest?.cargoId)
-					               .eq('cargoinnId', rest?.cargoinnId)
-					               .eq('isReady', isReady)
-					               .lte('payloadDate', payloadDate)
-					               .in('status', statuses)
-						         .query
-					         : this.whereClause(conjunct)
-					               .eq('isReady', isReady)
-					               .in('phone', [rest?.phone, formatPhone(rest?.phone)])
-					               .iLike('name', name)
-					               .iLike('patronymic', patronymic)
-					               .iLike('lastName', lastName)
-					               .iLike('address', address)
-					               .iLike('registrationAddress', registrationAddress)
+									 ? this.whereClause(conjunct)
+												 .eq('cargoId', rest?.cargoId)
+												 .eq('cargoinnId', rest?.cargoinnId)
+												 .eq('isReady', isReady)
+												 .lte('payloadDate', payloadDate)
+												 .in('status', statuses)
+										 .query
+									 : this.whereClause(conjunct)
+												 .eq('isReady', isReady)
+												 .in('phone', [rest?.phone, formatPhone(rest?.phone)])
+												 .iLike('name', name)
+												 .iLike('patronymic', patronymic)
+												 .iLike('lastName', lastName)
+												 .iLike('address', address)
+												 .iLike('registrationAddress', registrationAddress)
 					               .iLike('currentAddress', currentAddress)
 					               .lte('payloadDate', payloadDate)
 					               .in('status', statuses)
@@ -139,8 +148,12 @@ export default class DriverRepository
 							model:   Transport,
 							include: [{ model: Image }]
 						},
-						{ model: Order }
-					] : driverDefaultIncludeables
+						{
+							model:    Order,
+							required: false,
+							where:    this.whereClause<IOrder>().eq('status', orderStatus).query
+						}
+					] : includables
 				}
 			),
 			{ id: 'getList' },

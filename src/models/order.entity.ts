@@ -1,4 +1,4 @@
-import { FindOptions }              from 'sequelize';
+import { FindOptions }  from 'sequelize';
 import {
 	BelongsTo,
 	DefaultScope,
@@ -6,31 +6,37 @@ import {
 	HasMany,
 	IsUUID,
 	Table
-}                                   from 'sequelize-typescript';
+}                       from 'sequelize-typescript';
 import {
 	Field,
-	InterfaceType,
 	ObjectType
-}                                   from '@nestjs/graphql';
-import { ApiProperty }              from '@nestjs/swagger';
-import { ORDER }                    from '@config/json';
+}                       from '@nestjs/graphql';
+import { ApiProperty }  from '@nestjs/swagger';
+import { ORDER }        from '@config/json';
 import {
 	LoadingType,
 	OrderStage,
 	OrderStatus
-}                                   from '@common/enums';
-import { UuidScalar }               from '@common/scalars';
-import { Reference, TABLE_OPTIONS } from '@common/constants';
+}                       from '@common/enums';
 import {
-	ICRMEntity,
-	Index,
-	IOrder,
-	IOrderFilter,
+	OrderExecutionState,
+	OrderFilter
+}                       from '@common/classes/order';
+import { UuidScalar }   from '@common/scalars';
+import {
+	Reference,
+	DEFAULT_ORDER_STATE,
+	TABLE_OPTIONS
+}                       from '@common/constants';
+import {
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
+	ICRMEntity,
+	Index,
 	IntArrayColumn,
 	IntColumn,
+	IOrder,
 	JsonbColumn,
 	StringArrayColumn,
 	StringColumn,
@@ -38,18 +44,18 @@ import {
 	TGeoCoordinate,
 	UuidColumn,
 	VirtualColumn
-}                                   from '@common/interfaces';
-import { entityConfig }             from '@api/swagger/properties';
+}                       from '@common/interfaces';
+import { entityConfig } from '@api/swagger/properties';
 import {
 	convertBitrix,
 	isDedicatedOrder,
 	isExtraPayloadOrder
-}                                   from '@common/utils';
-import EntityModel                  from './entity-model';
-import CargoCompany                 from './cargo.entity';
-import CargoCompanyInn              from './cargo-inn.entity';
-import Destination                  from './destination.entity';
-import Driver                       from './driver.entity';
+}                       from '@common/utils';
+import EntityModel      from './entity-model';
+import CargoCompany     from './cargo.entity';
+import CargoCompanyInn  from './cargo-inn.entity';
+import Destination      from './destination.entity';
+import Driver           from './driver.entity';
 
 const { order: prop } = entityConfig;
 
@@ -62,81 +68,6 @@ const scopeOptions: FindOptions = {
 		}
 	]
 };
-
-@InterfaceType()
-export class OrderFilter
-	implements IOrderFilter {
-	/**
-	 * Minimal weight limit for order.
-	 * */
-	weightMin?: number;
-	/**
-	 * Maximal weight limit for order.
-	 * */
-	weightMax?: number;
-	/**
-	 * Minimal volume limit for order.
-	 * */
-	volumeMin?: number;
-	/**
-	 * Maximal volume limit for order.
-	 * */
-	volumeMax?: number;
-	/**
-	 * Minimal length limit for order.
-	 * */
-	lengthMin?: number;
-	/**
-	 * Maximal length limit for order.
-	 * */
-	lengthMax?: number;
-	/**
-	 * Minimal width limit for order.
-	 * */
-	widthMin?: number;
-	/**
-	 * Maximal width limit for order.
-	 * */
-	widthMax?: number;
-	/**
-	 * Minimal width limit for order.
-	 * */
-	heightMin?: number;
-	/**
-	 * Maximal height limit for order.
-	 * */
-	heightMax?: number;
-	/**
-	 * Types of transport for order.
-	 * */
-	types?: string[];
-	/**
-	 * Number of pallets of transport for order.
-	 * */
-	pallets?: number;
-	/**
-	 * For dedicated transports only.
-	 * */
-	isDedicated?: boolean;
-	/**
-	 * Capability for taking extra payload.
-	 * */
-	payloadExtra?: boolean;
-	/**
-	 * Payload filter.
-	 * */
-	payload?: string;
-	payloadType?: string;
-	loadingTypes?: LoadingType[];
-	status?: OrderStatus;
-	riskClass?: string;
-	paymentTypes?: string[];
-	dedicated?: string;
-	directions?: string[];
-	hasDriver?: boolean;
-	fromDate?: Date | string;
-	toDate?: Date | string;
-}
 
 /**
  * Order model for cargo company
@@ -302,12 +233,32 @@ export default class Order
 	@FloatColumn()
 	bidPriceVat?: number;
 
+	@ApiProperty(prop.currentPoint)
+	@StringColumn({ defaultValue: '' })
+	currentPoint?: string;
+
+	@HasMany(() => Destination, 'orderId')
+	destinations?: Destination[];
+
+	@ApiProperty(prop.execState)
+	@JsonbColumn({ defaultValue: DEFAULT_ORDER_STATE })
+	execState?: OrderExecutionState;
+
 	@ApiProperty(prop.filter)
 	@JsonbColumn()
 	filter?: OrderFilter;
 
 	@BooleanColumn({ defaultValue: false })
 	hasSent: boolean;
+
+	@BooleanColumn({ defaultValue: false, field: 'left_24h' })
+	left24H?: boolean;
+
+	@BooleanColumn({ defaultValue: false, field: 'left_6h' })
+	left6H?: boolean;
+
+	@BooleanColumn({ defaultValue: false, field: 'left_1h' })
+	left1H?: boolean;
 
 	@ApiProperty(prop.driverDeferralConditions)
 	@StringColumn()
@@ -329,6 +280,9 @@ export default class Order
 	@StringColumn({ defaultValue: null })
 	contractPhotoLink?: string;
 
+	@BooleanColumn({ defaultValue: false })
+	isAutogenerated?: boolean;
+
 	@ApiProperty(prop.cargo)
 	@BelongsTo(() => CargoCompany, 'cargoId')
 	cargo?: CargoCompany;
@@ -340,9 +294,6 @@ export default class Order
 	@ApiProperty(prop.driver)
 	@BelongsTo(() => Driver, 'driverId')
 	driver?: Driver;
-
-	@HasMany(() => Destination, 'orderId')
-	destinations?: Destination[];
 
 	@VirtualColumn()
 	public get priority(): boolean {
@@ -365,6 +316,21 @@ export default class Order
 		                    : this.title;
 	}
 
+	@VirtualColumn()
+	public get destination(): Destination {
+		return this.destinations?.find(d => d.point === this.currentPoint);
+	}
+
+	@VirtualColumn()
+	public get nextDestination(): Destination {
+		let activeIndex = this.destinations?.findIndex(d => d.point === this.currentPoint);
+
+		if(-1 < activeIndex && activeIndex < this.destinations?.length - 1)
+			return this.destinations?.at(++activeIndex);
+
+		return null;
+	}
+
 	public readonly toCrm = (
 		cargoCrmId: number,
 		driverCrmId: number,
@@ -385,10 +351,13 @@ export default class Order
 		data.fields[ORDER.BID.PRICE.INIT] = this.bidPrice || 0.0;
 		data.fields[ORDER.BID.PRICE.MAX] = this.bidPriceVat || 0.0;
 		data.fields[ORDER.BID.INFO] = this.bidInfo || '';
-		data.fields[ORDER.STATUS] = this.isCanceled ? '2258' : Reference.ORDER_STATUSES[this.status].ID;
+		if(this.isCanceled || Reference.ORDER_STATUSES[this.status])
+			data.fields[ORDER.STATUS] = this.isCanceled ? '2258' : Reference.ORDER_STATUSES[this.status].ID;
 		if(this.stage && (OrderStage.AGREED_OWNER < this.stage && this.stage < OrderStage.CARRYING)) {
 			data.fields[ORDER.STAGE] = convertBitrix('orderStage', this.stage, false, true);
 		}
+		if(this.isCanceled)
+			data.fields[ORDER.IS_CANCELED] = 'Y';
 		data.fields[ORDER.IS_OPEN] = this.isOpen ? 'Y' : 'N';
 		data.fields[ORDER.IS_FREE] = this.isFree ? 'Y' : 'N';
 		data.fields[ORDER.CANCEL_CAUSE] = this.cancelCause || null;
@@ -401,11 +370,8 @@ export default class Order
 		data.fields[ORDER.LINK.CONTRACT] = this.contractPhotoLink ?? null;
 		if(this.destinations) {
 			for(const destination of this.destinations) {
-				const DESTINATION = ORDER.DESTINATIONS.find(({ NAME }) => NAME === destination.point);
-
-				if(DESTINATION) {
-					data.fields[DESTINATION.SHIPPING_LINK] = destination.shippingPhotoLinks?.join(', ');
-				}
+				if(destination.toCrm)
+					destination.toCrm(data);
 			}
 		}
 		data.fields[ORDER.HAS_PROBLEM] = this.hasProblem ? 'Y' : 'N';

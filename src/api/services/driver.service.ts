@@ -1,11 +1,17 @@
 import {
-	forwardRef, Inject,
+	forwardRef,
+	Inject,
 	Injectable,
 	HttpStatus
 }                              from '@nestjs/common';
-import { BitrixUrl, Bucket }   from '@common/constants';
+import {
+	BitrixUrl,
+	Bucket,
+	NOTIFICATION_DISTANCE
+}                              from '@common/constants';
 import {
 	DestinationType,
+	OrderStatus,
 	UserRole
 }                              from '@common/enums';
 import {
@@ -13,11 +19,11 @@ import {
 	IApiResponses,
 	ICompanyDeleteResponse,
 	IDriver,
+	IDriverGatewayData,
+	IGatewayData,
 	IService,
-	TAsyncApiResponse,
 	TCRMData,
 	TCRMResponse,
-	TGeoCoordinate,
 	TMergedEntities,
 	TMulterFile,
 	TUpdateAttribute
@@ -31,11 +37,13 @@ import {
 	formatArgs,
 	getTranslation
 }                              from '@common/utils';
-import { Driver, Order }       from '@models/index';
+import {
+	Driver,
+	Destination,
+}                              from '@models/index';
 import {
 	DestinationRepository,
-	DriverRepository,
-	EntityFCMRepository
+	DriverRepository
 }                              from '@repos/index';
 import {
 	DriverCreateDto,
@@ -44,16 +52,62 @@ import {
 	ListFilter,
 	TransportFilter
 }                              from '@api/dto';
-import { NotificationGateway } from '@api/notifications';
+import {
+	FirebaseNotificationGateway,
+	SocketNotificationGateway,
+	NorificationGateway
+}                              from '@api/notifications';
 import Service                 from './service';
 import ImageFileService        from './image-file.service';
 import OrderService            from './order.service';
 
 const TRANSLATIONS = getTranslation('REST', 'DRIVER');
-const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
-const DIST_200_METERS = 200 / 1000;
+const EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
 
-const inDistanceRange = (distance: number): boolean => distance <= DIST_200_METERS;
+const sendDistanceNotification = async(
+	driverId: string,
+	destination: Destination,
+	repo: DestinationRepository,
+	gateways?: NorificationGateway[]
+): Promise<IGatewayData | null> =>
+{
+	let notificationData: IDriverGatewayData = null;
+	const options = { roles: [UserRole.CARGO], url: 'Main' };
+
+	if(destination) {
+		if(destination.atNearestDistanceToPoint) {
+			console.info('Minimal distance reached, nothing to do!');
+		}
+		else if(destination.distance !== null &&
+		        destination.distance <= NOTIFICATION_DISTANCE) {
+			let message: string = '';
+
+			switch(destination.type) {
+				case DestinationType.LOAD:
+					message = EVENT_TRANSLATIONS['ARRIVED_LOAD_200M'];
+					break;
+				case DestinationType.UNLOAD:
+					message = EVENT_TRANSLATIONS['ARRIVED_UNLOAD_200M'];
+					break;
+				case DestinationType.COMBINED:
+					message = EVENT_TRANSLATIONS['ARRIVED_COMBINED_200M'];
+					break;
+			}
+
+			notificationData = {
+				id:     driverId,
+				source: 'driver',
+				message
+			};
+			repo.update(destination.id, { atNearestDistanceToPoint: true })
+					.then(() => console.info('Destination updated successfuly'))
+					.catch(e => console.error(e));
+			gateways.forEach(g => g.sendDriverNotification(notificationData, options));
+		}
+	}
+
+	return notificationData;
+};
 
 @Injectable()
 export default class DriverService
@@ -63,13 +117,13 @@ export default class DriverService
 		NOT_FOUND: { statusCode: HttpStatus.NOT_FOUND, message: TRANSLATIONS['NOT_FOUND'] }
 	};
 	private readonly destinationRepo: DestinationRepository = new DestinationRepository();
-	private readonly fcmEntityRepo: EntityFCMRepository = new EntityFCMRepository({ log: true });
 
 	constructor(
 		protected readonly imageFileService: ImageFileService,
 		@Inject(forwardRef(() => OrderService))
 		protected readonly orderService: OrderService,
-		private readonly gateway: NotificationGateway
+		private readonly fcmGateway: FirebaseNotificationGateway,
+		private readonly socketGateway: SocketNotificationGateway,
 	) {
 		super();
 		this.repository = new DriverRepository();
@@ -108,7 +162,7 @@ export default class DriverService
 	 * @param {Boolean} full Get full associated models
 	 * */
 	public async getById(id: string, full?: boolean)
-		: TAsyncApiResponse<Driver | null> {
+		: Promise<IApiResponse<Driver | null>> {
 		const driver = await this.repository.get(id, full);
 
 		if(!driver)
@@ -123,7 +177,7 @@ export default class DriverService
 
 	public async getByTransport(
 		filter: TransportFilter & { driverIds?: string[] } = {}
-	): TAsyncApiResponse<Driver[]> {
+	): Promise<IApiResponse<Driver[]>> {
 		const drivers = await this.repository.getByTransports(filter);
 
 		return {
@@ -141,7 +195,7 @@ export default class DriverService
 	 * @param {IDriver!} data New data of cargo company driver.
 	 * */
 	public async create(data: DriverCreateDto)
-		: TAsyncApiResponse<Driver> {
+		: Promise<IApiResponse<Driver>> {
 		const driver = await this.createModel(data);
 
 		if(!driver)
@@ -165,7 +219,7 @@ export default class DriverService
 	public async update(
 		id: string,
 		data: DriverUpdateDto
-	): TAsyncApiResponse<Driver> {
+	): Promise<IApiResponse<Driver | null>> {
 		const driver = await this.repository.update(id, data);
 
 		if(!driver)
@@ -188,7 +242,7 @@ export default class DriverService
 	 * @param {String!} id Id of cargo company driver to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<Pick<ICompanyDeleteResponse, 'driver' | 'transport'>> {
+		: Promise<IApiResponse<Pick<ICompanyDeleteResponse, 'driver' | 'transport'>>> {
 		const driver = await this.repository.get(id, true);
 		let driverImagesCount = 0,
 			transportImagesCount = 0,
@@ -252,7 +306,7 @@ export default class DriverService
 	 *
 	 * @param {String!} id Id of driver to synchronize.
 	 * */
-	public async send(id: string): TAsyncApiResponse<number> {
+	public async send(id: string): Promise<IApiResponse<number>> {
 		const driver = await this.repository.get(id, true);
 
 		if(!driver) return this.responses['NOT_FOUND'];
@@ -306,78 +360,47 @@ export default class DriverService
 	public async updateGeoData(entities?: TMergedEntities)
 		: Promise<TUpdateAttribute<IDriver>> {
 		if(entities) {
-			const { order, driver } = entities as { order: Order; driver: Driver; };
-			if(order) {
-				if(!driver) {
-					return null;
-				}
-				const point: TGeoCoordinate = [driver.latitude, driver.longitude];
-				const currentAddress = await addressFromCoordinates(driver.latitude, driver.longitude);
-				const destination = await this.destinationRepo.getOrderDestination(order.id, { point: driver.currentPoint });
-				const distance = calculateDistance(point, destination.coordinates);
-				await this.destinationRepo.update(destination.id, { distance });
+			const { driver } = entities as { driver: Driver; };
 
-				await driver.save({ fields: ['currentAddress'] });
-				const data = { currentAddress };
-				const fcmEntity = await this.fcmEntityRepo.getByEntityId(driver.id);
-				const passedDistance = fcmEntity ? fcmEntity.passedDistance : false;
-
-				if(distance <= DIST_200_METERS && !passedDistance) {
-					let message: string = '';
-
-					switch(destination.type) {
-						case DestinationType.LOAD:
-							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_LOAD_200M'];
-							break;
-						case DestinationType.UNLOAD:
-							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_UNLOAD_200M'];
-							break;
-						case DestinationType.COMBINED:
-							message = DRIVER_EVENT_TRANSLATIONS['ARRIVED_COMBINED_200M'];
-							break;
-					}
-
-					this.gateway.sendDriverNotification(
-						{
-							id:             driver.id,
-							source:         'driver',
-							status:         driver.status,
-							latitude:       driver.latitude,
-							longitude:      driver.longitude,
-							currentPoint:   driver.currentAddress,
-							currentAddress: data.currentAddress,
-							message
-						},
-						{
-							role: UserRole.CARGO,
-							save: false,
-							url:  'Main'
-						}
-					);
-
-					if(fcmEntity) {
-						fcmEntity.passedDistance = true;
-						await fcmEntity.save({ fields: ['passedDistance'] });
-					}
-				}
-
-				this.gateway.sendDriverNotification(
-					{
-						id:             driver.id,
-						source:         'driver',
-						status:         driver.status,
-						latitude:       driver.latitude,
-						longitude:      driver.longitude,
-						currentPoint:   driver.currentAddress,
-						currentAddress: data.currentAddress
-					},
-					{
-						role: UserRole.ADMIN,
-						save: false
-					}
-				);
-				return data;
+			if(!driver) {
+				return null;
 			}
+
+			const { data: orders } = await this.orderService.getList(
+				{},
+				{
+					driverId:  driver.id,
+					status:    OrderStatus.PROCESSING,
+					onPayment: false
+				}
+			);
+
+			if(orders) {
+				for(const order of orders) {
+					const destination = await this.destinationRepo
+																				.getOrderDestination(order.id, {
+																					point: order.currentPoint
+																				});
+
+					if(!destination) continue;
+
+					destination.distance = calculateDistance([driver.latitude, driver.longitude], destination.coordinates);
+					await destination.save({ fields: ['distance'] });
+					const gateways = [this.fcmGateway, this.socketGateway];
+
+					sendDistanceNotification(
+						driver.id,
+						destination,
+						this.destinationRepo,
+						gateways
+					)
+						.then(data => data ? console.info(data) : console.info('No notification data'))
+						.catch(console.error);
+				}
+			}
+			const currentAddress = await addressFromCoordinates(driver.latitude, driver.longitude);
+			await this.repository.update(driver.id, { currentAddress });
+			return { currentAddress };
 		}
 		return null;
 	}
@@ -396,7 +419,7 @@ export default class DriverService
 		id: string,
 		image: TMulterFile,
 		folder: string = 'avatar'
-	): TAsyncApiResponse<Driver> {
+	): Promise<IApiResponse<Driver | null>> {
 		const driver = await this.repository.get(id);
 
 		if(!driver)
@@ -419,7 +442,7 @@ export default class DriverService
 		id: string,
 		image: TMulterFile,
 		folder: string = 'front'
-	): TAsyncApiResponse<Driver> {
+	): Promise<IApiResponse<Driver | null>> {
 		const driver = await this.repository.get(id);
 
 		if(!driver)
@@ -449,7 +472,7 @@ export default class DriverService
 		id: string,
 		image: TMulterFile,
 		folder: string = 'back'
-	): TAsyncApiResponse<Driver> {
+	): Promise<IApiResponse<Driver | null>> {
 		const driver = await this.repository.get(id);
 
 		if(!driver)

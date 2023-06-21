@@ -33,6 +33,14 @@ export default class DestinationRepository
 		);
 	}
 
+	public async getByPoint(point: string) {
+		return this.log(
+			() => this.model.findOne({ where: { point }, rejectOnEmpty: false }),
+			{ id: 'getByPoint' },
+			{ point }
+		);
+	}
+
 	/**
 	 * @link GenericRepository.getList
 	 * */

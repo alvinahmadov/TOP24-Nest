@@ -1,67 +1,69 @@
-import { Op }                  from 'sequelize';
+import { Op }                 from 'sequelize';
 import {
 	forwardRef,
+	HttpStatus,
 	Inject,
-	Injectable,
-	HttpStatus
-}                              from '@nestjs/common';
+	Injectable
+}                             from '@nestjs/common';
 import {
 	BitrixUrl,
 	Bucket
-}                              from '@common/constants';
+}                             from '@common/constants';
 import {
 	OfferStatus,
 	OrderStage,
 	OrderStatus,
 	TransportStatus,
 	UserRole
-}                              from '@common/enums';
+}                             from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
+	IDriverGatewayData,
 	IService,
 	TAffectedRows,
-	TAsyncApiResponse,
 	TCRMData,
 	TCRMResponse,
 	TDocumentMode,
 	TMergedEntities,
 	TMulterFile
-}                              from '@common/interfaces';
+}                             from '@common/interfaces';
 import {
 	buildBitrixRequestUrl,
-	renameMulterFiles,
 	fillDriverWithCompanyData,
 	filterOrders,
 	formatArgs,
 	getTranslation,
 	getUniqueArray,
-	transformTransportParameters,
-	renameMulterFile
-}                              from '@common/utils';
+	renameMulterFile,
+	renameMulterFiles,
+	transformTransportParameters
+}                             from '@common/utils';
 import {
-	Destination,
 	Driver,
 	Order,
 	Transport
-}                              from '@models/index';
+}                             from '@models/index';
 import {
 	DestinationRepository,
 	OfferRepository,
 	OrderRepository
-}                              from '@repos/index';
+}                             from '@repos/index';
 import {
 	ListFilter,
 	OrderCreateDto,
 	OrderFilter,
 	OrderUpdateDto
-}                              from '@api/dto';
-import { NotificationGateway } from '@api/notifications';
-import Service                 from './service';
-import CargoCompanyService     from './cargo-company.service';
-import CargoCompanyInnService  from './cargoinn-company.service';
-import DriverService           from './driver.service';
-import ImageFileService        from './image-file.service';
+}                             from '@api/dto';
+import {
+	FirebaseNotificationGateway,
+	SocketNotificationGateway
+}                             from '@api/notifications';
+import Service                from './service';
+import CargoCompanyService    from './cargo-company.service';
+import CargoCompanyInnService from './cargoinn-company.service';
+import DriverService          from './driver.service';
+import ImageFileService       from './image-file.service';
 
 const ORDER_TRANSLATIONS = getTranslation('REST', 'ORDER');
 const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
@@ -87,7 +89,8 @@ export default class OrderService
 		@Inject(forwardRef(() => DriverService))
 		private readonly driverService: DriverService,
 		protected readonly imageFileService: ImageFileService,
-		private readonly gateway: NotificationGateway
+		private readonly fcmGateway: FirebaseNotificationGateway,
+		private readonly socketGateway: SocketNotificationGateway
 	) {
 		super();
 		this.repository = new OrderRepository();
@@ -100,7 +103,7 @@ export default class OrderService
 	 * @param {Boolean} full
 	 * */
 	public async getById(id: string, full?: boolean)
-		: TAsyncApiResponse<Order> {
+		: Promise<IApiResponse<Order>> {
 		const data = await this.repository.get(id, full);
 		const order = filterOrders(data) as Order;
 
@@ -121,7 +124,7 @@ export default class OrderService
 	 * @param {Boolean} full.
 	 * */
 	public async getByCrmId(crm_id: number, full?: boolean)
-		: TAsyncApiResponse<Order> {
+		: Promise<IApiResponse<Order>> {
 		const order = await this.repository.getByCrmId(crm_id, full);
 
 		if(!order)
@@ -145,23 +148,27 @@ export default class OrderService
 	public async getList(
 		listFilter: ListFilter = { from: 0 },
 		filter: OrderFilter = {}
-	): TAsyncApiResponse<Order[]> {
+	): Promise<IApiResponse<Order[]>> {
 		const data = await this.repository.getList(listFilter, filter);
 		const orders = filterOrders(data) as Order[];
 
 		// Temp fix for web
 		if(orders) {
-			if(filter && filter.statuses)
+			if(filter && filter.statuses) {
 				orders.forEach(
-					order =>
-					{
+					order => {
 						if(
 							order.status === OrderStatus.CANCELLED ||
 							order.stage >= 4
 						)
 							order.stage = 4;
+
+						if(order.hasProblem) {
+							order.status = OrderStatus.CANCELLED;
+						}
 					}
 				);
+			}
 		}
 
 		return {
@@ -182,7 +189,7 @@ export default class OrderService
 	public async getCargoList(
 		cargoId: string,
 		listFilter: ListFilter
-	): TAsyncApiResponse<Order[]> {
+	): Promise<IApiResponse<Order[]>> {
 		const data = await this.repository.getCargoList(cargoId, listFilter);
 		const orders = filterOrders(data) as Order[];
 
@@ -200,7 +207,8 @@ export default class OrderService
 	 *
 	 * @param {IOrder!} dto New data of order.
 	 * */
-	public async create(dto: OrderCreateDto): TAsyncApiResponse<Order> {
+	public async create(dto: OrderCreateDto):
+		Promise<IApiResponse<Order>> {
 		const order = await this.createModel(dto);
 
 		if(!order)
@@ -223,7 +231,7 @@ export default class OrderService
 	public async update(
 		id: string,
 		dto: OrderUpdateDto
-	): TAsyncApiResponse<Order> {
+	): Promise<IApiResponse<Order>> {
 		const order = await this.repository.update(id, dto);
 
 		if(!order)
@@ -244,7 +252,7 @@ export default class OrderService
 	 * @param {String!} id Id of order to delete
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<TAffectedRows> {
+		: Promise<IApiResponse<TAffectedRows>> {
 		const order = await this.repository.get(id);
 
 		if(!order)
@@ -253,7 +261,7 @@ export default class OrderService
 		const result = await this.repository.delete(id);
 
 		if(result.affectedCount > 0)
-			this.gateway.sendOrderNotification(
+			this.socketGateway.sendOrderNotification(
 				{ id, message: 'Deleted' }
 			);
 
@@ -265,7 +273,7 @@ export default class OrderService
 	}
 
 	public async getByDriver(driverId: string, orderId?: string)
-		: TAsyncApiResponse<TMergedEntities> {
+		: Promise<IApiResponse<TMergedEntities>> {
 		const order = await this.repository.getDriverAssignedOrders(driverId, { id: orderId });
 		let result: {
 			order?: Order;
@@ -287,7 +295,7 @@ export default class OrderService
 				else {
 					const transport = driver.transports.find(
 						t => !t.isTrailer &&
-						     t.status === TransportStatus.ACTIVE
+								 t.status === TransportStatus.ACTIVE
 					);
 					if(transport) {
 						result.transport = transformTransportParameters(transport);
@@ -299,18 +307,16 @@ export default class OrderService
 			driver = fillDriverWithCompanyData(driver);
 
 			result.driver = driver;
-
-			if(!driver.currentPoint)
-				result.driver.currentPoint = 'A';
 			const orderResponse = await this.getById(order.id, false);
 			result.order = filterOrders(orderResponse?.data) as Order;
+			result.driver.order = result.order;
 		}
 
 		return {
 			statusCode: HttpStatus.OK,
 			data:       result,
 			message:    formatArgs(ORDER_TRANSLATIONS['DRIVERS'], result.driver ? 1 : 0)
-		} as IApiResponse<TMergedEntities>;
+		};
 	}
 
 	/**
@@ -322,7 +328,7 @@ export default class OrderService
 	 * @param {String!} id Id of order to send data to bitrix.
 	 * */
 	public async send(id: string)
-		: TAsyncApiResponse<number> {
+		: Promise<IApiResponse<number>> {
 		const order = await this.repository.get(id, true);
 
 		if(!order) return this.responses['NOT_FOUND'];
@@ -375,9 +381,9 @@ export default class OrderService
 			const data: TCRMData = order.toCrm(companyCrmId, driverCrmId, driverCoordinates);
 			data.params['REGISTER_SONET_EVENT'] = 'N';
 			const client = await this.httpClient
-			                         .post<TCRMResponse>(
-				                         buildBitrixRequestUrl(BitrixUrl.ORDER_UPD_URL, data, crmOrderId)
-			                         );
+															 .post<TCRMResponse>(
+																 buildBitrixRequestUrl(BitrixUrl.ORDER_UPD_URL, data, crmOrderId)
+															 );
 
 			if(client) {
 				const { result } = client;
@@ -411,7 +417,7 @@ export default class OrderService
 		id: string,
 		point: string,
 		files: TMulterFile[]
-	): TAsyncApiResponse<Order> {
+	): Promise<IApiResponse<Order>> {
 		let order = await this.repository.get(id);
 		let fileUploaded = false;
 		let message: string = '';
@@ -419,17 +425,14 @@ export default class OrderService
 		if(!order)
 			return this.responses['NOT_FOUND'];
 
-		let destination = await Destination.findOne(
-			{ where: { orderId: order.id, point } }
-		);
-
+		let destination = await this.destinationRepo.getOrderDestination(order.id, { point });
 		if(destination) {
 			const {
 				Location: shippingPhotoLinks
 			} = await this.imageFileService
-			              .uploadFiles(
-				              renameMulterFiles(files, Bucket.Folders.ORDER, id, 'shipping', point)
-			              );
+										.uploadFiles(
+											renameMulterFiles(files, Bucket.Folders.ORDER, id, 'shipping', point)
+										);
 
 			if(shippingPhotoLinks?.length > 0) {
 				fileUploaded = true;
@@ -440,15 +443,12 @@ export default class OrderService
 				else
 					destination.shippingPhotoLinks = shippingPhotoLinks;
 
-				await Destination.update({ fulfilled: true }, { where: { point: { [Op.lte]: point } } });
-
 				await this.destinationRepo.update(destination.id, { shippingPhotoLinks: destination.shippingPhotoLinks });
-				order = await this.repository.get(order.id);
 			}
 
 			if(fileUploaded) {
 				await this.send(order.id)
-				          .catch(console.error);
+									.catch(console.error);
 			}
 
 			if(fileUploaded)
@@ -483,7 +483,7 @@ export default class OrderService
 			if(0 < shippingLength) {
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
-					                      .deleteImageList(destination.shippingPhotoLinks) > 0;
+																.deleteImageList(destination.shippingPhotoLinks) > 0;
 					if(isDeleted)
 						destination.shippingPhotoLinks = [];
 				}
@@ -505,7 +505,7 @@ export default class OrderService
 
 			if(isDeleted) {
 				await this.send(order.id)
-				          .catch(console.error);
+									.catch(console.error);
 			}
 		}
 
@@ -533,7 +533,7 @@ export default class OrderService
 		id: string,
 		files: TMulterFile[],
 		mode: TDocumentMode
-	): TAsyncApiResponse<Order> {
+	): Promise<IApiResponse<Order>> {
 		let order = await this.repository.get(id);
 		let fileUploaded = false;
 		let message: string;
@@ -615,20 +615,9 @@ export default class OrderService
 		}
 
 		if(fileUploaded) {
-			// if(
-			// 	paymentPhotoLinks?.length > 0 &&
-			// 	receiptPhotoLinks?.length > 0
-			// ) {
-			// 	this.repository
-			// 	    .update(id, { stage: OrderStage.DOCUMENT_SENT, onPayment: order.onPayment })
-			// 	    .then(o => console.log(`Documents for ${mode} photos for order '${o.id}' uploaded`))
-			// 	    .catch(console.error);
-			// }
-			// else console.log('Either payment or receipt photo not uploaded!');
-
 			this.send(order.id)
-			    .then(() => this.gateway.sendOrderNotification({ id, message }))
-			    .catch(console.error);
+					.then(() => this.socketGateway.sendOrderNotification({ id, message }))
+					.catch(console.error);
 
 			return {
 				statusCode: HttpStatus.OK,
@@ -644,7 +633,7 @@ export default class OrderService
 		id: string,
 		mode: TDocumentMode,
 		index?: number
-	): TAsyncApiResponse<Order> {
+	): Promise<IApiResponse<Order>> {
 		let order = await this.repository.get(id);
 		let isDeleted = false;
 		let deleteAll = index === undefined;
@@ -664,8 +653,8 @@ export default class OrderService
 					order.contractPhotoLink = null;
 
 					order.save({ fields: ['contractPhotoLink', 'stage'] })
-					     .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
-					     .catch(console.error);
+							 .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
+							 .catch(console.error);
 				}
 			}
 		}
@@ -673,7 +662,7 @@ export default class OrderService
 			if(order.paymentPhotoLinks) {
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
-					                      .deleteImageList(order.paymentPhotoLinks) > 0;
+																.deleteImageList(order.paymentPhotoLinks) > 0;
 				}
 				else if(order.paymentPhotoLinks.length > 0) {
 					const paymentPhotoLink = order.paymentPhotoLinks[index];
@@ -685,8 +674,8 @@ export default class OrderService
 					order.paymentPhotoLinks = photoLinks;
 					order.onPayment = false;
 					order.save({ fields: ['paymentPhotoLinks', 'onPayment'] })
-					     .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
-					     .catch(console.error);
+							 .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
+							 .catch(console.error);
 				}
 			}
 		}
@@ -694,7 +683,7 @@ export default class OrderService
 			if(order.receiptPhotoLinks) {
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
-					                      .deleteImageList(order.receiptPhotoLinks) > 0;
+																.deleteImageList(order.receiptPhotoLinks) > 0;
 				}
 				else if(order.receiptPhotoLinks.length > 0) {
 					const receiptPhotoLink = order.receiptPhotoLinks[index];
@@ -705,8 +694,8 @@ export default class OrderService
 				if(isDeleted) {
 					order.receiptPhotoLinks = photoLinks;
 					order.save({ fields: ['receiptPhotoLinks'] })
-					     .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
-					     .catch(console.error);
+							 .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
+							 .catch(console.error);
 				}
 			}
 		}
@@ -739,17 +728,16 @@ export default class OrderService
 		);
 
 		if(affectedCount > 0) {
+			const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
+			const data: IDriverGatewayData = {
+				id:      null,
+				message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], orderTitle)
+			};
+
 			for(const offer of offers) {
-				this.gateway.sendDriverNotification(
-					{
-						id:      offer.driverId,
-						message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], orderTitle)
-					},
-					{
-						role: UserRole.CARGO,
-						url:  'Main'
-					}
-				);
+				data.id = offer.driverId;
+				this.socketGateway.sendDriverNotification(data, options);
+				this.fcmGateway.sendDriverNotification(data, options);
 			}
 		}
 	}

@@ -12,8 +12,8 @@ services:
     restart: always
     environment:
       TZ: "Europe/Moscow"
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
     volumes:
       - redis:/data
     networks:
@@ -21,7 +21,7 @@ services:
   db:
     container_name: top24-postgres
     image: postgres:12.1-alpine
-    restart: on-failure
+    restart: always
     stdin_open: true
     tty: true
     env_file:

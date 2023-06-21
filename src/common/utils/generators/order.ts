@@ -1,45 +1,35 @@
 import faker                      from '@faker-js/faker';
 import * as enums                 from '@common/enums';
-import { addressFromCoordinates } from '@common/utils/address';
+import * as interfaces            from '@common/interfaces';
 import * as dto                   from '@api/dto';
 import * as common                from './common';
 
 /**@ignore*/
-const minPrice = 10000, maxPrice = 200000;
+const minPrice: number = 10000,
+	maxPrice: number = 200000;
 
-/**@ignore*/
-const lat = () => Number(faker.address.latitude(60.0, 50.0, 5)),
-	lng = () => Number(faker.address.longitude(60.0, 50.0, 5));
+const { lat, lon, USE_GENERIC_ADDRESS: useGeneric } = common;
 
 /**@ignore*/
 const generatePrice = (): number => faker.datatype.number({ min: minPrice, max: maxPrice });
 
-function getFixedFromLoadingType() {
-	const loadingSet = new Set<number>();
-	const result: number[] = [];
-	const size = faker.helpers.arrayElement([1, 2, 3, 4]);
-	for(let i = 0; i < size; i++) {
-		loadingSet.add(faker.helpers.arrayElement(common.LOADING_TYPES));
-	}
-	for(const loadingType of loadingSet) {
-		result.push(loadingType);
-	}
-
-	return result.sort((a, b) => a - b);
-}
-
-async function generateDestinations(count?: number): Promise<Array<dto.DestinationCreateDto>> {
+async function generateDestinations(options: interfaces.IDestinationGenerateOptions)
+	: Promise<Array<dto.DestinationCreateDto>> {
+	const { maxSize, startPos, distanceDelta: delta } = options;
 	const destinations: dto.DestinationCreateDto[] = [];
-	const dateRange = 5;
-	let latitude = lat(), longitude = lng();
+	const dateRange: number = 5;
+	const precision: number = 10e-6;
+	let count = faker.datatype.number({ min: 2, max: maxSize ?? common.LETTERS.length });
+	let latitude = lat(startPos.latitude, delta),
+		longitude = lon(startPos.longitude, delta);
 	let date: Date = faker.date.soon(dateRange);
-	if(count === undefined) count = faker.datatype.number({ min: 2, max: 10 });
 	if(count > common.LETTERS.length) count = common.LETTERS.length;
 
 	for(let i = 0; i < count; i++) {
-		const address = await addressFromCoordinates(latitude, longitude);
-		let latitudeModifier = faker.datatype.number({ min: -2, max: 2 }),
-			longitudeModifier = faker.datatype.number({ min: -2, max: 2 });
+		const address = await common.generateAddressFromCoordinates({ latitude, longitude, useGeneric });
+		const latitudeModifier = faker.datatype.float({ min: -(delta), max: delta, precision });
+		const longitudeModifier = faker.datatype.float({ min: -(delta), max: delta, precision });
+
 		destinations.push(
 			{
 				orderId:     null,
@@ -49,12 +39,13 @@ async function generateDestinations(count?: number): Promise<Array<dto.Destinati
 				date,
 				fulfilled:   false,
 				type:        i !== 0
-				             ? (i !== count - 1
-				                ? faker.helpers.arrayElement(common.DESTINATION_TYPES)
-				                : enums.DestinationType.UNLOAD)
-				             : enums.DestinationType.LOAD,
+										 ? (i !== count - 1
+												? faker.helpers.arrayElement(common.DESTINATION_TYPES)
+												: enums.DestinationType.UNLOAD)
+										 : enums.DestinationType.LOAD,
 				coordinates: [latitude, longitude],
 				contact:     faker.name.findName(),
+				inn:         faker.datatype.number({ min: 9999, max: 99999 }).toString(),
 				phone:       faker.phone.phoneNumber('+7 9## ### ## ##'),
 				comment:     faker.lorem.word(4)
 			}
@@ -67,8 +58,10 @@ async function generateDestinations(count?: number): Promise<Array<dto.Destinati
 	return destinations;
 }
 
-export async function generateOrder(maxDestination?: number): Promise<dto.OrderCreateDto> {
-	const paramRange = { min: 1, max: 10, precision: 2 };
+export async function generateOrder(options?: interfaces.IOrderGenerateOptions)
+	: Promise<dto.OrderCreateDto> {
+	const destOptions = common.getDestinationOptions(options);
+	const paramRange = { min: 1, max: 10, precision: 0.1 };
 	const isBid = faker.datatype.boolean();
 	const orderNumber = faker.datatype.number({ min: 999, max: 10000 });
 	const price: number = generatePrice();
@@ -81,7 +74,7 @@ export async function generateOrder(maxDestination?: number): Promise<dto.OrderC
 	return {
 		date:            faker.date.recent(10),
 		dedicated:       faker.helpers.arrayElement(['Догруз', 'Не важно', 'Выделенная машина']),
-		destinations:    await generateDestinations(maxDestination),
+		destinations:    await generateDestinations(destOptions),
 		isBid,
 		bidPrice:        isBid ? price + 10000 : 0,
 		bidPriceVAT:     isBid ? price + 15000 : 0,
@@ -107,17 +100,18 @@ export async function generateOrder(maxDestination?: number): Promise<dto.OrderC
 		length:          length > 0 ? length : 1,
 		width:           width > 0 ? width : 1,
 		height:          height > 0 ? height : 1,
-		loadingTypes:    getFixedFromLoadingType(),
-		pallets:         faker.datatype.number({ min: 0, max: 15 })
+		loadingTypes:    common.getFixedFromLoadingType(),
+		pallets:         faker.datatype.number({ min: 0, max: 15 }),
+		isAutogenerated: true,
 	} as dto.OrderCreateDto;
 }
 
-export async function generateOrders(count?: number, maxDestination?: number): Promise<dto.OrderCreateDto[]> {
+export function generateOrders(options: interfaces.IOrderGenerateOptions) {
+	let { count } = common.getOrderOptions(options);
 	if(!count)
-		count = faker.datatype.number({ min: 3, max: 10 });
-	const createdData: dto.OrderCreateDto[] = [];
-	for(let step = 0; step < count; step++) {
-		createdData.push(await generateOrder(maxDestination));
-	}
-	return createdData;
+		count = faker.datatype.number({ min: 1, max: 5 });
+	return Promise.all(
+		Array.from(Array(count))
+				 .map(() => generateOrder(common.getOrderOptions(options)))
+	);
 }

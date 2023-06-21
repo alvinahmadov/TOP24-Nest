@@ -1,11 +1,9 @@
-import FieldTransformer,
-{ TOmitTimestamp }       from '@common/classes/field-transformer';
-import * as attributes   from '@common/interfaces/attributes';
-import * as transformers from './transformer-types';
+import FieldTransformer, { TOmitTimestamp } from '@common/classes/field-transformer';
+import * as attributes                      from '@common/interfaces/attributes';
+import * as transformers                    from './transformer-types';
 
 export const translateAdmin = <T extends transformers.IAdminTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.IAdmin> =>
-{
+	: TOmitTimestamp<attributes.IAdmin> => {
 	return new FieldTransformer<T, attributes.IAdmin>(data)
 		.set('id')
 		.set('name')
@@ -19,8 +17,7 @@ export const translateAdmin = <T extends transformers.IAdminTransformer>(data: T
 };
 
 export const translateAdress = <T extends transformers.IAddressTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.IAddress> =>
-{
+	: TOmitTimestamp<attributes.IAddress> => {
 	return new FieldTransformer<T, attributes.IAddress>(data)
 		.set('id')
 		.set('region')
@@ -37,8 +34,7 @@ export const translateAdress = <T extends transformers.IAddressTransformer>(data
 };
 
 export const translateCargoCompany = <T extends transformers.ICargoCompanyTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.ICargoCompany> =>
-{
+	: TOmitTimestamp<attributes.ICargoCompany> => {
 	return new FieldTransformer<T, attributes.ICargoCompany>(data)
 		.set('id')
 		.set('userId')
@@ -76,8 +72,7 @@ export const translateCargoCompany = <T extends transformers.ICargoCompanyTransf
 };
 
 export const translateCargoCompanyInn = <T extends transformers.ICargoCompanyInnTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.ICargoCompanyInn> =>
-{
+	: TOmitTimestamp<attributes.ICargoCompanyInn> => {
 	return new FieldTransformer<T, attributes.ICargoCompanyInn>(data)
 		.set('id')
 		.set('userId')
@@ -113,8 +108,7 @@ export const translateCargoCompanyInn = <T extends transformers.ICargoCompanyInn
 };
 
 export const translateDriver = <T extends transformers.IDriverTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.IDriver> =>
-{
+	: TOmitTimestamp<attributes.IDriver> => {
 	return new FieldTransformer<T, attributes.IDriver>(data)
 		.set('id')
 		.set('cargoId')
@@ -146,10 +140,8 @@ export const translateDriver = <T extends transformers.IDriverTransformer>(data:
 		.set('licenseDate', 'license_date')
 		.set('licenseBackLink', 'link_back')
 		.set('licenseFrontLink', 'link_front')
-		.set('operation')
 		.set('longitude')
 		.set('latitude')
-		.set('currentPoint', 'current_point')
 		.set('currentAddress', 'current_address')
 		.set('payloadCity', 'payload_city')
 		.set('payloadRegion', 'payload_region')
@@ -159,8 +151,7 @@ export const translateDriver = <T extends transformers.IDriverTransformer>(data:
 };
 
 export const translateGatewayEvent = <T extends transformers.IGatewayEventTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.IGatewayEvent> =>
-{
+	: TOmitTimestamp<attributes.IGatewayEvent> => {
 	return new FieldTransformer<T, attributes.IGatewayEvent>(data)
 		.set('eventName', 'event_name')
 		.set('eventData', 'event_data')
@@ -169,8 +160,7 @@ export const translateGatewayEvent = <T extends transformers.IGatewayEventTransf
 };
 
 export const translateImage = <T extends transformers.IImageTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.IImage> =>
-{
+	: TOmitTimestamp<attributes.IImage> => {
 	return new FieldTransformer<T, attributes.IImage>(data)
 		.set('id')
 		.set('cargoId')
@@ -181,8 +171,7 @@ export const translateImage = <T extends transformers.IImageTransformer>(data: T
 };
 
 export const translateOffer = <T extends transformers.IOfferTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.IOffer> =>
-{
+	: TOmitTimestamp<attributes.IOffer> => {
 	return new FieldTransformer<T, attributes.IOffer>(data)
 		.set('id')
 		.set('orderId')
@@ -196,8 +185,7 @@ export const translateOffer = <T extends transformers.IOfferTransformer>(data: T
 };
 
 export const translateOrder = <T extends transformers.IOrderTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.IOrder> =>
-{
+	: TOmitTimestamp<attributes.IOrder> => {
 	return new FieldTransformer<T, attributes.IOrder>(data)
 		.set('id')
 		.set('cargoId')
@@ -226,7 +214,10 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 		.set('onPayment', 'on_payment')
 		.set('isCanceled', 'is_canceled')
 		.set('cancelCause', 'cancel_cause')
+		.set('hasProblem', 'has_problem')
 		.set('destinations')
+		.set('currentPoint', 'current_point')
+		.set('execState', 'operation')
 		.set('bidInfo', 'bid_info')
 		.set('bidPrice', 'bid_price')
 		.set('bidPriceVat', 'bid_price_max')
@@ -241,8 +232,7 @@ export const translateOrder = <T extends transformers.IOrderTransformer>(data: T
 };
 
 export const translatePayment = <T extends transformers.IPaymentTransformer>(data: T | Partial<T>)
-	: TOmitTimestamp<attributes.IPayment> =>
-{
+	: TOmitTimestamp<attributes.IPayment> => {
 	return new FieldTransformer<T, attributes.IPayment>(data)
 		.set('id')
 		.set('cargoId')
@@ -258,8 +248,7 @@ export const translatePayment = <T extends transformers.IPaymentTransformer>(dat
 };
 
 export const translateTransport = <T extends transformers.ITransportTransformer>(data: T | Partial<T>)
-	: attributes.ITransport =>
-{
+	: attributes.ITransport => {
 	return new FieldTransformer<T, attributes.ITransport>(data)
 		.set('id')
 		.set('cargoId')
@@ -286,6 +275,8 @@ export const translateTransport = <T extends transformers.ITransportTransformer>
 		.set('registrationNumber', 'registr_num')
 		.set('prodYear', 'prod_year')
 		.set('certificateNumber', 'sts')
+		.set('certificatePhotoLinkFront', 'sts_link_front')
+		.set('certificatePhotoLinkBack', 'sts_link_back')
 		.set('riskClasses', 'risk_classes')
 		.set('loadingTypes', 'loading_types')
 		.set('fixtures', 'extra_fixtures')

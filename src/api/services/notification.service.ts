@@ -1,9 +1,9 @@
 import { Injectable }             from '@nestjs/common';
 import {
+	IApiResponse,
 	IApiResponses,
 	IService,
-	TAffectedRows,
-	TAsyncApiResponse
+	TAffectedRows
 }                                 from '@common/interfaces';
 import { GatewayEvent }           from '@models/index';
 import { GatewayEventRepository } from '@repos/index';
@@ -37,7 +37,7 @@ export default class NotificationService
 	public async getList(
 		listFilter: ListFilter,
 		filter?: GatewayEventFilter
-	): TAsyncApiResponse<GatewayEvent[]> {
+	): Promise<IApiResponse<GatewayEvent[]>> {
 		const events = await this.repository.getList(listFilter, filter);
 		return {
 			statusCode: 200,
@@ -51,17 +51,20 @@ export default class NotificationService
 	 * @param {string} id id of image in database
 	 * */
 	public async getById(id: string)
-		: TAsyncApiResponse<GatewayEvent> {
+		: Promise<IApiResponse<GatewayEvent>> {
 		const image = await this.repository.get(id);
 
 		if(image)
-			return { statusCode: 200, data: image };
+			return {
+				statusCode: 200,
+				data:       image
+			};
 
 		return this.responses['notFound'];
 	}
 
 	public async create(dto: GatewayEventCreateDto)
-		: TAsyncApiResponse<GatewayEvent> {
+		: Promise<IApiResponse<GatewayEvent>> {
 		const eventModel = await this.createModel(dto);
 
 		if(eventModel)
@@ -74,7 +77,7 @@ export default class NotificationService
 	}
 
 	public async update(id: string, dto: GatewayEventUpdateDto)
-		: TAsyncApiResponse<GatewayEvent> {
+		: Promise<IApiResponse<GatewayEvent>> {
 		const eventModel = await this.repository.update(id, dto);
 		if(eventModel)
 			return {
@@ -91,7 +94,7 @@ export default class NotificationService
 	 * @param {string} id id of image in database
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<TAffectedRows> {
+		: Promise<IApiResponse<TAffectedRows>> {
 		const item = await this.repository.get(id);
 		if(item) {
 			return {

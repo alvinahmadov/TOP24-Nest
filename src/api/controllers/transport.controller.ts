@@ -8,12 +8,20 @@ import {
 	Query,
 	Res,
 	UploadedFile,
+	UploadedFiles,
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { FileInterceptor }     from '@nestjs/platform-express';
-import { TMulterFile }         from '@common/interfaces';
+import {
+	FileInterceptor,
+	FilesInterceptor
+}                              from '@nestjs/platform-express';
+import {
+	IApiResponse,
+	TMulterFile
+}                              from '@common/interfaces';
 import { sendResponse }        from '@common/utils';
+import Transport               from '@models/transport.entity';
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
@@ -171,6 +179,74 @@ export default class TransportController
 		return sendResponse(response, apiResponse);
 	}
 
+	@ApiRoute(routes.certificate, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK],
+		fileOpts: {
+			interceptors: [FilesInterceptor('image')],
+			mimeTypes:    ['multipart/form-data'],
+			multi:        true
+		}
+	})
+	public async uploadCertificatePhoto(
+		@Param('id', ParseUUIDPipe) id: string,
+		@UploadedFiles() images: Array<TMulterFile>,
+		@Res() response: ex.Response
+	) {
+		let apiResponse: IApiResponse<Transport> = {
+			statusCode: HttpStatus.BAD_REQUEST,
+			message:    "Unsufficient number of files uploaded!"
+		};
+
+		if(images) {
+			if(images.length === 2) {
+				await this.transportService.uploadCertificatePhotoFront(id, images[0]);
+				apiResponse = await this.transportService.uploadCertificatePhotoBack(id, images[1]);
+			}
+			else if(images.length === 1) {
+				apiResponse = await this.transportService.uploadCertificatePhotoFront(id, images[0]);
+			}
+		}
+
+		return sendResponse(response, apiResponse);
+	}
+
+	@ApiRoute(routes.certificateFront, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK],
+		fileOpts: {
+			interceptors: [FileInterceptor('image')],
+			mimeTypes:    ['multipart/form-data']
+		}
+	})
+	public async uploadCertificatePhotoFront(
+		@Param('id', ParseUUIDPipe) id: string,
+		@UploadedFile() image: TMulterFile,
+		@Res() response: ex.Response
+	) {
+		const apiResponse = await this.transportService.uploadCertificatePhotoFront(id, image);
+
+		return sendResponse(response, apiResponse);
+	}
+
+	@ApiRoute(routes.certificateBack, {
+		guards:   [CargoGuard],
+		statuses: [HttpStatus.OK],
+		fileOpts: {
+			interceptors: [FileInterceptor('image')],
+			mimeTypes:    ['multipart/form-data']
+		}
+	})
+	public async uploadCertificatePhotoBack(
+		@Param('id', ParseUUIDPipe) id: string,
+		@UploadedFile() image: TMulterFile,
+		@Res() response: ex.Response
+	) {
+		const apiResponse = await this.transportService.uploadCertificatePhotoBack(id, image);
+
+		return sendResponse(response, apiResponse);
+	}
+
 	@ApiRoute(routes.diag, {
 		guards:   [CargoGuard],
 		statuses: [HttpStatus.OK],
@@ -179,7 +255,7 @@ export default class TransportController
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
-	public async diagnostic(
+	public async uploadDiagnosticsPhoto(
 		@Param('id', ParseUUIDPipe) id: string,
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response
@@ -197,7 +273,7 @@ export default class TransportController
 			mimeTypes:    ['multipart/form-data']
 		}
 	})
-	public async osago(
+	public async uploadOsagoPhoto(
 		@Param('id', ParseUUIDPipe) id: string,
 		@UploadedFile() image: TMulterFile,
 		@Res() response: ex.Response

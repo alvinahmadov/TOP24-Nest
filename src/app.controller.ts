@@ -4,14 +4,12 @@ import { IMigrationOptions }   from 'sequelize-migrate/index';
 import {
 	Body,
 	Controller,
-	Get,
 	Post,
 	Patch,
 	Res,
 	UseFilters
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
-import { AGREEMENT_PDF_PATH }  from '@common/constants';
 import { HttpExceptionFilter } from '@api/middlewares';
 import AppService              from './app.service';
 
@@ -56,10 +54,5 @@ export default class AppController {
 		const success = cmd.code === 0;
 		return response.status(success ? 200 : 400)
 		               .send(success ? cmd.stdout : cmd.stderr);
-	}
-
-	@Get('agreement')
-	public getAgreement(@Res() response: ex.Response) {
-		return response.sendFile(AGREEMENT_PDF_PATH, (err) => console.debug(err));
 	}
 }

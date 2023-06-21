@@ -1,9 +1,9 @@
 import { Injectable }      from '@nestjs/common';
 import {
+	IApiResponse,
 	IApiResponses,
 	IService,
-	TAffectedRows,
-	TAsyncApiResponse
+	TAffectedRows
 }                          from '@common/interfaces';
 import { Image }           from '@models/index';
 import { ImageRepository } from '@repos/index';
@@ -40,7 +40,7 @@ export default class ImageService
 	public async getList(
 		listFilter: ListFilter,
 		filter?: ImageFilter
-	): TAsyncApiResponse<Image[]> {
+	): Promise<IApiResponse<Image[]>> {
 		const images = await this.repository.getList(listFilter, filter);
 		return {
 			statusCode: 200,
@@ -55,7 +55,7 @@ export default class ImageService
 	 * @param {string} id id of image in database
 	 * */
 	public async getById(id: string)
-		: TAsyncApiResponse<Image> {
+		: Promise<IApiResponse<Image | null>> {
 		const image = await this.repository.get(id);
 
 		if(image)
@@ -65,7 +65,7 @@ export default class ImageService
 	}
 
 	public async create(dto: ImageCreateDto)
-		: TAsyncApiResponse<Image> {
+		: Promise<IApiResponse<Image | null>> {
 		const imageModel = await this.createModel(dto);
 
 		if(imageModel)
@@ -78,7 +78,7 @@ export default class ImageService
 	}
 
 	public async update(id: string, dto: ImageUpdateDto)
-		: TAsyncApiResponse<Image> {
+		: Promise<IApiResponse<Image | null>> {
 		const imageModel = await this.repository.update(id, dto);
 		if(imageModel)
 			return {
@@ -95,7 +95,7 @@ export default class ImageService
 	 * @param {string} id id of image in database
 	 * */
 	public async delete(id: string)
-		: TAsyncApiResponse<TAffectedRows> {
+		: Promise<IApiResponse<TAffectedRows>> {
 		const item = await this.repository.get(id);
 		if(item) {
 			if(item.url)
@@ -122,7 +122,7 @@ export default class ImageService
 	 * @returns number Count of deleted items
 	 * */
 	public async deleteList(list: Array<Image>)
-		: TAsyncApiResponse<TAffectedRows> {
+		: Promise<IApiResponse<TAffectedRows>> {
 		const imageFileService = this.imageFileService;
 		const affectedCount = await Promise.all(
 			list.map(

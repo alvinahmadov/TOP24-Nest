@@ -7,7 +7,7 @@ import {
 import { ContentObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import env               from '@config/env';
 import {
-	TApiResponseSchemaOptions,
+	IApiResponseSchemaOptions,
 	TMediaType
 }                        from '@common/interfaces';
 
@@ -15,7 +15,7 @@ import {
 export function getApiResponseContent(
 	mediaType: TMediaType,
 	classRef?: Type,
-	options?: TApiResponseSchemaOptions
+	options?: IApiResponseSchemaOptions
 ): Record<string, ApiResponseSchemaHost> {
 	switch(mediaType) {
 		case 'application/json':
@@ -32,9 +32,8 @@ export const getApiResponseContentOf = (
 	mediaType: TMediaType,
 	key: 'oneOf' | 'anyOf' | 'allOf',
 	classRefs?: Type[],
-	options?: TApiResponseSchemaOptions
-): { content: ContentObject } =>
-{
+	options?: IApiResponseSchemaOptions
+): { content: ContentObject } => {
 	let value: { content: ContentObject } = { content: null };
 
 	switch(mediaType) {
@@ -52,7 +51,7 @@ export const getApiResponseContentOf = (
 /**@ignore*/
 export function getJsonApiResponseContent(
 	classRef?: Type,
-	options?: TApiResponseSchemaOptions
+	options?: IApiResponseSchemaOptions
 ): Record<string, ApiResponseSchemaHost> {
 	return { 'application/json': getApiResponseSchema(classRef, options) };
 }
@@ -61,7 +60,7 @@ export function getJsonApiResponseContent(
 export function getJsonApiResponseContentOf(
 	key: 'oneOf' | 'anyOf' | 'allOf',
 	classRefs?: Type[],
-	options?: TApiResponseSchemaOptions
+	options?: IApiResponseSchemaOptions
 ): Record<string, ApiResponseSchemaHost> {
 	return { 'application/json': getApiResponseSchemaOf(key, classRefs, options) };
 }
@@ -82,9 +81,8 @@ export function getResponseSchema(
 /**@ignore*/
 export const getApiResponseSchema = (
 	classRef?: Type,
-	options?: TApiResponseSchemaOptions
-): ApiResponseSchemaHost =>
-{
+	options?: IApiResponseSchemaOptions
+): ApiResponseSchemaHost => {
 	return {
 		schema: env.api.compatMode ? (
 			(!!options?.isArray)
@@ -99,8 +97,8 @@ export const getApiResponseSchema = (
 					nullable: false
 				},
 				data:       (!!options?.isArray)
-				            ? { type: 'array', items: { $ref: getSchemaPath(classRef) } }
-				            : { $ref: getSchemaPath(classRef) },
+										? { type: 'array', items: { $ref: getSchemaPath(classRef) } }
+										: { $ref: getSchemaPath(classRef) },
 				message:    {
 					type:     'string',
 					nullable: true
@@ -127,9 +125,8 @@ const getItems = (key: 'oneOf' | 'anyOf' | 'allOf', classRefs: Type[]) =>
 export const getApiResponseSchemaOf = (
 	key: 'oneOf' | 'anyOf' | 'allOf',
 	classRefs?: Type[],
-	options?: TApiResponseSchemaOptions
-): ApiResponseSchemaHost =>
-{
+	options?: IApiResponseSchemaOptions
+): ApiResponseSchemaHost => {
 	return {
 		schema: env.api.compatMode ? (
 			(!!options?.isArray)
@@ -145,8 +142,8 @@ export const getApiResponseSchemaOf = (
 					nullable: false
 				},
 				data:       (!!options?.isArray)
-				            ? { type: 'array', items: getItems(key, classRefs) }
-				            : getItems(key, classRefs),
+										? { type: 'array', items: getItems(key, classRefs) }
+										: getItems(key, classRefs),
 				message:    {
 					type:     'string',
 					nullable: true
