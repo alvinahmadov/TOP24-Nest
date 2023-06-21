@@ -16,18 +16,15 @@ import {
 } from '@common/interfaces';
 
 @Injectable()
-abstract class NorificationGateway<TData = any> {
+abstract class NorificationGateway {
 	protected readonly logger: Logger;
 	protected readonly adminRepo: AdminRepository;
 	protected readonly userRepo: UserRepository;
-
-	protected users: Map<string, TData> = new Map<string, TData>();
 
 	protected constructor(loggerName?: string) {
 		this.logger = new Logger(loggerName ?? NorificationGateway.name, { timestamp: true });
 		this.adminRepo = new AdminRepository({ log: false });
 		this.userRepo = new UserRepository({ log: false });
-		this.users = new Map<string, TData>();
 	}
 
 	public abstract sendCargoNotification(data: ICargoGatewayData, options?: TNotifGatewayOptions): void;
