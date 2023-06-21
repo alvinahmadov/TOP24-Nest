@@ -11,9 +11,10 @@ import {
 } from '@common/enums';
 import {
 	IApiResponse,
-	IOrderExecutionState,
 	IModel,
 	IOffer,
+	IDriverSimulateData,
+	IOrderExecutionState,
 	TCreationAttribute,
 	TGeoCoordinate
 } from '@common/interfaces';
@@ -32,7 +33,7 @@ export interface ITransformer {
  * */
 export interface IUserTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	/**
 	 * @see IUser.role
 	 * */
@@ -57,7 +58,7 @@ export interface IAdminTransformer
 
 export interface IAddressTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	country: string;
 	postal_code?: string;
 	federal_district?: string;
@@ -87,7 +88,7 @@ export interface IAddressTransformer
  * */
 export interface ICompanyTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	userId: string;
 	name: string;
 	email: string;
@@ -270,7 +271,7 @@ export interface ICargoCompanyInnTransformer
  * */
 export interface IDestinationTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	point: string;
 	type: DestinationType;
 	address: string;
@@ -295,7 +296,7 @@ export interface IDestinationTransformer
  * */
 export interface IDriverTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	/**
@@ -414,6 +415,7 @@ export interface IDriverTransformer
 	 * @see IDriver.currentAddress
 	 * */
 	current_address?: string;
+	data?: IDriverSimulateData[];
 	readonly fullname?: string;
 	readonly company_name?: string;
 	readonly current_point?: string;
@@ -438,7 +440,7 @@ export interface IGatewayEventTransformer
  * */
 export interface IImageTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	transportId?: string;
@@ -453,7 +455,7 @@ export interface IImageTransformer
  * */
 export interface IOfferTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	orderId: string;
 	driverId: string;
 	status: OfferStatus;
@@ -483,7 +485,7 @@ export interface IOfferTransformer
  * */
 export interface IOrderTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	driverId?: string;
@@ -618,7 +620,7 @@ export interface IOrderTransformer
  * */
 export interface IPaymentTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	/**
@@ -650,7 +652,7 @@ export interface IPaymentTransformer
  * */
 export interface ITransportTransformer
 	extends IModel,
-	        ITransformer {
+					ITransformer {
 	cargoId?: string;
 	cargoinnId?: string;
 	driverId?: string;
@@ -769,8 +771,8 @@ export interface ITransportTransformer
 export type TOfferDriverTransformer = Omit<TCreationAttribute<IOfferTransformer>, 'orderId'>;
 
 export type TTransformerResponse<T> = IModel |
-                                      IModel[] |
-                                      ITransformer[] |
-                                      IApiResponse<T> |
-                                      (T & any[]) |
-                                      TTransformerApiResponse;
+																			IModel[] |
+																			ITransformer[] |
+																			IApiResponse<T> |
+																			(T & any[]) |
+																			TTransformerApiResponse;

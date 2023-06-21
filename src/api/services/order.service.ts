@@ -1,24 +1,25 @@
-import { Op }                  from 'sequelize';
+import { Op }                 from 'sequelize';
 import {
 	forwardRef,
+	HttpStatus,
 	Inject,
-	Injectable,
-	HttpStatus
-}                              from '@nestjs/common';
+	Injectable
+}                             from '@nestjs/common';
 import {
 	BitrixUrl,
 	Bucket
-}                              from '@common/constants';
+}                             from '@common/constants';
 import {
 	OfferStatus,
 	OrderStage,
 	OrderStatus,
 	TransportStatus,
 	UserRole
-}                              from '@common/enums';
+}                             from '@common/enums';
 import {
 	IApiResponse,
 	IApiResponses,
+	IDriverGatewayData,
 	IService,
 	TAffectedRows,
 	TCRMData,
@@ -26,40 +27,43 @@ import {
 	TDocumentMode,
 	TMergedEntities,
 	TMulterFile
-}                              from '@common/interfaces';
+}                             from '@common/interfaces';
 import {
 	buildBitrixRequestUrl,
-	renameMulterFiles,
 	fillDriverWithCompanyData,
 	filterOrders,
 	formatArgs,
 	getTranslation,
 	getUniqueArray,
-	transformTransportParameters,
-	renameMulterFile
-}                              from '@common/utils';
+	renameMulterFile,
+	renameMulterFiles,
+	transformTransportParameters
+}                             from '@common/utils';
 import {
 	Driver,
 	Order,
 	Transport
-}                              from '@models/index';
+}                             from '@models/index';
 import {
 	DestinationRepository,
 	OfferRepository,
 	OrderRepository
-}                              from '@repos/index';
+}                             from '@repos/index';
 import {
 	ListFilter,
 	OrderCreateDto,
 	OrderFilter,
 	OrderUpdateDto
-}                              from '@api/dto';
-import { NotificationGateway } from '@api/notifications';
-import Service                 from './service';
-import CargoCompanyService     from './cargo-company.service';
-import CargoCompanyInnService  from './cargoinn-company.service';
-import DriverService           from './driver.service';
-import ImageFileService        from './image-file.service';
+}                             from '@api/dto';
+import {
+	FirebaseNotificationGateway,
+	SocketNotificationGateway
+}                             from '@api/notifications';
+import Service                from './service';
+import CargoCompanyService    from './cargo-company.service';
+import CargoCompanyInnService from './cargoinn-company.service';
+import DriverService          from './driver.service';
+import ImageFileService       from './image-file.service';
 
 const ORDER_TRANSLATIONS = getTranslation('REST', 'ORDER');
 const EVENT_DRIVER_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
@@ -85,7 +89,8 @@ export default class OrderService
 		@Inject(forwardRef(() => DriverService))
 		private readonly driverService: DriverService,
 		protected readonly imageFileService: ImageFileService,
-		private readonly gateway: NotificationGateway
+		private readonly fcmGateway: FirebaseNotificationGateway,
+		private readonly socketGateway: SocketNotificationGateway
 	) {
 		super();
 		this.repository = new OrderRepository();
@@ -151,8 +156,7 @@ export default class OrderService
 		if(orders) {
 			if(filter && filter.statuses) {
 				orders.forEach(
-					order =>
-					{
+					order => {
 						if(
 							order.status === OrderStatus.CANCELLED ||
 							order.stage >= 4
@@ -257,7 +261,7 @@ export default class OrderService
 		const result = await this.repository.delete(id);
 
 		if(result.affectedCount > 0)
-			this.gateway.sendOrderNotification(
+			this.socketGateway.sendOrderNotification(
 				{ id, message: 'Deleted' }
 			);
 
@@ -291,7 +295,7 @@ export default class OrderService
 				else {
 					const transport = driver.transports.find(
 						t => !t.isTrailer &&
-						     t.status === TransportStatus.ACTIVE
+								 t.status === TransportStatus.ACTIVE
 					);
 					if(transport) {
 						result.transport = transformTransportParameters(transport);
@@ -377,9 +381,9 @@ export default class OrderService
 			const data: TCRMData = order.toCrm(companyCrmId, driverCrmId, driverCoordinates);
 			data.params['REGISTER_SONET_EVENT'] = 'N';
 			const client = await this.httpClient
-			                         .post<TCRMResponse>(
-				                         buildBitrixRequestUrl(BitrixUrl.ORDER_UPD_URL, data, crmOrderId)
-			                         );
+															 .post<TCRMResponse>(
+																 buildBitrixRequestUrl(BitrixUrl.ORDER_UPD_URL, data, crmOrderId)
+															 );
 
 			if(client) {
 				const { result } = client;
@@ -426,9 +430,9 @@ export default class OrderService
 			const {
 				Location: shippingPhotoLinks
 			} = await this.imageFileService
-			              .uploadFiles(
-				              renameMulterFiles(files, Bucket.Folders.ORDER, id, 'shipping', point)
-			              );
+										.uploadFiles(
+											renameMulterFiles(files, Bucket.Folders.ORDER, id, 'shipping', point)
+										);
 
 			if(shippingPhotoLinks?.length > 0) {
 				fileUploaded = true;
@@ -444,7 +448,7 @@ export default class OrderService
 
 			if(fileUploaded) {
 				await this.send(order.id)
-				          .catch(console.error);
+									.catch(console.error);
 			}
 
 			if(fileUploaded)
@@ -479,7 +483,7 @@ export default class OrderService
 			if(0 < shippingLength) {
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
-					                      .deleteImageList(destination.shippingPhotoLinks) > 0;
+																.deleteImageList(destination.shippingPhotoLinks) > 0;
 					if(isDeleted)
 						destination.shippingPhotoLinks = [];
 				}
@@ -501,7 +505,7 @@ export default class OrderService
 
 			if(isDeleted) {
 				await this.send(order.id)
-				          .catch(console.error);
+									.catch(console.error);
 			}
 		}
 
@@ -612,8 +616,8 @@ export default class OrderService
 
 		if(fileUploaded) {
 			this.send(order.id)
-			    .then(() => this.gateway.sendOrderNotification({ id, message }))
-			    .catch(console.error);
+					.then(() => this.socketGateway.sendOrderNotification({ id, message }))
+					.catch(console.error);
 
 			return {
 				statusCode: HttpStatus.OK,
@@ -649,8 +653,8 @@ export default class OrderService
 					order.contractPhotoLink = null;
 
 					order.save({ fields: ['contractPhotoLink', 'stage'] })
-					     .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
-					     .catch(console.error);
+							 .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
+							 .catch(console.error);
 				}
 			}
 		}
@@ -658,7 +662,7 @@ export default class OrderService
 			if(order.paymentPhotoLinks) {
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
-					                      .deleteImageList(order.paymentPhotoLinks) > 0;
+																.deleteImageList(order.paymentPhotoLinks) > 0;
 				}
 				else if(order.paymentPhotoLinks.length > 0) {
 					const paymentPhotoLink = order.paymentPhotoLinks[index];
@@ -670,8 +674,8 @@ export default class OrderService
 					order.paymentPhotoLinks = photoLinks;
 					order.onPayment = false;
 					order.save({ fields: ['paymentPhotoLinks', 'onPayment'] })
-					     .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
-					     .catch(console.error);
+							 .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
+							 .catch(console.error);
 				}
 			}
 		}
@@ -679,7 +683,7 @@ export default class OrderService
 			if(order.receiptPhotoLinks) {
 				if(deleteAll) {
 					isDeleted = await this.imageFileService
-					                      .deleteImageList(order.receiptPhotoLinks) > 0;
+																.deleteImageList(order.receiptPhotoLinks) > 0;
 				}
 				else if(order.receiptPhotoLinks.length > 0) {
 					const receiptPhotoLink = order.receiptPhotoLinks[index];
@@ -690,8 +694,8 @@ export default class OrderService
 				if(isDeleted) {
 					order.receiptPhotoLinks = photoLinks;
 					order.save({ fields: ['receiptPhotoLinks'] })
-					     .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
-					     .catch(console.error);
+							 .then(o => console.log(`Deleted ${mode} photos for order '${o.id}'`))
+							 .catch(console.error);
 				}
 			}
 		}
@@ -724,17 +728,16 @@ export default class OrderService
 		);
 
 		if(affectedCount > 0) {
+			const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
+			const data: IDriverGatewayData = {
+				id:      null,
+				message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], orderTitle)
+			};
+
 			for(const offer of offers) {
-				this.gateway.sendDriverNotification(
-					{
-						id:      offer.driverId,
-						message: formatArgs(EVENT_DRIVER_TRANSLATIONS['NOT_SELECTED'], orderTitle)
-					},
-					{
-						role: UserRole.CARGO,
-						url:  'Main'
-					}
-				);
+				data.id = offer.driverId;
+				this.socketGateway.sendDriverNotification(data, options);
+				this.fcmGateway.sendDriverNotification(data, options);
 			}
 		}
 	}

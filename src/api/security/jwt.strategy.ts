@@ -10,8 +10,8 @@ import { PassportStrategy }          from '@nestjs/passport';
 import env                           from '@config/env';
 import {
 	IAuthRequest,
-	IUserPayload,
-	TRouteAccess
+	IRouteAccess,
+	IUserPayload
 }                                    from '@common/interfaces';
 import { requestAuthExtractor }      from '@common/utils';
 import {
@@ -20,7 +20,7 @@ import {
 	CargoInnCompanyRepository
 }                                    from '@repos/index';
 
-const routesWhiteList: TRouteAccess[] = [
+const routesWhiteList: IRouteAccess[] = [
 	{ path: `/api/reference`, method: RequestMethod.ALL },
 	{ path: '/api/generator', method: RequestMethod.ALL },
 	{ path: '/api/admin/hostlogin', method: RequestMethod.POST },

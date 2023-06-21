@@ -10,6 +10,7 @@ export * from './company';
 export * from './company-inn';
 export * from './driver';
 export * from './gateway-event';
+export * from './generator';
 export * from './image';
 export * from './offer';
 export * from './order';

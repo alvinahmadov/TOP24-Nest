@@ -3,21 +3,29 @@ import {
 	IsUUID,
 	Table
 }                                   from 'sequelize-typescript';
-import { Field, ObjectType }        from '@nestjs/graphql';
+import {
+	Field,
+	ObjectType
+}                                   from '@nestjs/graphql';
+import { ORDER }                    from '@config/json';
 import { DestinationType }          from '@common/enums';
-import { TupleScalar, UuidScalar }  from '@common/scalars';
+import {
+	TupleScalar,
+	UuidScalar
+}                                   from '@common/scalars';
 import { TABLE_OPTIONS }            from '@common/constants';
 import { destinationPointToNumber } from '@common/utils';
 import {
-	Index,
-	IDestination,
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
-	RealArrayColumn,
+	IDestination,
+	Index,
 	IntColumn,
+	RealArrayColumn,
 	StringArrayColumn,
 	StringColumn,
+	TCRMData,
 	TGeoCoordinate,
 	UuidColumn,
 	VirtualColumn
@@ -68,6 +76,13 @@ export default class Destination
 	@Index
 	@UuidColumn({ onDelete: 'CASCADE' })
 	orderId?: string;
+
+	@Index
+	@IntColumn({
+		unique:       false,
+		defaultValue: null
+	})
+	crmId?: number;
 
 	/**
 	 * Name of the point (alphabet character)
@@ -150,6 +165,30 @@ export default class Destination
 	get num(): number {
 		return destinationPointToNumber(this.point);
 	}
+
+	get latitude() {
+		return this.coordinates[0];
+	}
+
+	get longitude() {
+		return this.coordinates[1];
+	}
+
+	public readonly toCrm? = (data?: TCRMData): void => {
+		const DESTINATION = ORDER.DESTINATIONS.find(({ NAME }) => NAME === this.point);
+		if(DESTINATION) {
+			if(Array.isArray(data.fields[DESTINATION.SHIPPING_LINK])) {
+				if(data.fields[DESTINATION.SHIPPING_LINK]?.length > 0) {
+					data.fields[DESTINATION.SHIPPING_LINK].push(this.shippingPhotoLinks?.join(', '));
+				}
+			}
+			else if(typeof data.fields[DESTINATION.SHIPPING_LINK] === 'string') {
+				if(!data.fields[DESTINATION.SHIPPING_LINK]?.length)
+					data.fields[DESTINATION.SHIPPING_LINK] = "";
+				data.fields[DESTINATION.SHIPPING_LINK] += this.shippingPhotoLinks?.join(', ');
+			}
+		}
+	};
 
 	public hasDiff(dto: DestinationUpdateDto) {
 		return getDiff(this, dto, [

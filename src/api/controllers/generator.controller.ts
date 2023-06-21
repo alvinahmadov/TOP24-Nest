@@ -8,6 +8,12 @@ import {
 }                              from '@nestjs/common';
 import { ApiTags }             from '@nestjs/swagger';
 import { CompanyType }         from '@common/enums';
+import { GeneratorOptions }    from '@common/constants';
+import {
+	ICompanyGenerateOptions,
+	IOrderGenerateOptions,
+	ISimulateOptions
+}                              from '@common/interfaces';
 import {
 	randomOf,
 	sendResponse
@@ -15,7 +21,7 @@ import {
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
 import { getRouteConfig }      from '@api/routes';
-import { AdminGuard }          from '@api/security';
+import { LogistGuard }         from '@api/security';
 import { GeneratorService }    from '@api/services';
 
 const { path, tag, routes } = getRouteConfig('generator');
@@ -29,33 +35,61 @@ export default class GeneratorController {
 	) {}
 
 	@ApiRoute(routes.company, {
-		guards:   [AdminGuard],
+		guards:   [LogistGuard],
 		statuses: [HttpStatus.OK]
 	})
 	public async createCompanies(
-		@Body() data: { count?: number, type?: number },
+		@Body() options: ICompanyGenerateOptions = GeneratorOptions.COMPANY_DEFAULTS,
 		@Res() response: ex.Response
 	) {
-		let { count, type: companyType = CompanyType.ORG } = data;
-
-		if(companyType > CompanyType.PI || companyType < 0) {
-			companyType = randomOf<CompanyType>(CompanyType.PI, CompanyType.IE);
+		if(options.type == undefined) {
+			options.type = randomOf<CompanyType>(CompanyType.PI, CompanyType.IE);
 		}
 
-		const result = await this.generatorService.generateCompanies(count, companyType);
+		const result = await this.generatorService.generateCompanies(options);
 
 		return sendResponse(response, result);
 	}
 
 	@ApiRoute(routes.order, {
-		guards: [AdminGuard]
+		guards: [LogistGuard]
 	})
 	public async createOrders(
-		@Body() data: { count?: number, maxDestination?: number },
+		@Body() options: IOrderGenerateOptions = GeneratorOptions.ORDER_DEFAULTS,
 		@Res() response: ex.Response
 	) {
-		const result = await this.generatorService.generateOrders(data.count, data.maxDestination);
+		const result = await this.generatorService.generateOrders(options);
 
 		return sendResponse(response, result);
+	}
+
+	@ApiRoute(routes.simulateStart, {
+		guards: [LogistGuard]
+	})
+	public async startServiceSimulation(
+		@Body() options: ISimulateOptions = {
+			count:    1,
+			interval: 5,
+			reset:    false,
+			company:  GeneratorOptions.COMPANY_DEFAULTS,
+			order:    GeneratorOptions.ORDER_DEFAULTS
+		},
+		@Res() response: ex.Response
+	) {
+		const res = await this.generatorService.generateSimulation(options);
+
+		sendResponse(response, res, false);
+	}
+
+	@ApiRoute(routes.simulateEnd, {
+		guards: [LogistGuard]
+	})
+	public async stopServiceSimulation(
+		@Body() options: Pick<ISimulateOptions, 'reset'> = { reset: false },
+		@Res() response: ex.Response
+	) {
+		const res = await this.generatorService.stopSimulation('simulate', options);
+
+		sendResponse(response, res, false);
 	}
 }

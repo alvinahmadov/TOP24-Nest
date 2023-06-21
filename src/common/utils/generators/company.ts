@@ -1,37 +1,37 @@
-import faker, { GenderType } from '@faker-js/faker';
-import * as enums            from '@common/enums';
-import * as utils            from '@common/utils';
-import * as dto              from '@api/dto';
-import * as common           from './common';
-import { generatePayment }   from './payment';
+import faker, { GenderType }       from '@faker-js/faker';
+import { GeneratorOptions }        from '@common/constants';
+import * as enums                  from '@common/enums';
+import { ICompanyGenerateOptions } from '@common/interfaces';
+import * as utils                  from '@common/utils';
+import * as dto                    from '@api/dto';
+import * as common                 from './common';
+import { generatePayment }         from './payment';
 
 /**@ignore*/
 type CompanyData = { company: dto.CompanyCreateDto, payment: dto.PaymentCreateDto };
 /**@ignore*/
 type CompanyInnData = { company: dto.CompanyInnCreateDto, payment: dto.PaymentCreateDto };
 
-const lat = () => Number(faker.address.latitude(60.0, 50.0, 5)),
-	lng = () => Number(faker.address.longitude(60.0, 50.0, 5));
+const { COMPANY_DEFAULTS } = GeneratorOptions;
+const { lat, lon, getDriverOptions, USE_GENERIC_ADDRESS: useGeneric } = common;
 
-async function generateCargoCompany(): Promise<CompanyData> {
+async function generateCargoCompany(options?: ICompanyGenerateOptions): Promise<CompanyData> {
+	let { type } = options ?? COMPANY_DEFAULTS;
+	const { startPos, distanceDelta: delta } = getDriverOptions(options.driver, COMPANY_DEFAULTS);
+
 	const gender1 = faker.name.gender(true).toLowerCase() as GenderType;
 	const gender2 = faker.name.gender(true).toLowerCase() as GenderType;
 	const gender3 = faker.name.gender(true).toLowerCase() as GenderType;
-	const name = faker.company.companyName();
-	const phone = faker.phone.phoneNumber('+7 999 ### ## ##');
-
-	let email = faker.internet.email(name, undefined, undefined, { allowSpecialCharacters: false });
-
-	if(email.split('@')[0].length < 2) {
-		email = faker.internet.email(name, undefined, undefined, { allowSpecialCharacters: false });
-	}
+	const name: string = faker.company.companyName();
+	const phone: string = faker.phone.phoneNumber('+7 999 ### ## ##');
+	const email: string = common.generateEmailAddress(name);
 
 	const cargoCompanyData: dto.CompanyCreateDto = {
 		name,
 		phone,
 		email,
+		type,
 		user:                        phone,
-		type:                        enums.CompanyType.ORG,
 		isDefault:                   false,
 		confirmed:                   true,
 		contact:                     faker.name.findName(
@@ -56,8 +56,20 @@ async function generateCargoCompany(): Promise<CompanyData> {
 		taxReasonCode:               faker.finance.account(12),
 		registrationNumber:          faker.finance.account(12),
 		paymentType:                 faker.helpers.arrayElement(['НДС 20%', 'Без НДС', ' Наличными']),
-		legalAddress:                await common.generateAddressFromCoordinates(lat(), lng()),
-		postalAddress:               await common.generateAddressFromCoordinates(lat(), lng()),
+		legalAddress:                await common.generateAddressFromCoordinates(
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
+		),
+		postalAddress:               await common.generateAddressFromCoordinates(
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
+		),
 		passportGivenDate:           common.dateBetween(2000, 2020),
 		passportPhotoLink:           faker.image.business(300, 300, true),
 		passportRegistrationAddress: common.generateAddress(),
@@ -76,29 +88,28 @@ async function generateCargoCompany(): Promise<CompanyData> {
 	return { company: cargoCompanyData, payment };
 }
 
-async function generateCargoInnCompany(companyType?: enums.CompanyType) {
+async function generateInnCargoCompany(options: ICompanyGenerateOptions = COMPANY_DEFAULTS): Promise<CompanyInnData> {
+	let { type } = options ?? COMPANY_DEFAULTS;
+	const { startPos, distanceDelta: delta } = getDriverOptions(options.driver);
+
 	const gender = faker.name.gender(true).toLowerCase() as GenderType;
-	const name = faker.name.firstName(gender);
-	const middle_name = faker.name.middleName(gender);
-	const lastName = faker.name.lastName(gender);
-	const phone = faker.phone.phoneNumber('+7 ### ### ## ##');
-	let email = faker.internet.email(name, undefined, undefined, { allowSpecialCharacters: false });
+	const name: string = faker.name.firstName(gender);
+	const middleName: string = faker.name.middleName(gender);
+	const lastName: string = faker.name.lastName(gender);
+	const phone: string = faker.phone.phoneNumber('+7 ### ### ## ##');
+	const email: string = common.generateEmailAddress(name, lastName);
 
-	if(email.split('@')[0].length < 2) {
-		email = faker.internet.email(name, undefined, undefined, { allowSpecialCharacters: false });
-	}
-
-	if(companyType === undefined)
-		companyType = faker.helpers.arrayElement([enums.CompanyType.IE, enums.CompanyType.PI]);
+	if(type === undefined)
+		type = faker.helpers.arrayElement([enums.CompanyType.IE, enums.CompanyType.PI]);
 
 	const cargoCompanyInnData: dto.CompanyInnCreateDto = {
 		name,
 		lastName,
-		patronymic:                  middle_name,
 		phone,
 		email,
+		type,
+		patronymic:                  middleName,
 		user:                        phone,
-		type:                        companyType,
 		isDefault:                   false,
 		taxpayerNumber:              faker.finance.account(12),
 		paymentType:                 utils.randomOf('НДС 20%', 'Без НДС', ' Наличными'),
@@ -108,13 +119,37 @@ async function generateCargoInnCompany(companyType?: enums.CompanyType) {
 		passportIssuedBy:            faker.address.streetAddress(true),
 		passportSelfieLink:          faker.image.imageUrl(),
 		passportSignLink:            faker.image.imageUrl(),
-		address:                     await common.generateAddressFromCoordinates(lat(), lng()),
-		postalAddress:               await common.generateAddressFromCoordinates(lat(), lng()),
-		actualAddress:               await common.generateAddressFromCoordinates(lat(), lng()),
+		address:                     await common.generateAddressFromCoordinates(
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
+		),
+		postalAddress:               await common.generateAddressFromCoordinates(
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
+		),
+		actualAddress:               await common.generateAddressFromCoordinates(
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
+		),
 		confirmed:                   false,
 		directions:                  faker.helpers.arrayElements(common.DIRECTIONS, 3),
 		passportGivenDate:           common.dateBetween(2000, 2020),
-		passportRegistrationAddress: await common.generateAddressFromCoordinates(lat(), lng()),
+		passportRegistrationAddress: await common.generateAddressFromCoordinates(
+			{
+				latitude:  lat(startPos.latitude, delta),
+				longitude: lon(startPos.longitude, delta),
+				useGeneric
+			}
+		),
 		passportSerialNumber:        faker.random.alphaNumeric(7),
 		passportSubdivisionCode:     common.generateSerialNumber([3, 4]),
 		contactPhone:                faker.phone.phoneNumber('+7 ### ### ## ##'),
@@ -126,35 +161,9 @@ async function generateCargoInnCompany(companyType?: enums.CompanyType) {
 	return { company: cargoCompanyInnData, payment };
 }
 
-async function generateCompanies(count?: number) {
-	if(count === undefined)
-		count = faker.datatype.number({ min: 3, max: 10 });
-	const createdData: CompanyData[] = [];
-
-	for(let step = 0; step < count; step++) {
-		const data = await generateCargoCompany();
-		createdData.push(data);
-	}
-
-	return createdData;
-}
-
-async function generateInnCompanies(count?: number, companyType?: enums.CompanyType) {
-	if(!count)
-		count = faker.datatype.number({ min: 3, max: 10 });
-	const createdData: CompanyInnData[] = [];
-
-	for(let step = 0; step < count; step++) {
-		const data = await generateCargoInnCompany(companyType);
-		createdData.push(data);
-	}
-
-	return createdData;
-}
-
-export async function generateCompany(count?: number, companyType?: enums.CompanyType) {
-	if(companyType === undefined) {
-		companyType = faker.helpers.arrayElement(
+export async function generateCompanies(options: ICompanyGenerateOptions = COMPANY_DEFAULTS) {
+	if(options.type === undefined) {
+		options.type = faker.helpers.arrayElement(
 			[
 				enums.CompanyType.ORG,
 				enums.CompanyType.IE,
@@ -163,10 +172,13 @@ export async function generateCompany(count?: number, companyType?: enums.Compan
 		);
 	}
 
-	if(companyType === enums.CompanyType.ORG) {
-		return generateCompanies(count);
-	}
-	else {
-		return generateInnCompanies(count, companyType);
-	}
+	if(options.count === undefined)
+		options.count = faker.datatype.number({ min: 3, max: 10 });
+
+	return Promise.all(
+		Array.from(Array(options.count))
+				 .map(() => options.type === enums.CompanyType.ORG
+										? generateCargoCompany(options)
+										: generateInnCargoCompany(options))
+	);
 }

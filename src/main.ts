@@ -59,6 +59,8 @@ const DTOS = [
 	dto.DriverCreateDto,
 	dto.DriverUpdateDto,
 	dto.DriverFilter,
+	// Generator
+	dto.SimulateOptionsDto,
 	// Image
 	dto.ImageCreateDto,
 	dto.ImageUpdateDto,

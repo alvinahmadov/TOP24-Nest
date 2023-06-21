@@ -48,6 +48,7 @@ import {
 import * as dto                from '@api/dto';
 import { ApiRoute }            from '@api/decorators';
 import { HttpExceptionFilter } from '@api/middlewares';
+import * as notifications      from '@api/notifications';
 import {
 	CompanyCreatePipe,
 	CompanyTransportFilterPipe,
@@ -68,7 +69,6 @@ import {
 }                              from '@api/services';
 import BaseController          from './controller';
 import AddressService          from '../services/address.service';
-import { NotificationGateway } from '@api/notifications';
 
 const { path, tag, routes } = getRouteConfig('company');
 const TRANSLATIONS = getTranslation('REST', 'COMPANY');
@@ -86,7 +86,7 @@ export default class CompanyController
 		private readonly offerService: OfferService,
 		private readonly paymentService: PaymentService,
 		private readonly userService: UserService,
-		private readonly gateway: NotificationGateway
+		private readonly fcmGateway: notifications.FirebaseNotificationGateway
 	) {
 		super();
 	}
@@ -271,7 +271,7 @@ export default class CompanyController
 
 		if(isSuccessResponse(apiResponse)) {
 			if('accessToken' in apiResponse.data && fcm) {
-				await this.gateway.handleUser(
+				await this.fcmGateway.handleAuth(
 					{
 						jwtToken: apiResponse.data['accessToken'],
 						fcmToken: fcm
@@ -308,7 +308,7 @@ export default class CompanyController
 			data: company,
 			message
 		} = await (this.cargoService.getById(id) ||
-		           this.cargoInnService.getById(id));
+							 this.cargoInnService.getById(id));
 
 		if(company && company.role === role) {
 			const data = { accessToken: this.authService.createAccess({ id, role }) };
@@ -439,8 +439,7 @@ export default class CompanyController
 		if(orderId) {
 			const { data: offers } = await this.offerService.getList({}, { orderId });
 
-			const setOfferStatus = (transport: Transport): Transport =>
-			{
+			const setOfferStatus = (transport: Transport): Transport => {
 				const offer = offers.find(o => o.driverId === transport.driverId);
 				if(offer)
 					transport.offerStatus = offer.status;

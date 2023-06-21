@@ -1,20 +1,22 @@
-import { CRM }                   from '@config/json/crm_enums.json';
-import { ICompany, TBitrixData } from '@common/interfaces';
+import { CRM } from '@config/json/crm_enums.json';
+import {
+	ICompany,
+	TBitrixData
+}              from '@common/interfaces';
 import {
 	Driver,
 	Order,
 	Transport
-}                                from '@models/index';
+}              from '@models/index';
 
 function isDedicatedOrExtraPayload(value: string, order: Order) {
 	const dedicated: TBitrixData = CRM.ORDER.DEDICATION
-	                                  .find((d: TBitrixData) => d.VALUE === value);
+																		.find((d: TBitrixData) => d.VALUE === value);
 	if(!dedicated) {
-		console.debug(`Не найдено значение "${value}" для заказа!`);
 		return false;
 	}
 	return order.dedicated === dedicated.VALUE ||
-	       order.dedicated === dedicated.ID;
+				 order.dedicated === dedicated.ID;
 }
 
 export function transformTransportParameters(transport: Transport): Transport {
@@ -34,8 +36,7 @@ export function fillDriverWithCompanyData(driver: Driver, company?: ICompany): D
 	if(driver) {
 		const companyKey: keyof Driver = driver.cargoId ? 'cargo' : 'cargoinn';
 
-		const fillData = (data: ICompany) =>
-		{
+		const fillData = (data: ICompany) => {
 			if(data) {
 				if(!driver.avatarLink && 'avatarLink' in data)
 					driver.avatarLink = data?.avatarLink;

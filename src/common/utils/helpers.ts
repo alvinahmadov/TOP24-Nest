@@ -3,8 +3,8 @@ import { v4 as uuid }         from 'uuid';
 import * as ex                from 'express';
 import env                    from '@config/env';
 import {
-	RANDOM_CODE_MAX,
-	RANDOM_CODE_DIGITS
+	RANDOM_CODE_DIGITS,
+	RANDOM_CODE_MAX
 }                             from '@common/constants';
 import {
 	IApiResponse,
@@ -31,6 +31,12 @@ export const isNumber = (value: any): boolean => !isNaN(Number(value));
 
 export const isSuccessResponse = <T>(response: IApiResponse<T>) =>
 	response?.statusCode >= 200 && response?.statusCode < 400 || response?.data !== undefined;
+
+export const isValidEmail = (email: string) => {
+	return email.match(
+		/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+	) !== null;
+};
 
 export const min = (a: number, b: number): number => a > b ? b : a;
 
@@ -89,8 +95,5 @@ export function sendResponse<T = any>(
 	transform: boolean | number = env.api.compatMode
 ) {
 	return response.status(result?.statusCode ?? 400)
-	               .send(
-		               transform ? transformApiResult(result)
-		                         : result
-	               );
+								 .send(transform ? transformApiResult(result) : result);
 }

@@ -166,7 +166,6 @@ export default class BitrixController
 		@Req() request: ex.Request,
 		@Res() response: ex.Response
 	) {
-		console.debug({ webhookRespond: body })
 		return sendResponse(response, { statusCode: HttpStatus.OK });
 	}
 }

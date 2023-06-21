@@ -3,6 +3,7 @@ import { ApiProperty }  from '@nestjs/swagger';
 import { DriverStatus } from '@common/enums';
 import {
 	IDriver,
+	IDriverSimulateData,
 	TUpdateAttribute
 }                       from '@common/interfaces';
 import { entityConfig } from '@api/swagger/properties';
@@ -113,4 +114,7 @@ export default class DriverUpdateDto
 
 	@ApiProperty(prop.currentAddress)
 	public currentAddress?: string;
+
+	@ApiProperty(prop.data)
+	public data?: IDriverSimulateData[];
 }

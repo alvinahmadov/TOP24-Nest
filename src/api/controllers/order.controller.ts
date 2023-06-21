@@ -205,16 +205,20 @@ export default class OrderController
 
 			if(!dto.execState) {
 				dto.execState = {
-					type:         DestinationType.LOAD,
+					type:         order.destination.type,
 					actionStatus: ActionStatus.ON_WAY,
 					loaded:       false,
 					unloaded:     false,
 					uploaded:     false
 				};
 			}
+			else if(dto.execState.type === undefined) {
+				dto.execState.type = order.destination.type;
+			}
 
-			if(order.destination.type === DestinationType.COMBINED) {
-				dto.execState.set(order.execState);
+			if(dto.execState.type === DestinationType.COMBINED) {
+				if(dto.execState.loaded && !dto.execState.unloaded)
+					dto.execState.unloaded = true;
 			}
 			const result = await this.orderService.update(id, dto);
 			return sendResponse(response, result);

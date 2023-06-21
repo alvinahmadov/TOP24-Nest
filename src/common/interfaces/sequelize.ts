@@ -11,7 +11,7 @@ import {
 }                                      from 'sequelize-typescript';
 
 type IndexDecoratorOptions = IndexOptions &
-                             Pick<IndexFieldOptions, Exclude<keyof IndexFieldOptions, 'name'>>;
+														 Pick<IndexFieldOptions, Exclude<keyof IndexFieldOptions, 'name'>>;
 type AnnotationFunction = <T>(
 	target: T,
 	propertyName: string

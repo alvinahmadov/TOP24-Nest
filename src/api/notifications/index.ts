@@ -1,7 +1,11 @@
-import NotificationGateway from './notification.gateway';
-import RedisIoAdapter      from './redis-io.adapter';
+import FirebaseNotificationGateway from './firebase-notification.gateway';
+import SocketNotificationGateway   from './socket-notification.gateway';
+import NorificationGateway         from './notification-gateway';
+import RedisIoAdapter              from './redis-io.adapter';
 
 export {
-	NotificationGateway,
+	FirebaseNotificationGateway,
+	SocketNotificationGateway,
+	NorificationGateway,
 	RedisIoAdapter
 };

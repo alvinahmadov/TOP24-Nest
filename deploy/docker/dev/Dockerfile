@@ -1,14 +1,12 @@
 ## ---- Base ---- ##
 FROM node:lts-buster AS base
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils locales net-tools \
-    nano libreoffice-writer
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils locales cron net-tools nano libreoffice-writer 
 RUN npm install -g npm@latest --loglevel=error
 
 # Locale
 RUN sed -i -e \
-  's/# ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen \
-   && locale-gen
+  's/# ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
 
 ENV APP_USER=node
 ENV APP_HOME=/srv/app

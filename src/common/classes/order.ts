@@ -20,14 +20,17 @@ export class OrderExecutionState
 	unloaded?: boolean;
 	uploaded?: boolean;
 
-	set = (state: IOrderExecutionState): void => {
+	static set(lhs: IOrderExecutionState, state: IOrderExecutionState): void {
 		try {
-			if(this.loaded === undefined)
-				this.loaded = !!state?.loaded;
-			if(this.unloaded === undefined)
-				this.unloaded = !!state?.unloaded;
-			if(this.uploaded === undefined)
-				this.uploaded = !!state?.uploaded;
+			if(lhs.loaded === undefined)
+				if(state?.loaded !== undefined)
+					lhs.loaded = state.loaded;
+			if(lhs.unloaded === undefined)
+				if(state?.unloaded !== undefined)
+					lhs.unloaded = state.unloaded;
+			if(lhs.uploaded === undefined)
+				if(state?.uploaded !== undefined)
+					lhs.uploaded = state.uploaded;
 		} catch(e) {}
 	};
 }
