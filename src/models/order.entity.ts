@@ -32,7 +32,6 @@ import {
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
-	ICRMEntity,
 	Index,
 	IntArrayColumn,
 	IntColumn,
@@ -80,7 +79,7 @@ const scopeOptions: FindOptions = {
 @Table(TABLE_OPTIONS)
 export default class Order
 	extends EntityModel<IOrder>
-	implements IOrder, ICRMEntity {
+	implements IOrder {
 	@ApiProperty(prop.cargoId)
 	@IsUUID('all')
 	@Field(() => UuidScalar)
