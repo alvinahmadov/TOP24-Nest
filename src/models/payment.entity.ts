@@ -7,8 +7,10 @@ import { ApiProperty }       from '@nestjs/swagger';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { TABLE_OPTIONS }     from '@common/constants';
 import {
+	ICRMValidationData,
 	Index,
 	IPayment,
+	JsonbColumn,
 	StringColumn,
 	UrlColumn,
 	UuidColumn
@@ -74,6 +76,10 @@ export default class Payment
 	@ApiProperty(prop.info)
 	@StringColumn()
 	info?: string;
+	
+	@ApiProperty(prop.crmData)
+	@JsonbColumn({ defaultValue: {} })
+	crmData?: ICRMValidationData<IPayment>;
 
 	@ApiProperty(prop.cargo)
 	@BelongsTo(() => CargoCompany, 'cargoId')

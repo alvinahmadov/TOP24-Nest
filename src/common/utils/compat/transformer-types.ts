@@ -158,6 +158,8 @@ export interface ICompanyTransformer
 	info?: string;
 	status?: string;
 
+	crm_data?: any;
+
 	drivers?: IDriverTransformer[];
 	orders?: IOrderTransformer[];
 	payment?: IPaymentTransformer;
@@ -416,6 +418,7 @@ export interface IDriverTransformer
 	 * */
 	current_address?: string;
 	data?: IDriverSimulateData[];
+	crm_data?: any;
 	readonly fullname?: string;
 	readonly company_name?: string;
 	readonly current_point?: string;
@@ -766,6 +769,8 @@ export interface ITransportTransformer
 	offer_status?: number;
 	driver?: IDriverTransformer;
 	images?: IImageTransformer[];
+
+	crm_data?: any;
 }
 
 export type TOfferDriverTransformer = Omit<TCreationAttribute<IOfferTransformer>, 'orderId'>;

@@ -19,6 +19,9 @@ import {
 	CompanyType,
 	UserRole
 }                        from '@common/enums';
+import {
+	validateCompanyCrm
+}                        from '@common/utils/bitrix'
 import { TABLE_OPTIONS } from '@common/constants';
 import {
 	BooleanColumn,
@@ -31,7 +34,10 @@ import {
 	TCRMData,
 	UrlColumn,
 	UuidColumn,
-	VirtualColumn
+	VirtualColumn,
+	ICRMValidationData,
+	JsonbColumn,
+	TCRMFields,
 }                        from '@common/interfaces';
 import { convertBitrix } from '@common/utils';
 import { entityConfig }  from '@api/swagger/properties';
@@ -196,6 +202,10 @@ export default class CargoCompanyInn
 	@UrlColumn()
 	passportSelfieLink?: string;
 
+	@ApiProperty(prop.crmData)
+	@JsonbColumn({ defaultValue: {} })
+	crmData?: ICRMValidationData<ICargoCompanyInn>;
+
 	@BooleanColumn({ defaultValue: false })
 	hasSent?: boolean;
 
@@ -242,6 +252,7 @@ export default class CargoCompanyInn
 		const name = this.name ? ` ${this.name[0]}.` : '';
 		return `${lastName}${patronymic}${name}`;
 	}
+	
 
 	public toCrm = (): TCRMData =>
 	{
@@ -280,4 +291,7 @@ export default class CargoCompanyInn
 		data.fields[CARGOINN.DATE_UPDATE] = this.updatedAt;
 		return data;
 	};
+	
+	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean => 
+		validateCompanyCrm(this, crm, reference);
 }

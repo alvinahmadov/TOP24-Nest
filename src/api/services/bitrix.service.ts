@@ -23,10 +23,12 @@ import {
 	IApiResponses,
 	ICargoGatewayData,
 	ICompany,
+	ICRMEntity,
 	IDriverGatewayData,
 	IOrder,
 	IService,
 	TAffectedRows,
+	TCRMFields,
 	TCRMResponse,
 	TOperationCount,
 	TUpdateAttribute
@@ -39,6 +41,7 @@ import {
 	orderFromBitrix
 }                                from '@common/utils';
 import {
+	Driver,
 	Order,
 	Transport
 }                                from '@models/index';
@@ -54,18 +57,28 @@ import {
 import Service                   from './service';
 import CargoCompanyService       from './cargo-company.service';
 import CargoCompanyInnService    from './cargoinn-company.service';
+import DriverService             from './driver.service';
 import OfferService              from './offer.service';
 import OrderService              from './order.service';
 import TransportService          from './transport.service';
 import ORDER_LST_URL = BitrixUrl.ORDER_LST_URL;
 import ORDER_GET_URL = BitrixUrl.ORDER_GET_URL;
 import COMPANY_GET_URL = BitrixUrl.COMPANY_GET_URL;
+import COMPANY_REF_URL = BitrixUrl.COMPANY_REF_URL;
 import CONTACT_GET_URL = BitrixUrl.CONTACT_GET_URL;
+import CONTACT_REF_URL = BitrixUrl.CONTACT_REF_URL;
 
+import { Axios }         from '@common/classes';
 const COMPANY_EVENT_TRANSLATION = getTranslation('EVENT', 'COMPANY');
 const DRIVER_EVENT_TRANSLATION = getTranslation('EVENT', 'DRIVER');
 const ORDER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
 const debugBitrixOrder = false;
+
+async function validateCrm(httpClient: Axios, crmEntity: ICRMEntity, crmItem: TCRMFields, referenceUrl: string) {
+	const { result: reference_result } = await httpClient.get<TCRMResponse>(referenceUrl);
+	const crmRef = getCrm(reference_result);
+	return crmEntity.validateCrm(crmItem, crmRef)
+}
 
 /**
  * @summary Bitrix Service
@@ -80,6 +93,7 @@ export default class BitrixService
 		updateErr:           { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Error Cargo updating ...' },
 		bitrixErr:           { statusCode: HttpStatus.BAD_REQUEST, message: 'Error in bitrix answer ...' },
 		NOT_FOUND_COMPANY:   { statusCode: HttpStatus.NOT_FOUND, message: 'Cargo Not found ...' },
+		NOT_FOUND_DRIVER:    { statusCode: HttpStatus.NOT_FOUND, message: 'Driver Not found ...' },
 		NOT_FOUND_TRANSPORT: { statusCode: HttpStatus.NOT_FOUND, message: 'Transport Not found ...' },
 		NOT_FOUND_ORDER:     { statusCode: HttpStatus.NOT_FOUND, message: 'Order Not found ...' }
 	};
@@ -88,6 +102,7 @@ export default class BitrixService
 	constructor(
 		protected readonly cargoService: CargoCompanyService,
 		protected readonly cargoInnService: CargoCompanyInnService,
+		protected readonly driverService: DriverService,
 		protected readonly orderService: OrderService,
 		protected readonly offerService: OfferService,
 		protected readonly transportService: TransportService,
@@ -285,9 +300,18 @@ export default class BitrixService
 				const { data: cargo } = await this.cargoService.getByCrmId(crmId);
 				if(cargo) {
 					cargo.confirmed = Number(crmItem[CARGO.CONFIRMED]) === 1;
+					
+					// Get json reference data
+					const validateionRequired = await validateCrm(
+						this.httpClient, cargo, crmItem, COMPANY_REF_URL
+					);
+					
 					if(cargo.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
+					const saveFields = ['confirmed'];
+					if (validateionRequired)
+						saveFields.push('crmData');
 
-					await cargo.save({ fields: ['confirmed'] })
+					await cargo.save({ fields: saveFields as any })
 										 .then((res) => {
 											 const options = { roles: [UserRole.CARGO] };
 											 const data: ICargoGatewayData = {
@@ -336,6 +360,50 @@ export default class BitrixService
 		}
 
 		return this.responses['NOT_FOUND_COMPANY'];
+	}
+
+	public async updateDriver(crmId: number)
+		: Promise<IApiResponse<Driver | null>> {
+		const { result } = await this.httpClient.post<TCRMResponse>(`${CONTACT_GET_URL}?ID=${crmId}`);
+		const crmItem = getCrm(result);
+		let message: string = '';
+
+		if(crmItem) {
+			const { data: driver } = await this.driverService.getByCrmId(crmId, true);
+
+			const validationRequired = await validateCrm(
+				this.httpClient, driver, crmItem, CONTACT_REF_URL
+			);
+			
+			if(driver) {
+				const saveFields = [];
+				if (validationRequired){
+					saveFields.push('crmData');
+				}
+				
+				if(saveFields.length > 0) {
+					await driver.save({ fields: ['crmData'] })
+											.then(() => {
+												const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
+												const data: IDriverGatewayData = {
+													id:     driver.id,
+													source: 'bitrix',
+													message
+												};
+
+												this.socketGateway.sendDriverNotification(data, options);
+												this.fcmGateway.sendDriverNotification(data, options);
+											});
+				}
+
+				return {
+					statusCode: 200,
+					data:       driver,
+				};
+			}
+		}
+
+		return this.responses['NOT_FOUND_DRIVER'];
 	}
 
 	public async updateTransport(crmId: number)

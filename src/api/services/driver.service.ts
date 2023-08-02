@@ -40,7 +40,8 @@ import {
 import {
 	Driver,
 	Destination,
-}                              from '@models/index';
+	Transport,
+} from '@models/index';
 import {
 	DestinationRepository,
 	DriverRepository
@@ -173,6 +174,18 @@ export default class DriverService
 			data:       fillDriverWithCompanyData(driver),
 			message:    formatArgs(TRANSLATIONS['GET'], driver.fullName)
 		};
+	}
+
+	public async getByCrmId(crmId: number, full?: boolean)
+		: Promise<IApiResponse<Driver | null>> {
+		const driver = await this.repository.getByCrmId(crmId, full);
+		if(driver)
+			return {
+				statusCode: HttpStatus.OK,
+				data:       driver
+			};
+
+		return this.responses['NOT_FOUND'];
 	}
 
 	public async getByTransport(

@@ -1,5 +1,6 @@
 import {
 	CRM,
+	VALIDATION_KEYS,
 	ORDER,
 	TRANSPORT
 }                       from '@config/json';
@@ -12,6 +13,7 @@ import {
 	AxiosStatic
 }                       from '@common/classes';
 import {
+	CrmValidation,
 	DestinationType,
 	LoadingType,
 	OrderStage,
@@ -19,9 +21,12 @@ import {
 }                       from '@common/enums';
 import {
 	IApiResponse,
+	ICompany,
 	ICRMEntity,
+	IDriver,
 	IFilter,
 	IModel,
+	ITransport,
 	TBitrixEnum,
 	TCRMData,
 	TCRMFields
@@ -268,7 +273,7 @@ function parseDestination(crmFields: TCRMFields): Promise<DestinationCreateDto[]
 	);
 }
 
-export function getCrm(data: TCRMFields | string | boolean): TCRMFields {
+export function getCrm(data: TCRMFields | string | boolean): TCRMFields | null {
 	const isCrm = (data: any): boolean =>
 		typeof data !== 'boolean' && typeof data !== 'string';
 
@@ -556,4 +561,101 @@ export async function cargoToBitrix<T extends ICRMEntity & { [key: string]: any;
 		return { statusCode: 500, message: e.message };
 	}
 	return { statusCode: 404, message: 'Not found' };
+}
+
+function validateCrm(key: string, crm: TCRMFields, reference: TCRMFields): CrmValidation {
+	if (key in reference) {
+		const reference_items: TBitrixEnum = reference[key]['items'];
+		for(const reference_item of reference_items)
+		{
+			if(crm[key] === "")
+				return CrmValidation.NONE;
+			if(crm[key] === reference_item.ID)
+				return reference_item.VALUE.toLowerCase() === "пройдена" ? CrmValidation.ACCEPTED
+																																 : CrmValidation.REJECTED;
+		}
+	}
+	return CrmValidation.NONE;
+}
+
+const findCrmIssueKey = (key: string, keys: {[k: string]: { ID: string; KEYS: any[] }}) => (issueKey: any) => {
+	for (const validationKey of keys[key].KEYS){
+		if(issueKey as string === validationKey)
+			return true;
+	}
+	return false;
+};
+
+
+export function validateCrmEntity(
+	entity: ICRMEntity,
+	crm: TCRMFields,
+	reference: TCRMFields,
+	validationKeys: {[k: string]: { ID: string; KEYS: string[] }}
+): boolean
+{
+	if (!entity.crmData) entity.crmData = { issues: {}, comment: "" };
+	if (!entity.crmData.issues) entity.crmData.issues = {};
+	let validationRequired: boolean = false;
+	
+	const comment = VALIDATION_KEYS.COMMENT.COMPANY;
+	const validate = (key: string): CrmValidation => validateCrm(key, crm, reference)
+
+	for(let validationKey in validationKeys) {
+		const validationEnum = validate(validationKeys[validationKey].ID);
+
+		for (const entityFieldName of validationKeys[validationKey].KEYS) {
+			switch(validationEnum) {
+				case CrmValidation.NONE:
+					if(entity.crmData.issues[entityFieldName])
+						entity.crmData.issues[entityFieldName] = undefined;
+					break;
+				case CrmValidation.ACCEPTED:
+						entity.crmData.issues[entityFieldName].ok = true;
+						entity.crmData.issues[entityFieldName].description = "";
+						validationRequired = true;
+					break;
+				case CrmValidation.REJECTED:
+					if (entityFieldName) {
+							if (entityFieldName in entity) {
+								if(!entity.crmData.issues[entityFieldName]) {
+									entity.crmData.issues[entityFieldName] = {
+										ok: false,
+										description: ""
+									};
+								} else {
+									entity.crmData.issues[entityFieldName].ok = false;
+									entity.crmData.issues[entityFieldName].description = "";
+								}
+							}
+					}
+					entity.crmData.comment = comment;
+					validationRequired = true;
+					break;
+				default:
+					break;
+			}
+		}
+	}
+	return validationRequired;
+}
+
+
+export function validateCompanyCrm<C extends ICompany>(
+	company: C,
+	crm: TCRMFields,
+	reference: TCRMFields
+): boolean
+{
+	return validateCrmEntity(company, crm, reference, VALIDATION_KEYS.COMPANY);
+}
+
+export function validateDriverCrm(driver: IDriver, crm: TCRMFields, reference: TCRMFields): boolean
+{
+	return validateCrmEntity(driver, crm, reference, VALIDATION_KEYS.CONTACT);
+}
+
+export function validateTransportCrm(transport: ITransport, crm: TCRMFields, reference: TCRMFields): boolean
+{
+	return validateCrmEntity(transport, crm, reference, VALIDATION_KEYS.CONTACT);
 }

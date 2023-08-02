@@ -27,7 +27,7 @@ import {
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
-	ICRMEntity,
+	ICRMValidationData,
 	IDriver,
 	IDriverSimulateData,
 	Index,
@@ -35,10 +35,14 @@ import {
 	JsonbColumn,
 	StringColumn,
 	TCRMData,
+	TCRMFields,
 	UrlColumn,
 	UuidColumn,
 	VirtualColumn,
 }                       from '@common/interfaces';
+import {
+	validateDriverCrm
+}                       from '@common/utils';
 import { entityConfig } from '@api/swagger/properties';
 import EntityModel      from './entity-model';
 import CargoCompany     from './cargo.entity';
@@ -61,7 +65,7 @@ const { driver: prop } = entityConfig;
 @Table(TABLE_OPTIONS)
 export default class Driver
 	extends EntityModel<IDriver>
-	implements IDriver, ICRMEntity {
+	implements IDriver {
 	@ApiProperty(prop.cargoId)
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoCompany)
@@ -226,6 +230,10 @@ export default class Driver
 	@JsonbColumn({ defaultValue: {} })
 	data?: IDriverSimulateData[];
 
+	@ApiProperty(prop.crmData)
+	@JsonbColumn({ defaultValue: {} })
+	crmData?: ICRMValidationData<IDriver>;
+
 	@ApiProperty(prop.hasSent)
 	@BooleanColumn({ defaultValue: false })
 	hasSent?: boolean;
@@ -274,6 +282,9 @@ export default class Driver
 		return !!reverse ? [this.longitude, this.latitude]
 										 : [this.latitude, this.longitude];
 	}
+
+	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
+		validateDriverCrm(this, crm, reference);
 
 	public toCrm(
 		companyCrmId: number,

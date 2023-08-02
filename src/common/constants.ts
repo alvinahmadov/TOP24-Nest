@@ -142,11 +142,13 @@ export namespace BitrixUrl {
 	export const COMPANY_UPD_URL = `${API}/crm.company.update.json`;
 	export const COMPANY_ADD_URL = `${API}/crm.company.add.json`;
 	export const COMPANY_DEL_URL = `${API}/crm.company.delete.json`;
+	export const COMPANY_REF_URL = `${API}/crm.company.fields.json`;
 
 	export const CONTACT_GET_URL = `${API}/crm.contact.get.json`;
 	export const CONTACT_ADD_URL = `${API}/crm.contact.add.json`;
 	export const CONTACT_UPD_URL = `${API}/crm.contact.update.json`;
 	export const CONTACT_DEL_URL = `${API}/crm.contact.delete.json`;
+	export const CONTACT_REF_URL = `${API}/crm.contact.fields.json`;
 
 	export const ORDER_GET_URL = `${API}/crm.deal.get.json`;
 	export const ORDER_UPD_URL = `${API}/crm.deal.update.json`;
