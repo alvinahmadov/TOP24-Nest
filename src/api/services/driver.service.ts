@@ -40,8 +40,7 @@ import {
 import {
 	Driver,
 	Destination,
-	Transport,
-} from '@models/index';
+}                              from '@models/index';
 import {
 	DestinationRepository,
 	DriverRepository

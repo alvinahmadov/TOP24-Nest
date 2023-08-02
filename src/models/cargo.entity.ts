@@ -36,7 +36,6 @@ import {
 	JsonbColumn,
 	StringArrayColumn,
 	StringColumn,
-	TBitrixEnum,
 	TCRMData,
 	TCRMFields,
 	UrlColumn,

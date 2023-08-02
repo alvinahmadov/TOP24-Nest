@@ -1,8 +1,7 @@
 import {
 	IApiResponse,
-	ICRMValidationData,
 	IModel
-} from '@common/interfaces';
+}                            from '@common/interfaces';
 import * as attributes       from '@common/interfaces/attributes';
 import { isSuccessResponse } from '@common/utils';
 import * as models           from '@models/index';
