@@ -578,15 +578,6 @@ function validateCrm(key: string, crm: TCRMFields, reference: TCRMFields): CrmVa
 	return CrmValidation.NONE;
 }
 
-const findCrmIssueKey = (key: string, keys: {[k: string]: { ID: string; KEYS: any[] }}) => (issueKey: any) => {
-	for (const validationKey of keys[key].KEYS){
-		if(issueKey as string === validationKey)
-			return true;
-	}
-	return false;
-};
-
-
 export function validateCrmEntity(
 	entity: ICRMEntity,
 	crm: TCRMFields,
