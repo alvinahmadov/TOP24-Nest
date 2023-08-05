@@ -11,6 +11,7 @@ import {
 import { Throttle }            from '@nestjs/throttler';
 import { ApiTags }             from '@nestjs/swagger';
 import { ORDER }               from '@config/json';
+import env                     from '@config/env';
 import { IWebhookResponse }    from '@common/interfaces';
 import {
 	isSuccessResponse,
@@ -121,9 +122,11 @@ export default class BitrixController
 		@Body() crm: IWebhookResponse,
 		@Res() response: ex.Response
 	) {
-		if(crm.data === undefined ||
+		if((crm.data === undefined ||
 		   crm.data['FIELDS'] === undefined ||
-		   crm.data['FIELDS'][ORDER.ID] === undefined) {
+		   crm.data['FIELDS'][ORDER.ID] === undefined) || 
+			 crm.auth.application_token !== env.bitrix.token
+		) {
 			console.info('Undefined data from bitrix webhook!');
 		return sendResponse(response, { statusCode: HttpStatus.NOT_ACCEPTABLE });
 		}
@@ -151,6 +154,7 @@ export default class BitrixController
 				await this.bitrixService.updateCargo(crmId);
 				break;
 			case 'ONCRMCONTACTUPDATE':
+				await this.bitrixService.updateDriver(crmId);
 				await this.bitrixService.updateTransport(crmId);
 				break;
 		}
