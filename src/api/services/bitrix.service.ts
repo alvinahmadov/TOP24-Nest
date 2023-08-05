@@ -309,19 +309,20 @@ export default class BitrixService
 					if(cargo.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
 
 					if(validateionRequired) {
-						await cargo.save()
-											 .then((res) => {
-												 const options = { roles: [UserRole.CARGO] };
-												 const data: ICargoGatewayData = {
-													 id:     res.id,
-													 event:  'cargo',
-													 source: 'bitrix',
-													 message
-												 };
+						this.cargoService
+								.update(cargo.id, { crmData: cargo.crmData })
+								.then(({ data: res }) => {
+									const options = { roles: [UserRole.CARGO] };
+									const data: ICargoGatewayData = {
+										id:     res.id,
+										event:  'cargo',
+										source: 'bitrix',
+										message
+									};
 
-												 this.socketGateway.sendCargoNotification(data, options);
-												 this.fcmGateway.sendCargoNotification(data, options);
-											 });
+									this.socketGateway.sendCargoNotification(data, options);
+									this.fcmGateway.sendCargoNotification(data, options);
+								});
 					}
 
 					return {
@@ -341,19 +342,20 @@ export default class BitrixService
 					);
 
 					if(validateionRequired){
-						await cargoinn.save()
-													.then((res) => {
-														const options = { roles: [UserRole.CARGO] };
-														const data: ICargoGatewayData = {
-															id:     res.id,
-															event:  'cargo',
-															source: 'bitrix',
-															message
-														};
+						this.cargoInnService
+								.update(cargoinn.id, { crmData: cargoinn.crmData })
+								.then(({ data: res }) => {
+									const options = { roles: [UserRole.CARGO] };
+									const data: ICargoGatewayData = {
+										id:     res.id,
+										event:  'cargo',
+										source: 'bitrix',
+										message
+									};
 
-														this.socketGateway.sendCargoNotification(data, options);
-														this.fcmGateway.sendCargoNotification(data, options);
-													});
+									this.socketGateway.sendCargoNotification(data, options);
+									this.fcmGateway.sendCargoNotification(data, options);
+								});
 					}
 
 					return {
