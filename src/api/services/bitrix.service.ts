@@ -307,23 +307,22 @@ export default class BitrixService
 					);
 					
 					if(cargo.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
-					const saveFields = ['confirmed'];
-					if (validateionRequired)
-						saveFields.push('crmData');
 
-					await cargo.save({ fields: saveFields as any })
-										 .then((res) => {
-											 const options = { roles: [UserRole.CARGO] };
-											 const data: ICargoGatewayData = {
-												 id:     res.id,
-												 event:  'cargo',
-												 source: 'bitrix',
-												 message
-											 };
+					if(validateionRequired) {
+						await cargo.save({ fields: ['crmData', 'confirmed'] })
+											 .then((res) => {
+												 const options = { roles: [UserRole.CARGO] };
+												 const data: ICargoGatewayData = {
+													 id:     res.id,
+													 event:  'cargo',
+													 source: 'bitrix',
+													 message
+												 };
 
-											 this.socketGateway.sendCargoNotification(data, options);
-											 this.fcmGateway.sendCargoNotification(data, options);
-										 });
+												 this.socketGateway.sendCargoNotification(data, options);
+												 this.fcmGateway.sendCargoNotification(data, options);
+											 });
+					}
 
 					return {
 						statusCode: 200,
@@ -336,19 +335,26 @@ export default class BitrixService
 					cargoinn.confirmed = Number(crmItem[CARGOINN.CONFIRMED]) === 1;
 					if(cargoinn.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
 
-					await cargoinn.save({ fields: ['confirmed'] })
-												.then((res) => {
-													const options = { roles: [UserRole.CARGO] };
-													const data: ICargoGatewayData = {
-														id:     res.id,
-														event:  'cargo',
-														source: 'bitrix',
-														message
-													};
+					// Get json reference data
+					const validateionRequired = await validateCrm(
+						this.httpClient, cargoinn, crmItem, COMPANY_REF_URL
+					);
 
-													this.socketGateway.sendCargoNotification(data, options);
-													this.fcmGateway.sendCargoNotification(data, options);
-												});
+					if(validateionRequired){
+						await cargoinn.save({ fields: ['crmData', 'confirmed'] })
+													.then((res) => {
+														const options = { roles: [UserRole.CARGO] };
+														const data: ICargoGatewayData = {
+															id:     res.id,
+															event:  'cargo',
+															source: 'bitrix',
+															message
+														};
+
+														this.socketGateway.sendCargoNotification(data, options);
+														this.fcmGateway.sendCargoNotification(data, options);
+													});
+					}
 
 					return {
 						statusCode: 200,
