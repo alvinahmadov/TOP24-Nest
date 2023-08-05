@@ -585,6 +585,17 @@ export function validateCrmEntity(
 	validationKeys: {[k: string]: { ID: string; KEYS: string[] }}
 ): boolean
 {
+	const setIssue = (field: string, ok: boolean = false, description: string = "") => {
+		if (field && field in entity) {
+			if(!entity.crmData.issues[field]) {
+				entity.crmData.issues[field] = { ok, description };
+			} else {
+				entity.crmData.issues[field].ok = ok;
+				entity.crmData.issues[field].description = description;
+			}
+		}
+	}
+	
 	if (!entity.crmData) entity.crmData = { issues: {}, comment: "" };
 	if (!entity.crmData.issues) entity.crmData.issues = {};
 	let validationRequired: boolean = false;
@@ -602,31 +613,19 @@ export function validateCrmEntity(
 						entity.crmData.issues[entityFieldName] = undefined;
 					break;
 				case CrmValidation.ACCEPTED:
-						entity.crmData.issues[entityFieldName].ok = true;
-						entity.crmData.issues[entityFieldName].description = "";
-						validationRequired = true;
+					setIssue(entityFieldName, true);
+					validationRequired = true;
 					break;
 				case CrmValidation.REJECTED:
-					if (entityFieldName) {
-							if (entityFieldName in entity) {
-								if(!entity.crmData.issues[entityFieldName]) {
-									entity.crmData.issues[entityFieldName] = {
-										ok: false,
-										description: ""
-									};
-								} else {
-									entity.crmData.issues[entityFieldName].ok = false;
-									entity.crmData.issues[entityFieldName].description = "";
-								}
-							}
-					}
-					entity.crmData.comment = comment;
+					setIssue(entityFieldName, false)
 					validationRequired = true;
 					break;
 				default:
 					break;
 			}
 		}
+
+		entity.crmData.comment = comment;
 	}
 	return validationRequired;
 }
