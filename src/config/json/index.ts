@@ -1,4 +1,4 @@
-import { CRM, VALIDATION_VALUES } from './crm_enums.json';
+import { CRM } from './crm_enums.json';
 import {
 	DATA_KEYS as DATA,
 	VALIDATION_KEYS
@@ -16,7 +16,6 @@ const {
 export {
 	CRM,
 	VALIDATION_KEYS,
-	VALIDATION_VALUES,
 	CARGO,
 	CARGOINN,
 	DRIVER,

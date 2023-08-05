@@ -12,7 +12,8 @@ import {
 import { ApiProperty }  from '@nestjs/swagger';
 import {
 	CRM,
-	DRIVER
+	DRIVER,
+	VALIDATION_KEYS
 }                       from '@config/json';
 import {
 	DriverStatus,
@@ -41,7 +42,7 @@ import {
 	VirtualColumn,
 }                       from '@common/interfaces';
 import {
-	validateDriverCrm
+	validateCrmEntity
 }                       from '@common/utils';
 import { entityConfig } from '@api/swagger/properties';
 import EntityModel      from './entity-model';
@@ -283,9 +284,6 @@ export default class Driver
 										 : [this.latitude, this.longitude];
 	}
 
-	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
-		validateDriverCrm(this, crm, reference);
-
 	public toCrm(
 		companyCrmId: number,
 		directions: string[]
@@ -318,4 +316,7 @@ export default class Driver
 		data.fields[DRIVER.DATE_UPDATE] = this.updatedAt;
 		return data;
 	};
+
+	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
+		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.CONTACT);
 }

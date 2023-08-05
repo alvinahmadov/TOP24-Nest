@@ -6,7 +6,11 @@ import {
 }                            from 'sequelize-typescript';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { ApiProperty }       from '@nestjs/swagger';
-import { CRM, TRANSPORT }    from '@config/json';
+import { 
+	CRM,
+	TRANSPORT,
+	VALIDATION_KEYS
+}                            from '@config/json';
 import { TABLE_OPTIONS }     from '@common/constants';
 import {
 	loadingTypeToStr,
@@ -32,9 +36,9 @@ import {
 	VirtualColumn
 }                            from '@common/interfaces';
 import { UuidScalar }        from '@common/scalars';
-import { 
+import {
 	convertBitrix,
-	validateTransportCrm,
+	validateCrmEntity,
 }                            from '@common/utils';
 import { entityConfig }      from '@api/swagger/properties';
 import EntityModel           from './entity-model';
@@ -269,9 +273,6 @@ export default class Transport
 	@ApiProperty(prop.trailer)
 	@VirtualColumn()
 	trailer?: Transport;
-	
-	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
-		validateTransportCrm(this, crm, reference)
 
 	public toCrm(): TCRMData {
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'N' } };
@@ -324,4 +325,7 @@ export default class Transport
 
 		return data;
 	};
+
+	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
+		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.CONTACT);
 }

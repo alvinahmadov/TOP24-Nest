@@ -1,3 +1,4 @@
+import { diff }             from 'deep-diff';
 import {
 	CRM,
 	VALIDATION_KEYS,
@@ -21,12 +22,9 @@ import {
 }                       from '@common/enums';
 import {
 	IApiResponse,
-	ICompany,
 	ICRMEntity,
-	IDriver,
 	IFilter,
 	IModel,
-	ITransport,
 	TBitrixEnum,
 	TCRMData,
 	TCRMFields
@@ -596,9 +594,9 @@ export function validateCrmEntity(
 		}
 	}
 	
+	const crmData = entity.crmData;
 	if (!entity.crmData) entity.crmData = { issues: {}, comment: "" };
 	if (!entity.crmData.issues) entity.crmData.issues = {};
-	let validationRequired: boolean = false;
 	
 	const commentKey = VALIDATION_KEYS.COMMENT.COMPANY;
 	const validate = (key: string): CrmValidation => validateCrm(key, crm, reference)
@@ -614,38 +612,18 @@ export function validateCrmEntity(
 					break;
 				case CrmValidation.ACCEPTED:
 					setIssue(entityFieldName, true);
-					validationRequired = true;
 					break;
 				case CrmValidation.REJECTED:
 					setIssue(entityFieldName, false)
-					validationRequired = true;
 					break;
 				default:
 					break;
 			}
 		}
-
-		entity.crmData.comment = crm[commentKey];
 	}
-	return validationRequired;
-}
 
+	if (crm[commentKey])
+		entity.crmData.comment = crm[commentKey];
 
-export function validateCompanyCrm<C extends ICompany>(
-	company: C,
-	crm: TCRMFields,
-	reference: TCRMFields
-): boolean
-{
-	return validateCrmEntity(company, crm, reference, VALIDATION_KEYS.COMPANY);
-}
-
-export function validateDriverCrm(driver: IDriver, crm: TCRMFields, reference: TCRMFields): boolean
-{
-	return validateCrmEntity(driver, crm, reference, VALIDATION_KEYS.CONTACT);
-}
-
-export function validateTransportCrm(transport: ITransport, crm: TCRMFields, reference: TCRMFields): boolean
-{
-	return validateCrmEntity(transport, crm, reference, VALIDATION_KEYS.CONTACT);
+	return diff(crmData, entity.crmData) !== undefined;
 }

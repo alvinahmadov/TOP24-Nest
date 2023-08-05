@@ -13,15 +13,16 @@ import { ObjectType }    from '@nestjs/graphql';
 import {
 	CARGOINN,
 	CRM,
-	PAYMENT
+	PAYMENT,
+	VALIDATION_KEYS,
 }                        from '@config/json';
+import {
+	validateCrmEntity
+}                        from '@common/utils';
 import {
 	CompanyType,
 	UserRole
 }                        from '@common/enums';
-import {
-	validateCompanyCrm
-}                        from '@common/utils/bitrix'
 import { TABLE_OPTIONS } from '@common/constants';
 import {
 	BooleanColumn,
@@ -254,8 +255,7 @@ export default class CargoCompanyInn
 	}
 	
 
-	public toCrm = (): TCRMData =>
-	{
+	public toCrm(): TCRMData {
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
 		data.fields[CARGOINN.NAME.FIRST] = this.name || 'Company';
 		data.fields[CARGOINN.NAME.PATRONYMIC] = this.patronymic;
@@ -293,5 +293,5 @@ export default class CargoCompanyInn
 	};
 	
 	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean => 
-		validateCompanyCrm(this, crm, reference);
+		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.COMPANY);
 }

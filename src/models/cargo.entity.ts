@@ -14,13 +14,12 @@ import {
 	CARGO,
 	CRM,
 	PAYMENT,
+	VALIDATION_KEYS,
 }                        from '@config/json';
 import {
 	convertBitrix,
-
-	validateCompanyCrm,
 	validateCrmEntity
-} from '@common/utils';
+}                        from '@common/utils';
 import {
 	CompanyType,
 	UserRole
@@ -263,8 +262,7 @@ export default class CargoCompany
 		return this.legalName ?? this.name;
 	}
 
-	public readonly toCrm = (): TCRMData =>
-	{
+	public toCrm(): TCRMData {
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
 		data.fields[CARGO.LEGAL_NAME] = this.legalName ?? 'Company';
 		data.fields[CARGO.DIRECTIONS] = this.directions?.join();
@@ -302,9 +300,6 @@ export default class CargoCompany
 		return data;
 	};
 	
-	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean => {
-		if (this.payment)
-			validateCrmEntity(this.payment, crm, reference, {})
-		return validateCompanyCrm(this, crm, reference);
-	}
+	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
+		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.COMPANY);
 }

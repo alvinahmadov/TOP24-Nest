@@ -6,6 +6,7 @@ import {
 	TransportStatus
 }                       from '@common/enums';
 import {
+	ICRMValidationData,
 	ITransport,
 	TUpdateAttribute
 }                       from '@common/interfaces';
@@ -112,4 +113,7 @@ export default class TransportUpdateDto
 
 	@ApiProperty(prop.width)
 	width?: number;
+
+	@ApiProperty(prop.crmData)
+	crmData?: ICRMValidationData<ITransport>;
 }
