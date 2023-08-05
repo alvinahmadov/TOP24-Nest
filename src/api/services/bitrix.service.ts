@@ -309,7 +309,7 @@ export default class BitrixService
 					if(cargo.confirmed) message = COMPANY_EVENT_TRANSLATION['MODERATION'];
 
 					if(validateionRequired) {
-						await cargo.save({ fields: ['crmData', 'confirmed'] })
+						await cargo.save()
 											 .then((res) => {
 												 const options = { roles: [UserRole.CARGO] };
 												 const data: ICargoGatewayData = {
@@ -341,7 +341,7 @@ export default class BitrixService
 					);
 
 					if(validateionRequired){
-						await cargoinn.save({ fields: ['crmData', 'confirmed'] })
+						await cargoinn.save()
 													.then((res) => {
 														const options = { roles: [UserRole.CARGO] };
 														const data: ICargoGatewayData = {
