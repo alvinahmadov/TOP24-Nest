@@ -12,7 +12,8 @@ import {
 import { ApiProperty }  from '@nestjs/swagger';
 import {
 	CRM,
-	DRIVER
+	DRIVER,
+	VALIDATION_KEYS
 }                       from '@config/json';
 import {
 	DriverStatus,
@@ -27,7 +28,7 @@ import {
 	BooleanColumn,
 	DateColumn,
 	FloatColumn,
-	ICRMEntity,
+	ICRMValidationData,
 	IDriver,
 	IDriverSimulateData,
 	Index,
@@ -35,10 +36,14 @@ import {
 	JsonbColumn,
 	StringColumn,
 	TCRMData,
+	TCRMFields,
 	UrlColumn,
 	UuidColumn,
 	VirtualColumn,
 }                       from '@common/interfaces';
+import {
+	validateCrmEntity
+}                       from '@common/utils';
 import { entityConfig } from '@api/swagger/properties';
 import EntityModel      from './entity-model';
 import CargoCompany     from './cargo.entity';
@@ -61,7 +66,7 @@ const { driver: prop } = entityConfig;
 @Table(TABLE_OPTIONS)
 export default class Driver
 	extends EntityModel<IDriver>
-	implements IDriver, ICRMEntity {
+	implements IDriver {
 	@ApiProperty(prop.cargoId)
 	@Field(() => UuidScalar)
 	@ForeignKey(() => CargoCompany)
@@ -226,6 +231,10 @@ export default class Driver
 	@JsonbColumn({ defaultValue: {} })
 	data?: IDriverSimulateData[];
 
+	@ApiProperty(prop.crmData)
+	@JsonbColumn({ defaultValue: {} })
+	crmData?: ICRMValidationData<IDriver>;
+
 	@ApiProperty(prop.hasSent)
 	@BooleanColumn({ defaultValue: false })
 	hasSent?: boolean;
@@ -307,4 +316,7 @@ export default class Driver
 		data.fields[DRIVER.DATE_UPDATE] = this.updatedAt;
 		return data;
 	};
+
+	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
+		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.CONTACT);
 }

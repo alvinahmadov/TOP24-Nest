@@ -2,6 +2,7 @@ import { InputType }    from '@nestjs/graphql';
 import { ApiProperty }  from '@nestjs/swagger';
 import {
 	ICargoCompanyInn,
+	ICRMValidationData,
 	TUpdateAttribute
 }                       from '@common/interfaces';
 import { entityConfig } from '@api/swagger/properties';
@@ -79,4 +80,7 @@ export default class CompanyInnUpdateDto
 
 	@ApiProperty(prop.taxpayerNumber)
 	public taxpayerNumber?: string;
+	
+	@ApiProperty(prop.crmData)
+	public crmData?: ICRMValidationData<ICargoCompanyInn>;
 }

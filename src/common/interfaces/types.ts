@@ -29,17 +29,20 @@ type longitude = number;
 
 export type URL = string;
 
-export type TBitrixData = {
-	ID: string;
+export type TBitrixData<TID = string> = {
+	ID: TID;
 	VALUE?: string;
 	ALIAS?: string | number | symbol;
 }
 
-export type TBitrixEnum = Array<TBitrixData>;
+export type TBitrixEnum<TID = string> = Array<TBitrixData<TID>>;
 
 export type TCompanyIdOptions = { cargoId?: string; cargoinnId?: string };
 
 export type TCRMFields = Record<string, any>;
+
+let rec: Record<string, string> = {}
+rec['key'] = 'fuckt'
 
 export type TCRMData = {
 	fields: TCRMFields;
@@ -227,6 +230,25 @@ export interface IBucketItem {
 	mimetype?: TImageMimeType;
 }
 
+type TCrmIssueDetail = {
+	ok?: boolean;
+	description?: string;
+}
+
+type TCrmIssue<M> =  Record<keyof M, TCrmIssueDetail>;
+
+export interface ICRMValidationData<M extends ICRMEntity> {
+	issues?: TCrmIssue<Omit<M, 'id' |
+														 'createdAt' |
+														 'updatedAt' |
+														 'crmData' |
+														 'validateCrm' |
+														 'fromCrm' |
+														 'toCrm' |
+														 'crmId'>>;
+	comment?: string;
+}
+
 export interface ICRMEntity {
 	/**
 	 * CRM id of company from bitrix service.
@@ -238,11 +260,19 @@ export interface ICRMEntity {
 	 * and prevent repeat of update actions from webhooks.
 	 * */
 	hasSent?: boolean;
+	
+	crmData?: ICRMValidationData<any>;
+
+	/**
+	 * Check for errors/issues from bitrix
+	 * */
+	validateCrm?: (crm: TCRMFields, reference?: TCRMFields) => boolean;
 
 	/**
 	 * Convert entity data to bitrix data for sending.
 	 * */
 	readonly toCrm?: (...args: any[]) => void | TCRMData;
+	readonly fromCrm?: <T>(data: TCRMFields) => T
 }
 
 export interface IDeviceInfo<T> {

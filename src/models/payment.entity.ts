@@ -7,13 +7,18 @@ import { ApiProperty }       from '@nestjs/swagger';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { TABLE_OPTIONS }     from '@common/constants';
 import {
+	ICRMValidationData,
 	Index,
 	IPayment,
+	JsonbColumn,
 	StringColumn,
+	TCRMFields,
 	UrlColumn,
 	UuidColumn
 }                            from '@common/interfaces';
 import { UuidScalar }        from '@common/scalars';
+import { validateCrmEntity } from '@common/utils';
+import { VALIDATION_KEYS }   from '@config/json';
 import { entityConfig }      from '@api/swagger/properties';
 import EntityModel           from './entity-model';
 import CargoCompany          from './cargo.entity';
@@ -74,6 +79,10 @@ export default class Payment
 	@ApiProperty(prop.info)
 	@StringColumn()
 	info?: string;
+	
+	@ApiProperty(prop.crmData)
+	@JsonbColumn({ defaultValue: {} })
+	crmData?: ICRMValidationData<IPayment>;
 
 	@ApiProperty(prop.cargo)
 	@BelongsTo(() => CargoCompany, 'cargoId')
@@ -82,4 +91,7 @@ export default class Payment
 	@ApiProperty(prop.cargoinn)
 	@BelongsTo(() => CargoCompanyInn, 'cargoinnId')
 	cargoinn?: CargoCompanyInn;
+
+	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
+		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.PAYMENT);
 }

@@ -13,8 +13,12 @@ import { ObjectType }    from '@nestjs/graphql';
 import {
 	CARGOINN,
 	CRM,
-	PAYMENT
+	PAYMENT,
+	VALIDATION_KEYS,
 }                        from '@config/json';
+import {
+	validateCrmEntity
+}                        from '@common/utils';
 import {
 	CompanyType,
 	UserRole
@@ -31,7 +35,10 @@ import {
 	TCRMData,
 	UrlColumn,
 	UuidColumn,
-	VirtualColumn
+	VirtualColumn,
+	ICRMValidationData,
+	JsonbColumn,
+	TCRMFields,
 }                        from '@common/interfaces';
 import { convertBitrix } from '@common/utils';
 import { entityConfig }  from '@api/swagger/properties';
@@ -196,6 +203,10 @@ export default class CargoCompanyInn
 	@UrlColumn()
 	passportSelfieLink?: string;
 
+	@ApiProperty(prop.crmData)
+	@JsonbColumn({ defaultValue: {} })
+	crmData?: ICRMValidationData<ICargoCompanyInn>;
+
 	@BooleanColumn({ defaultValue: false })
 	hasSent?: boolean;
 
@@ -242,9 +253,9 @@ export default class CargoCompanyInn
 		const name = this.name ? ` ${this.name[0]}.` : '';
 		return `${lastName}${patronymic}${name}`;
 	}
+	
 
-	public toCrm = (): TCRMData =>
-	{
+	public toCrm(): TCRMData {
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
 		data.fields[CARGOINN.NAME.FIRST] = this.name || 'Company';
 		data.fields[CARGOINN.NAME.PATRONYMIC] = this.patronymic;
@@ -280,4 +291,7 @@ export default class CargoCompanyInn
 		data.fields[CARGOINN.DATE_UPDATE] = this.updatedAt;
 		return data;
 	};
+	
+	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean => 
+		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.COMPANY);
 }

@@ -1,5 +1,7 @@
+import { diff }             from 'deep-diff';
 import {
 	CRM,
+	VALIDATION_KEYS,
 	ORDER,
 	TRANSPORT
 }                       from '@config/json';
@@ -12,6 +14,7 @@ import {
 	AxiosStatic
 }                       from '@common/classes';
 import {
+	CrmValidation,
 	DestinationType,
 	LoadingType,
 	OrderStage,
@@ -268,7 +271,7 @@ function parseDestination(crmFields: TCRMFields): Promise<DestinationCreateDto[]
 	);
 }
 
-export function getCrm(data: TCRMFields | string | boolean): TCRMFields {
+export function getCrm(data: TCRMFields | string | boolean): TCRMFields | null {
 	const isCrm = (data: any): boolean =>
 		typeof data !== 'boolean' && typeof data !== 'string';
 
@@ -556,4 +559,71 @@ export async function cargoToBitrix<T extends ICRMEntity & { [key: string]: any;
 		return { statusCode: 500, message: e.message };
 	}
 	return { statusCode: 404, message: 'Not found' };
+}
+
+function validateCrm(key: string, crm: TCRMFields, reference: TCRMFields): CrmValidation {
+	if (key in reference) {
+		const reference_items: TBitrixEnum = reference[key]['items'];
+		for(const reference_item of reference_items)
+		{
+			if(crm[key] === "")
+				return CrmValidation.NONE;
+			if(crm[key] === reference_item.ID)
+				return reference_item.VALUE.toLowerCase() === "пройдена" ? CrmValidation.ACCEPTED
+																																 : CrmValidation.REJECTED;
+		}
+	}
+	return CrmValidation.NONE;
+}
+
+export function validateCrmEntity(
+	entity: ICRMEntity,
+	crm: TCRMFields,
+	reference: TCRMFields,
+	validationKeys: {[k: string]: { ID: string; KEYS: string[] }}
+): boolean
+{
+	const setIssue = (field: string, ok: boolean = false, description: string = "") => {
+		if (field && field in entity) {
+			if(!entity.crmData.issues[field]) {
+				entity.crmData.issues[field] = { ok, description };
+			} else {
+				entity.crmData.issues[field].ok = ok;
+				entity.crmData.issues[field].description = description;
+			}
+		}
+	}
+	
+	const crmData = entity.crmData;
+	if (!entity.crmData) entity.crmData = { issues: {}, comment: "" };
+	if (!entity.crmData.issues) entity.crmData.issues = {};
+	
+	const commentKey = VALIDATION_KEYS.COMMENT.COMPANY;
+	const validate = (key: string): CrmValidation => validateCrm(key, crm, reference)
+
+	for(let validationKey in validationKeys) {
+		const validationEnum = validate(validationKeys[validationKey].ID);
+
+		for (const entityFieldName of validationKeys[validationKey].KEYS) {
+			switch(validationEnum) {
+				case CrmValidation.NONE:
+					if(entity.crmData.issues[entityFieldName])
+						entity.crmData.issues[entityFieldName] = undefined;
+					break;
+				case CrmValidation.ACCEPTED:
+					setIssue(entityFieldName, true);
+					break;
+				case CrmValidation.REJECTED:
+					setIssue(entityFieldName, false)
+					break;
+				default:
+					break;
+			}
+		}
+	}
+
+	if (crm[commentKey])
+		entity.crmData.comment = crm[commentKey];
+
+	return diff(crmData, entity.crmData) !== undefined;
 }

@@ -78,6 +78,39 @@ export function transformToAdmin(data: transformers.IAdminTransformer)
 function transformCargoCompany(company: models.CargoCompany)
 	: transformers.ICargoCompanyTransformer {
 	if(company) {
+		const crmData = company.get('crmData');
+		let crm_data: any = null;
+		if(crmData) {
+			const { issues } = crmData;
+			crm_data = {
+				comment: crmData.comment,
+				issues:  {
+					email:                         issues?.email,
+					inn:                           issues?.taxpayerNumber,
+					director:                      issues?.director,
+					shortname:                     issues?.legalName,
+					name:                          issues?.name,
+					passport_serial_number:        issues?.passportSerialNumber,
+					passport_date:                 issues?.passportGivenDate,
+					passport_subdivision_code:     issues?.passportSubdivisionCode,
+					passport_issued_by:            issues?.passportIssuedBy,
+					passport_registration_address: issues?.passportRegistrationAddress,
+					passport_photo_link:           issues?.passportPhotoLink,
+					phone:                         issues?.phone,
+					address_first:                 issues?.legalAddress,
+					address_second:                issues?.postalAddress,
+					certificate_photo_link:        issues?.certificatePhotoLink,
+					ogpn:                          issues?.registrationNumber,
+					kpp:                           issues?.taxReasonCode,
+					// payment issues
+					bank:                          company.payment?.crmData.issues?.bankName,
+					bankbik:                       company.payment?.crmData.issues?.bankBic,
+					ogrnip_link:                   company.payment?.crmData.issues?.ogrnipPhotoLink,
+					ks:                            company.payment?.crmData.issues?.correspondentAccount,
+				},
+			};
+		}
+		
 		return {
 			id:                            company.getDataValue('id'),
 			userId:                        company.userId,
@@ -120,6 +153,7 @@ function transformCargoCompany(company: models.CargoCompany)
 			payment:                       transformPayment(company.payment),
 			user:                          transformUser(company.user),
 			transports:                    company.transports?.map(transformTransport),
+			crm_data,
 			createdAt:                     company.getDataValue('createdAt'),
 			updatedAt:                     company.getDataValue('updatedAt')
 		};
@@ -143,6 +177,37 @@ export function transformToCargoCompany(data: transformers.ICargoCompanyTransfor
 function transformCargoCompanyInn(company: models.CargoCompanyInn)
 	: transformers.ICargoCompanyInnTransformer {
 	if(company) {
+		const crmData = company.get('crmData');
+		let crm_data: any = null;
+		if(crmData) {
+			const { issues } = crmData;
+			crm_data = {
+				comment: crmData.comment,
+				issues:  {
+					email:                         issues?.email,
+					inn:                           issues?.taxpayerNumber,
+					name:                          issues?.name,
+					surname:                       issues?.lastName,
+					middle_name:                   issues?.patronymic,
+					passport_serial_number:        issues?.passportSerialNumber,
+					passport_date:                 issues?.passportGivenDate,
+					passport_subdivision_code:     issues?.passportSubdivisionCode,
+					passport_issued_by:            issues?.passportIssuedBy,
+					passport_registration_address: issues?.passportRegistrationAddress,
+					passport_photo_link:           issues?.passportPhotoLink,
+					phone:                         issues?.phone,
+					address_first:                 issues?.address,
+					address_second:                issues?.actualAddress,
+					address_third:                 issues?.postalAddress,
+					// payment issues
+					bank:                          company.payment?.crmData.issues?.bankName,
+					bankbik:                       company.payment?.crmData.issues?.bankBic,
+					ogrnip_link:                   company.payment?.crmData.issues?.ogrnipPhotoLink,
+					ks:                            company.payment?.crmData.issues?.correspondentAccount,
+				},
+			};
+		}
+		
 		return {
 			id:                            company.getDataValue('id'),
 			userId:                        company.getDataValue('userId'),
@@ -179,6 +244,7 @@ function transformCargoCompanyInn(company: models.CargoCompanyInn)
 			payment:                       transformPayment(company.payment),
 			transports:                    company.transports?.map(transformTransport),
 			user:                          transformUser(company.user),
+			crm_data,
 			createdAt:                     company.getDataValue('createdAt'),
 			updatedAt:                     company.getDataValue('updatedAt')
 		};
@@ -203,6 +269,37 @@ export function transformToCargoCompanyInn(data: transformers.ICargoCompanyInnTr
 function transformDriver(driver: models.Driver)
 	: transformers.IDriverTransformer {
 	if(driver) {
+
+		const crmData = driver.get('crmData');
+		let crm_data: any = null;
+		if(crmData) {
+			const { issues } = crmData;
+			crm_data = {
+				comment: crmData.comment,
+				issues:  {
+					email:                         issues?.email,
+					inn:                           issues?.taxpayerNumber,
+					name:                          issues?.name,
+					surname:                       issues?.lastName,
+					middle_name:                   issues?.patronymic,
+					date_of_birth:                 issues?.birthDate,
+					passport_serial_number:        issues?.passportSerialNumber,
+					passport_date:                 issues?.passportGivenDate,
+					passport_subdivision_code:     issues?.passportSubdivisionCode,
+					passport_issued_by:            issues?.passportIssuedBy,
+					passport_registration_address: issues?.passportRegistrationAddress,
+					passport_photo_link:           issues?.passportPhotoLink,
+					phone:                         issues?.phone,
+					physical_address:              issues?.address,
+					license:                       issues?.licenseNumber,
+					license_date:                  issues?.licenseDate,
+					link_front:                    issues?.licenseFrontLink,
+					link_back:                     issues?.licenseBackLink,
+					avatar_link:                   issues?.avatarLink,
+				},
+			};
+		}
+		
 		return {
 			id:                            driver.getDataValue('id'),
 			cargoId:                       driver.getDataValue('cargoId'),
@@ -245,6 +342,7 @@ function transformDriver(driver: models.Driver)
 			fullname:                      driver.get('fullName'),
 			company_name:                  driver.get('companyName'),
 			current_point:                 driver.get('currentPoint'),
+			crm_data,
 			cargo:                         transformCargoCompany(driver.cargo),
 			cargoinn:                      transformCargoCompanyInn(driver.cargoinn),
 			order:                         transformOrder(driver.order),
@@ -534,6 +632,28 @@ function transformTransport(transport: models.Transport)
 			transport.getDataValue('certificatePhotoLinkFront'),
 			transport.getDataValue('certificatePhotoLinkBack'),
 		].filter(v => !!v);
+		
+		const crmData = transport.get('crmData');
+		let crm_data: any = null;
+		if(crmData) {
+			const { issues } = crmData;
+			crm_data = {
+				comment: crmData.comment,
+				issues:  {
+					osago_link:     issues?.osagoPhotoLink,
+					sts_link_front: issues?.certificatePhotoLinkFront,
+					sts_link_back:  issues?.certificatePhotoLinkBack,
+					diag_link:      issues?.diagnosticsPhotoLink,
+					brand:          issues?.brand,
+					sts:            issues?.certificateNumber,
+					registr_num:    issues?.registrationNumber,
+					diag_num:       issues?.diagnosticsNumber,
+					osago_number:   issues?.osagoNumber,
+					osago_date:     issues?.osagoExpiryDate,
+					risk_classes:   issues?.riskClasses,
+				},
+			};
+		}
 
 		return {
 			id:             transport.getDataValue('id'),
@@ -574,6 +694,7 @@ function transformTransport(transport: models.Transport)
 			diag_link:      transport.getDataValue('diagnosticsPhotoLink'),
 			info:           transport.getDataValue('info'),
 			comments:       transport.getDataValue('comments'),
+			crm_data,
 			trailer:        transformTransport(transport.trailer),
 			offer_status:   transport.getDataValue('offerStatus'),
 			driver:         transformDriver(transport.driver),

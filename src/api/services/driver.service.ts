@@ -175,6 +175,18 @@ export default class DriverService
 		};
 	}
 
+	public async getByCrmId(crmId: number, full?: boolean)
+		: Promise<IApiResponse<Driver | null>> {
+		const driver = await this.repository.getByCrmId(crmId, full);
+		if(driver)
+			return {
+				statusCode: HttpStatus.OK,
+				data:       driver
+			};
+
+		return this.responses['NOT_FOUND'];
+	}
+
 	public async getByTransport(
 		filter: TransportFilter & { driverIds?: string[] } = {}
 	): Promise<IApiResponse<Driver[]>> {

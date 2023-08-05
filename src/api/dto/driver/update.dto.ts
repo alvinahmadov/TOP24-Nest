@@ -2,6 +2,7 @@ import { InputType }    from '@nestjs/graphql';
 import { ApiProperty }  from '@nestjs/swagger';
 import { DriverStatus } from '@common/enums';
 import {
+	ICRMValidationData,
 	IDriver,
 	IDriverSimulateData,
 	TUpdateAttribute
@@ -117,4 +118,7 @@ export default class DriverUpdateDto
 
 	@ApiProperty(prop.data)
 	public data?: IDriverSimulateData[];
+
+	@ApiProperty(prop.crmData)
+	public crmData?: ICRMValidationData<IDriver>;
 }

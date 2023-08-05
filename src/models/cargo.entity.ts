@@ -13,9 +13,13 @@ import { ObjectType }    from '@nestjs/graphql';
 import {
 	CARGO,
 	CRM,
-	PAYMENT
+	PAYMENT,
+	VALIDATION_KEYS,
 }                        from '@config/json';
-import { convertBitrix } from '@common/utils';
+import {
+	convertBitrix,
+	validateCrmEntity
+}                        from '@common/utils';
 import {
 	CompanyType,
 	UserRole
@@ -25,12 +29,14 @@ import {
 	BooleanColumn,
 	DateColumn,
 	ICargoCompany,
-	ICRMEntity,
+	ICRMValidationData,
 	Index,
 	IntColumn,
+	JsonbColumn,
 	StringArrayColumn,
 	StringColumn,
 	TCRMData,
+	TCRMFields,
 	UrlColumn,
 	UuidColumn,
 	VirtualColumn
@@ -49,6 +55,7 @@ const scopeOptions: FindOptions = {
 	include: [{ model: User }]
 };
 
+
 /**
  * Cargo company model.
  *
@@ -61,7 +68,7 @@ const scopeOptions: FindOptions = {
 @Table({ tableName: 'companies', ...TABLE_OPTIONS })
 export default class CargoCompany
 	extends EntityModel<ICargoCompany>
-	implements ICargoCompany, ICRMEntity {
+	implements ICargoCompany {
 	@ApiProperty(prop.userId)
 	@IsUUID('all')
 	@ForeignKey(() => User)
@@ -207,6 +214,10 @@ export default class CargoCompany
 	@UrlColumn()
 	attorneySignLink?: string;
 
+	@ApiProperty(prop.crmData)
+	@JsonbColumn({ defaultValue: {} })
+	crmData?: ICRMValidationData<ICargoCompany>;
+
 	@BooleanColumn({ defaultValue: false })
 	hasSent?: boolean;
 
@@ -240,6 +251,8 @@ export default class CargoCompany
 
 	@VirtualColumn()
 	public get userPhone(): string {
+		for (let key in this)
+			console.debug({ key })
 		return this.user?.phone;
 	}
 
@@ -249,8 +262,7 @@ export default class CargoCompany
 		return this.legalName ?? this.name;
 	}
 
-	public readonly toCrm = (): TCRMData =>
-	{
+	public toCrm(): TCRMData {
 		const data: TCRMData = { fields: {}, params: { 'REGISTER_SONET_EVENT': 'Y' } };
 		data.fields[CARGO.LEGAL_NAME] = this.legalName ?? 'Company';
 		data.fields[CARGO.DIRECTIONS] = this.directions?.join();
@@ -287,4 +299,7 @@ export default class CargoCompany
 		data.fields[CARGO.DATE_UPDATE] = this.updatedAt;
 		return data;
 	};
+	
+	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
+		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.COMPANY);
 }
