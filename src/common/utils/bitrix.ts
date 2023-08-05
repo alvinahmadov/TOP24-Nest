@@ -600,7 +600,7 @@ export function validateCrmEntity(
 	if (!entity.crmData.issues) entity.crmData.issues = {};
 	let validationRequired: boolean = false;
 	
-	const comment = VALIDATION_KEYS.COMMENT.COMPANY;
+	const commentKey = VALIDATION_KEYS.COMMENT.COMPANY;
 	const validate = (key: string): CrmValidation => validateCrm(key, crm, reference)
 
 	for(let validationKey in validationKeys) {
@@ -625,7 +625,7 @@ export function validateCrmEntity(
 			}
 		}
 
-		entity.crmData.comment = comment;
+		entity.crmData.comment = crm[commentKey];
 	}
 	return validationRequired;
 }
