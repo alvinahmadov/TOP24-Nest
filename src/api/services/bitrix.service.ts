@@ -37,11 +37,7 @@ import {
 	isSuccessResponse,
 	orderFromBitrix
 }                                from '@common/utils';
-import {
-	Driver,
-	Order,
-	Transport
-}                                from '@models/index';
+import { Order, Transport }      from '@models/index';
 import { DestinationRepository } from '@repos/index';
 import {
 	DestinationCreateDto,
@@ -365,64 +361,38 @@ export default class BitrixService
 
 		return this.responses['NOT_FOUND_COMPANY'];
 	}
-	
-	public async updateContact(crmId: number) {		
+
+	public async updateContact(crmId: number)
+		: Promise<IApiResponse<Transport | null>> {
 		const { result } = await this.httpClient.post<TCRMResponse>(`${CONTACT_GET_URL}?ID=${crmId}`);
 		const crmItem = getCrm(result);
-		const crmResponse = await this.httpClient.get<TCRMResponse>(CONTACT_REF_URL);
-		const crmReference = getCrm(crmResponse.result);
 		const message: string = "Пожалуйста, проверьте соответствие введенных полей политике сервиса, с уважением 24ТОП.";
-		
-		const notifyFn = (driverId: string) => {
-			const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
-			const data: IDriverGatewayData = {
-				id:     driverId,
-				source: 'bitrix',
-				message
-			};
-
-			this.socketGateway.sendDriverNotification(data, options);
-			this.fcmGateway.sendDriverNotification(data, options);
-		}
 
 		if(crmItem) {
-			const driverResponse = await this.driverService.getByCrmId(crmId, true);
+			const response = await this.httpClient.get<TCRMResponse>(CONTACT_REF_URL);
+			const reference = getCrm(response.result);
 			const transportResponse = await this.transportService.getByCrmId(crmId, true);
-			
-			if(isSuccessResponse(driverResponse)) {
-				let driver = driverResponse.data;
-				let transportValidationRequired = false;
-				const driverValidationRequired = driver.validateCrm(crmItem, crmReference);
-				const transports = driver.transports;
-				
-				for(let transport of transports) {
-					const validationRequired = transport.validateCrm(crmItem, crmReference);
-					if(validationRequired) {
-						transportValidationRequired = true;
-						this.transportService
-								.update(transport.id, { crmData: transport.crmData })
-								.then(apiResponse => notifyFn(apiResponse?.data.driverId));
-					}
-				}
-				if(driverValidationRequired && !transportValidationRequired) 
-					this.driverService
-							.update(driver.id, { crmData: driver.crmData })
-							.then((apiResponse) => { if(!transportValidationRequired) notifyFn(apiResponse?.data.id); });
 
-				return {
-					statusCode: 200,
-					data:       driver,
+			const notifyFn = (driverId: string) => {
+				const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
+				const data: IDriverGatewayData = {
+					id:     driverId,
+					source: 'bitrix',
+					message
 				};
+
+				this.socketGateway.sendDriverNotification(data, options);
+				this.fcmGateway.sendDriverNotification(data, options);
 			}
-			else if (isSuccessResponse(transportResponse)) {
+			
+			if(isSuccessResponse(transportResponse)) {
 				let transport = transportResponse.data;
 				let driver = transport.driver;
-				
-				const transportValidationRequired = transport.validateCrm(crmItem, crmReference);
-				const driverValidationRequired = driver.validateCrm(crmItem, crmReference);
-				
+				const transportValidationRequired = transport.validateCrm(crmItem, reference);
+				const driverValidationRequired = driver.validateCrm(crmItem, reference);
+
 				if(!driverValidationRequired && !transportValidationRequired) {
-					return this.responses['NOT_FOUND_DRIVER'];
+					return { statusCode: HttpStatus.OK, message: 'No validation needed' };
 				}
 				else if(transportValidationRequired && !driverValidationRequired) {
 					this.transportService
@@ -434,88 +404,10 @@ export default class BitrixService
 							.then(apiResponse => notifyFn(apiResponse?.data.id));
 				} else {
 					await this.transportService
-							.update(transport.id, {crmData: transport.crmData})
+										.update(transport.id, {crmData: transport.crmData});
 					this.driverService
 							.update(driver.id, {crmData: driver.crmData})
 							.then(apiResponse => notifyFn(apiResponse?.data.id));
-				}
-			}
-		}
-
-		return this.responses['NOT_FOUND_DRIVER'];
-	}
-
-	public async updateDriver(crmId: number)
-		: Promise<IApiResponse<Driver | null>> {
-		const { result } = await this.httpClient.post<TCRMResponse>(`${CONTACT_GET_URL}?ID=${crmId}`);
-		const crmItem = getCrm(result);
-		const message: string = "Пожалуйста, проверьте соответствие введенных полей политике сервиса, с уважением 24ТОП.";
-
-		if(crmItem) {
-			const driverResponse = await this.driverService.getByCrmId(crmId, true);
-			if(isSuccessResponse(driverResponse)) {
-				const driver = driverResponse.data;
-				const response = await this.httpClient.get<TCRMResponse>(CONTACT_REF_URL);
-				const reference = getCrm(response.result);
-				const validationRequired = driver.validateCrm(crmItem, reference);
-
-				if(validationRequired) {
-					this.driverService
-							.update(driver.id, { crmData: driver.crmData })
-							.then(() => {
-								const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
-								const data: IDriverGatewayData = {
-									id:     driver.id,
-									source: 'bitrix',
-									message
-								};
-
-								this.socketGateway.sendDriverNotification(data, options);
-								this.fcmGateway.sendDriverNotification(data, options);
-							});
-				}
-
-				return {
-					statusCode: 200,
-					data:       driver,
-				};
-			}
-		}
-
-		return this.responses['NOT_FOUND_DRIVER'];
-	}
-
-	public async updateTransport(crmId: number)
-		: Promise<IApiResponse<Transport | null>> {
-		const { result } = await this.httpClient.post<TCRMResponse>(`${CONTACT_GET_URL}?ID=${crmId}`);
-		const crmItem = getCrm(result);
-		const message: string = "Пожалуйста, проверьте соответствие введенных полей политике сервиса, с уважением 24ТОП.";
-
-		if(crmItem) {
-			const transportResponse = await this.transportService.getByCrmId(crmId, true);
-			
-			if(isSuccessResponse(transportResponse)) {
-				const transport = transportResponse.data;
-				const response = await this.httpClient.get<TCRMResponse>(CONTACT_REF_URL);
-				const reference = getCrm(response.result);
-				const validationRequired = transport.validateCrm(crmItem, reference);
-
-				if(validationRequired) {
-					this.transportService
-							.update(transport.id, { crmData: transport.crmData })
-							.then((apiResponse) => {
-								if(apiResponse) {
-									const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
-									const data: IDriverGatewayData = {
-										id:     transport.driverId,
-										source: 'bitrix',
-										message
-									};
-
-									this.socketGateway.sendDriverNotification(data, options);
-									this.fcmGateway.sendDriverNotification(data, options);
-								}
-							});
 				}
 				return {
 					statusCode: 200,
