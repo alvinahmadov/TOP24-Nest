@@ -365,6 +365,85 @@ export default class BitrixService
 
 		return this.responses['NOT_FOUND_COMPANY'];
 	}
+	
+	public async updateContact(crmId: number) {		
+		const { result } = await this.httpClient.post<TCRMResponse>(`${CONTACT_GET_URL}?ID=${crmId}`);
+		const crmItem = getCrm(result);
+		const crmResponse = await this.httpClient.get<TCRMResponse>(CONTACT_REF_URL);
+		const crmReference = getCrm(crmResponse.result);
+		const message: string = "Пожалуйста, проверьте соответствие введенных полей политике сервиса, с уважением 24ТОП.";
+		
+		const notifyFn = (driverId: string) => {
+			const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
+			const data: IDriverGatewayData = {
+				id:     driverId,
+				source: 'bitrix',
+				message
+			};
+
+			this.socketGateway.sendDriverNotification(data, options);
+			this.fcmGateway.sendDriverNotification(data, options);
+		}
+
+		if(crmItem) {
+			const driverResponse = await this.driverService.getByCrmId(crmId, true);
+			const transportResponse = await this.transportService.getByCrmId(crmId, true);
+			
+			if(isSuccessResponse(driverResponse)) {
+				let driver = driverResponse.data;
+				let transportValidationRequired = false;
+				const driverValidationRequired = driver.validateCrm(crmItem, crmReference);
+				const transports = driver.transports;
+				
+				for(let transport of transports) {
+					const validationRequired = transport.validateCrm(crmItem, crmReference);
+					if(validationRequired) {
+						transportValidationRequired = true;
+						this.transportService
+								.update(transport.id, { crmData: transport.crmData })
+								.then(apiResponse => notifyFn(apiResponse?.data.driverId));
+					}
+				}
+				if(driverValidationRequired && !transportValidationRequired) 
+					this.driverService
+							.update(driver.id, { crmData: driver.crmData })
+							.then((apiResponse) => { if(!transportValidationRequired) notifyFn(apiResponse?.data.id); });
+
+				return {
+					statusCode: 200,
+					data:       driver,
+				};
+			}
+			else if (isSuccessResponse(transportResponse)) {
+				let transport = transportResponse.data;
+				let driver = transport.driver;
+				
+				const transportValidationRequired = transport.validateCrm(crmItem, crmReference);
+				const driverValidationRequired = driver.validateCrm(crmItem, crmReference);
+				
+				if(!driverValidationRequired && !transportValidationRequired) {
+					return this.responses['NOT_FOUND_DRIVER'];
+				}
+				else if(transportValidationRequired && !driverValidationRequired) {
+					this.transportService
+							.update(transport.id, {crmData: transport.crmData})
+							.then(apiResponse => notifyFn(apiResponse?.data.driverId));
+				} else if (driverValidationRequired && !transportValidationRequired) {
+					this.driverService
+							.update(driver.id, {crmData: driver.crmData})
+							.then(apiResponse => notifyFn(apiResponse?.data.id));
+				} else {
+					await this.transportService
+							.update(transport.id, {crmData: transport.crmData})
+					this.driverService
+							.update(driver.id, {crmData: driver.crmData})
+							.then(apiResponse => notifyFn(apiResponse?.data.id));
+				}
+			}
+		}
+
+		return this.responses['NOT_FOUND_DRIVER'];
+	}
 
 	public async updateDriver(crmId: number)
 		: Promise<IApiResponse<Driver | null>> {
