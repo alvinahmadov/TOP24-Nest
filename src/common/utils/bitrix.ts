@@ -1,9 +1,9 @@
-import { diff }             from 'deep-diff';
+import { diff }         from 'deep-diff';
 import {
 	CRM,
-	VALIDATION_KEYS,
 	ORDER,
-	TRANSPORT
+	TRANSPORT,
+	VALIDATION_KEYS
 }                       from '@config/json';
 import {
 	BitrixUrl,
@@ -595,7 +595,7 @@ export function validateCrmEntity(
 		}
 	}
 	
-	const crmData = entity.crmData;
+	const crmData = structuredClone(entity.crmData);
 	if (!entity.crmData) entity.crmData = { issues: {}, comment: "" };
 	if (!entity.crmData.issues) entity.crmData.issues = {};
 	
@@ -625,6 +625,7 @@ export function validateCrmEntity(
 
 	if (crm[commentKey])
 		entity.crmData.comment = crm[commentKey];
-
-	return diff(crmData, entity.crmData) !== undefined;
+	
+	const difference = diff(crmData, entity.crmData);
+	return !!difference;
 }
