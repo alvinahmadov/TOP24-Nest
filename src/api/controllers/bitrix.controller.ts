@@ -154,8 +154,9 @@ export default class BitrixController
 				await this.bitrixService.updateCargo(crmId);
 				break;
 			case 'ONCRMCONTACTUPDATE':
-				await this.bitrixService.updateDriver(crmId);
-				await this.bitrixService.updateTransport(crmId);
+				await this.bitrixService.updateContact(crmId);
+				// await this.bitrixService.updateDriver(crmId);
+				// await this.bitrixService.updateTransport(crmId);
 				break;
 		}
 
