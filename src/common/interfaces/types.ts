@@ -247,6 +247,7 @@ export interface ICRMValidationData<M extends ICRMEntity> {
 														 'fromCrm' |
 														 'toCrm' |
 														 'crmId'>>;
+	admitted?: 'yes' | 'no' | 'blacklist';
 	comment?: string;
 }
 

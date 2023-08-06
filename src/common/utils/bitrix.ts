@@ -600,6 +600,7 @@ export function validateCrmEntity(
 	if (!entity.crmData.issues) entity.crmData.issues = {};
 	
 	const commentKey = isContact ? VALIDATION_KEYS.COMMENT.CONTACT : VALIDATION_KEYS.COMMENT.COMPANY;
+	const admittedToWorkKey = isContact ? VALIDATION_KEYS.ADMITTED : undefined;
 	const validate = (key: string): CrmValidation => validateCrm(key, crm, reference)
 
 	for(let validationKey in validationKeys) {
@@ -625,6 +626,26 @@ export function validateCrmEntity(
 
 	if (crm[commentKey])
 		entity.crmData.comment = crm[commentKey];
+
+	if(!!admittedToWorkKey && reference[admittedToWorkKey])
+	{
+		const admittedToWorkRefs: TBitrixEnum = reference[admittedToWorkKey]['items'];
+		if(admittedToWorkRefs)
+		{
+			const admittedToWorkId = crm[admittedToWorkKey]
+			const index = admittedToWorkRefs.findIndex(ref => admittedToWorkId === ref.ID)
+			if(index >= 0) {
+				const admittedToWorkValue = admittedToWorkRefs[index].VALUE.toLowerCase();
+				if(admittedToWorkValue === 'допущен') {
+					entity.crmData.admitted = 'yes';
+				} else if(admittedToWorkValue === 'не допущен') {
+					entity.crmData.admitted = 'no';
+				} else {
+					entity.crmData.admitted = 'blacklist';
+				}
+			}
+		}
+	}
 	
 	const difference = diff(crmData, entity.crmData);
 	return !!difference;
