@@ -76,9 +76,9 @@ export default class FirebaseNotificationGateway
 		@MessageBody(CargoMessageBodyPipe) data: ICargoGatewayData,
 		options?: TNotifGatewayOptions
 	) {
-		const { roles = [], url = '' } = options ?? {};
+		const { roles = [], url = '', entityId = data.id } = options ?? {};
 
-		this.sendNotification(data, { roles, url, event: CARGO_EVENT });
+		this.sendNotification(data, { roles, url, event: CARGO_EVENT, entityId });
 	}
 
 	@UseGuards(CargoGuard)
