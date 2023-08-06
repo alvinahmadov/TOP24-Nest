@@ -289,7 +289,7 @@ export default class BitrixService
 				
 				const notifFn = (apiRes: IApiResponse<any>, companyId: string) => {
 					if(apiRes.data) {
-						const options = { roles: [UserRole.CARGO] };
+						const options = { roles: [UserRole.CARGO, UserRole.DRIVER] };
 						const data: ICargoGatewayData = {
 							id:     companyId,
 							event:  'cargo',
