@@ -165,7 +165,7 @@ export default class FirebaseNotificationGateway
 	}
 
 	protected sendNotification(data: IGatewayData, options: TNotifGatewayOptions): void {
-		const { roles, event } = options;
+		const { roles, event, entityId = data.id } = options;
 		let sent = false;
 
 		if(roles.length && event) {
@@ -180,7 +180,7 @@ export default class FirebaseNotificationGateway
 
 			if(!sent) {
 				this.fcmEntityRepo
-						.getByEntityId(data.id)
+						.getByEntityId(entityId)
 						.then(
 							fcm =>
 								fcm ? this.sendToDevice(fcm.token, data, options)

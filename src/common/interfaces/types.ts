@@ -113,6 +113,7 @@ export type TMulterFile = Express.Multer.File;
 
 export type TNotifGatewayOptions = {
 	roles: UserRole[];
+	entityId?: string;
 	url?: string;
 	event?: 'cargo' |
 					'driver' |

@@ -285,11 +285,11 @@ export default class BitrixService
 			if(crmItem) {
 				const response = await this.httpClient.get<TCRMResponse>(COMPANY_REF_URL);
 				const reference = getCrm(response.result);
-				const { data: cargo } = await this.cargoService.getByCrmId(crmId);
+				const { data: cargo } = await this.cargoService.getByCrmId(crmId, true);
 				
-				const notifFn = (apiRes: IApiResponse<any>, companyId: string) => {
+				const notifFn = (apiRes: IApiResponse<any>, companyId: string, entityId?: string) => {
 					if(apiRes.data) {
-						const options = { roles: [UserRole.CARGO, UserRole.DRIVER] };
+						const options = { roles: [UserRole.CARGO, UserRole.DRIVER], entityId };
 						const data: ICargoGatewayData = {
 							id:     companyId,
 							event:  'cargo',
@@ -314,13 +314,13 @@ export default class BitrixService
 								.update(cargo?.payment.id, { crmData: cargo.payment.crmData })
 								.then(apiResponse => {
 									if(!companyValidationRequired) 
-										notifFn(apiResponse, cargo.id);
+										notifFn(apiResponse, cargo.id, cargo.drivers?.at(0)?.id);
 								});
 					}
 					if(companyValidationRequired) {
 						this.cargoService
 								.update(cargo.id, { crmData: cargo.crmData })
-								.then((apiRes) => notifFn(apiRes, cargo.id));
+								.then((apiRes) => notifFn(apiRes, cargo.id, cargo.drivers?.at(0).id));
 					}
 
 					return {
@@ -330,7 +330,7 @@ export default class BitrixService
 					};
 				}
 				else {
-					const { data: cargoinn } = await this.cargoInnService.getByCrmId(crmId);
+					const { data: cargoinn } = await this.cargoInnService.getByCrmId(crmId, true);
 					const companyValidationRequired = cargoinn.validateCrm(crmItem, reference);
 					const paymentValidationRequired = cargoinn.payment 
 																						? cargoinn.payment?.validateCrm(crmItem, reference)
@@ -341,13 +341,13 @@ export default class BitrixService
 								.update(cargoinn.payment.id, { crmData: cargoinn.payment.crmData })
 								.then(apiResponse => {
 									if(!companyValidationRequired)
-										notifFn(apiResponse, cargoinn.id);
+										notifFn(apiResponse, cargoinn.id, cargoinn.drivers?.at(0).id);
 								});
 					}
 					if(companyValidationRequired){
 						this.cargoInnService
 								.update(cargoinn.id, { crmData: cargoinn.crmData })
-								.then((apiRes) => notifFn(apiRes, cargoinn.id));
+								.then((apiRes) => notifFn(apiRes, cargoinn.id, cargoinn.drivers?.at(0).id));
 					}
 
 					return {
