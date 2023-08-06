@@ -580,7 +580,8 @@ export function validateCrmEntity(
 	entity: ICRMEntity,
 	crm: TCRMFields,
 	reference: TCRMFields,
-	validationKeys: {[k: string]: { ID: string; KEYS: string[] }}
+	validationKeys: {[k: string]: { ID: string; KEYS: string[] }},
+	isContact = false
 ): boolean
 {
 	const setIssue = (field: string, ok: boolean = false, description: string = "") => {
@@ -598,7 +599,7 @@ export function validateCrmEntity(
 	if (!entity.crmData) entity.crmData = { issues: {}, comment: "" };
 	if (!entity.crmData.issues) entity.crmData.issues = {};
 	
-	const commentKey = VALIDATION_KEYS.COMMENT.COMPANY;
+	const commentKey = isContact ? VALIDATION_KEYS.COMMENT.CONTACT : VALIDATION_KEYS.COMMENT.COMPANY;
 	const validate = (key: string): CrmValidation => validateCrm(key, crm, reference)
 
 	for(let validationKey in validationKeys) {

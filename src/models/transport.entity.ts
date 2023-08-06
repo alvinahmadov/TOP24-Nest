@@ -327,5 +327,5 @@ export default class Transport
 	};
 
 	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
-		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.CONTACT);
+		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.CONTACT, true);
 }
