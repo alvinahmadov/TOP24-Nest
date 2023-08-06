@@ -481,334 +481,339 @@
 		}
 	},
 
-	"VALIDATION_KEYS": {
-		"ADMITTED": "UF_CRM_1636705057003",
-		"CONTACT": {
-			"FIRSTNAME": {
-				"ID": "UF_CRM_1685003488940",
-				"KEYS": [
-					"name"
-				]
-			},
-			"PATRONYMIC": {
-				"ID": "UF_CRM_1685003744999",
-				"KEYS": [
-					"patronymic"
-				]
-			},
-			"LASTNAME": {
-				"ID": "UF_CRM_1685003652407",
-				"KEYS": [
-					"lastName"
-				]
-			},
-			"INN": {
-				"ID": "UF_CRM_1685003913007",
-				"KEYS": [
-					"taxpayerNumber"
-				]
-			},
-			"BITHDATE": {
-				"ID": "UF_CRM_1685004264990",
-				"KEYS": [
-					"birthDate"
-				]
-			},
-			"PHONE": {
-				"ID": "UF_CRM_1685088205194",
-				"KEYS": [
-					"phone"
-				]
-			},
-			"WEBSITE": {
-				"ID": "UF_CRM_1685089218412",
-				"KEYS": [
-					"website"
-				]
-			},
-			"EMAIL": {
-				"ID": "UF_CRM_1685090128026",
-				"KEYS": [
-					"email"
-				]
-			},
-			"ADDRESS": {
-				"ID": "UF_CRM_1685090177304",
-				"KEYS": [
-					"address"
-				]
-			},
-			"LICENSE": {
-				"ID": "UF_CRM_1685004732343",
-				"KEYS": [
-					"licenseNumber"
-				]
-			},
-			"LICENSE_EXP_DATE": {
-				"ID": "UF_CRM_1685004783917",
-				"KEYS": [
-					"licenseDate"
-				]
-			},
-			"LICENSE_PHOTO_FRONT": {
-				"ID": "UF_CRM_1685004870951",
-				"KEYS": [
-					"licenseFrontLink"
-				]
-			},
-			"LICENSE_PHOTO_BACK": {
-				"ID": "UF_CRM_1685004945312",
-				"KEYS": [
-					"licenseBackLink"
-				]
-			},
-			"AVATAR": {
-				"ID": "UF_CRM_1685003813722",
-				"KEYS": [
-					"avatarLink"
-				]
-			},
-			"PASSPORT_PHOTO": {
-				"ID": "UF_CRM_1685976580587",
-				"KEYS": []
-			},
-
-			"OSAGO_PHOTO": {
-				"ID": "UF_CRM_1685005334115",
-				"KEYS": [
-					"osagoPhotoLink"
-				]
-			},
-			"STS_FRONT_PHOTO": {
-				"ID": "UF_CRM_1685005509940",
-				"KEYS": [
-					"certificatePhotoLinkFront"
-				]
-			},
-			"STS_BACK_PHOTO": {
-				"ID": "UF_CRM_1685005571153",
-				"KEYS": [
-					"certificatePhotoLinkBack"
-				]
-			},
-			"DIAGNOSTIC_PHOTO": {
-				"ID": "UF_CRM_1685005296422",
-				"KEYS": [
-					"diagnosticsPhotoLink"
-				]
-			},
-			"OSAGO": {
-				"ID": "UF_CRM_1685005022220",
-				"KEYS": [
-					"osagoNumber"
-				]
-			},
-			"OSAGO_EXP_DATE": {
-				"ID": "UF_CRM_1685005168969",
-				"KEYS": [
-					"osagoExpiryDate"
-				]
-			},
-			"STS": {
-				"ID": "UF_CRM_1685005645670",
-				"KEYS": [
-					"certificateNumber"
-				]
-			},
-			"REG_NUM": {
-				"ID": "UF_CRM_1685005719604",
-				"KEYS": [
-					"registrationNumber"
-				]
-			},
-			"BRAND": {
-				"ID": "UF_CRM_1685005783918",
-				"KEYS": [
-					"brand"
-				]
-			},
-			"RISK_CLASS": {
-				"ID": "UF_CRM_1685005840158",
-				"KEYS": [
-					"riskClasses"
-				]
-			},
-			"MAINTENANCE_NUM": {
-				"ID": "UF_CRM_1685005229092",
-				"KEYS": [
-					"diagnosticsNumber"
-				]
-			}
+	"VALIDATION": {
+		"ADMITTED": {
+			"COMPANY": "UF_CRM_1685370437571",
+			"CONTACT": "UF_CRM_1636705057003"
 		},
 		"COMMENT": {
 			"COMPANY": "UF_CRM_1685370471914",
 			"CONTACT": "UF_CRM_1685004364857"
 		},
-		"COMPANY": {
-			"ADDRESS": {
-				"ID": "UF_CRM_1685374490377",
-				"KEYS": [
-					"legalAddress",
-					"address"
-				]
+		"KEYS": {
+			"CONTACT": {
+				"FIRSTNAME": {
+					"ID": "UF_CRM_1685003488940",
+					"KEYS": [
+						"name"
+					]
+				},
+				"PATRONYMIC": {
+					"ID": "UF_CRM_1685003744999",
+					"KEYS": [
+						"patronymic"
+					]
+				},
+				"LASTNAME": {
+					"ID": "UF_CRM_1685003652407",
+					"KEYS": [
+						"lastName"
+					]
+				},
+				"INN": {
+					"ID": "UF_CRM_1685003913007",
+					"KEYS": [
+						"taxpayerNumber"
+					]
+				},
+				"BITHDATE": {
+					"ID": "UF_CRM_1685004264990",
+					"KEYS": [
+						"birthDate"
+					]
+				},
+				"PHONE": {
+					"ID": "UF_CRM_1685088205194",
+					"KEYS": [
+						"phone"
+					]
+				},
+				"WEBSITE": {
+					"ID": "UF_CRM_1685089218412",
+					"KEYS": [
+						"website"
+					]
+				},
+				"EMAIL": {
+					"ID": "UF_CRM_1685090128026",
+					"KEYS": [
+						"email"
+					]
+				},
+				"ADDRESS": {
+					"ID": "UF_CRM_1685090177304",
+					"KEYS": [
+						"address"
+					]
+				},
+				"LICENSE": {
+					"ID": "UF_CRM_1685004732343",
+					"KEYS": [
+						"licenseNumber"
+					]
+				},
+				"LICENSE_EXP_DATE": {
+					"ID": "UF_CRM_1685004783917",
+					"KEYS": [
+						"licenseDate"
+					]
+				},
+				"LICENSE_PHOTO_FRONT": {
+					"ID": "UF_CRM_1685004870951",
+					"KEYS": [
+						"licenseFrontLink"
+					]
+				},
+				"LICENSE_PHOTO_BACK": {
+					"ID": "UF_CRM_1685004945312",
+					"KEYS": [
+						"licenseBackLink"
+					]
+				},
+				"AVATAR": {
+					"ID": "UF_CRM_1685003813722",
+					"KEYS": [
+						"avatarLink"
+					]
+				},
+				"PASSPORT_PHOTO": {
+					"ID": "UF_CRM_1685976580587",
+					"KEYS": []
+				},
+
+				"OSAGO_PHOTO": {
+					"ID": "UF_CRM_1685005334115",
+					"KEYS": [
+						"osagoPhotoLink"
+					]
+				},
+				"STS_FRONT_PHOTO": {
+					"ID": "UF_CRM_1685005509940",
+					"KEYS": [
+						"certificatePhotoLinkFront"
+					]
+				},
+				"STS_BACK_PHOTO": {
+					"ID": "UF_CRM_1685005571153",
+					"KEYS": [
+						"certificatePhotoLinkBack"
+					]
+				},
+				"DIAGNOSTIC_PHOTO": {
+					"ID": "UF_CRM_1685005296422",
+					"KEYS": [
+						"diagnosticsPhotoLink"
+					]
+				},
+				"OSAGO": {
+					"ID": "UF_CRM_1685005022220",
+					"KEYS": [
+						"osagoNumber"
+					]
+				},
+				"OSAGO_EXP_DATE": {
+					"ID": "UF_CRM_1685005168969",
+					"KEYS": [
+						"osagoExpiryDate"
+					]
+				},
+				"STS": {
+					"ID": "UF_CRM_1685005645670",
+					"KEYS": [
+						"certificateNumber"
+					]
+				},
+				"REG_NUM": {
+					"ID": "UF_CRM_1685005719604",
+					"KEYS": [
+						"registrationNumber"
+					]
+				},
+				"BRAND": {
+					"ID": "UF_CRM_1685005783918",
+					"KEYS": [
+						"brand"
+					]
+				},
+				"RISK_CLASS": {
+					"ID": "UF_CRM_1685005840158",
+					"KEYS": [
+						"riskClasses"
+					]
+				},
+				"MAINTENANCE_NUM": {
+					"ID": "UF_CRM_1685005229092",
+					"KEYS": [
+						"diagnosticsNumber"
+					]
+				}
 			},
-			"CEO": {
-				"ID": "UF_CRM_1685374683143",
-				"KEYS": [
-					"director"
-				]
+			"COMPANY": {
+				"ADDRESS": {
+					"ID": "UF_CRM_1685374490377",
+					"KEYS": [
+						"legalAddress",
+						"address"
+					]
+				},
+				"CEO": {
+					"ID": "UF_CRM_1685374683143",
+					"KEYS": [
+						"director"
+					]
+				},
+				"EMAIL": {
+					"ID": "UF_CRM_1685374818810",
+					"KEYS": [
+						"email"
+					]
+				},
+				"INN": {
+					"ID": "UF_CRM_1685090514947",
+					"KEYS": [
+						"taxpayerNumber"
+					]
+				},
+				"LEGALNAME": {
+					"ID": "UF_CRM_1685090514947",
+					"KEYS": [
+						"legalName"
+					]
+				},
+				"FIRSTNAME": {
+					"ID": "UF_CRM_1685372562139",
+					"KEYS": [
+						"name"
+					]
+				},
+				"PATRONYMIC": {
+					"ID": "UF_CRM_1685374309431",
+					"KEYS": [
+						"patronymic"
+					]
+				},
+				"LASTNAME": {
+					"ID": "UF_CRM_1685372641841",
+					"KEYS": [
+						"lastName"
+					]
+				},
+				"BIRTHDATE": {
+					"ID": "UF_CRM_1685374403993",
+					"KEYS": [
+						"birthDate"
+					]
+				},
+				"PASSPORT_SERIAL_NUMBER": {
+					"ID": "UF_CRM_1685091444979",
+					"KEYS": [
+						"passportSerialNumber"
+					]
+				},
+				"PASSPORT_GIVEN_DATE": {
+					"ID": "UF_CRM_1685091491932",
+					"KEYS": [
+						"passportGivenDate"
+					]
+				},
+				"PASSPORT_SUBDIVISION_CODE": {
+					"ID": "UF_CRM_1685091982938",
+					"KEYS": [
+						"passportSubdivisionCode"
+					]
+				},
+				"PASSPORT_ISSUED_BY": {
+					"ID": "UF_CRM_1685092774142",
+					"KEYS": [
+						"passportIssuedBy"
+					]
+				},
+				"PASSPORT_REGISTRATION_ADDRESS": {
+					"ID": "UF_CRM_1685092832299",
+					"KEYS": [
+						"passportRegistrationAddress"
+					]
+				},
+				"PHONE": {
+					"ID": "UF_CRM_1685374728014",
+					"KEYS": [
+						"phone"
+					]
+				},
+				"PASSPORT_SPREAD_PHOTO": {
+					"ID": "UF_CRM_1685370534875",
+					"KEYS": [
+						"passportPhotoLink"
+					]
+				},
+				"PASSPORT_SELFIE_PHOTO": {
+					"ID": "UF_CRM_1685370576524",
+					"KEYS": [
+						"passportSelfieLink"
+					]
+				},
+				"PASSPORT_REGISTR_PHOTO": {
+					"ID": "UF_CRM_1685370622083",
+					"KEYS": [
+						"passportSignLink"
+					]
+				},
+				"CERTIFICATE_PHOTO": {
+					"ID": "UF_CRM_1685370733082",
+					"KEYS": [
+						"certificatePhotoLink"
+					]
+				},
+				"CEO_PASSPORT_SCAN": {
+					"ID": "UF_CRM_1685370778269",
+					"KEYS": [
+						"passportPhotoLink"
+					]
+				},
+				"POST_ADDRESS": {
+					"ID": "UF_CRM_1685374539954",
+					"KEYS": [
+						"postalAddress"
+					]
+				},
+				"REG_NUM": {
+					"ID": "UF_CRM_1685103257359",
+					"KEYS": [
+						"registrationNumber"
+					]
+				},
+				"TAX_REASON_CODE": {
+					"ID": "UF_CRM_1685090887359",
+					"KEYS": [
+						"taxReasonCode"
+					]
+				}
 			},
-			"EMAIL": {
-				"ID": "UF_CRM_1685374818810",
-				"KEYS": [
-					"email"
-				]
-			},
-			"INN": {
-				"ID": "UF_CRM_1685090514947",
-				"KEYS": [
-					"taxpayerNumber"
-				]
-			},
-			"LEGALNAME": {
-				"ID": "UF_CRM_1685090514947",
-				"KEYS": [
-					"legalName"
-				]
-			},
-			"FIRSTNAME": {
-				"ID": "UF_CRM_1685372562139",
-				"KEYS": [
-					"name"
-				]
-			},
-			"PATRONYMIC": {
-				"ID": "UF_CRM_1685374309431",
-				"KEYS": [
-					"patronymic"
-				]
-			},
-			"LASTNAME": {
-				"ID": "UF_CRM_1685372641841",
-				"KEYS": [
-					"lastName"
-				]
-			},
-			"BIRTHDATE": {
-				"ID": "UF_CRM_1685374403993",
-				"KEYS": [
-					"birthDate"
-				]
-			},
-			"PASSPORT_SERIAL_NUMBER": {
-				"ID": "UF_CRM_1685091444979",
-				"KEYS": [
-					"passportSerialNumber"
-				]
-			},
-			"PASSPORT_GIVEN_DATE": {
-				"ID": "UF_CRM_1685091491932",
-				"KEYS": [
-					"passportGivenDate"
-				]
-			},
-			"PASSPORT_SUBDIVISION_CODE": {
-				"ID": "UF_CRM_1685091982938",
-				"KEYS": [
-					"passportSubdivisionCode"
-				]
-			},
-			"PASSPORT_ISSUED_BY": {
-				"ID": "UF_CRM_1685092774142",
-				"KEYS": [
-					"passportIssuedBy"
-				]
-			},
-			"PASSPORT_REGISTRATION_ADDRESS": {
-				"ID": "UF_CRM_1685092832299",
-				"KEYS": [
-					"passportRegistrationAddress"
-				]
-			},
-			"PHONE": {
-				"ID": "UF_CRM_1685374728014",
-				"KEYS": [
-					"phone"
-				]
-			},
-			"PASSPORT_SPREAD_PHOTO": {
-				"ID": "UF_CRM_1685370534875",
-				"KEYS": [
-					"passportPhotoLink"
-				]
-			},
-			"PASSPORT_SELFIE_PHOTO": {
-				"ID": "UF_CRM_1685370576524",
-				"KEYS": [
-					"passportSelfieLink"
-				]
-			},
-			"PASSPORT_REGISTR_PHOTO": {
-				"ID": "UF_CRM_1685370622083",
-				"KEYS": [
-					"passportSignLink"
-				]
-			},
-			"CERTIFICATE_PHOTO": {
-				"ID": "UF_CRM_1685370733082",
-				"KEYS": [
-					"certificatePhotoLink"
-				]
-			},
-			"CEO_PASSPORT_SCAN": {
-				"ID": "UF_CRM_1685370778269",
-				"KEYS": [
-					"passportPhotoLink"
-				]
-			},
-			"POST_ADDRESS": {
-				"ID": "UF_CRM_1685374539954",
-				"KEYS": [
-					"postalAddress"
-				]
-			},
-			"REG_NUM": {
-				"ID": "UF_CRM_1685103257359",
-				"KEYS": [
-					"registrationNumber"
-				]
-			},
-			"TAX_REASON_CODE": {
-				"ID": "UF_CRM_1685090887359",
-				"KEYS": [
-					"taxReasonCode"
-				]
-			}
-		},
-		"PAYMENT": {
-			"BANK_ID_CODE": {
-				"ID": "UF_CRM_1685103291275",
-				"KEYS": [
-					"bankBic"
-				]
-			},
-			"BANK_NAME": {
-				"ID": "UF_CRM_1685369783019",
-				"KEYS": [
-					"bankName"
-				]
-			},
-			"OGRNIP_PHOTO": {
-				"ID": "UF_CRM_1685370689911",
-				"KEYS": [
-					"ogrnipPhotoLink"
-				]
-			},
-			"CORRESPONDENT_ACCOUNT": {
-				"ID": "UF_CRM_1685370242584",
-				"KEYS": [
-					"correspondentAccount"
-				]
+			"PAYMENT": {
+				"BANK_ID_CODE": {
+					"ID": "UF_CRM_1685103291275",
+					"KEYS": [
+						"bankBic"
+					]
+				},
+				"BANK_NAME": {
+					"ID": "UF_CRM_1685369783019",
+					"KEYS": [
+						"bankName"
+					]
+				},
+				"OGRNIP_PHOTO": {
+					"ID": "UF_CRM_1685370689911",
+					"KEYS": [
+						"ogrnipPhotoLink"
+					]
+				},
+				"CORRESPONDENT_ACCOUNT": {
+					"ID": "UF_CRM_1685370242584",
+					"KEYS": [
+						"correspondentAccount"
+					]
+				}
 			}
 		}
 	}

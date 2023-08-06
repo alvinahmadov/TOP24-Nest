@@ -3,7 +3,7 @@ import {
 	CRM,
 	ORDER,
 	TRANSPORT,
-	VALIDATION_KEYS
+	VALIDATION
 }                       from '@config/json';
 import {
 	BitrixUrl,
@@ -599,8 +599,8 @@ export function validateCrmEntity(
 	if (!entity.crmData) entity.crmData = { issues: {}, comment: "" };
 	if (!entity.crmData.issues) entity.crmData.issues = {};
 	
-	const commentKey = isContact ? VALIDATION_KEYS.COMMENT.CONTACT : VALIDATION_KEYS.COMMENT.COMPANY;
-	const admittedToWorkKey = isContact ? VALIDATION_KEYS.ADMITTED : undefined;
+	const commentKey = isContact ? VALIDATION.COMMENT.CONTACT : VALIDATION.COMMENT.COMPANY;
+	const admittedToWorkKey = isContact ? VALIDATION.ADMITTED.CONTACT : VALIDATION.ADMITTED.COMPANY;
 	const validate = (key: string): CrmValidation => validateCrm(key, crm, reference)
 
 	for(let validationKey in validationKeys) {

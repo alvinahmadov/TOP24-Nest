@@ -13,7 +13,7 @@ import { ApiProperty }  from '@nestjs/swagger';
 import {
 	CRM,
 	DRIVER,
-	VALIDATION_KEYS
+	VALIDATION
 }                       from '@config/json';
 import {
 	DriverStatus,
@@ -318,5 +318,5 @@ export default class Driver
 	};
 
 	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
-		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.CONTACT, true);
+		validateCrmEntity(this, crm, reference, VALIDATION.KEYS.CONTACT, true);
 }

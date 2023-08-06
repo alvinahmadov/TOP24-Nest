@@ -14,7 +14,7 @@ import {
 	CARGOINN,
 	CRM,
 	PAYMENT,
-	VALIDATION_KEYS,
+	VALIDATION,
 }                        from '@config/json';
 import {
 	validateCrmEntity
@@ -293,5 +293,5 @@ export default class CargoCompanyInn
 	};
 	
 	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean => 
-		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.COMPANY);
+		validateCrmEntity(this, crm, reference, VALIDATION.KEYS.COMPANY);
 }

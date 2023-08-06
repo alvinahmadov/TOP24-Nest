@@ -1,7 +1,7 @@
 import { CRM } from './crm_enums.json';
 import {
 	DATA_KEYS as DATA,
-	VALIDATION_KEYS
+	VALIDATION
 }              from './bitrix.json';
 
 const {
@@ -15,7 +15,7 @@ const {
 
 export {
 	CRM,
-	VALIDATION_KEYS,
+	VALIDATION,
 	CARGO,
 	CARGOINN,
 	DRIVER,

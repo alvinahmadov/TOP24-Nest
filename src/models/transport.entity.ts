@@ -9,7 +9,7 @@ import { ApiProperty }       from '@nestjs/swagger';
 import { 
 	CRM,
 	TRANSPORT,
-	VALIDATION_KEYS
+	VALIDATION
 }                            from '@config/json';
 import { TABLE_OPTIONS }     from '@common/constants';
 import {
@@ -327,5 +327,5 @@ export default class Transport
 	};
 
 	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
-		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.CONTACT, true);
+		validateCrmEntity(this, crm, reference, VALIDATION.KEYS.CONTACT, true);
 }
