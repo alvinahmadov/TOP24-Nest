@@ -281,6 +281,7 @@ export interface IServerEvents {
 	driver: (data: IDriverGatewayData) => void;
 	order: (data: IOrderGatewayData) => void;
 	offer: (data: any) => void;
+	transport: (data: ITransportGatewayData) => void;
 }
 
 export interface ISignInData {
