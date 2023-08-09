@@ -118,7 +118,8 @@ export type TNotifGatewayOptions = {
 	event?: 'cargo' |
 					'driver' |
 					'offer' |
-					'order';
+					'order' |
+					'transport';
 }
 
 /**@ignore*/

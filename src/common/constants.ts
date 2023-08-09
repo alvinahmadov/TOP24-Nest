@@ -87,9 +87,10 @@ export const TABLE_OPTIONS: TableOptions = {
 	updatedAt:   'updatedAt'
 };
 
-export const DRIVER_EVENT = 'driver';
 export const CARGO_EVENT = 'cargo';
+export const DRIVER_EVENT = 'driver';
 export const ORDER_EVENT = 'order';
+export const TRANSPORT_EVENT = 'transport';
 
 export const DEFAULT_COORDINATES = {
 	lat: 55.750450636518245,

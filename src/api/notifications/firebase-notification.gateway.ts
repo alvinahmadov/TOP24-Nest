@@ -15,7 +15,8 @@ import {
 import {
 	CARGO_EVENT,
 	DRIVER_EVENT,
-	ORDER_EVENT
+	ORDER_EVENT,
+	TRANSPORT_EVENT
 }                              from '@common/constants';
 import {
 	ICargoGatewayData,
@@ -26,6 +27,7 @@ import {
 	INotificationTokenData,
 	INotificationUserRole,
 	IOrderGatewayData,
+	ITransportGatewayData,
 	TNotifGatewayOptions
 }                              from '@common/interfaces';
 import { cleanToken }          from '@common/utils';
@@ -38,7 +40,8 @@ import { EntityFCMRepository } from '@repos/index';
 import {
 	CargoMessageBodyPipe,
 	DriverMessageBodyPipe,
-	OrderMessageBodyPipe
+	OrderMessageBodyPipe,
+	TransportMessageBodyPipe
 }                              from '@api/pipes';
 import {
 	CargoGuard,
@@ -102,6 +105,17 @@ export default class FirebaseNotificationGateway
 
 		this.sendNotification(data, { roles, url, event: ORDER_EVENT });
 	}
+
+	@UseGuards(CargoGuard)
+	@SubscribeMessage(TRANSPORT_EVENT)
+	public sendTransportNotification(
+		@MessageBody(TransportMessageBodyPipe) data: ITransportGatewayData,
+		options?: TNotifGatewayOptions
+	) {
+		const { roles = [], url = '', entityId = data.id } = options ?? {};
+
+		this.sendNotification(data, { roles, url, event: TRANSPORT_EVENT, entityId });
+	};
 
 	public async handleAuth(tokenData: INotificationTokenData): Promise<boolean> {
 		if(FirebaseNotificationGateway.enableFirebase) {

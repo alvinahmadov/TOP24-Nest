@@ -171,14 +171,22 @@
 		}
 	},
 	"EVENT": {
+		"CARGO": {
+			"MODERATION": "Добро пожаловать в 24ТОП. Ваш аккаунт успешно прошел модерацию.",
+			"VALIDATION": "Please, check correctness of entered data for company."
+		},
 		"DRIVER": {
 			"SENT": "An offer has been sent to you to complete the order '{}'.",
-			"ACCEPT": "Your request for the order '{}' is accepted!"
+			"ACCEPT": "Your request for the order '{}' is accepted!",
+			"VALIDATION": "Please, check correctness of entered data for driver."
 		},
 		"ORDER": {
 			"ACCEPT": "The offer was accepted by the driver {}.",
 			"CREATE": "Создана заявка {}",
 			"UPDATE": "Обновлены данные сделки {}"
+		},
+		"TRANSPORT": {
+			"VALIDATION": "Please, check correctness of entered data for transport."
 		}
 	},
 	"FAIL": {

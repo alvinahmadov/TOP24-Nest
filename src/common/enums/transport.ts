@@ -40,5 +40,9 @@ export enum LoadingType {
 }
 
 /**@ignore*/
+export const transportStatusToStr = (status: TransportStatus) =>
+	getTranslation('ENUM', 'TRANSPORT', 'STATUS', TransportStatus[status]);
+
+/**@ignore*/
 export const loadingTypeToStr = (status: LoadingType) =>
 	getTranslation('ENUM', 'TRANSPORT', 'LOADTYPE', LoadingType[status]);
