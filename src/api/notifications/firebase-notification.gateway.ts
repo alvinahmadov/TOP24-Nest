@@ -281,13 +281,13 @@ export default class FirebaseNotificationGateway
 					.messaging
 					.sendToDevice(token, payload)
 					.then(
-						(res) => {
-							if(res) {
-								if(res.successCount > 0) {
-									this.logger.log('Notification success:', { notificationData: data });
+						(result) => {
+							if(result) {
+								if(result.successCount > 0) {
+									this.logger.log('Notification success:', { notificationData: data, result });
 								}
-								if(res.failureCount > 0) {
-									this.logger.warn('Notification failure:', { notificationData: data });
+								if(result.failureCount > 0) {
+									this.logger.warn('Notification failure:', { notificationData: data, result });
 								}
 							}
 						}
