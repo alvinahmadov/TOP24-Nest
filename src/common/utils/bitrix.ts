@@ -650,3 +650,12 @@ export function validateCrmEntity(
 	const difference = diff(crmData, entity.crmData);
 	return !!difference;
 }
+
+export function checkCrmIssues(crmData: any) {
+	for(const key in crmData.issues) {
+		if(crmData.issues[key].ok === false)
+			return true;
+	}
+
+	return false;
+}

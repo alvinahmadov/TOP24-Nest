@@ -17,6 +17,7 @@ import {
 	VALIDATION,
 }                        from '@config/json';
 import {
+	checkCrmIssues,
 	validateCrmEntity
 }                        from '@common/utils';
 import {
@@ -292,6 +293,10 @@ export default class CargoCompanyInn
 		return data;
 	};
 	
-	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean => 
-		validateCrmEntity(this, crm, reference, VALIDATION.KEYS.COMPANY);
+	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean => {
+		const validationRequired = validateCrmEntity(
+			this, crm, reference, VALIDATION.KEYS.COMPANY
+		);
+		return checkCrmIssues(this.crmData) && validationRequired;
+	};
 }

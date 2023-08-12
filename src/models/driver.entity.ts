@@ -42,6 +42,7 @@ import {
 	VirtualColumn,
 }                       from '@common/interfaces';
 import {
+	checkCrmIssues,
 	validateCrmEntity
 }                       from '@common/utils';
 import { entityConfig } from '@api/swagger/properties';
@@ -317,6 +318,10 @@ export default class Driver
 		return data;
 	};
 
-	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
-		validateCrmEntity(this, crm, reference, VALIDATION.KEYS.CONTACT, true);
+	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean => {
+		const validationRequired = validateCrmEntity(
+			this, crm, reference, VALIDATION.KEYS.CONTACT, true
+		);
+		return checkCrmIssues(this.crmData) && validationRequired;
+	}
 }
