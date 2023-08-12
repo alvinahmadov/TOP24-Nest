@@ -284,10 +284,10 @@ export default class FirebaseNotificationGateway
 						(result) => {
 							if(result) {
 								if(result.successCount > 0) {
-									this.logger.log('Notification success:', { notificationData: data, result });
+									this.logger.log('Notification success:', { notificationData: data });
 								}
 								if(result.failureCount > 0) {
-									this.logger.warn('Notification failure:', { notificationData: data, result });
+									this.logger.warn('Notification failure:', { notificationData: data, ...result });
 								}
 							}
 						}
