@@ -15,7 +15,8 @@ import {
 import {
 	CARGO_EVENT,
 	DRIVER_EVENT,
-	ORDER_EVENT
+	ORDER_EVENT,
+	TRANSPORT_EVENT
 }                              from '@common/constants';
 import {
 	ICargoGatewayData,
@@ -26,6 +27,7 @@ import {
 	INotificationTokenData,
 	INotificationUserRole,
 	IOrderGatewayData,
+	ITransportGatewayData,
 	TNotifGatewayOptions
 }                              from '@common/interfaces';
 import { cleanToken }          from '@common/utils';
@@ -38,7 +40,8 @@ import { EntityFCMRepository } from '@repos/index';
 import {
 	CargoMessageBodyPipe,
 	DriverMessageBodyPipe,
-	OrderMessageBodyPipe
+	OrderMessageBodyPipe,
+	TransportMessageBodyPipe
 }                              from '@api/pipes';
 import {
 	CargoGuard,
@@ -76,9 +79,9 @@ export default class FirebaseNotificationGateway
 		@MessageBody(CargoMessageBodyPipe) data: ICargoGatewayData,
 		options?: TNotifGatewayOptions
 	) {
-		const { roles = [], url = '' } = options ?? {};
+		const { roles = [], url = '', entityId = data.id } = options ?? {};
 
-		this.sendNotification(data, { roles, url, event: CARGO_EVENT });
+		this.sendNotification(data, { roles, url, event: CARGO_EVENT, entityId });
 	}
 
 	@UseGuards(CargoGuard)
@@ -102,6 +105,17 @@ export default class FirebaseNotificationGateway
 
 		this.sendNotification(data, { roles, url, event: ORDER_EVENT });
 	}
+
+	@UseGuards(CargoGuard)
+	@SubscribeMessage(TRANSPORT_EVENT)
+	public sendTransportNotification(
+		@MessageBody(TransportMessageBodyPipe) data: ITransportGatewayData,
+		options?: TNotifGatewayOptions
+	) {
+		const { roles = [], url = '', entityId = data.id } = options ?? {};
+
+		this.sendNotification(data, { roles, url, event: TRANSPORT_EVENT, entityId });
+	};
 
 	public async handleAuth(tokenData: INotificationTokenData): Promise<boolean> {
 		if(FirebaseNotificationGateway.enableFirebase) {
@@ -165,7 +179,7 @@ export default class FirebaseNotificationGateway
 	}
 
 	protected sendNotification(data: IGatewayData, options: TNotifGatewayOptions): void {
-		const { roles, event } = options;
+		const { roles, event, entityId = data.id } = options;
 		let sent = false;
 
 		if(roles.length && event) {
@@ -180,7 +194,7 @@ export default class FirebaseNotificationGateway
 
 			if(!sent) {
 				this.fcmEntityRepo
-						.getByEntityId(data.id)
+						.getByEntityId(entityId)
 						.then(
 							fcm =>
 								fcm ? this.sendToDevice(fcm.token, data, options)
@@ -267,13 +281,13 @@ export default class FirebaseNotificationGateway
 					.messaging
 					.sendToDevice(token, payload)
 					.then(
-						(res) => {
-							if(res) {
-								if(res.successCount > 0) {
+						(result) => {
+							if(result) {
+								if(result.successCount > 0) {
 									this.logger.log('Notification success:', { notificationData: data });
 								}
-								if(res.failureCount > 0) {
-									this.logger.warn('Notification failure:', { notificationData: data });
+								if(result.failureCount > 0) {
+									this.logger.warn('Notification failure:', { notificationData: data, ...result });
 								}
 							}
 						}

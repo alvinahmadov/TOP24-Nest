@@ -37,7 +37,7 @@ import {
 	isSuccessResponse,
 	orderFromBitrix
 }                                from '@common/utils';
-import {
+import { 
 	Driver,
 	Order,
 	Transport
@@ -66,7 +66,10 @@ import COMPANY_REF_URL = BitrixUrl.COMPANY_REF_URL;
 import CONTACT_GET_URL = BitrixUrl.CONTACT_GET_URL;
 import CONTACT_REF_URL = BitrixUrl.CONTACT_REF_URL;
 
+const CARGO_EVENT_TRANSLATIONS = getTranslation('EVENT', 'CARGO');
+const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
 const ORDER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
+const TRANSPORT_EVENT_TRANSLATIONS = getTranslation('EVENT', 'TRANSPORT');
 const debugBitrixOrder = false;
 
 /**
@@ -284,24 +287,22 @@ export default class BitrixService
 		else {
 			const { result } = await this.httpClient.post<TCRMResponse>(`${COMPANY_GET_URL}?ID=${crmId}`);
 			const crmItem = getCrm(result);
-			const message: string = "Пожалуйста, проверьте соответствие введенных полей политике сервиса, с уважением 24ТОП.";
+			const message: string = CARGO_EVENT_TRANSLATIONS['VALIDATION'];
 
 			if(crmItem) {
 				const response = await this.httpClient.get<TCRMResponse>(COMPANY_REF_URL);
 				const reference = getCrm(response.result);
-				const { data: cargo } = await this.cargoService.getByCrmId(crmId);
+				const { data: cargo } = await this.cargoService.getByCrmId(crmId, true);
 				
-				const notifFn = (apiRes: IApiResponse<any>, companyId: string) => {
+				const notifFn = (apiRes: IApiResponse<any>, companyId: string, entityId?: string) => {
 					if(apiRes.data) {
-						const options = { roles: [UserRole.CARGO] };
+						const options = { roles: [UserRole.CARGO, UserRole.DRIVER], url: 'Registration', entityId };
 						const data: ICargoGatewayData = {
 							id:     companyId,
 							event:  'cargo',
 							source: 'bitrix',
 							message
 						};
-
-						this.socketGateway.sendCargoNotification(data, options);
 						this.fcmGateway.sendCargoNotification(data, options);
 					}
 				};
@@ -312,19 +313,20 @@ export default class BitrixService
 					const paymentValidationRequired = cargo.payment
 																						? cargo.payment.validateCrm(crmItem, reference)
 																						: false;
+					const entityId = cargo.drivers?.at(0)?.id;
 
 					if(paymentValidationRequired) {
 						this.paymentService
 								.update(cargo?.payment.id, { crmData: cargo.payment.crmData })
 								.then(apiResponse => {
 									if(!companyValidationRequired) 
-										notifFn(apiResponse, cargo.id);
+										notifFn(apiResponse, cargo.id, entityId);
 								});
 					}
 					if(companyValidationRequired) {
 						this.cargoService
 								.update(cargo.id, { crmData: cargo.crmData })
-								.then((apiRes) => notifFn(apiRes, cargo.id));
+								.then(apiResponse => notifFn(apiResponse, cargo.id, entityId));
 					}
 
 					return {
@@ -334,24 +336,25 @@ export default class BitrixService
 					};
 				}
 				else {
-					const { data: cargoinn } = await this.cargoInnService.getByCrmId(crmId);
+					const { data: cargoinn } = await this.cargoInnService.getByCrmId(crmId, true);
 					const companyValidationRequired = cargoinn.validateCrm(crmItem, reference);
 					const paymentValidationRequired = cargoinn.payment 
 																						? cargoinn.payment?.validateCrm(crmItem, reference)
 																						: false;
+					const entityId = cargoinn.drivers?.at(0)?.id;
 
 					if(paymentValidationRequired) {
 						this.paymentService
 								.update(cargoinn.payment.id, { crmData: cargoinn.payment.crmData })
 								.then(apiResponse => {
 									if(!companyValidationRequired)
-										notifFn(apiResponse, cargoinn.id);
+										notifFn(apiResponse, cargoinn.id, entityId);
 								});
 					}
 					if(companyValidationRequired){
 						this.cargoInnService
 								.update(cargoinn.id, { crmData: cargoinn.crmData })
-								.then((apiRes) => notifFn(apiRes, cargoinn.id));
+								.then(apiResponse => notifFn(apiResponse, cargoinn.id, entityId));
 					}
 
 					return {
@@ -366,82 +369,75 @@ export default class BitrixService
 		return this.responses['NOT_FOUND_COMPANY'];
 	}
 
-	public async updateDriver(crmId: number)
-		: Promise<IApiResponse<Driver | null>> {
-		const { result } = await this.httpClient.post<TCRMResponse>(`${CONTACT_GET_URL}?ID=${crmId}`);
-		const crmItem = getCrm(result);
-		const message: string = "Пожалуйста, проверьте соответствие введенных полей политике сервиса, с уважением 24ТОП.";
-
-		if(crmItem) {
-			const driverResponse = await this.driverService.getByCrmId(crmId, true);
-			if(isSuccessResponse(driverResponse)) {
-				const driver = driverResponse.data;
-				const response = await this.httpClient.get<TCRMResponse>(CONTACT_REF_URL);
-				const reference = getCrm(response.result);
-				const validationRequired = driver.validateCrm(crmItem, reference);
-
-				if(validationRequired) {
-					this.driverService
-							.update(driver.id, { crmData: driver.crmData })
-							.then(() => {
-								const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
-								const data: IDriverGatewayData = {
-									id:     driver.id,
-									source: 'bitrix',
-									message
-								};
-
-								this.socketGateway.sendDriverNotification(data, options);
-								this.fcmGateway.sendDriverNotification(data, options);
-							});
-				}
-
-				return {
-					statusCode: 200,
-					data:       driver,
-				};
-			}
-		}
-
-		return this.responses['NOT_FOUND_DRIVER'];
-	}
-
-	public async updateTransport(crmId: number)
+	public async updateContact(crmId: number)
 		: Promise<IApiResponse<Transport | null>> {
 		const { result } = await this.httpClient.post<TCRMResponse>(`${CONTACT_GET_URL}?ID=${crmId}`);
 		const crmItem = getCrm(result);
-		const message: string = "Пожалуйста, проверьте соответствие введенных полей политике сервиса, с уважением 24ТОП.";
 
 		if(crmItem) {
+			const response = await this.httpClient.get<TCRMResponse>(CONTACT_REF_URL);
+			const reference = getCrm(response.result);
 			const transportResponse = await this.transportService.getByCrmId(crmId, true);
+			const roles = [UserRole.DRIVER, UserRole.CARGO];
+
+			const driverNotify = (apiResponse: IApiResponse<Driver>) => {
+				if(isSuccessResponse(apiResponse)) {
+					const { data: { id } } = apiResponse;
+					this.fcmGateway.sendDriverNotification(
+						{
+							id,
+							source: 'bitrix',
+							message: DRIVER_EVENT_TRANSLATIONS['VALIDATION']
+						},
+						{ roles, url: 'DriverLicense', entityId: id }
+					);
+				}
+			};
+			const transportNotify = (apiResponse: IApiResponse<Transport>) => {
+				if(isSuccessResponse(apiResponse)) {
+					const { data: { id, driverId } } = apiResponse;
+					this.fcmGateway.sendTransportNotification(
+						{
+							id,
+							source: 'bitrix',
+							message: TRANSPORT_EVENT_TRANSLATIONS['VALIDATION']
+						},
+						{ roles, url: 'AddVehicle', entityId: driverId }
+					);
+				}
+			};
 			
 			if(isSuccessResponse(transportResponse)) {
-				const transport = transportResponse.data;
-				const response = await this.httpClient.get<TCRMResponse>(CONTACT_REF_URL);
-				const reference = getCrm(response.result);
-				const validationRequired = transport.validateCrm(crmItem, reference);
+				let transport = transportResponse.data;
+				let driver = transport.driver;
+				const transportValidationRequired = transport.validateCrm(crmItem, reference);
+				const driverValidationRequired = driver.validateCrm(crmItem, reference);
 
-				if(validationRequired) {
+				if(!driverValidationRequired && !transportValidationRequired) {
+					return { statusCode: HttpStatus.OK, message: 'No validation needed' };
+				}
+				else if(transportValidationRequired && !driverValidationRequired) {
 					this.transportService
 							.update(transport.id, { crmData: transport.crmData })
-							.then((apiResponse) => {
-								if(apiResponse) {
-									const options = { roles: [UserRole.DRIVER, UserRole.CARGO], url: 'Main' };
-									const data: IDriverGatewayData = {
-										id:     transport.driverId,
-										source: 'bitrix',
-										message
-									};
-
-									this.socketGateway.sendDriverNotification(data, options);
-									this.fcmGateway.sendDriverNotification(data, options);
-								}
-							});
+							.then(apiResponse => transportNotify(apiResponse));
 				}
+				else if(driverValidationRequired && !transportValidationRequired) {
+					this.driverService
+							.update(driver.id, { crmData: driver.crmData })
+							.then(apiResponse => driverNotify(apiResponse));
+				}
+				else {
+					this.driverService
+							.update(driver.id, { crmData: driver.crmData })
+							.then(apiResponse => driverNotify(apiResponse));
+					this.transportService
+							.update(transport.id, { crmData: transport.crmData })
+							.then(apiResponse => transportNotify(apiResponse));
+				}
+
 				return {
 					statusCode: 200,
-					data:       transport,
-					message
+					data:       transport
 				};
 			}
 		}

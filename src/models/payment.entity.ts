@@ -18,7 +18,7 @@ import {
 }                            from '@common/interfaces';
 import { UuidScalar }        from '@common/scalars';
 import { validateCrmEntity } from '@common/utils';
-import { VALIDATION_KEYS }   from '@config/json';
+import { VALIDATION }        from '@config/json';
 import { entityConfig }      from '@api/swagger/properties';
 import EntityModel           from './entity-model';
 import CargoCompany          from './cargo.entity';
@@ -93,5 +93,5 @@ export default class Payment
 	cargoinn?: CargoCompanyInn;
 
 	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
-		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.PAYMENT);
+		validateCrmEntity(this, crm, reference, VALIDATION.KEYS.PAYMENT);
 }

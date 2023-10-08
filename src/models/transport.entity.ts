@@ -9,7 +9,7 @@ import { ApiProperty }       from '@nestjs/swagger';
 import { 
 	CRM,
 	TRANSPORT,
-	VALIDATION_KEYS
+	VALIDATION
 }                            from '@config/json';
 import { TABLE_OPTIONS }     from '@common/constants';
 import {
@@ -37,6 +37,7 @@ import {
 }                            from '@common/interfaces';
 import { UuidScalar }        from '@common/scalars';
 import {
+	checkCrmIssues,
 	convertBitrix,
 	validateCrmEntity,
 }                            from '@common/utils';
@@ -326,6 +327,10 @@ export default class Transport
 		return data;
 	};
 
-	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
-		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.CONTACT);
+	public validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean => {
+		const validationRequired = validateCrmEntity(
+			this, crm, reference, VALIDATION.KEYS.CONTACT, true
+		);
+		return checkCrmIssues(this.crmData) && validationRequired;
+	}
 }

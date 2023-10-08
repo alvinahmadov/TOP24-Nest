@@ -14,10 +14,11 @@ import {
 	CARGO,
 	CRM,
 	PAYMENT,
-	VALIDATION_KEYS,
+	VALIDATION,
 }                        from '@config/json';
 import {
 	convertBitrix,
+	checkCrmIssues,
 	validateCrmEntity
 }                        from '@common/utils';
 import {
@@ -48,6 +49,7 @@ import Order             from './order.entity';
 import Payment           from './payment.entity';
 import Transport         from './transport.entity';
 import User              from './user.entity';
+import { mapKeys }       from 'lodash';
 
 const { company: prop } = entityConfig;
 
@@ -300,6 +302,10 @@ export default class CargoCompany
 		return data;
 	};
 	
-	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
-		validateCrmEntity(this, crm, reference, VALIDATION_KEYS.COMPANY);
+	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean => {
+		const validationRequired = validateCrmEntity(
+			this, crm, reference, VALIDATION.KEYS.COMPANY
+		);
+		return checkCrmIssues(this.crmData) && validationRequired;
+	};
 }

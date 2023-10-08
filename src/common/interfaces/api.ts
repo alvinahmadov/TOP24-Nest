@@ -9,7 +9,8 @@ import {
 	CompanyType,
 	DriverStatus,
 	OrderStage,
-	OrderStatus
+	OrderStatus,
+	TransportStatus,
 }                       from '../enums';
 
 /**
@@ -30,7 +31,8 @@ export type TOperationCount = {
 export type TEventName = 'cargo' |
 												 'driver' |
 												 'offer' |
-												 'order';
+												 'order' |
+												 'transport';
 
 // noinspection MagicNumberJS
 export type TStatusCode = 200 |
@@ -163,6 +165,12 @@ export interface IDriverGatewayData
 	currentAddress?: string;
 }
 
+export interface ITransportGatewayData
+	extends IGatewayData,
+					IGatewayStatusData<TransportStatus> {
+	event?: 'transport';
+}
+
 /**@ignore*/
 export interface IKladrData {
 	/**
@@ -273,6 +281,7 @@ export interface IServerEvents {
 	driver: (data: IDriverGatewayData) => void;
 	order: (data: IOrderGatewayData) => void;
 	offer: (data: any) => void;
+	transport: (data: ITransportGatewayData) => void;
 }
 
 export interface ISignInData {

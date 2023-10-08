@@ -1,9 +1,9 @@
-import { diff }             from 'deep-diff';
+import { diff }         from 'deep-diff';
 import {
 	CRM,
-	VALIDATION_KEYS,
 	ORDER,
-	TRANSPORT
+	TRANSPORT,
+	VALIDATION
 }                       from '@config/json';
 import {
 	BitrixUrl,
@@ -580,7 +580,8 @@ export function validateCrmEntity(
 	entity: ICRMEntity,
 	crm: TCRMFields,
 	reference: TCRMFields,
-	validationKeys: {[k: string]: { ID: string; KEYS: string[] }}
+	validationKeys: {[k: string]: { ID: string; KEYS: string[] }},
+	isContact = false
 ): boolean
 {
 	const setIssue = (field: string, ok: boolean = false, description: string = "") => {
@@ -594,11 +595,12 @@ export function validateCrmEntity(
 		}
 	}
 	
-	const crmData = entity.crmData;
+	const crmData = structuredClone(entity.crmData);
 	if (!entity.crmData) entity.crmData = { issues: {}, comment: "" };
 	if (!entity.crmData.issues) entity.crmData.issues = {};
 	
-	const commentKey = VALIDATION_KEYS.COMMENT.COMPANY;
+	const commentKey = isContact ? VALIDATION.COMMENT.CONTACT : VALIDATION.COMMENT.COMPANY;
+	const admittedToWorkKey = isContact ? VALIDATION.ADMITTED.CONTACT : VALIDATION.ADMITTED.COMPANY;
 	const validate = (key: string): CrmValidation => validateCrm(key, crm, reference)
 
 	for(let validationKey in validationKeys) {
@@ -625,5 +627,35 @@ export function validateCrmEntity(
 	if (crm[commentKey])
 		entity.crmData.comment = crm[commentKey];
 
-	return diff(crmData, entity.crmData) !== undefined;
+	if(!!admittedToWorkKey && reference[admittedToWorkKey])
+	{
+		const admittedToWorkRefs: TBitrixEnum = reference[admittedToWorkKey]['items'];
+		if(admittedToWorkRefs)
+		{
+			const admittedToWorkId = crm[admittedToWorkKey]
+			const index = admittedToWorkRefs.findIndex(ref => admittedToWorkId === ref.ID)
+			if(index >= 0) {
+				const admittedToWorkValue = admittedToWorkRefs[index].VALUE.toLowerCase();
+				if(admittedToWorkValue === 'допущен') {
+					entity.crmData.admitted = 'yes';
+				} else if(admittedToWorkValue === 'не допущен') {
+					entity.crmData.admitted = 'no';
+				} else {
+					entity.crmData.admitted = 'blacklist';
+				}
+			}
+		}
+	}
+	
+	const difference = diff(crmData, entity.crmData);
+	return !!difference;
+}
+
+export function checkCrmIssues(crmData: any) {
+	for(const key in crmData.issues) {
+		if(crmData.issues[key].ok === false)
+			return true;
+	}
+
+	return false;
 }

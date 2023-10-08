@@ -113,11 +113,13 @@ export type TMulterFile = Express.Multer.File;
 
 export type TNotifGatewayOptions = {
 	roles: UserRole[];
+	entityId?: string;
 	url?: string;
 	event?: 'cargo' |
 					'driver' |
 					'offer' |
-					'order';
+					'order' |
+					'transport';
 }
 
 /**@ignore*/
@@ -246,6 +248,7 @@ export interface ICRMValidationData<M extends ICRMEntity> {
 														 'fromCrm' |
 														 'toCrm' |
 														 'crmId'>>;
+	admitted?: 'yes' | 'no' | 'blacklist';
 	comment?: string;
 }
 
