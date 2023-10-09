@@ -651,9 +651,9 @@ export function validateCrmEntity(
 	return !!difference;
 }
 
-export function checkCrmIssues(crmData: any) {
+export function hasCrmIssues(crmData: any) {
 	for(const key in crmData.issues) {
-		if(crmData.issues[key].ok === false)
+		if(crmData.issues[key] !== undefined && crmData.issues[key].ok === false)
 			return true;
 	}
 

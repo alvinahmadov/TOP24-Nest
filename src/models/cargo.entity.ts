@@ -18,7 +18,7 @@ import {
 }                        from '@config/json';
 import {
 	convertBitrix,
-	checkCrmIssues,
+	hasCrmIssues,
 	validateCrmEntity
 }                        from '@common/utils';
 import {
@@ -49,7 +49,6 @@ import Order             from './order.entity';
 import Payment           from './payment.entity';
 import Transport         from './transport.entity';
 import User              from './user.entity';
-import { mapKeys }       from 'lodash';
 
 const { company: prop } = entityConfig;
 
@@ -306,6 +305,6 @@ export default class CargoCompany
 		const validationRequired = validateCrmEntity(
 			this, crm, reference, VALIDATION.KEYS.COMPANY
 		);
-		return checkCrmIssues(this.crmData) && validationRequired;
+		return hasCrmIssues(this.crmData)&&validationRequired;
 	};
 }
