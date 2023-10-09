@@ -18,7 +18,7 @@ import {
 }                        from '@config/json';
 import {
 	convertBitrix,
-	checkCrmIssues,
+	hasCrmIssues,
 	validateCrmEntity
 }                        from '@common/utils';
 import {
@@ -306,6 +306,6 @@ export default class CargoCompany
 		const validationRequired = validateCrmEntity(
 			this, crm, reference, VALIDATION.KEYS.COMPANY
 		);
-		return checkCrmIssues(this.crmData) && validationRequired;
+		return hasCrmIssues(this.crmData)&&validationRequired;
 	};
 }

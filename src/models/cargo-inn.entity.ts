@@ -17,7 +17,7 @@ import {
 	VALIDATION,
 }                        from '@config/json';
 import {
-	checkCrmIssues,
+	hasCrmIssues,
 	validateCrmEntity
 }                        from '@common/utils';
 import {
@@ -297,6 +297,6 @@ export default class CargoCompanyInn
 		const validationRequired = validateCrmEntity(
 			this, crm, reference, VALIDATION.KEYS.COMPANY
 		);
-		return checkCrmIssues(this.crmData) && validationRequired;
+		return hasCrmIssues(this.crmData)&&validationRequired;
 	};
 }

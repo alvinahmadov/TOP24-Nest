@@ -37,7 +37,7 @@ import {
 }                            from '@common/interfaces';
 import { UuidScalar }        from '@common/scalars';
 import {
-	checkCrmIssues,
+	hasCrmIssues,
 	convertBitrix,
 	validateCrmEntity,
 }                            from '@common/utils';
@@ -331,6 +331,6 @@ export default class Transport
 		const validationRequired = validateCrmEntity(
 			this, crm, reference, VALIDATION.KEYS.CONTACT, true
 		);
-		return checkCrmIssues(this.crmData) && validationRequired;
+		return hasCrmIssues(this.crmData) && validationRequired;
 	}
 }

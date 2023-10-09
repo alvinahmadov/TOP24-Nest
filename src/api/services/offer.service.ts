@@ -21,7 +21,6 @@ import {
 	IOfferFilter,
 	IOrderGatewayData,
 	IService,
-	ITransportFilter,
 	TAffectedRows,
 	TOfferDriver,
 	TOfferTransportFilter,
@@ -29,11 +28,11 @@ import {
 }                              from '@common/interfaces';
 import {
 	fillDriverWithCompanyData,
-	filterTransports,
 	formatArgs,
 	getTranslation,
+	hasCrmIssues,
 	isSuccessResponse
-}                              from '@common/utils';
+} from '@common/utils';
 import {
 	IDriverTransformer,
 	IOrderTransformer,
@@ -61,6 +60,8 @@ import {
 	SocketNotificationGateway
 }                              from '@api/notifications';
 import Service                 from './service';
+import CargoCompanyService     from './cargo-company.service';
+import CargoCompanyInnService  from './cargoinn-company.service';
 import DriverService           from './driver.service';
 import OrderService            from './order.service';
 
@@ -80,6 +81,8 @@ export default class OfferService
 	private readonly destinationRepo: DestinationRepository = new DestinationRepository();
 
 	constructor(
+		protected readonly cargoService: CargoCompanyService,
+		protected readonly cargoInnService: CargoCompanyInnService,
 		protected readonly driverService: DriverService,
 		protected readonly orderService: OrderService,
 		private readonly fcmGateway: FirebaseNotificationGateway,
@@ -131,6 +134,58 @@ export default class OfferService
 			// Prevent the driver from processing of two distinct 
 			// orders at the same time if the new order is not of extra payload type
 			// Previous order must be finished prior to the taking new one.
+			
+			const driverHasIssues: boolean = hasCrmIssues(driver.crmData);
+			let transportHaveIssues: boolean = false;
+			let companyHaveIssues: boolean = false;
+			
+			let transportId: string = "";
+			let companyId: string = "";
+			
+			for (const transport of driver.transports) {
+				const haveIssue =  hasCrmIssues(transport.crmData);
+				if(haveIssue) {
+					transportHaveIssues = haveIssue;
+					transportId = transport.id;
+					break;
+				}
+			}
+			
+			if(driver.cargoId) {
+				const { data: cargo } = await this.cargoService.getById(driver.cargoId);
+				if(cargo) {
+					companyHaveIssues = hasCrmIssues(cargo.crmData);
+					companyId = cargo.id;
+				}
+			} else if(driver.cargoinnId) {
+				const { data: cargoInn } = await this.cargoInnService.getById(driver.cargoinnId);
+				if(cargoInn) {
+					companyHaveIssues = hasCrmIssues(cargoInn.crmData);
+					companyId = cargoInn.id;
+				}
+			}
+			
+			if(driverHasIssues || transportHaveIssues || companyHaveIssues) {
+				const roles = [UserRole.DRIVER, UserRole.CARGO];
+				const message: string = "Вы не прошли проверку СБ 24ТОП, пожалуйста исправьте ошибки и попробуйте заново.";
+
+				if(driverHasIssues)
+					this.fcmGateway.sendDriverNotification({id: driverId,  message}, {
+						roles, url: 'DriverLicense', entityId: driverId
+					});
+				if(transportHaveIssues)
+					this.fcmGateway.sendTransportNotification({id: transportId, message}, {
+						roles, url: 'AddVehicle', entityId: driverId
+					})
+				if(companyHaveIssues)
+					this.fcmGateway.sendCargoNotification({id: companyId, message}, {
+						roles, url: 'Registration', entityId: driverId
+					})
+				return {
+					statusCode: HttpStatus.NOT_ACCEPTABLE,
+					message:    message
+				};
+			}
 
 			// driver has old/active order
 			if(
@@ -660,21 +715,6 @@ export default class OfferService
 		let { data: drivers } = await this.driverService.getByTransport(
 			{ driverIds: driverOffers.map(o => o.driverId) }
 		);
-
-		const transportRequirements: ITransportFilter = {
-			weightMin: order.weight,
-			heightMin: order.height,
-			volumeMin: order.volume,
-			lengthMin: order.length,
-			widthMin:  order.width,
-			pallets:   order.pallets ?? 0
-		};
-
-		// noinspection JSUnusedLocalSymbols
-		const matchDrivers = drivers.filter(driver => filterTransports(driver.transports, transportRequirements)?.length
-																									> 0);
-		// noinspection JSUnusedLocalSymbols
-		const nonMatchingDrivers = drivers.filter(driver => matchDrivers.every(d => driver.id !== d.id));
 
 		if(!drivers.length)
 			return {
