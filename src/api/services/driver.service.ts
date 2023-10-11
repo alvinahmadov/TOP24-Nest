@@ -72,7 +72,7 @@ const sendDistanceNotification = async(
 ): Promise<IGatewayData | null> =>
 {
 	let notificationData: IDriverGatewayData = null;
-	const options = { roles: [UserRole.CARGO], url: 'Main' };
+	const options = { roles: [UserRole.CARGO, UserRole.DRIVER], url: 'Main', entityId: driverId };
 
 	if(destination) {
 		if(destination.atNearestDistanceToPoint) {
@@ -173,18 +173,6 @@ export default class DriverService
 			data:       fillDriverWithCompanyData(driver),
 			message:    formatArgs(TRANSLATIONS['GET'], driver.fullName)
 		};
-	}
-
-	public async getByCrmId(crmId: number, full?: boolean)
-		: Promise<IApiResponse<Driver | null>> {
-		const driver = await this.repository.getByCrmId(crmId, full);
-		if(driver)
-			return {
-				statusCode: HttpStatus.OK,
-				data:       driver
-			};
-
-		return this.responses['NOT_FOUND'];
 	}
 
 	public async getByTransport(
@@ -389,15 +377,13 @@ export default class DriverService
 
 			if(orders) {
 				for(const order of orders) {
-					const destination = await this.destinationRepo
-																				.getOrderDestination(order.id, {
-																					point: order.currentPoint
-																				});
+					let destination = await this.destinationRepo.getOrderDestination(
+						order.id, { point: order.currentPoint });
 
 					if(!destination) continue;
 
-					destination.distance = calculateDistance([driver.latitude, driver.longitude], destination.coordinates);
-					await destination.save({ fields: ['distance'] });
+					const distance = calculateDistance([driver.latitude, driver.longitude], destination.coordinates);
+					destination = await this.destinationRepo.update(destination.id, { distance });
 					const gateways = [this.fcmGateway, this.socketGateway];
 
 					sendDistanceNotification(
