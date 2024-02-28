@@ -277,8 +277,8 @@ export default class BitrixService
 		const notifFn = (
 			apiRes: IApiResponse<any>,
 			companyId: string,
-			message: string = CARGO_EVENT_TRANSLATIONS['VALIDATION'],
-			entityId?: string
+			entityId?: string,
+			message: string = CARGO_EVENT_TRANSLATIONS['VALIDATION']
 		) => {
 			if(apiRes.data) {
 				const options = { roles: [UserRole.CARGO, UserRole.DRIVER], url: 'Registration', entityId };
