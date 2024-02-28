@@ -233,7 +233,7 @@ export interface IBucketItem {
 }
 
 type TCrmIssueDetail = {
-	ok?: boolean;
+	ok: boolean;
 	description?: string;
 }
 

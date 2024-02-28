@@ -297,6 +297,8 @@ export default class CargoCompanyInn
 		const validationRequired = validateCrmEntity(
 			this, crm, reference, VALIDATION.KEYS.COMPANY
 		);
-		return hasCrmIssues(this.crmData)&&validationRequired;
+		if(validationRequired)
+			return !hasCrmIssues(this.crmData);
+		return true;
 	};
 }

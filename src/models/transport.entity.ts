@@ -331,6 +331,8 @@ export default class Transport
 		const validationRequired = validateCrmEntity(
 			this, crm, reference, VALIDATION.KEYS.CONTACT, true
 		);
-		return hasCrmIssues(this.crmData) && validationRequired;
+		if(validationRequired)
+			return !hasCrmIssues(this.crmData);
+		return true;
 	}
 }

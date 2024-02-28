@@ -17,7 +17,10 @@ import {
 	UuidColumn
 }                            from '@common/interfaces';
 import { UuidScalar }        from '@common/scalars';
-import { validateCrmEntity } from '@common/utils';
+import {
+	hasCrmIssues,
+	validateCrmEntity
+} from '@common/utils';
 import { VALIDATION }        from '@config/json';
 import { entityConfig }      from '@api/swagger/properties';
 import EntityModel           from './entity-model';
@@ -92,6 +95,10 @@ export default class Payment
 	@BelongsTo(() => CargoCompanyInn, 'cargoinnId')
 	cargoinn?: CargoCompanyInn;
 
-	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean =>
-		validateCrmEntity(this, crm, reference, VALIDATION.KEYS.PAYMENT);
+	public readonly validateCrm = (crm: TCRMFields, reference: TCRMFields): boolean => {
+		const validationRequired = validateCrmEntity(this, crm, reference, VALIDATION.KEYS.PAYMENT);
+		if(validationRequired)
+			return hasCrmIssues(this.crmData);
+		return true;
+	}
 }

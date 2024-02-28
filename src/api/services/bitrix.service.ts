@@ -29,7 +29,7 @@ import {
 	TCRMResponse,
 	TOperationCount,
 	TUpdateAttribute
-} from '@common/interfaces';
+}                                from '@common/interfaces';
 import {
 	formatArgs,
 	getCrm,
@@ -37,7 +37,7 @@ import {
 	isSuccessResponse,
 	orderFromBitrix
 }                                from '@common/utils';
-import { 
+import {
 	Driver,
 	Order,
 	Transport
@@ -313,37 +313,40 @@ export default class BitrixService
 
 				if(cargo) {
 					// Get json reference data
-					const companyValidationRequired = cargo.validateCrm(crmItem, reference);
-					const paymentValidationRequired = cargo.payment
+					const isCompanyDataValid = cargo.validateCrm(crmItem, reference);
+					const isPaymentDataValid = cargo.payment
 																						? cargo.payment.validateCrm(crmItem, reference)
 																						: false;
 					const entityId = cargo.drivers?.at(0)?.id;
 
-					if(paymentValidationRequired) {
-						this.paymentService
-								.update(cargo?.payment.id, { crmData: cargo.payment.crmData })
-								.then(apiResponse => {
-									if(!companyValidationRequired) 
-										notifFn(apiResponse, cargo.id, entityId);
-								});
+					if(isPaymentDataValid && isCompanyDataValid) {
+						if(cargo.crmData.admitted === 'yes') {
+							this.cargoService.getById(
+								cargo.id
+							).then(
+								apiResponse => notifFn(
+									apiResponse,
+									cargo.id,
+									entityId,
+									"Вы допушены к работе в 24ТОП."
+								)
+							);
+						}
 					}
-					if(companyValidationRequired) {
-						this.cargoService
-								.update(cargo.id, { crmData: cargo.crmData })
-								.then(apiResponse => notifFn(apiResponse, cargo.id, entityId));
-					}
-
-					if(!paymentValidationRequired && !companyValidationRequired) {
-						this.cargoService.getById(
-							cargo.id
-						).then(
-							apiResponse => notifFn(
-								apiResponse,
-								cargo.id,
-								entityId,
-								"Вы допушены к работе в 24ТОП."
-							)
-						);
+					else {
+						if(!isPaymentDataValid) {
+							this.paymentService
+									.update(cargo?.payment.id, { crmData: cargo.payment.crmData })
+									.then(apiResponse => {
+										if(isCompanyDataValid)
+											notifFn(apiResponse, cargo.id, entityId);
+									});
+						}
+						if(!isCompanyDataValid) {
+							this.cargoService
+									.update(cargo.id, { crmData: cargo.crmData })
+									.then(apiResponse => notifFn(apiResponse, cargo.id, entityId));
+						}
 					}
 
 					return {
@@ -353,36 +356,37 @@ export default class BitrixService
 				}
 				else {
 					const { data: cargoinn } = await this.cargoInnService.getByCrmId(crmId, true);
-					const companyValidationRequired = cargoinn.validateCrm(crmItem, reference);
-					const paymentValidationRequired = cargoinn.payment 
+					const isCompanyDataValid = cargoinn.validateCrm(crmItem, reference);
+					const isPaymentDataValid = cargoinn.payment
 																						? cargoinn.payment?.validateCrm(crmItem, reference)
 																						: false;
 					const entityId = cargoinn.drivers?.at(0)?.id;
 
-					if(paymentValidationRequired) {
-						this.paymentService
-								.update(cargoinn.payment.id, { crmData: cargoinn.payment.crmData })
-								.then(apiResponse => {
-									if(!companyValidationRequired)
-										notifFn(apiResponse, cargoinn.id, entityId);
-								});
-					}
-					if(companyValidationRequired){
-						this.cargoInnService
-								.update(cargoinn.id, { crmData: cargoinn.crmData })
-								.then(apiResponse => notifFn(apiResponse, cargoinn.id, entityId));
-					}
-
-					if(!paymentValidationRequired && !companyValidationRequired)
-					{
-						this.cargoInnService.getById(
-							cargoinn.id
-						).then(apiResponse => notifFn(
-							apiResponse,
-							cargoinn.id,
-							entityId,
-							"Вы допушены к работе в 24ТОП."
-						))
+					if(isPaymentDataValid && isCompanyDataValid) {
+						if(cargoinn.crmData.admitted === 'yes') {
+							this.cargoInnService.getById(
+								cargoinn.id
+							).then(apiResponse => notifFn(
+								apiResponse,
+								cargoinn.id,
+								entityId,
+								"Вы допушены к работе в 24ТОП."
+							));
+						}
+					} else {
+						if(!isCompanyDataValid) {
+							this.cargoInnService
+									.update(cargoinn.id, { crmData: cargoinn.crmData })
+									.then(apiResponse => notifFn(apiResponse, cargoinn.id, entityId));
+						}
+						if(!isPaymentDataValid) {
+							this.paymentService
+									.update(cargoinn.payment.id, { crmData: cargoinn.payment.crmData })
+									.then(apiResponse => {
+										if(isCompanyDataValid)
+											notifFn(apiResponse, cargoinn.id, entityId);
+									});
+						}
 					}
 
 					return {
@@ -431,34 +435,28 @@ export default class BitrixService
 					);
 				}
 			};
-			
+
 			if(isSuccessResponse(transportResponse)) {
 				let transport = transportResponse.data;
 				let driver = transport.driver;
-				const transportValidationRequired = transport.validateCrm(crmItem, reference);
-				const driverValidationRequired = driver.validateCrm(crmItem, reference);
+				const isTransportDataValid = transport.validateCrm(crmItem, reference);
+				const isDriverDataValid = driver.validateCrm(crmItem, reference);
 
-				if(!driverValidationRequired && !transportValidationRequired) {
-					this.driverService
-							.getById(driver.id)
-							.then(apiResponse => driverNotify(apiResponse, "Вы допушены к работе в 24ТОП."))
-
+				if(isDriverDataValid && isTransportDataValid) {
+					if(driver.crmData.admitted === 'yes')
+					{
+						this.driverService
+								.getById(driver.id)
+								.then(apiResponse => driverNotify(apiResponse, "Вы допушены к работе в 24ТОП."));
+					}
 					return { statusCode: HttpStatus.OK, message: 'No validation needed' };
 				}
-				else if(transportValidationRequired && !driverValidationRequired) {
-					this.transportService
-							.update(transport.id, { crmData: transport.crmData })
-							.then(apiResponse => transportNotify(apiResponse));
-				}
-				else if(driverValidationRequired && !transportValidationRequired) {
+				else if(!isDriverDataValid) {
 					this.driverService
 							.update(driver.id, { crmData: driver.crmData })
 							.then(apiResponse => driverNotify(apiResponse));
 				}
-				else {
-					this.driverService
-							.update(driver.id, { crmData: driver.crmData })
-							.then(apiResponse => driverNotify(apiResponse));
+				else if(!isTransportDataValid) {
 					this.transportService
 							.update(transport.id, { crmData: transport.crmData })
 							.then(apiResponse => transportNotify(apiResponse));
