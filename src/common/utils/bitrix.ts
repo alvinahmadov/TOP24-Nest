@@ -586,7 +586,7 @@ export function validateCrmEntity(
 {
 	const setIssue = (field: string, ok: boolean = false, description: string = "") => {
 		if (field && field in entity) {
-			if(!entity.crmData.issues[field]) {
+			if(entity.crmData.issues[field] === undefined) {
 				entity.crmData.issues[field] = { ok, description };
 			} else {
 				entity.crmData.issues[field].ok = ok;
@@ -653,7 +653,7 @@ export function validateCrmEntity(
 
 export function hasCrmIssues(crmData: any) {
 	for(const key in crmData.issues) {
-		if(crmData.issues[key] !== undefined && crmData.issues[key].ok === false)
+		if(crmData.issues[key] !== undefined && !crmData.issues[key].ok)
 			return true;
 	}
 

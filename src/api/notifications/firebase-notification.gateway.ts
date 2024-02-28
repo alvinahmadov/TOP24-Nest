@@ -162,7 +162,7 @@ export default class FirebaseNotificationGateway
 										if(entityData && entityData.token) {
 											fcmToken = cleanToken(entityData.token);
 										}
-										else this.logger.warn('No token provided for fcm');
+										else this.logger.warn("No token provided for fcm");
 									}
 								} catch(e) {
 									console.error(e);
@@ -198,13 +198,13 @@ export default class FirebaseNotificationGateway
 						.then(
 							fcm =>
 								fcm ? this.sendToDevice(fcm.token, data, options)
-										: console.warn('Entity doesn\'t have saved token!')
+										: console.warn("Entity doesn't have saved token!")
 						)
 						.catch(console.error);
 			}
 		}
 
-		this.logger.log('Sending driver info: ', data, roles);
+		this.logger.log("Sending driver info: ", data, roles);
 	}
 
 	private async createAuthUser<
