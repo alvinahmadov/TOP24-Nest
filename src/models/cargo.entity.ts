@@ -56,7 +56,6 @@ const scopeOptions: FindOptions = {
 	include: [{ model: User }]
 };
 
-
 /**
  * Cargo company model.
  *
@@ -75,17 +74,17 @@ export default class CargoCompany
 	@ForeignKey(() => User)
 	@Index
 	@UuidColumn({
-		            allowNull: false,
-		            onDelete:  'CASCADE'
-	            })
+		allowNull: false,
+		onDelete:  'CASCADE'
+	})
 	userId: string;
 
 	@ApiProperty(prop.crmId)
 	@Index
 	@IntColumn({
-		           unique:       true,
-		           defaultValue: null
-	           })
+		unique:       true,
+		defaultValue: null
+	})
 	crmId?: number;
 
 	@ApiProperty(prop.name)
@@ -106,9 +105,9 @@ export default class CargoCompany
 
 	@ApiProperty(prop.email)
 	@StringColumn({
-		              unique:   true,
-		              validate: { isEmail: true }
-	              })
+		unique:   true,
+		validate: { isEmail: true }
+	})
 	email: string;
 
 	@ApiProperty(prop.phone)
@@ -252,8 +251,6 @@ export default class CargoCompany
 
 	@VirtualColumn()
 	public get userPhone(): string {
-		for (let key in this)
-			console.debug({ key })
 		return this.user?.phone;
 	}
 

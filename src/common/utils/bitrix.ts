@@ -561,7 +561,14 @@ export async function cargoToBitrix<T extends ICRMEntity & { [key: string]: any;
 	return { statusCode: 404, message: 'Not found' };
 }
 
-function validateCrm(key: string, crm: TCRMFields, reference: TCRMFields): CrmValidation {
+/**
+ * The function checks that entity data has passed security checks in bitix crm.
+ * 
+ * @param key {String} CRM ID key.
+ * @param crm {TCRMFields} CRM fields corresponding to the entity in bitrix.
+ * @param reference {TCRMFields} CRM reference fields to check against.
+ * */
+function checkCrmSecurityPass(key: string, crm: TCRMFields, reference: TCRMFields): CrmValidation {
 	if (key in reference) {
 		const reference_items: TBitrixEnum = reference[key]['items'];
 		for(const reference_item of reference_items)
@@ -584,7 +591,7 @@ export function validateCrmEntity(
 	isContact = false
 ): boolean
 {
-	const setIssue = (field: string, ok: boolean = false, description: string = "") => {
+	const setCrmIssueData = (field: string, ok: boolean = false, description: string = "") => {
 		if (field && field in entity) {
 			if(entity.crmData.issues[field] === undefined) {
 				entity.crmData.issues[field] = { ok, description };
@@ -596,27 +603,26 @@ export function validateCrmEntity(
 	}
 	
 	const crmData = structuredClone(entity.crmData);
-	if (!entity.crmData) entity.crmData = { issues: {}, comment: "" };
-	if (!entity.crmData.issues) entity.crmData.issues = {};
+	if(entity.crmData === undefined) entity.crmData = { issues: {}, comment: "", admitted: undefined };
+	if(entity.crmData.issues === undefined) entity.crmData.issues = {};
 	
 	const commentKey = isContact ? VALIDATION.COMMENT.CONTACT : VALIDATION.COMMENT.COMPANY;
 	const admittedToWorkKey = isContact ? VALIDATION.ADMITTED.CONTACT : VALIDATION.ADMITTED.COMPANY;
-	const validate = (key: string): CrmValidation => validateCrm(key, crm, reference)
 
-	for(let validationKey in validationKeys) {
-		const validationEnum = validate(validationKeys[validationKey].ID);
+	for(const validationKey in validationKeys) {
+		const validationEnum = checkCrmSecurityPass(validationKeys[validationKey].ID, crm, reference);
 
-		for (const entityFieldName of validationKeys[validationKey].KEYS) {
+		for(const entityFieldName of validationKeys[validationKey].KEYS) {
 			switch(validationEnum) {
 				case CrmValidation.NONE:
 					if(entity.crmData.issues[entityFieldName])
 						entity.crmData.issues[entityFieldName] = undefined;
 					break;
 				case CrmValidation.ACCEPTED:
-					setIssue(entityFieldName, true);
+					setCrmIssueData(entityFieldName, true);
 					break;
 				case CrmValidation.REJECTED:
-					setIssue(entityFieldName, false)
+					setCrmIssueData(entityFieldName, false);
 					break;
 				default:
 					break;
@@ -624,31 +630,34 @@ export function validateCrmEntity(
 		}
 	}
 
-	if (crm[commentKey])
+	if(crm[commentKey])
 		entity.crmData.comment = crm[commentKey];
 
-	if(!!admittedToWorkKey && reference[admittedToWorkKey])
+	if(admittedToWorkKey !== undefined && reference[admittedToWorkKey] !== undefined)
 	{
 		const admittedToWorkRefs: TBitrixEnum = reference[admittedToWorkKey]['items'];
-		if(admittedToWorkRefs)
+		if(admittedToWorkRefs && admittedToWorkRefs.length > 0)
 		{
 			const admittedToWorkId = crm[admittedToWorkKey]
 			const index = admittedToWorkRefs.findIndex(ref => admittedToWorkId === ref.ID)
 			if(index >= 0) {
-				const admittedToWorkValue = admittedToWorkRefs[index].VALUE.toLowerCase();
-				if(admittedToWorkValue === 'допущен') {
+				const admittedToWorkValue = admittedToWorkRefs[index].VALUE.toLowerCase().trim();
+				if(admittedToWorkValue === "допущен") {
 					entity.crmData.admitted = 'yes';
-				} else if(admittedToWorkValue === 'не допущен') {
+				} else if(admittedToWorkValue === "не допущен") {
 					entity.crmData.admitted = 'no';
-				} else {
+				} else if(admittedToWorkValue === "черный список") {
 					entity.crmData.admitted = 'blacklist';
 				}
+			} else
+			{
+				entity.crmData.admitted = undefined;
 			}
 		}
 	}
 	
 	const difference = diff(crmData, entity.crmData);
-	return !!difference;
+	return difference !== undefined;
 }
 
 export function hasCrmIssues(crmData: any) {

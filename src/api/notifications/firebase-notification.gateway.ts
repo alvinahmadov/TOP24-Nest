@@ -197,8 +197,8 @@ export default class FirebaseNotificationGateway
 						.getByEntityId(entityId)
 						.then(
 							fcm =>
-								fcm ? this.sendToDevice(fcm.token, data, options)
-										: console.warn("Entity doesn't have saved token!")
+								fcm !== null ? this.sendToDevice(fcm.token, data, options) 
+														 : console.warn("Entity doesn't have saved token!")
 						)
 						.catch(console.error);
 			}

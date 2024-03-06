@@ -66,7 +66,6 @@ import COMPANY_REF_URL = BitrixUrl.COMPANY_REF_URL;
 import CONTACT_GET_URL = BitrixUrl.CONTACT_GET_URL;
 import CONTACT_REF_URL = BitrixUrl.CONTACT_REF_URL;
 
-const CARGO_EVENT_TRANSLATIONS = getTranslation('EVENT', 'CARGO');
 const DRIVER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'DRIVER');
 const ORDER_EVENT_TRANSLATIONS = getTranslation('EVENT', 'ORDER');
 const TRANSPORT_EVENT_TRANSLATIONS = getTranslation('EVENT', 'TRANSPORT');
@@ -110,7 +109,7 @@ export default class BitrixService
 	 *
 	 * @description Fetches order data from bitrix.
 	 *
-	 * @returns {Array<IOrder>} New order data as a list
+	 * @returns New order data as a list
 	 * */
 	public async getOrders() {
 		const { result: bitrixOrderList } = await this.httpClient.get<TCRMResponse>(ORDER_LST_URL);
@@ -274,21 +273,41 @@ export default class BitrixService
 		crmId: number,
 		cargo?: TUpdateAttribute<ICompany>
 	): Promise<IApiResponse<ICompany>> {
-		const notifFn = (
-			apiRes: IApiResponse<any>,
-			companyId: string,
-			entityId?: string,
-			message: string = CARGO_EVENT_TRANSLATIONS['VALIDATION']
-		) => {
-			if(apiRes.data) {
-				const options = { roles: [UserRole.CARGO, UserRole.DRIVER], url: 'Registration', entityId };
-				const data: ICargoGatewayData = {
-					id:     companyId,
+		const notifyFn = (apiRes: IApiResponse<any>, entityId: string) => {
+			{
+				if(!isSuccessResponse(apiRes))
+					return;
+
+				const { data } = apiRes;
+				const { admitted: admitValue } = data.crmData;
+				let message: string;
+				let url: string = "Registration";
+
+				if(admitValue === "yes") {
+					message = "Вы допушены к работе в 24ТОП.";
+				}
+				else if(admitValue === "no") {
+					message = "Вы не допушены к работе в 24ТОП.\n" +
+										"Пожалуйста, проверьте соответствие введенных данных политике сервиса.";
+				}
+				else if(admitValue === "blacklist") {
+					message = "К сожалению Вы находитесь в черном списке 24ТОП.\n" +
+										"Пожалуйста, для решения проблемы, свяжитесь со службой поддержки 24ТОП.";
+				}
+				else {
+					message =
+						"Пожалуйста, ждите, пока служба безопасности проверит введенные Вами данные на соответствие политике сервиса.";
+					url = undefined;
+				}
+
+				const options = { roles: [UserRole.CARGO, UserRole.DRIVER], url, entityId };
+				const notifData: ICargoGatewayData = {
+					id:     data.id,
 					event:  'cargo',
 					source: 'bitrix',
 					message
 				};
-				this.fcmGateway.sendCargoNotification(data, options);
+				this.fcmGateway.sendCargoNotification(notifData, options);
 			}
 		};
 
@@ -312,41 +331,22 @@ export default class BitrixService
 				const { data: cargo } = await this.cargoService.getByCrmId(crmId, true);
 
 				if(cargo) {
-					// Get json reference data
-					const isCompanyDataValid = cargo.validateCrm(crmItem, reference);
-					const isPaymentDataValid = cargo.payment
-																						? cargo.payment.validateCrm(crmItem, reference)
-																						: false;
 					const entityId = cargo.drivers?.at(0)?.id;
+					const { payment } = cargo;
+					cargo.validateCrm(crmItem, reference);
 
-					if(isPaymentDataValid && isCompanyDataValid) {
-						if(cargo.crmData.admitted === 'yes') {
-							this.cargoService.getById(
-								cargo.id
-							).then(
-								apiResponse => notifFn(
-									apiResponse,
-									cargo.id,
-									entityId,
-									"Вы допушены к работе в 24ТОП."
-								)
-							);
-						}
-					}
-					else {
-						if(!isPaymentDataValid) {
-							this.paymentService
-									.update(cargo?.payment.id, { crmData: cargo.payment.crmData })
-									.then(apiResponse => {
-										if(isCompanyDataValid)
-											notifFn(apiResponse, cargo.id, entityId);
-									});
-						}
-						if(!isCompanyDataValid) {
-							this.cargoService
-									.update(cargo.id, { crmData: cargo.crmData })
-									.then(apiResponse => notifFn(apiResponse, cargo.id, entityId));
-						}
+					this.cargoService
+							.update(cargo.id, { crmData: cargo.crmData })
+							.then(r => notifyFn(r, entityId));
+
+					if(payment) {
+						const isPaymentDataValid = payment.validateCrm(crmItem, reference);
+						this.paymentService
+								.update(payment.id, { crmData: payment.crmData })
+								.then(r => {
+									if(!isPaymentDataValid)
+										notifyFn(r, entityId);
+								});
 					}
 
 					return {
@@ -356,37 +356,22 @@ export default class BitrixService
 				}
 				else {
 					const { data: cargoinn } = await this.cargoInnService.getByCrmId(crmId, true);
-					const isCompanyDataValid = cargoinn.validateCrm(crmItem, reference);
-					const isPaymentDataValid = cargoinn.payment
-																						? cargoinn.payment?.validateCrm(crmItem, reference)
-																						: false;
 					const entityId = cargoinn.drivers?.at(0)?.id;
+					const { payment } = cargoinn;
+					cargoinn.validateCrm(crmItem, reference);
 
-					if(isPaymentDataValid && isCompanyDataValid) {
-						if(cargoinn.crmData.admitted === 'yes') {
-							this.cargoInnService.getById(
-								cargoinn.id
-							).then(apiResponse => notifFn(
-								apiResponse,
-								cargoinn.id,
-								entityId,
-								"Вы допушены к работе в 24ТОП."
-							));
-						}
-					} else {
-						if(!isCompanyDataValid) {
-							this.cargoInnService
-									.update(cargoinn.id, { crmData: cargoinn.crmData })
-									.then(apiResponse => notifFn(apiResponse, cargoinn.id, entityId));
-						}
-						if(!isPaymentDataValid) {
-							this.paymentService
-									.update(cargoinn.payment.id, { crmData: cargoinn.payment.crmData })
-									.then(apiResponse => {
-										if(isCompanyDataValid)
-											notifFn(apiResponse, cargoinn.id, entityId);
-									});
-						}
+					this.cargoInnService
+							.update(cargoinn.id, { crmData: cargoinn.crmData })
+							.then(r => notifyFn(r, entityId));
+
+					if(payment) {
+						const isPaymentDataValid = payment.validateCrm(crmItem, reference);
+						this.paymentService
+								.update(payment.id, { crmData: payment.crmData })
+								.then(r => {
+									if(!isPaymentDataValid)
+										notifyFn(r, entityId);
+								});
 					}
 
 					return {
@@ -443,8 +428,7 @@ export default class BitrixService
 				const isDriverDataValid = driver.validateCrm(crmItem, reference);
 
 				if(isDriverDataValid && isTransportDataValid) {
-					if(driver.crmData.admitted === 'yes')
-					{
+					if(driver.crmData.admitted === 'yes') {
 						this.driverService
 								.getById(driver.id)
 								.then(apiResponse => driverNotify(apiResponse, "Вы допушены к работе в 24ТОП."));
